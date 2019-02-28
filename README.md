@@ -57,7 +57,7 @@ To calculate a dispersion correction for a PBE0 calculation use
 
 Note that, the `--func` option will try to make as much sense as
 possible from your input, by converting it internally to lowercase
-and ignoring most dashes or year number. The input b-p and BP86/def-TZVP
+and ignoring most dashes or year number. The input `b-p` and `BP86/def-TZVP`
 are therefore equivalent.
 
 To calculate the derivative of the dispersion energy use
@@ -67,9 +67,19 @@ To calculate the derivative of the dispersion energy use
 This will write a Turbomole style `gradient` file or will try to
 augment an already present `gradient` file with the dispersion gradient.
 
-To use the D4(EEQ)-MBD method use
+For the D4(EEQ)-MBD method use
 
     $ dftd4 --func pbe0 --mbd coord
+    
+Citation
+--------
+
+Eike Caldeweyher, Christoph Bannwarth and Stefan Grimme, *J. Chem. Phys.*, **2017**, 147, 034112.
+DOI: [10.1063/1.4993215](https://doi.org/10.1063/1.4993215)
+
+Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, *ChemRxiv*, **2019**, preprint. DOI: [10.26434/chemrxiv.7430216](https://doi.org/10.26434/chemrxiv.7430216.v2)
+
+
 
 Bugs
 ----
