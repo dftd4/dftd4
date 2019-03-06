@@ -1,20 +1,26 @@
+!> @brief provides different kinds of coordination numbers used in this program
+!!
+!! Implemented is the original DFT-D3 coordination number, a modified version
+!! using a better counting function and the DFT-D4 coordination number
+!! The derivative is given as dCNi/dRj -> dcn(:,j,i), so matrix-vector
+!! operations can be used to obtain the molecular gradient
 module coordination_number
    use iso_fortran_env, only : wp => real64
    implicit none
 
    real(wp),private,parameter :: cnthr = 1600.0_wp
 
-   real(wp),parameter :: k1 = 16.0_wp
+   real(wp),parameter :: k1 = 16.0_wp !< steepness of counting function
 
-   real(wp),parameter :: ka=10.0_wp
-   real(wp),parameter :: kb=20.0_wp
-   real(wp),parameter :: r_shift=2.0_wp
+   real(wp),parameter :: ka=10.0_wp !< steepness of first counting function
+   real(wp),parameter :: kb=20.0_wp !< steepness of second counting function
+   real(wp),parameter :: r_shift=2.0_wp !< offset for second counting function
 
-   real(wp),parameter :: k4=4.10451_wp
-   real(wp),parameter :: k5=19.08857_wp
-   real(wp),parameter :: k6=2*11.28174_wp**2
+   real(wp),parameter :: k4=4.10451_wp  !< EN scaling parameter in covCN
+   real(wp),parameter :: k5=19.08857_wp !< EN scaling parameter in covCN
+   real(wp),parameter :: k6=2*11.28174_wp**2 !< EN scaling parameter in covCN
 
-   real(wp),parameter :: kn=7.50_wp
+   real(wp),parameter :: kn=7.50_wp !< steepness of counting function
    real(wp),parameter :: kr=0.25_wp
    real(wp),parameter :: ke=0.05_wp
 
@@ -41,8 +47,8 @@ module coordination_number
 !  & 3.57788113, 5.06446567, 4.56053862, 4.20778980, 3.98102289, &
 !  & 3.82984466, 3.85504098, 3.88023730, 3.90543362 /)
 
-!  covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
-!  188-197), values for metals decreased by 10 %
+!> @brief covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
+!! 188-197), values for metals decreased by 10 %
    real(wp),private,parameter :: rad(max_elem) = (/  &
    & 0.32,0.46, & ! H,He
    & 1.20,0.94,0.77,0.75,0.71,0.63,0.64,0.67, & ! Li-Ne
@@ -65,7 +71,7 @@ module coordination_number
    &           1.22,1.29,1.46,1.58,1.48,1.41 /) ! Nh-Og
    real(wp),parameter :: rcov(max_elem) = 4.0_wp/3.0_wp*rad/0.52917726_wp
 
-!  pauling EN's 
+!> @brief pauling EN's 
    real(wp),parameter :: en(max_elem) = (/ &
    & 2.20,3.00, & ! H,He
    & 0.98,1.57,2.04,2.55,3.04,3.44,3.98,4.50, & ! Li-Ne
@@ -93,14 +99,11 @@ module coordination_number
 
 contains
 
-!! ========================================================================
-!  modified D3 type coordination number from 2018
-!  INPUT
-!  nat  :: number of atoms
-!  at   :: ordinal number of atoms
-!  xyz  :: coordinates in Bohr
-!  OUTPUT
-!  cn   :: coordination number
+! ========================================================================
+!> @brief modified D3 type coordination number from 2018
+!!
+!! @param[in]  mol   molecular stucture
+!! @param[out] cn    coordination number
 !  PARAMETERS: kn,k2
 !  NOTE: k2 is already included in rcov
 pure subroutine ncoord_erf(mol,cn,thr)
@@ -141,15 +144,12 @@ pure subroutine ncoord_erf(mol,cn,thr)
 
 end subroutine ncoord_erf
 
-!! ========================================================================
-!  modified D3 type coordination number from 2018
-!  INPUT
-!  nat  :: number of atoms
-!  at   :: ordinal number of atoms
-!  xyz  :: coordinates in Bohr
-!  OUTPUT
-!  cn   :: coordination number
-!  dcn  :: derivative of coordination number w.r.t. atom position
+! ========================================================================
+!> @brief modified D3 type coordination number from 2018
+!!
+!! @param[in]  mol   molecular stucture
+!! @param[out] cn    coordination number
+!! @param[out] dcn   derivative of coordination number w.r.t. atom position
 !  PARAMETERS: kn,k2
 !  NOTE: k2 is already included in rcov
 pure subroutine dncoord_erf(mol,cn,dcn,thr)
@@ -198,12 +198,11 @@ pure subroutine dncoord_erf(mol,cn,dcn,thr)
 
 end subroutine dncoord_erf
 
-!! ========================================================================
-!  original D3 type coordination number from 2010
-!  INPUT
-!  mol  :: molecular stucture
-!  OUTPUT
-!  cn   :: coordination number
+! ========================================================================
+!> @brief original D3 type coordination number from 2010
+!!
+!! @param[in]  mol   molecular stucture
+!! @param[out] cn    coordination number
 !  PARAMETERS: k1,k2
 !  NOTE: k2 is already included in rcov
 pure subroutine ncoord_d3(mol,cn,thr)
@@ -245,13 +244,12 @@ pure subroutine ncoord_d3(mol,cn,thr)
 
 end subroutine ncoord_d3
 
-!! ========================================================================
-!  original D3 type coordination number from 2010
-!  INPUT
-!  mol  :: molecular stucture
-!  OUTPUT
-!  cn   :: coordination number
-!  dcn  :: derivative of coordination number w.r.t. atom position
+! ========================================================================
+!> @brief original D3 type coordination number from 2010
+!!
+!! @param[in]  mol   molecular stucture
+!! @param[out] cn    coordination number
+!! @param[out] dcn   derivative of coordination number w.r.t. atom position
 !  PARAMETERS: k1,k2
 !  NOTE: k2 is already included in rcov
 pure subroutine dncoord_d3(mol,cn,dcn,thr)
@@ -301,12 +299,11 @@ pure subroutine dncoord_d3(mol,cn,dcn,thr)
 
 end subroutine dncoord_d3
 
-!! ========================================================================
-!  covalent coordination number of the DFT-D4 method
-!  INPUT
-!  mol  :: molecular stucture
-!  OUTPUT
-!  cn   :: coordination number
+! ========================================================================
+!> @brief covalent coordination number of the DFT-D4 method
+!!
+!! @param[in]  mol   molecular stucture
+!! @param[out] cn    coordination number
 !  PARAMETERS: k1,k2,k4,k5,k6
 !  NOTE: k2 is already included in rcov
 pure subroutine ncoord_d4(mol,cn,thr)
@@ -352,14 +349,12 @@ pure subroutine ncoord_d4(mol,cn,thr)
 
 end subroutine ncoord_d4
 
-!! ========================================================================
-!  derivative of the covalent coordination number of the DFT-D4 method
-!  NOTE: the derivative is inlined in the dispgrad in dftd4 by hand
-!  INPUT
-!  mol  :: molecular stucture
-!  OUTPUT
-!  cn   :: coordination number
-!  dcn  :: derivative of coordination number w.r.t. atom position
+! ========================================================================
+!> @brief derivative of the covalent coordination number of the DFT-D4 method
+!!
+!! @param[in]  mol   molecular stucture
+!! @param[out] cn    coordination number
+!! @param[out] dcn   derivative of coordination number w.r.t. atom position
 !  PARAMETERS: k1,k2,k4,k5,k6
 !  NOTE: k2 is already included in rcov
 pure subroutine dncoord_d4(mol,cn,dcn,thr)

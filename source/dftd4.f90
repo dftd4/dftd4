@@ -1,3 +1,4 @@
+!> @brief provides DFT-D4 dispersion
 module dftd4
    use iso_fortran_env, only : wp => real64
 !! ========================================================================
@@ -19,12 +20,13 @@ module dftd4
    integer,parameter :: p_refq_gfn2xtb_gbsa_h2o = 4
    integer,parameter :: p_refq_goedecker        = 5
 
-   integer,parameter :: p_mbd_none       = 0
-   integer,parameter :: p_mbd_rpalike    = 1
-   integer,parameter :: p_mbd_exact_atm  = 2
-   integer,parameter :: p_mbd_approx_atm = 3
+   integer,parameter :: p_mbd_none       = 0 !< just pair-wise dispersion
+   integer,parameter :: p_mbd_rpalike    = 1 !< RPA-like (=MBD) non-additivity
+   integer,parameter :: p_mbd_exact_atm  = 2 !< integrate C9 from polarizibilities
+   integer,parameter :: p_mbd_approx_atm = 3 !< approximate C9 from C6
 
    integer,private,parameter :: max_elem = 118
+!> @brief effective nuclear charge used in calculation of polarizibilities
    real(wp),parameter :: zeff(max_elem) = (/ &
    &   1,                                                 2,  & ! H-He
    &   3, 4,                               5, 6, 7, 8, 9,10,  & ! Li-Ne
@@ -37,14 +39,16 @@ module dftd4
    &   9,10,11,30,31,32,33,34,35,36,37,38,39,40,41,42,43,  & ! Fr-Lr
    &  12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 /) ! Rf-Og
 
-!  Semiempirical Evaluation of the GlobalHardness of the Atoms of 103
-!  Elements of the Periodic Table Using the Most Probable Radii as
-!  their Size Descriptors DULAL C. GHOSH, NAZMUL ISLAM 2009 in 
-!  Wiley InterScience (www.interscience.wiley.com).
-!  DOI 10.1002/qua.22202
-!  values in the paper multiplied by two because 
-!  (ii:ii)=(IP-EA)=d^2 E/dN^2 but the hardness
-!  definition they use is 1/2d^2 E/dN^2 (in Eh)
+!> @brief chemical hardness
+!!
+!! Semiempirical Evaluation of the GlobalHardness of the Atoms of 103
+!! Elements of the Periodic Table Using the Most Probable Radii as
+!! their Size Descriptors DULAL C. GHOSH, NAZMUL ISLAM 2009 in 
+!! Wiley InterScience (www.interscience.wiley.com).
+!! DOI 10.1002/qua.22202
+!! values in the paper multiplied by two because 
+!! (ii:ii)=(IP-EA)=d^2 E/dN^2 but the hardness
+!! definition they use is 1/2d^2 E/dN^2 (in Eh)
    real(wp),parameter :: gam(1:max_elem) = (/ &
   &0.47259288,0.92203391,0.17452888,0.25700733,0.33949086,0.42195412, & ! H-C
   &0.50438193,0.58691863,0.66931351,0.75191607,0.17964105,0.22157276, & ! N-Mg
@@ -67,7 +71,7 @@ module dftd4
   &0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000, & ! Ds-Mc
   &0.00000000,0.00000000,0.00000000,0.00000000 /) ! Lv-Og
 
-!  pauling EN's 
+!> @brief pauling EN's 
    real(wp),parameter :: en(max_elem) = (/ &
    & 2.20,3.00, & ! H,He
    & 0.98,1.57,2.04,2.55,3.04,3.44,3.98,4.50, & ! Li-Ne
@@ -122,8 +126,8 @@ module dftd4
 !  & 3.57788113, 5.06446567, 4.56053862, 4.20778980, 3.98102289, &
 !  & 3.82984466, 3.85504098, 3.88023730, 3.90543362 /)
 
-!  covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
-!  188-197), values for metals decreased by 10 %
+!> @brief covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
+!! 188-197), values for metals decreased by 10 %
    real(wp),private,parameter :: rad(max_elem) = (/  &
    & 0.32,0.46, & ! H,He
    & 1.20,0.94,0.77,0.75,0.71,0.63,0.64,0.67, & ! Li-Ne
@@ -172,13 +176,15 @@ module dftd4
 !   &   6.09527958, 11.79156076, 11.10997644,  9.51377795,  8.67197068, &
 !   &   8.77140725,  8.65402716,  8.53923501,  8.85024712 /)
 
-!  PBE0/def2-QZVP atomic values calculated by S. Grimme in Gaussian (2010)
-!  rare gases recalculated by J. Mewes with PBE0/aug-cc-pVQZ in Dirac (2018)
-!  He: 3.4698 -> 3.5544, Ne: 3.1036 -> 3.7943, Ar: 5.6004 -> 5.6638, 
-!  Kr: 6.1971 -> 6.2312, Xe: 7.5152 -> 8.8367
-!  not replaced but recalculated (PBE0/cc-pVQZ) were
-!   H: 8.0589 ->10.9359, Li:29.0974 ->39.7226, Be:14.8517 ->17.7460
-!  also new super heavies Cn,Nh,Fl,Lv,Og
+!> @brief <r4>/<r2> expectation values for atoms
+!!
+!! PBE0/def2-QZVP atomic values calculated by S. Grimme in Gaussian (2010)
+!! rare gases recalculated by J. Mewes with PBE0/aug-cc-pVQZ in Dirac (2018)
+!! He: 3.4698 -> 3.5544, Ne: 3.1036 -> 3.7943, Ar: 5.6004 -> 5.6638, 
+!! Kr: 6.1971 -> 6.2312, Xe: 7.5152 -> 8.8367
+!! not replaced but recalculated (PBE0/cc-pVQZ) were
+!!  H: 8.0589 ->10.9359, Li:29.0974 ->39.7226, Be:14.8517 ->17.7460
+!! also new super heavies Cn,Nh,Fl,Lv,Og
    real(wp),private,parameter :: r2r4(max_elem) = (/  &
    &  8.0589, 3.4698, & ! H,He
    & 29.0974,14.8517,11.8799, 7.8715, 5.5588, 4.7566, 3.8025, 3.1036, & ! Li-Ne
@@ -204,6 +210,7 @@ module dftd4
    &          0.0000, 0.0000, 0.0000, 0.0000, 5.4929, & ! -Cn
    &                  6.7286, 6.5144, 0.0000,10.3600, 0.0000, 8.6641 /) ! Nh-Og
    integer,private :: idum
+!> @brief weighted <r4>/<r2> expectation values used for C6 -> C8 extrapolation
    real(wp),parameter :: r4r2(max_elem) = &
    &  sqrt(0.5_wp*(r2r4*(/(sqrt(real(idum,wp)),idum=1,max_elem)/)))
 
@@ -232,15 +239,20 @@ module dftd4
 
 contains
 
+!> @brief prints molecular properties in a human readable format
+!!
+!! molecular polarizibilities and molecular C6/C8 coefficients are
+!! printed together with the used partial charge, coordination number
+!! atomic C6 and static polarizibilities.
 subroutine prmolc6(mol,molc6,molc8,molpol,  &
            &       cn,covcn,q,qlmom,c6ab,alpha,rvdw,hvol)
    use iso_fortran_env, only : id => output_unit
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
-   real(wp),intent(in)  :: molc6
-   real(wp),intent(in)  :: molc8
-   real(wp),intent(in)  :: molpol
+   type(molecule),intent(in) :: mol !< molecular structure information
+   real(wp),intent(in)  :: molc6    !< molecular C6 coefficient in au
+   real(wp),intent(in)  :: molc8    !< molecular C8 coefficient in au
+   real(wp),intent(in)  :: molpol   !< molecular static dipole polarizibility
    real(wp),intent(in),optional :: cn(mol%nat)
    real(wp),intent(in),optional :: covcn(mol%nat)
    real(wp),intent(in),optional :: q(mol%nat)
@@ -288,6 +300,13 @@ subroutine prmolc6(mol,molc6,molc8,molpol,  &
    &          molc6,molc8,molpol
 end subroutine prmolc6
 
+!> @brief calculate molecular dispersion properties
+!!
+!! calculates molecular C6/C8 coefficients and molecular static
+!! polarizibility, optionally return dipole polarizibilities
+!! partitioned to atoms, C6AA coefficients for each atom,
+!! radii derived from the polarizibilities and relative
+!! volumes relative to the atom
 subroutine mdisp(mol,ndim,q,g_a,g_c, &
            &     gw,c6abns,molc6,molc8,molpol,aout,cout,rout,vout)
 !  use dftd4, only : thopi,gam, &
@@ -295,15 +314,16 @@ subroutine mdisp(mol,ndim,q,g_a,g_c, &
 !  &  refn,refq,refal
 use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
-   integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: q(mol%nat) 
-   real(wp),intent(in)  :: g_a,g_c
+   type(molecule),intent(in) :: mol   !< molecular structure information
+   integer, intent(in)  :: ndim       !< dimension of reference systems
+   real(wp),intent(in)  :: q(mol%nat) !< partial charges
+   real(wp),intent(in)  :: g_a        !< charge scaling height
+   real(wp),intent(in)  :: g_c        !< charge scaling steepness
    real(wp),intent(in)  :: gw(ndim)
    real(wp),intent(in)  :: c6abns(ndim,ndim)
-   real(wp),intent(out) :: molc6
-   real(wp),intent(out) :: molc8
-   real(wp),intent(out) :: molpol
+   real(wp),intent(out) :: molc6  !< molecular C6 coefficient in au
+   real(wp),intent(out) :: molc8  !< molecular C8 coefficient in au
+   real(wp),intent(out) :: molpol !< molecular static dipole polarizibility
    real(wp),intent(out),optional :: aout(23,mol%nat)
    real(wp),intent(out),optional :: cout(mol%nat,mol%nat)
    real(wp),intent(out),optional :: rout(mol%nat)
@@ -387,6 +407,7 @@ subroutine prd4ref(mol)
    write(istdout,'(a)')
 end subroutine prd4ref
 
+!> @brief charge scaling function
 pure elemental function zeta(a,c,qref,qmod)
    implicit none
    real(wp),intent(in) :: qmod,qref
@@ -403,6 +424,7 @@ pure elemental function zeta(a,c,qref,qmod)
 
 end function zeta
 
+!> @brief derivative of charge scaling function w.r.t. charge
 pure elemental function dzeta(a,c,qref,qmod)
 !  use dftd4, only : zeta
    implicit none
@@ -421,6 +443,7 @@ pure elemental function dzeta(a,c,qref,qmod)
 
 end function dzeta
 
+!> @brief numerical Casimir-Polder integration
 pure function trapzd(pol)
    implicit none
    real(wp),intent(in) :: pol(23)
@@ -492,6 +515,7 @@ pure function trapzd(pol)
 
 end function trapzd
 
+!> @brief coordination number gaussian weight
 pure elemental function cngw(wf,cn,cnref)
    implicit none
    real(wp),intent(in) :: wf,cn,cnref
@@ -503,6 +527,7 @@ pure elemental function cngw(wf,cn,cnref)
 
 end function cngw
 
+!> @brief derivative of gaussian weight w.r.t. coordination number
 pure elemental function dcngw(wf,cn,cnref)
 !  use dftd4, only : cngw
    implicit none
@@ -513,44 +538,48 @@ pure elemental function dcngw(wf,cn,cnref)
 
 end function dcngw
 
-!* BJ damping function ala DFT-D3(BJ)
-!  f(n,rab) = sn*rab**n/(rab**n + R0**n)  w/ R0 = a1*sqrt(C6/C8)+a2
-!  see: https://doi.org/10.1002/jcc.21759
+!> @brief BJ damping function ala DFT-D3(BJ)
+!!
+!! f(n,rab) = sn*rab**n/(rab**n + R0**n)  w/ R0 = a1*sqrt(C6/C8)+a2
+!! see: https://doi.org/10.1002/jcc.21759
 pure elemental function fdmpr_bj(n,r,c) result(fdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
+   integer, intent(in)  :: n  !< order
+   real(wp),intent(in)  :: r  !< distance
+   real(wp),intent(in)  :: c  !< critical radius
    real(wp) :: fdmp
    fdmp = 1.0_wp / ( r**n + c**n )
 end function fdmpr_bj
+!> @brief derivative of BJ damping function ala DFT-D3(BJ)
 pure elemental function fdmprdr_bj(n,r,c) result(dfdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
+   integer, intent(in)  :: n  !< order
+   real(wp),intent(in)  :: r  !< distance
+   real(wp),intent(in)  :: c  !< critical radius
    real(wp) :: dfdmp
    dfdmp = -n*r**(n-1) * fdmpr_bj(n,r,c)**2
 end function fdmprdr_bj
 
-!* original DFT-D3(0) damping
-!  f(n,rab) = sn/(1+6*(4/3*R0/rab)**alp)  w/ R0 of unknown origin
+!> @brief original DFT-D3(0) damping
+!!
+!! f(n,rab) = sn/(1+6*(4/3*R0/rab)**alp)  w/ R0 of unknown origin
 pure elemental function fdmpr_zero(n,r,c,alp) result(fdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   integer, intent(in)  :: alp !< exponent
    real(wp),parameter   :: six = 6.0_wp
    real(wp) :: fdmp
    fdmp = 1.0_wp / (r**n*(1 + six * (c/r)**(n+alp)))
 end function fdmpr_zero
+!> @brief derivative of original DFT-D3(0) damping
 pure elemental function fdmprdr_zero(n,r,c,alp) result(dfdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   integer, intent(in)  :: alp !< exponent
    real(wp),parameter   :: six = 6.0_wp
    real(wp) :: dfdmp
    dfdmp = -( n*r**(n-1)*(1+six*(c/r)**(alp)) &
@@ -559,74 +588,80 @@ pure elemental function fdmprdr_zero(n,r,c,alp) result(dfdmp)
 !  fdmp = 1.0_wp / (r**n*(1 + 6.0_wp * (c/r)**(n+alp)))
 end function fdmprdr_zero
 
-!* fermi damping function from TS and MBD methods
-!  f(n,rab) = sn/(1+exp[-alp*(rab/R0-1)]) w/ R0 as experimenal vdW-Radii
+!> @brief fermi damping function from TS and MBD methods
+!!
+!! f(n,rab) = sn/(1+exp[-alp*(rab/R0-1)]) w/ R0 as experimenal vdW-Radii
 pure elemental function fdmpr_fermi(n,r,c,alp) result(fdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   integer, intent(in)  :: alp !< steepness
    real(wp) :: fdmp
    fdmp = 1.0_wp / (r**n*(1.0_wp+exp(-alp*(r/c - 1.0))))
 end function fdmpr_fermi
+!> @brief derivative of fermi damping function from TS and MBD methods
 pure elemental function fdmprdr_fermi(n,r,c,alp) result(dfdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   integer, intent(in)  :: alp !< steepness
    real(wp) :: dfdmp
    dfdmp = -(-alp/c*r**n*exp(-alp*(r/c - 1.0)) &
              + n*r**(n-1)*(1.0_wp+exp(-alp*(r/c - 1.0)))) &
              * fdmpr_fermi(n,r,c,alp)**2
 end function fdmprdr_fermi
 
-!* optimized power zero damping (M. Head-Gordon)
-!  f(n,rab) = sn*rab**(n+alp)/(rab**(n+alp) + R0**(n+alp))
-!  see: https://dx.doi.org/10.1021/acs.jpclett.7b00176
+!> @brief optimized power zero damping (M. Head-Gordon)
+!!
+!! f(n,rab) = sn*rab**(n+alp)/(rab**(n+alp) + R0**(n+alp))
+!! see: https://dx.doi.org/10.1021/acs.jpclett.7b00176
 pure elemental function fdmpr_op(n,r,c,alp) result(fdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   integer, intent(in)  :: alp !< optimized power
    real(wp) :: fdmp
    fdmp = r**alp / (r**(n+alp)*c**(n+alp))
 end function fdmpr_op
+!> @brief derivative optimized power zero damping (M. Head-Gordon)
 pure elemental function fdmprdr_op(n,r,c,alp) result(dfdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   integer, intent(in)  :: alp !< optimized power
    real(wp) :: dfdmp
    dfdmp = (alp*r*(alp-1) - (n+alp)*r**alp*r**(n+alp-1)) &
            * fdmpr_op(n,r,c,alp)**2
 !  fdmp = r**alp / (r**(n+alp)*c**(n+alp))
 end function fdmprdr_op
 
-!* Sherrill's M-zero damping function
-!  f(n,rab) = sn/(1+6*(4/3*R0/rab+a2*R0)**(-alp))
-!  see: https://dx.doi.org/10.1021/acs.jpclett.6b00780
+!> @brief Sherrill's M-zero damping function
+!!
+!! f(n,rab) = sn/(1+6*(4/3*R0/rab+a2*R0)**(-alp))
+!! see: https://dx.doi.org/10.1021/acs.jpclett.6b00780
 pure elemental function fdmpr_zerom(n,r,c,rsn,alp) result(fdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   real(wp),intent(in)  :: rsn
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   real(wp),intent(in)  :: rsn !< offset for critical radius
+   integer, intent(in)  :: alp !< exponent
    real(wp),parameter   :: six = 6.0_wp
    real(wp) :: fdmp
    fdmp = 1.0_wp / (r**n*(1 + six * (r/c+rsn*c)**(-alp)))
 end function fdmpr_zerom
+!> @brief derivative of Sherrill's M-zero damping function
 pure elemental function fdmprdr_zerom(n,r,c,rsn,alp) result(dfdmp)
    implicit none
-   integer, intent(in)  :: n
-   real(wp),intent(in)  :: r
-   real(wp),intent(in)  :: c
-   real(wp),intent(in)  :: rsn
-   integer, intent(in)  :: alp
+   integer, intent(in)  :: n   !< order
+   real(wp),intent(in)  :: r   !< distance
+   real(wp),intent(in)  :: c   !< critical radius
+   real(wp),intent(in)  :: rsn !< offset for critical radius
+   integer, intent(in)  :: alp !< exponent
    real(wp),parameter   :: six = 6.0_wp
    real(wp) :: dfdmp
    dfdmp = -( n*r**(n-1)*(1+six*(r/c+rsn*c)**(-alp)) &
@@ -634,10 +669,11 @@ pure elemental function fdmprdr_zerom(n,r,c,rsn,alp) result(dfdmp)
            * fdmpr_zerom(n,r,c,rsn,alp)**2
 end function fdmprdr_zerom
 
+!> @brief initialize the dftd4 module
 subroutine d4init(mol,g_a,g_c,mode,ndim)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    real(wp),intent(in)  :: g_a,g_c
    integer, intent(in)  :: mode
    integer, intent(out) :: ndim
@@ -700,11 +736,12 @@ subroutine d4init(mol,g_a,g_c,mode,ndim)
 
 end subroutine d4init
 
+!> @brief get calculation dimension for DFT-D4 reference systems
 subroutine d4dim(mol,ndim)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
-   integer, intent(out) :: ndim
+   type(molecule),intent(in) :: mol !< molecular structure information
+   integer, intent(out) :: ndim     !< total number of reference systems
 
    integer :: i
 
@@ -716,13 +753,17 @@ subroutine d4dim(mol,ndim)
 
 end subroutine d4dim
 
+!> @brief basic D4 calculation
+!!
+!! obtain gaussian weights for the references systems based on
+!! input CN and integrate reference C6 coefficients
 subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,c6abns)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
-   integer, intent(in)  :: ndim
+   type(molecule),intent(in) :: mol !< molecular structure information
+   integer, intent(in)  :: ndim     !< calculation dimension
    real(wp),intent(in)  :: wf,g_a,g_c
-   real(wp),intent(in)  :: covcn(mol%nat)
+   real(wp),intent(in)  :: covcn(mol%nat)  !< covalent coordination number
    real(wp),intent(out) :: gw(ndim)
    real(wp),intent(out) :: c6abns(ndim,ndim)
 
@@ -785,10 +826,11 @@ subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,c6abns)
 
 end subroutine d4
 
+!> @brief build a dispersion matrix (mainly for SCC calculations)
 pure subroutine build_dispmat(mol,ndim,par,c6abns,dispmat)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in)  :: par
    real(wp),intent(in)  :: c6abns(ndim,ndim)
@@ -842,10 +884,11 @@ pure subroutine build_dispmat(mol,ndim,par,c6abns,dispmat)
 
 end subroutine build_dispmat
 
+!> @brief build a weighted dispersion matrix (mainly for SCC calculations)
 subroutine build_wdispmat(mol,ndim,par,c6abns,gw,wdispmat)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in)  :: par
    real(wp),intent(in)  :: c6abns(ndim,ndim)
@@ -908,10 +951,11 @@ subroutine build_wdispmat(mol,ndim,par,c6abns,gw,wdispmat)
 
 end subroutine build_wdispmat
 
+!> @brief calculate contribution to the Fockian
 subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    real(wp),intent(in)  :: q(mol%nat)
    real(wp),intent(in)  :: g_a,g_c
@@ -962,10 +1006,11 @@ subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
 
 end subroutine disppot
 
+!> @brief calculate dispersion energy in SCC
 function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    real(wp),intent(in)  :: q(mol%nat)
    real(wp),intent(in)  :: g_a,g_c
@@ -1005,12 +1050,23 @@ function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
 
 end function edisp_scc
 
+!> @brief calculate D4 dispersion energy
+!!
+!! @param[in]      q       partial charges
+!! @param[in]      par     damping parameters
+!! @param[in]      g_a     charge scale height
+!! @param[in]      g_c     charge scale steepness
+!! @param[in]      gw      gaussian weights for references
+!! @param[in]      c6abns  reference C6 coefficients
+!! @param[in]      mbd     type of non-additivity correction
+!! @param[out]     e       energy from gradient calculation
+!! @param[out]     aout    dipole polarizibilities
 subroutine edisp(mol,ndim,q,par,g_a,g_c, &
            &     gw,c6abns,mbd,E,aout,etwo,emany)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
-   integer, intent(in)  :: ndim
+   type(molecule),intent(in) :: mol !< molecular structure information
+   integer, intent(in)  :: ndim     !< calculation dimension
    real(wp),intent(in)  :: q(mol%nat) 
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(in)  :: g_a,g_c
@@ -1132,19 +1188,36 @@ subroutine edisp(mol,ndim,q,par,g_a,g_c, &
 
 end subroutine edisp
 
-!* compute D4 gradient
-!  ∂E/∂rij = ∂/∂rij (W·D·W)
-!          = ∂W/∂rij·D·W  + W·∂D/∂rij·W + W·D·∂W/∂rij
-!  ∂W/∂rij = ∂(ζ·w)/∂rij = ∂ζ/∂rij·w + ζ·∂w/∂rij
-!          = ζ·∂w/∂CN·∂CN/∂rij + w·∂ζ/∂q·∂q/∂rij
+!> @brief compute D4 gradient
+!!
+!! @param[in]      q       partial charges
+!! @param[in]      dqdr    derivative of partial charges w.r.t. nuclear coordinates
+!! @param[in]      cn      coordination number
+!! @param[in]      dcndr   derivative of CNs w.r.t. nuclear coordinates
+!! @param[in]      par     damping parameters
+!! @param[in]      wf      gaussian weighting factor
+!! @param[in]      g_a     charge scale height
+!! @param[in]      g_c     charge scale steepness
+!! @param[in]      c6abns  reference C6 coefficients
+!! @param[in]      mbd     type of non-additivity correction
+!! @param[in,out]  g       molecular gradient
+!! @param[out]     eout    energy from gradient calculation
+!! @param[out]     aout    dipole polarizibilities
+!
+! ∂E/∂rij = ∂/∂rij (W·D·W)
+!         = ∂W/∂rij·D·W  + W·∂D/∂rij·W + W·D·∂W/∂rij
+!
+! ∂W/∂rij = ∂(ζ·w)/∂rij = ∂ζ/∂rij·w + ζ·∂w/∂rij
+!         = ζ·∂w/∂CN·∂CN/∂rij + w·∂ζ/∂q·∂q/∂rij
+!
 subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
            &        par,wf,g_a,g_c, &
            &        c6abns,mbd, &
            &        g,eout,aout)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
-   integer, intent(in)  :: ndim
+   type(molecule),intent(in) :: mol !< molecular structure information
+   integer, intent(in)  :: ndim     !< calculation dimension
    real(wp),intent(in)  :: q(mol%nat)
    real(wp),intent(in)  :: dqdr(3,mol%nat,mol%nat)
    real(wp),intent(in)  :: cn(mol%nat)
@@ -1406,10 +1479,11 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 
 end subroutine dispgrad
 
+!> @brief calculates threebody dispersion energy from C6 coefficients
 subroutine apprabc(mol,c6ab,par,E)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(out) :: E
@@ -1461,10 +1535,11 @@ subroutine apprabc(mol,c6ab,par,E)
 
 end subroutine apprabc
 
+!> @brief calculates threebody dispersion energy from dipole polarizibilities
 subroutine dispabc(mol,aw,par,E)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    real(wp),intent(in)  :: aw(23,mol%nat)
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(out) :: E
@@ -1513,10 +1588,11 @@ subroutine dispabc(mol,aw,par,E)
 
 end subroutine dispabc
 
+!> @brief calculates threebody dispersion energy from C6 coefficients
 subroutine abcappr(mol,ndim,g_a,g_c,par,gw,r2ab,c6abns,eabc)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    real(wp),intent(in)  :: g_a,g_c
    type(dftd_parameter),intent(in) :: par
@@ -1653,10 +1729,11 @@ subroutine abcappr(mol,ndim,g_a,g_c,par,gw,r2ab,c6abns,eabc)
 
 end subroutine abcappr
 
+!> @brief calculates threebody dispersion gradient from C6 coefficients
 subroutine dabcappr(mol,ndim,par,r2ab,zvec,dzvec,c6abns,itbl,dc6dr,dc6dcn,eout)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(in)  :: r2ab(mol%nat*(mol%nat+1)/2)
@@ -1822,6 +1899,7 @@ subroutine dabcappr(mol,ndim,par,r2ab,zvec,dzvec,c6abns,itbl,dc6dr,dc6dcn,eout)
 end subroutine dabcappr
 
 
+!> @brief calculates threebody dispersion gradient from polarizibilities
 !* here is the theory for the ATM-gradient (SAW, 180224)
 ! EABC = WA·WB·WC·DABC
 ! ∂EABC/∂X = ∂/∂X(WA·WB·WC·DABC)
@@ -1856,7 +1934,7 @@ end subroutine dabcappr
 subroutine dabcgrad(mol,ndim,par,dcn,zvec,dzvec,itbl,g,eout)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(in)  :: dcn(mol%nat,mol%nat)
@@ -2055,10 +2133,11 @@ subroutine dabcgrad(mol,ndim,par,dcn,zvec,dzvec,itbl,g,eout)
 
 end subroutine dabcgrad
 
+!> @brief calculate non additivity by RPA-like scheme
 subroutine dispmb(mol,E,aw,oor6ab)
    use class_molecule
    implicit none
-   type(molecule),intent(in) :: mol
+   type(molecule),intent(in) :: mol !< molecular structure information
    real(wp),intent(in)  :: aw(23,mol%nat)
    real(wp),intent(in)  :: oor6ab(mol%nat,mol%nat)
    real(wp),intent(out) :: E

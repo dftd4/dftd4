@@ -1,14 +1,15 @@
+!> @brief contains all functions needed for calculating partial charges
 module eeq_model
    use iso_fortran_env, wp => real64
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  class definitions
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    use class_param, only : chrg_parameter
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  get interfaces
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    use coordination_number, only : ncoord =>  ncoord_erf, &
                                   dncoord => dncoord_erf
 
@@ -16,11 +17,11 @@ module eeq_model
 
    private :: ncoord,dncoord
 
-!  π itself
+!> @brief π itself
    real(wp),private,parameter :: pi = 3.1415926535897932384626433832795029_wp
-!  √π
+!> @brief √π
    real(wp),private,parameter :: sqrtpi = sqrt(pi)
-!  √(2/π)
+!> @brief √(2/π)
    real(wp),private,parameter :: sqrt2pi = sqrt(2.0_wp/pi)
 
 
@@ -30,11 +31,15 @@ module eeq_model
 
 contains
 
+!> @brief load parameters for the extended electronegativity model
+!!
+!! Fetch fitted parameters for electronegativity, CN scaling factor,
+!! chemical hardness and atom radius for a given molecule type.
 subroutine new_charge_model_2019(chrgeq,mol)
    use class_molecule
    implicit none
-   type(chrg_parameter) :: chrgeq
-   type(molecule) :: mol
+   type(chrg_parameter) :: chrgeq !< charge model for EEQ model
+   type(molecule) :: mol          !< molecular structure data
 
    integer,parameter :: max_elem = 86
    real(wp) :: en(max_elem)
@@ -42,9 +47,9 @@ subroutine new_charge_model_2019(chrgeq,mol)
    real(wp) :: cnfak(max_elem)
    real(wp) :: alp(max_elem)
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  PARAMETRISATION BY S. SPICHER (NEW)
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    parameter( en =(/&
     1.23695041_wp, 1.26590957_wp, 0.54341808_wp, 0.99666991_wp, 1.26691604_wp, &
     1.40028282_wp, 1.55819364_wp, 1.56866440_wp, 1.57540015_wp, 1.15056627_wp, &
@@ -135,6 +140,7 @@ subroutine new_charge_model_2019(chrgeq,mol)
 
 end subroutine new_charge_model_2019
 
+!> @brief print a charge model and its results in a human readable form
 subroutine print_chrgeq(iunit,chrgeq,mol,q,cn)
    use iso_fortran_env, wp => real64
    use class_molecule
@@ -174,14 +180,19 @@ subroutine print_chrgeq(iunit,chrgeq,mol,q,cn)
 
 end subroutine print_chrgeq
 
-!! ========================================================================
+! ========================================================================
 !  Purpose:
-!! ------------------------------------------------------------------------
-!  calculate energies and properties from the Goedecker charge model
-!  using the parametrisation from the GFN0-xTB.
-!
+! ------------------------------------------------------------------------
+!> @brief calculate energies and properties from the EEQ model
+!! 
+!! calculates only energy and partial charges by default, but can
+!! calculate derivatives of the energy and partial charges with
+!! repect to the nuclear coordinates. Works in the space of the
+!! Lagranian for coupled perturbed charges, allocatation should be
+!! on n+1 not n.
+! 
 !  Input:
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  n                 - number of atoms
 !  at(n)             - atom type/ordinal number
 !  xyz(3,n)          - molecular geometry
@@ -191,18 +202,18 @@ end subroutine print_chrgeq
 !                      (switched indices are assumed here!)
 !
 !  Output:
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  q(n)              - partial charges
 !  dqdr(3,n,n+1)     - derivative of the partial charges and
 !                      Lagrange multiplier (n+1 instead of n!)
 !
 !  Input/Output:
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  energy            - isotropic electrostatic energy
 !  gradient(3,n)     - molecular gradient
 !
 !  Citation:
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  Original work: S. Alireza Ghasemi, Albert Hofstetter, Santanu Saha, and
 !                 Stefan Goedecker, PHYSICAL REVIEW B 92, 045131 (2015).
 !  This work:     S. Ehlert, E. Caldeweyher, S. Spicher and S. Grimme,
@@ -213,34 +224,34 @@ end subroutine print_chrgeq
 !        therefore, all intermediates live in the space of the Lagrangian.
 !
 !  Implemented by SAW in 2018, see focusing lab course report for details.
-!! ========================================================================
+! ========================================================================
 subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
                             lverbose,lgrad,lcpq)
    use iso_fortran_env, wp => real64, istdout => output_unit
    use class_molecule
    implicit none
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  Input
-!! ------------------------------------------------------------------------
-   type(molecule),intent(in) :: mol                    ! structure information
-   type(chrg_parameter),intent(in) :: chrgeq           ! parametrisation
-   real(wp),intent(in)    :: cn(mol%nat)               ! erf-CN
-   real(wp),intent(in)    :: dcndr(3,mol%nat,mol%nat)  ! derivative of erf-CN
-   logical, intent(in)    :: lverbose                  ! toggles printout
-   logical, intent(in)    :: lgrad                     ! flag for gradient calculation
-   logical, intent(in)    :: lcpq                      ! do partial charge derivative
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
+   type(molecule),intent(in) :: mol                    !< structure information
+   type(chrg_parameter),intent(in) :: chrgeq           !< parametrisation
+   real(wp),intent(in)    :: cn(mol%nat)               !< erf-CN
+   real(wp),intent(in)    :: dcndr(3,mol%nat,mol%nat)  !< derivative of erf-CN
+   logical, intent(in)    :: lverbose                  !< toggles printout
+   logical, intent(in)    :: lgrad                     !< flag for gradient calculation
+   logical, intent(in)    :: lcpq                      !< do partial charge derivative
+! ------------------------------------------------------------------------
 !  Output
-!! ------------------------------------------------------------------------
-   real(wp),intent(out)   :: q(mol%nat)                ! partial charges
-   real(wp),intent(out)   :: dqdr(3,mol%nat,mol%nat+1) ! derivative of partial charges
-   real(wp),intent(inout) :: energy                    ! electrostatic energy
-   real(wp),intent(inout) :: gradient(3,mol%nat)       ! molecular gradient of IES
+! ------------------------------------------------------------------------
+   real(wp),intent(out)   :: q(mol%nat)                !< partial charges
+   real(wp),intent(out)   :: dqdr(3,mol%nat,mol%nat+1) !< derivative of partial charges
+   real(wp),intent(inout) :: energy                    !< electrostatic energy
+   real(wp),intent(inout) :: gradient(3,mol%nat)       !< molecular gradient of IES
 !
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  charge model
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    integer  :: m ! dimension of the Lagrangian
    real(wp),allocatable :: Amat(:,:)
    real(wp),allocatable :: Xvec(:)
@@ -248,9 +259,9 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    real(wp),allocatable :: dAmat(:,:,:)
    real(wp),allocatable :: dXvec(:,:,:)
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  local variables
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    integer  :: i,j,k,l,n
    real(wp) :: r,rij(3),r2
    real(wp) :: gamij,gamij2
@@ -258,17 +269,17 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    real(wp) :: lambda
    real(wp) :: es
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  scratch variables
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    real(wp),allocatable :: xtmp(:)
    real(wp),allocatable :: atmp(:,:)
    real(wp),allocatable :: Xfac(:)
    real(wp),allocatable :: Afac(:,:)
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  Lapack work variables
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    integer, allocatable :: ipiv(:)
    real(wp),allocatable :: temp(:)
    real(wp),allocatable :: work(:)
@@ -276,9 +287,9 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    integer  :: info
    real(wp) :: test(1)
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  initizialization
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    n    = mol%nat
    m    = n+1
    q    = 0.0_wp
@@ -286,15 +297,15 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    allocate( ipiv(m), source = 0 )
    allocate( Amat(m,m), Xvec(m), Xfac(m), source = 0.0_wp )
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  set up the A matrix and X vector
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  αi -> alpha(i), ENi -> xi(i), κi -> kappa(i), Jii -> gam(i)
 !  γij = 1/√(αi+αj)
 !  Xi  = -ENi + κi·√CNi
 !  Aii = Jii + 2/√π·γii
 !  Aij = erf(γij·Rij)/Rij = 2/√π·F0(γ²ij·R²ij)
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "Setup of the A matrix and the RHS X vector"
 !  prepare some arrays
@@ -330,9 +341,9 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 !$omp enddo
 !$omp endparallel
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  solve the linear equations to obtain partial charges
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "Solve the linear equations to obtain partial charges"
    Amat(m,1:m) = 1.0_wp
@@ -364,13 +375,13 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
          "total charge :",sum(q)
    endif
   
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  calculate isotropic electrostatic (IES) energy
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  E = ∑i (ENi - κi·√CNi)·qi + ∑i (Jii + 2/√π·γii)·q²i
 !      + ½ ∑i ∑j,j≠i qi·qj·2/√π·F0(γ²ij·R²ij)
 !    = q·(½A·q - X)
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "Isotropic electrostatic (IES) energy calculation"
    work(:m) = Xvec
@@ -383,13 +394,13 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
          "energy",es
    endif
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  calculate molecular gradient of the IES energy
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  dE/dRj -> g(:,j), ∂Xi/∂Rj -> -dcn(:,i,j), ½∂Aij/∂Rj -> dAmat(:,j,i)
 !  dE/dR = (½∂A/∂R·q - ∂X/∂R)·q
 !  ∂Aij/∂Rj = ∂Aij/∂Ri
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "molecular gradient calculation"
    allocate( dAmat(3,n,m), dXvec(3,n,m), Afac(3,n), source = 0.0_wp )
@@ -423,10 +434,10 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    call dgemv('n',3*n,m,+1.0_wp,dAmat,3*n,Xtmp,1,1.0_wp,gradient,1)
    call dgemv('n',3*n,m,-1.0_wp,dXvec,3*n,Xtmp,1,1.0_wp,gradient,1)
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  invert the A matrix using a Bunch-Kaufman factorization
 !  A⁻¹ = (L·D·L^T)⁻¹ = L^T·D⁻¹·L
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 do_partial_charge_derivative: if (lcpq) then
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "A matrix inversion by Bunch-Kaufman factorization"
@@ -460,9 +471,9 @@ do_partial_charge_derivative: if (lcpq) then
       enddo
    enddo
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  calculate gradient of the partial charge w.r.t. the nuclear coordinates
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "calculating the derivative of the partial charges"
    do i = 1, n
@@ -476,9 +487,9 @@ do_partial_charge_derivative: if (lcpq) then
 
 endif do_partial_charge_derivative
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  Clean up
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    if (allocated(Amat))  deallocate(Amat)
    if (allocated(dAmat)) deallocate(dAmat)
    if (allocated(Afac))  deallocate(Afac)

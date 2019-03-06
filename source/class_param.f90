@@ -1,3 +1,8 @@
+!> @brief definition of all used parameter types
+!!
+!! This module provides a type for the DFT-D damping parameters,
+!! the charge model parameters for the EEQ calculation and
+!! the SCC parameters used in GFN-xTB
 module class_param
    use iso_fortran_env, only : wp => real64
 
@@ -6,18 +11,19 @@ module class_param
    public :: chrg_parameter
    private
 
+!> @brief damping parameters for DFT-D
    type :: dftd_parameter
-      real(wp) :: s6  = -1.0_wp
-      real(wp) :: s8  = -1.0_wp
-      real(wp) :: s10 =  0.0_wp
-      real(wp) :: a1  = -1.0_wp
-      real(wp) :: a2  = -1.0_wp
-      real(wp) :: s9  =  1.0_wp
-      integer  :: alp = 16
-      ! for MBD@rsSCS
-      real(wp) :: beta = 1.0_wp
+      real(wp) :: s6  = -1.0_wp !< scaling of dipole-dipole dispersion
+      real(wp) :: s8  = -1.0_wp !< scaling of dipole-quadrupole dispersion
+      real(wp) :: s10 =  0.0_wp !< scaling of higher order dispersion
+      real(wp) :: a1  = -1.0_wp !< scaling of vdW-Radius in finite damping
+      real(wp) :: a2  = -1.0_wp !< constant offset off vdW-Radius in finite damping
+      real(wp) :: s9  =  1.0_wp !< scaling of non-addititive dispersion
+      integer  :: alp = 16      !< exponent of zero damping
+      real(wp) :: beta = 1.0_wp !< range separation parameter for Fermi-damping
    end type dftd_parameter
 
+!> @brief parameters for self consistent charge calculation in GFN-xTB
    type scc_parameter
       real(wp) :: kspd(6)
       real(wp) :: gscal
@@ -49,6 +55,10 @@ module class_param
       real(wp) :: wf
    end type scc_parameter
 
+!> @brief parameters for the extended electronegativity model
+!!
+!! Contains fitted parameters for electronegativity, CN scaling factor,
+!! chemical hardness and atom radius for a given molecule type.
    type chrg_parameter
       integer :: n
       real(wp),allocatable :: xi(:)
@@ -62,6 +72,7 @@ module class_param
 
 contains
 
+!> @brief constructor for charge model
 subroutine allocate_chrg(self,n)
    implicit none
    class(chrg_parameter) :: self
@@ -73,6 +84,7 @@ subroutine allocate_chrg(self,n)
    allocate(self%alpha(n), source = 0.0_wp)
 end subroutine allocate_chrg
 
+!> @brief deconstructor for charge model
 subroutine deallocate_chrg(self)
    implicit none
    class(chrg_parameter) :: self

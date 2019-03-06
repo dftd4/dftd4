@@ -1,3 +1,6 @@
+!> @brief definition of the molecular structure class
+!!
+!! contains number of atoms, geometry, atomtypes and molecular charge
 module class_molecule
    use iso_fortran_env, wp => real64
    implicit none
@@ -5,13 +8,15 @@ module class_molecule
    public :: molecule
    private
 
+!> @class molecule
+!> @brief molecule structure class
    type :: molecule
-      integer  :: nat
-      character(len=2),allocatable :: sym(:)
-      integer, allocatable :: at(:)
-      real(wp),allocatable :: xyz(:,:)
+      integer  :: nat !< number of atoms
+      character(len=2),allocatable :: sym(:) !< element symbol
+      integer, allocatable :: at(:)          !< ordinal number
+      real(wp),allocatable :: xyz(:,:)       !< cartesian coordinates in bohr
       real(wp),allocatable :: abc(:)
-      real(wp) :: chrg = 0.0_wp
+      real(wp) :: chrg = 0.0_wp              !< molecular charge in e
       real(wp) :: lattice(3,3)
    contains
       procedure :: allocate => allocate_molecule
@@ -20,6 +25,7 @@ module class_molecule
 
 contains
 
+!> @brief constructor for molecule class
 subroutine allocate_molecule(self,nat,lpbc)
    implicit none
    class(molecule) :: self
@@ -34,6 +40,7 @@ subroutine allocate_molecule(self,nat,lpbc)
    endif
 end subroutine allocate_molecule
 
+!> @brief deconstructor for molecule class
 subroutine deallocate_molecule(self)
    implicit none
    class(molecule) :: self

@@ -1,3 +1,4 @@
+!> @brief general IO-operations and string parsing library
 module mctc_readin
    use iso_fortran_env, wp => real64
    implicit none
@@ -14,7 +15,7 @@ module mctc_readin
    character,private,parameter :: minus = '-'
    character(len=*),private,parameter :: flag_end = '$end'
 
-!! ------------------------------------------------------------------[SAW]-
+! ------------------------------------------------------------------[SAW]-
 !  this function returns a logical and is always evaluated for its
 !  side effect (parsing the given string for its real/int/bool value)
    interface get_value
@@ -27,7 +28,7 @@ module mctc_readin
 
 contains
 
-!! ------------------------------------------------------------------[SAW]-
+! ------------------------------------------------------------------[SAW]-
 !  I could use rdpath directly, but this would require access to xpath,
 !  so I use xfind as a wrapper with access to the xpath variable to
 !  circumvent this. Also as a gimmick, I do not return a logical, but
@@ -50,7 +51,7 @@ function xfind(name) result(fname)
 
 end function xfind
 
-!! ------------------------------------------------------------------[SAW]-
+! ------------------------------------------------------------------[SAW]-
 !  wrapper around getline from the MCTC lib that strips comments
 !  automatically und removes all leading and trailing whitespace
 subroutine strip_line(in,line,err)
@@ -75,7 +76,7 @@ subroutine strip_line(in,line,err)
 
 end subroutine strip_line
 
-!! ------------------------------------------------------------------[SAW]-
+! ------------------------------------------------------------------[SAW]-
 !  same as strip_line, but has the additional function of copying to
 !  one unit while reading from another, which is helpful for backing up
 !  files you plan to replace in the next step of you program.
@@ -108,6 +109,7 @@ subroutine mirror_line(in,out,line,err)
 
 end subroutine mirror_line
 
+!> @brief takes a string and search a name for a file that is not already present
 function find_new_name(fname) result(newname)
    character(len=*),intent(in)  :: fname
    character(len=:),allocatable :: newname

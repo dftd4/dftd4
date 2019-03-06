@@ -1,9 +1,11 @@
+!> @brief global calculation data for error handling
 module mctc_global
-   character(len=:),allocatable :: name
-   character(len=:),allocatable,target :: msgbuffer
-   integer :: msgid
-   integer :: maxmsg = 100
+   character(len=:),allocatable :: name  !< name of the currently running program
+   character(len=:),allocatable,target :: msgbuffer !< error message buffer
+   integer :: msgid !< number of generated errors
+   integer :: maxmsg = 100 !< size of error buffer
 
+!> @brief wrapper
    type :: errormsg
       character(len=:),allocatable :: msg
       integer :: len

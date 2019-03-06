@@ -1,8 +1,9 @@
+!> @brief error handler for MCTC library
 subroutine raise(mode,message)
    use iso_fortran_env
    use mctc_global
-   character,       intent(in) :: mode
-   character(len=*),intent(in) :: message
+   character,       intent(in) :: mode    !< kind of operation
+   character(len=*),intent(in) :: message !< string containing error description
    select case(mode)
    case('S','s') ! save to message buffer
       msgid = msgid + 1
