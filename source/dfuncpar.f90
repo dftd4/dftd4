@@ -158,7 +158,7 @@ function get_d4eeqbjatm_2019_parameter(dfnum,bsnum) result(param)
    &  s6=1.0000_wp, s8=3.02227550_wp, a1=0.47396846_wp, a2=4.49845309_wp )
 !  Fitset: MD= 0.10485 MAD= 0.32175 RMSD= 0.48508
    case(p_df_b2gpplyp); param = dftd_parameter ( & ! (SAW190107)
-   &  s6=1.0000_wp, s8=0.94633372_wp, a1=0.42907301_wp, a2=5.18802602_wp )
+   &  s6=0.5600_wp, s8=0.94633372_wp, a1=0.42907301_wp, a2=5.18802602_wp )
 !  Fitset: MD= -0.05248 MAD= 0.18110 RMSD= 0.27365
    case(p_df_b2plyp); param = dftd_parameter ( & ! (SAW190103)
    &  s6=0.6400_wp, s8=1.16888646_wp, a1=0.44154604_wp, a2=4.73114642_wp )
@@ -396,7 +396,7 @@ function get_d4eeqbjmbd_2019_parameter(dfnum,bsnum) result(param)
    &  s6=1.0000_wp, s8=2.98402204_wp, a1=0.46862950_wp, a2=4.48637849_wp )
 !  Fitset: MD= 0.09181 MAD= 0.31824 RMSD= 0.48100
    case(p_df_b2gpplyp); param = dftd_parameter ( & ! (SAW190107)
-   &  s6=1.0000_wp, s8=1.00494214_wp, a1=0.42447353_wp, a2=5.19461329_wp )
+   &  s6=0.5600_wp, s8=1.00494214_wp, a1=0.42447353_wp, a2=5.19461329_wp )
 !  Fitset: MD= -0.06339 MAD= 0.18624 RMSD= 0.28316
    case(p_df_b2plyp); param = dftd_parameter ( & ! (SAW190103)
    &  s6=0.6400_wp, s8=1.15117773_wp, a1=0.42666167_wp, a2=4.73635790_wp )
