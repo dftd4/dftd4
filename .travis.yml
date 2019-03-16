@@ -1,0 +1,13 @@
+language: c
+
+os:
+- linux
+
+addons:
+   apt_packages:
+   - gfortran
+   - meson
+   
+script:
+   - meson setup build
+   - ninja -C build
