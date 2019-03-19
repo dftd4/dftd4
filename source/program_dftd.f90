@@ -29,6 +29,7 @@ program dftd
 ! ------------------------------------------------------------------------
    type(molecule)       :: mol
    type(options)        :: set
+   type(dftd_options)   :: dopt
    type(dftd_parameter) :: dparam
    type(chrg_parameter) :: chrgeq
 
@@ -125,163 +126,12 @@ program dftd
    endif
    if (.not.(set%lenergy.or.set%lgradient.or.set%lhessian)) set%lmolpol = .true.
 
-! ------------------------------------------------------------------------
-!  Output: Initialization and Parameter setup
-! ------------------------------------------------------------------------
-   call d4init(mol,set%g_a,set%g_c,p_refq_goedecker,ndim)
-   memory = ((mol%nat)+(mol%nat)+(ndim)+(ndim*ndim) &
-            +(3*mol%nat)+(mol%nat*mol%nat)+(23*mol%nat)&
-            +(3*mol%nat*3*mol%nat)+(mol%nat)+(3*mol%nat) &
-            +(3*mol%nat*mol%nat)+(3*mol%nat*(mol%nat+1)) &
-            +(3*mol%nat*mol%nat)) * wp / (1024.0_wp**2)
+   dopt = set%export()
 
-   call generic_header(istdout,'Calculation Setup',49,10)
-   write(istdout,'(3x,a," : ",a)')    'coordinate file     ', set%fname
-   write(istdout,'(3x,a," : ",i6)')   'number of atoms     ', mol%nat
-   write(istdout,'(3x,a," : ",i6)')   'charge              ', nint(mol%chrg)
-   write(istdout,'(3x,a," : ",a)')    'non-additivity corr.', lmbd2string(set%lmbd)
-   write(istdout,'(3x,a," : ",a)')    'charge model        ', refq2string(p_refq_goedecker)
-   if (allocated(set%func)) &
-   write(istdout,'(3x,a," : ",a)')    'functional          ', set%func
-!$ write(istdout,'(3x,a," : ",i6)')   'omp threads         ',omp_get_num_threads()
-   write(istdout,'(3x,a," : ",f6.1,1x,a)') &
-      "memory needed (est.)",memory,"Mb"
-   if (set%wf  /= 6.0_wp .or. set%verbose) &
-   write(istdout,'(3x,a," : ",f6.1)')   'weighting factor    ', set%wf
-   if (set%g_a /= 3.0_wp .or. set%verbose) &
-   write(istdout,'(3x,a," : ",f6.1)')   'q-scale height      ', set%g_a
-   if (set%g_c /= 2.0_wp .or. set%verbose) &
-   write(istdout,'(3x,a," : ",f6.1)')   'q-scale steepness   ', set%g_c
+   if (dopt%lgradient) allocate( gradient(3,mol%nat) )
+   if (dopt%lhessian)  allocate( hessian(3*mol%nat,3*mol%nat) )
 
-   write(istdout,'(a)')
-
-   if (.not.set%silent) &
-   call prd4ref(mol)
-
-   allocate( q(mol%nat),covcn(mol%nat),gweights(ndim),refc6(ndim,ndim),&
-             gradient(3,mol%nat),c6ab(mol%nat,mol%nat),aw(23,mol%nat),&
-             hessian(3*mol%nat,3*mol%nat),cn(mol%nat),ges(3,mol%nat), &
-             dcndr(3,mol%nat,mol%nat),dqdr(3,mol%nat,mol%nat+1), &
-             dcovcndr(3,mol%nat,mol%nat), stat = err )
-   if (err /= 0) &
-      call raise('E','Memory allocation failed')
-
-   call dncoord_d4(mol,covcn,dcovcndr)
-   call d4(mol,ndim,set%wf,set%g_a,set%g_c,covcn,gweights,refc6)
-
-   call dncoord_erf(mol,cn,dcndr)
-
-! ------------------------------------------------------------------------
-!  get partial charges
-! ------------------------------------------------------------------------
-   if (set%verbose) &
-   call eeq_header
-   call new_charge_model(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges, &
-                   .false.,.false.,.true.)
-   if (set%verbose) &
-   call print_chrgeq(istdout,chrgeq,mol,q,cn)
-
-! ------------------------------------------------------------------------
-!  calculate properties
-! ------------------------------------------------------------------------
-dispersion_properties: if (set%lmolpol) then
-   call generic_header(istdout,'Molecular Properties',49,10)
-   call mdisp(mol,ndim,q,set%g_a,set%g_c,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
-   call prmolc6(mol,molc6,molc8,molpol,covcn=covcn,q=q,c6ab=c6ab,alpha=aw(1,:))
-endif dispersion_properties
-
-if (.not.set%silent.and.(set%lenergy.or.set%lgradient.or.set%lhessian)) then
-   call generic_header(istdout,'Damping Parameters',49,10)
-   write(istdout,'(3x,a," : ",f10.4)')   's6                  ', dparam%s6
-   write(istdout,'(3x,a," : ",f10.4)')   's8                  ', dparam%s8
-   if (dparam%s10 /= 0.0_wp .or. set%verbose) &
-   write(istdout,'(3x,a," : ",f10.4)')   's10                 ', dparam%s10
-   if (dparam%s9  /= 1.0_wp .or. set%verbose) &
-   write(istdout,'(3x,a," : ",f10.4)')   's9                  ', dparam%s9
-   write(istdout,'(3x,a," : ",f10.4)')   'a1                  ', dparam%a1
-   write(istdout,'(3x,a," : ",f10.4)')   'a2                  ', dparam%a2
-   write(istdout,'(a)')
-endif
-
-! ------------------------------------------------------------------------
-!  calculate energy
-! ------------------------------------------------------------------------
-dispersion_energy: if (set%lenergy) then
-   call edisp(mol,ndim,q,dparam,set%g_a,set%g_c, &
-              gweights,refc6,set%lmbd,energy,etwo=etwo,emany=emany)
-endif dispersion_energy
-
-! ------------------------------------------------------------------------
-!  calculate gradient
-! ------------------------------------------------------------------------
-dispersion_gradient: if (set%lgradient) then
-   call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam,set%wf,set%g_a,set%g_c, &
-   &             refc6,set%lmbd,gradient,etmp)
-   if (.not.set%lenergy) energy = etmp
-!   allocate(gr(3,mol%nat),gl(3,mol%nat))
-!   call generic_header(istdout,'numerical gradient',49,10)
-!   do i = 1, mol%nat
-!      do j = 1, 3
-!         ii = 3*(i-1)+j
-!         er = 0.0_wp
-!         el = 0.0_wp
-!         mol%xyz(j,i) = mol%xyz(j,i) + step
-!         call dncoord_d4(mol,covcn,dcovcndr)
-!         call dncoord_erf(mol,cn,dcndr)
-!         call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges, &
-!                               .false.,.false.,.true.)
-!         call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
-!                       set%wf,set%g_a,set%g_c,refc6,set%lmbd,gr,er)
-!         mol%xyz(j,i) = mol%xyz(j,i) - 2*step
-!         call dncoord_d4(mol,covcn,dcovcndr)
-!         call dncoord_erf(mol,cn,dcndr)
-!         call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges, &
-!                               .false.,.false.,.true.)
-!         call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
-!                       set%wf,set%g_a,set%g_c,refc6,set%lmbd,gr,el)
-!         mol%xyz(j,i) = mol%xyz(j,i) + step
-!         gl (j,i) = (er-el)*step2
-!      enddo
-!   enddo
-
-endif dispersion_gradient
-
-! ------------------------------------------------------------------------
-!  calculate hessian
-! ------------------------------------------------------------------------
-dispersion_hessian: if (set%lhessian) then
-   allocate(gr(3,mol%nat),gl(3,mol%nat))
-   do i = 1, mol%nat
-      do j = 1, 3
-         ii = 3*(i-1)+j
-         gr = 0.0_wp
-         gl = 0.0_wp
-         mol%xyz(j,i) = mol%xyz(j,i) + step
-         call dncoord_d4(mol,covcn,dcovcndr)
-         call dncoord_erf(mol,cn,dcndr)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges, &
-                         .false.,.false.,.true.)
-         call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
-                       set%wf,set%g_a,set%g_c,refc6,set%lmbd,gr,er)
-         mol%xyz(j,i) = mol%xyz(j,i) - 2*step
-         call dncoord_d4(mol,covcn,dcovcndr)
-         call dncoord_erf(mol,cn,dcndr)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges, &
-                         .false.,.false.,.true.)
-         call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
-                       set%wf,set%g_a,set%g_c,refc6,set%lmbd,gr,el)
-         mol%xyz(j,i) = mol%xyz(j,i) + step
-         do k = 1, mol%nat
-            do l = 1, 3
-               jj = 3*(k-1) + l
-               hessian(jj,ii) = (gr(l,k)-gl(j,i))*step2
-            enddo
-         enddo
-      enddo
-   enddo
-   deallocate(gr,gl)
-endif dispersion_hessian
+   call d4_calculation(istdout,dopt,mol,dparam,energy,gradient,hessian)
 
 ! ------------------------------------------------------------------------
 !  Output:

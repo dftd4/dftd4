@@ -6,9 +6,11 @@ subroutine raise(mode,message)
    character(len=*),intent(in) :: message !< string containing error description
    select case(mode)
    case('S','s') ! save to message buffer
-      msgid = msgid + 1
-      errorbuffer(msgid) % msg = message
-      errorbuffer(msgid) % len = len(message)
+      if (allocated(errorbuffer)) then
+         call save_warning
+      else
+         call warning
+      endif
    case('F','f') ! flush message buffer
       if (msgid.gt.0) then
          write(output_unit,'(72(''#''))')
@@ -22,11 +24,23 @@ subroutine raise(mode,message)
          call init_errorbuffer
       endif
    case('W','w') ! print warning directly
-      write(output_unit,'(''#WARNING!'',1x,a)') message
+      call warning
    case('E','e')
-      write(output_unit,'(''#ERROR!'',1x,a)')   message
-      call terminate(1)
+      call error
    end select
+contains
+subroutine save_warning
+   msgid = msgid + 1
+   errorbuffer(msgid) % msg = message
+   errorbuffer(msgid) % len = len(message)
+end subroutine save_warning
+subroutine warning
+   write(output_unit,'(''#WARNING!'',1x,a)') message
+end subroutine warning
+subroutine error
+   write(output_unit,'(''#ERROR!'',1x,a)')   message
+   call terminate(1)
+end subroutine error
 end subroutine raise
 
 subroutine terminate(signal)

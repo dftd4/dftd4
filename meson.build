@@ -1,5 +1,8 @@
 # 
-project('dftd4', 'fortran', version : '2.0')
+project('dftd4', 'fortran',
+        version : '2.0',
+        license : 'GPL',
+        meson_version : '>=0.49')
 
 dialect = ''
 bounds = ''
@@ -19,51 +22,80 @@ add_project_arguments(dialect, language : 'fortran')
 add_project_arguments(bounds,  language : 'fortran')
 add_project_arguments(omp,     language : 'fortran')
 
-fsrcs2 = []
-fsrcs2 += 'source/program_dftd.f90'
-fsrcs2 += 'source/printout.f90'
+fsrcs  = []
+fapis  = []
+fmain  = 'source/program_dftd.f90'
+ftest  = 'source/tests_dftd.f90'
+fsrcs += 'source/printout.f90'
 
 # MCTC library
-fsrcs2 += 'source/mctc_global.f90'
-fsrcs2 += 'source/mctc_systools.f90'
-fsrcs2 += 'source/mctc_readin.f90'
-fsrcs2 += 'source/mctc_econv.f90'
-fsrcs2 += 'source/mctc_timings.f90'
-fsrcs2 += 'source/error.f90'
-#srcs2 += 'source/signal.c'
+fsrcs += 'source/mctc_global.f90'
+fsrcs += 'source/mctc_systools.f90'
+fsrcs += 'source/mctc_readin.f90'
+fsrcs += 'source/mctc_econv.f90'
+fsrcs += 'source/mctc_timings.f90'
+fsrcs += 'source/error.f90'
+#srcs += 'source/signal.c'
 
 # class definitions
-fsrcs2 += 'source/class_set.f90'
-fsrcs2 += 'source/class_molecule.f90'
-fsrcs2 += 'source/class_param.f90'
+fsrcs += 'source/class_set.f90'
+fsrcs += 'source/class_molecule.f90'
+fsrcs += 'source/class_param.f90'
 
 # I/O
-fsrcs2 += 'source/argparser.f90'
-fsrcs2 += 'source/geometry_reader.f90'
-fsrcs2 += 'source/disp_output.f90'
+fsrcs += 'source/argparser.f90'
+fsrcs += 'source/geometry_reader.f90'
+fsrcs += 'source/disp_output.f90'
+
+# API and interfaces
+fapis += 'source/d4_calculation.f90'
 
 # charge model
-fsrcs2 += 'source/eeq_model.f90'
+fsrcs += 'source/eeq_model.f90'
 
 # coordination number
-fsrcs2 += 'source/coordination_number.f90'
+fsrcs += 'source/coordination_number.f90'
 
 # dispersion
-fsrcs2 += 'source/dftd4.f90'
+fsrcs += 'source/dftd4.f90'
 #incfil += 'include/param_ref.f'
-fsrcs2 += 'source/dfuncpar.f90'
+fsrcs += 'source/dfuncpar.f90'
 
-sources = fsrcs2
+sources = fsrcs + fapis
 
-lapack_dep  = fc.find_library('lapack',  required : true)
-blas_dep    = fc.find_library('blas',    required : true)
+lapack_dep  = fc.find_library('lapack', required : true )
+blas_dep    = fc.find_library('blas',   required : true )
 pthread_dep = dependency('threads')
 
 dependencies = [lapack_dep, blas_dep, pthread_dep]
 
 incdir = include_directories('include')
 
-executable('dftd4', sources,
-           dependencies : dependencies,
-           include_directories : incdir,
-           link_args : '-fopenmp' )
+# create a static library from all sources
+d4lib_static = static_library(meson.project_name(), sources,
+                 include_directories : incdir, pic : true)
+
+# and link it into an executable
+d4exe = executable(meson.project_name(), fmain,
+                 dependencies : dependencies,
+                 include_directories : incdir,
+                 link_with : d4lib_static,
+                 link_args : '-fopenmp' )
+
+d4tester = executable('d4test', ftest,
+                 dependencies : dependencies,
+                 include_directories : incdir,
+                 link_with : d4lib_static,
+                 link_args : '-fopenmp' )
+
+# some very basic checks to see if the executable reacts at all
+test('print version',d4exe,args : '--version')
+test('print help',   d4exe,args : '--help')
+test('print license',d4exe,args : '--license')
+test('no arguments', d4exe,should_fail : true)
+
+# more specific tests are implemented by the tester binary
+test('EEQ charges',          d4tester,args : '1')
+test('Dispersion properties',d4tester,args : '2')
+test('Dispersion energies',  d4tester,args : '3')
+test('API tests',            d4tester,args : '4')

@@ -12,7 +12,7 @@ module class_param
    private
 
 !> @brief damping parameters for DFT-D
-   type :: dftd_parameter
+   type, bind(C) :: dftd_parameter
       real(wp) :: s6  = -1.0_wp !< scaling of dipole-dipole dispersion
       real(wp) :: s8  = -1.0_wp !< scaling of dipole-quadrupole dispersion
       real(wp) :: s10 =  0.0_wp !< scaling of higher order dispersion
