@@ -2271,4 +2271,362 @@ function lmbd2string(lmbd) result(string)
    end select
 end function lmbd2string
 
+
+! --- PBC
+subroutine pbc_d4(nat,ndim,at,wf,g_a,g_c,covcn,gw,c6abns)
+   use iso_fortran_env, only : wp => real64
+   implicit none
+   integer, intent(in)  :: nat
+   integer, intent(in)  :: ndim
+   integer, intent(in)  :: at(nat)
+   real(wp),intent(in)  :: wf,g_a,g_c
+   real(wp),intent(in)  :: covcn(nat)
+   real(wp),intent(out) :: gw(ndim)
+   real(wp),intent(out) :: c6abns(ndim,ndim)
+
+   integer  :: i,ia,is,icn,ii,iii,j,jj,ja,k,l
+   integer,allocatable :: itbl(:,:)
+   real(wp) :: twf,norm,aiw(23)
+
+   intrinsic :: maxval
+
+   allocate( itbl(7,nat), source = 0 )
+
+   gw = 0._wp
+   c6abns = 0._wp
+
+   k = 0
+   do i = 1, nat
+      do ii = 1, refn(at(i))
+         k = k+1
+         itbl(ii,i) = k
+      enddo
+   enddo
+
+   do i = 1, nat
+      ia = at(i)
+      norm = 0.0_wp
+      do ii = 1, refn(ia)
+         do iii = 1, refc(ii,ia)
+            twf = iii*wf
+            norm = norm + cngw(twf,covcn(i),refcovcn(ii,ia))
+         enddo
+      enddo
+      norm = 1._wp / norm
+      do ii = 1, refn(ia)
+         k = itbl(ii,i)
+         do iii = 1, refc(ii,ia)
+            twf = iii*wf
+            gw(k) = gw(k) + cngw(twf,covcn(i),refcovcn(ii,ia)) * norm
+         enddo
+!    --- okay, if we run out of numerical iso_fortran_env, gw(k) will be NaN.
+!        In case it is NaN, it will not match itself! So we can rescue
+!        this exception. This can only happen for very high CNs.
+         if (gw(k).ne.gw(k)) then
+            if (maxval(refcovcn(:refn(ia),ia)).eq.refcovcn(ii,ia)) then
+               gw(k) = 1.0_wp
+            else
+               gw(k) = 0.0_wp
+            endif
+         endif
+         ! diagonal terms
+         do jj = 1, ii
+            l = itbl(jj,j)
+            aiw = refal(:,ii,ia)*refal(:,jj,ia)
+            c6abns(l,k) = thopi * trapzd(aiw)
+            c6abns(k,l) = c6abns(l,k)
+         enddo
+         ! offdiagonal terms
+         do j = 1, i-1
+            ja = at(j)
+            do jj = 1, refn(ja)
+               l = itbl(jj,j)
+               aiw = refal(:,ii,ia)*refal(:,jj,ja)
+               c6abns(l,k) = thopi * trapzd(aiw)
+               c6abns(k,l) = c6abns(l,k)
+            enddo
+         enddo
+      enddo
+   enddo
+
+end subroutine pbc_d4
+
+! compute D4 gradient under pbc
+subroutine pbc_dispgrad(nat,ndim,at,q,xyz,cn,dcn, &
+      lat,rep,par,wf,g_a,g_c, &
+      c6abns,mbd, &
+      g,eout,dq,aout)
+   use iso_fortran_env, only : wp => real64
+   implicit none
+   integer, intent(in)  :: nat
+   integer, intent(in)  :: ndim
+   integer, intent(in)  :: at(nat)
+   real(wp),intent(in)  :: q(nat)
+   real(wp),intent(in)  :: cn(nat)
+   real(wp),intent(in)  :: dcn(3,nat,nat)
+   real(wp),intent(in)  :: xyz(3,nat)
+   real(wp),intent(in)  :: lat(3,3)
+   integer, intent(in)  :: rep(3)
+   integer              :: tx,ty,tz
+   real(wp)             :: t(3)
+   real(wp)             :: aiw(23)
+   type(dftd_parameter),intent(in) :: par
+   real(wp),intent(in)  :: wf,g_a,g_c
+   real(wp),intent(in)  :: c6abns(ndim,ndim)
+   integer, intent(in)  :: mbd
+   real(wp),intent(inout)        :: g(3,nat)
+   real(wp),intent(out),optional :: eout
+   real(wp),intent(in), optional :: dq(3,nat,nat+1)
+   real(wp),intent(out),optional :: aout(23,nat)
+
+
+   integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
+   integer, allocatable :: itbl(:,:)
+   real(wp) :: iz
+   real(wp) :: qmod,eabc,ed
+   real(wp) :: norm,dnorm
+   real(wp) :: dexpw,expw
+   real(wp) :: twf,tgw,r4r2ij
+   real(wp) :: rij(3),r,r2,r4,r6,r8,R0
+   real(wp) :: oor6,oor8,oor10,door6,door8,door10,cutoff
+   real(wp) :: c8abns,disp,ddisp,x1,x2,x3
+   real(wp) :: c6ii,c6ij,dic6ii,dic6ij,djc6ij,dizii,dizij,djzij
+   real(wp) :: rcovij,expterm,den,dcndr
+
+   real(wp) :: drdx(3),dtmp,gwk,dgwk
+   real(wp),allocatable :: r2ab(:)
+   real(wp),allocatable :: dc6dcn(:)
+   real(wp),allocatable :: zvec(:)
+   real(wp),allocatable :: dzvec(:)
+   real(wp),allocatable :: gw(:)
+   real(wp),allocatable :: dgw(:)
+   real(wp),allocatable :: dc6dq(:)
+   real(wp),allocatable :: dzdq(:)
+   real(wp) :: cn_thr,r_thr,gw_thr
+
+   parameter(cn_thr = 1600.0_wp)
+   parameter( r_thr=5000._wp)
+   parameter(gw_thr=0.000001_wp)
+   real(wp),parameter :: sqrtpi = 1.77245385091_wp
+   real(wp),parameter :: hlfosqrtpi = 0.5_wp/1.77245385091_wp
+   real(wp),parameter :: sf = 0.5_wp
+
+   intrinsic :: present,sum,maxval,exp,abs
+
+   !  print'(" * Allocating local memory")'
+   allocate( dc6dcn(nat),                  &
+      &      r2ab(nat*(nat+1)/2),     &
+      &      zvec(ndim),dzvec(ndim),  &
+      &      gw(ndim),dgw(ndim),dc6dq(nat),dzdq(ndim),  &
+      &      source = 0.0_wp )
+   allocate( itbl(7,nat), source = 0 )
+
+   ed = 0.0_wp
+
+   k = 0
+   do i = 1, nat
+      do ii = 1, refn(at(i))
+         k = k+1
+         itbl(ii,i) = k
+      enddo
+   enddo
+
+   !  print'(" * Entering first OMP section")'
+!$OMP parallel default(none) &
+!$omp private(i,ii,iii,ia,iz,k,norm,dnorm,twf,tgw,dexpw,expw,gwk,dgwk) &
+!$omp shared (nat,at,refn,refc,refcovcn,itbl,refq,wf,cn,g_a,g_c,q) &
+!$omp shared (gw,dgw,zvec,dzvec,dzdq)
+!$omp do
+   do i = 1, nat
+      ia = at(i)
+      iz = zeff(ia)
+      norm  = 0.0_wp
+      dnorm = 0.0_wp
+      do ii=1,refn(ia)
+         do iii = 1, refc(ii,ia)
+            twf = iii*wf
+            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
+            norm  =  norm + tgw
+            dnorm = dnorm + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
+         enddo
+      enddo
+      norm = 1._wp/norm
+      do ii = 1, refn(ia)
+         k = itbl(ii,i)
+         dexpw=0.0_wp
+         expw=0.0_wp
+         do iii = 1, refc(ii,ia)
+            twf = wf*iii
+            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
+            expw  =  expw + tgw
+            dexpw = dexpw + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
+         enddo
+
+         ! save
+         gwk = expw*norm
+         if (gwk.ne.gwk) then
+            if (maxval(refcovcn(:refn(ia),ia)).eq.refcovcn(ii,ia)) then
+               gwk = 1.0_wp
+            else
+               gwk = 0.0_wp
+            endif
+         endif
+         zvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
+         ! NEW: q=0 for ATM
+         gw(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gwk
+
+         dgwk = dexpw*norm-expw*dnorm*norm**2
+         if (dgwk.ne.dgwk) then
+            dgwk = 0.0_wp
+         endif
+         dzvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * dgwk
+         dzdq(k) = dzeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
+         ! NEW: q=0 for ATM
+         dgw(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * dgwk
+      enddo
+   enddo
+!$omp end do
+!$omp end parallel
+
+!$OMP parallel default(none) &
+!$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ij,dic6ii,dic6ij,djc6ij,disp,ddisp,dizii, &
+!$omp         rij,r2,r,r4r2ij,r0,oor6,oor8,oor10,door6,door8,door10,dizij,djzij, &
+!$omp         t,tx,ty,tz,dtmp,drdx)  &
+!$omp shared(nat,at,xyz,refn,itbl,zvec,dzvec,c6abns,par,dzdq,rep,lat) &
+!$omp shared(r2ab) reduction(+:dc6dq,dc6dcn,ed,g)
+!$omp do schedule(dynamic)
+   do i = 1, nat
+      ia = at(i)
+      ! temps
+      c6ij   = 0.0_wp
+      dic6ij = 0.0_wp
+      djc6ij = 0.0_wp
+      dizij  = 0.0_wp
+      djzij  = 0.0_wp
+      ! all refs
+      do ii = 1, refn(ia)
+         k = itbl(ii,i)
+         do jj = 1, refn(ia)
+            l = itbl(jj,i)
+            c6ij   = c6ij   +  zvec(k) *  zvec(l) * c6abns(k,l)
+            dic6ij = dic6ij + dzvec(k) *  zvec(l) * c6abns(k,l)
+            djc6ij = djc6ij +  zvec(k) * dzvec(l) * c6abns(k,l)
+            dizij  = dizij  +  dzdq(k) *  zvec(l) * c6abns(k,l)
+            djzij  = djzij  +  zvec(k) *  dzdq(l) * c6abns(k,l)
+         enddo
+      enddo
+      ! i in primitive cell with i in images
+      r4r2ij = 3*r4r2(ia)*r4r2(ia)
+      r0 = par%a1*sqrt(r4r2ij) + par%a2
+      do tx = -rep(1),rep(1),1
+         do ty = -rep(2),rep(2),1
+            do tz = -rep(3),rep(3),1
+               ! cycle i with i interaction in same cell
+               if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
+               rij = tx*lat(:,1) + ty*lat(:,2) + tz*lat(:,3)                
+               r2  = sum( rij**2 )
+               if (r2.gt.r_thr) cycle
+               r   = sqrt(r2)     
+               oor6 = 1._wp/(r2**3+r0**6)
+               oor8 = 1._wp/(r2**4+r0**8)
+               oor10 = 1._wp/(r2**5+r0**10)
+               door6 = -6*r2**2*r*oor6**2
+               door8 = -8*r2**3*r*oor8**2
+               door10 = -10*r2**4*r*oor10**2
+               disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
+                  + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+               ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
+                  + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
+               ed = ed - c6ij*disp
+               ! save this
+               dc6dq(i)  = dc6dq(i)  + (dizij  + djzij )*disp 
+               dc6dcn(i) = dc6dcn(i) + (dic6ij + djc6ij)*disp
+               drdx = rij/r
+               g(:,i) = g(:,i) - c6ij*ddisp*drdx 
+            enddo ! tz
+         enddo ! ty
+      enddo ! tx
+      ! over all j atoms
+      do j = 1, i-1
+         ja = at(j)
+         ! temps
+         c6ij   = 0.0_wp
+         dic6ij = 0.0_wp
+         djc6ij = 0.0_wp
+         dizij  = 0.0_wp
+         djzij  = 0.0_wp
+         ! all refs
+         do ii = 1, refn(ia)
+            k = itbl(ii,i)
+            do jj = 1, refn(ja)
+               l = itbl(jj,j)
+               c6ij   = c6ij   +  zvec(k) *  zvec(l) * c6abns(k,l)
+               dic6ij = dic6ij + dzvec(k) *  zvec(l) * c6abns(k,l)
+               djc6ij = djc6ij +  zvec(k) * dzvec(l) * c6abns(k,l)
+               dizij  = dizij  +  dzdq(k) *  zvec(l) * c6abns(k,l)
+               djzij  = djzij  +  zvec(k) *  dzdq(l) * c6abns(k,l)
+            enddo
+         enddo
+         r4r2ij = 3*r4r2(ia)*r4r2(ja)
+         r0 = par%a1*sqrt(r4r2ij) + par%a2
+         do tx = -rep(1),rep(1),1
+            do ty = -rep(2),rep(2),1
+               do tz = -rep(3),rep(3),1
+                  ! cycle self interaction
+                  if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+                  t = tx*lat(:,1) + ty*lat(:,2) + tz*lat(:,3)                
+                  rij = xyz(:,i) - xyz(:,j) + t
+                  r2 = sum(rij**2)
+                  if (r2.gt.r_thr) cycle
+                  r = sqrt(r2)
+                  oor6 = 1._wp/(r2**3+r0**6)
+                  oor8 = 1._wp/(r2**4+r0**8)
+                  oor10 = 1._wp/(r2**5+r0**10)
+                  door6 = -6*r2**2*r*oor6**2
+                  door8 = -8*r2**3*r*oor8**2
+                  door10 = -10*r2**4*r*oor10**2        
+                  disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
+                     + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+                  ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
+                     + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10 
+                  ed = ed - c6ij*disp
+                  ! save this
+                  dc6dq(i)  = dc6dq(i)  + dizij  *disp
+                  dc6dq(j)  = dc6dq(j)  + djzij  *disp
+                  dc6dcn(i) = dc6dcn(i) + dic6ij *disp
+                  dc6dcn(j) = dc6dcn(j) + djc6ij *disp
+                  dtmp = c6ij*ddisp
+                  drdx = rij/r
+                  g(:,i) = g(:,i) - dtmp * drdx 
+                  g(:,j) = g(:,j) + dtmp * drdx 
+               enddo ! tz
+            enddo ! ty
+         enddo ! tx        
+      enddo
+   enddo
+!$omp enddo
+!$omp end parallel
+   if(present(dq)) then
+      ! handle dq  :: gradient is exact e-11
+      call dgemv('n',3*nat,nat,-1.0_wp,dq,3*nat,dc6dq,1,1.0_wp,g,1)
+   endif
+
+   ! always handle dCN :: gradient is exact e-11
+   call dgemv('n',3*nat,nat,-1.0_wp,dcn,3*nat,dc6dcn,1,1.0_wp,g,1)
+
+   !  print'(" * Dispersion all done, saving variables")'
+   if (present(eout)) eout = ed + eabc
+
+   if (present(aout)) then
+      aout = 0._wp
+      do i = 1, nat
+         ia = at(i)
+         do ii = 1, refn(ia)
+            aout(:,i) = aout(:,i) + zvec(k) * refal(:,ii,ia)
+         enddo
+      enddo
+   endif
+end subroutine pbc_dispgrad
+
+
 end module dftd4

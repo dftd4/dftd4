@@ -4,34 +4,44 @@ project('dftd4', 'fortran',
         license : 'GPL',
         meson_version : '>=0.49')
 
+doubles = ''
 dialect = ''
 bounds = ''
 fc = meson.get_compiler('fortran')
 if fc.get_id() == 'gcc'
+  #doubles = '-fdefault-real-8'
   dialect = ['-std=f2008']
   bounds = '-fbounds-check'
   omp = '-fopenmp'
 endif
 if fc.get_id() == 'intel'
+  #doubles = '-r8'
   dialect = ['-stand','f08']
   bounds = ['-check','bounds']
   omp = ['-qopenmp','-axAVX']
 endif
 
+#add_project_arguments(doubles, language : 'fortran')
 add_project_arguments(dialect, language : 'fortran')
 add_project_arguments(bounds,  language : 'fortran')
 add_project_arguments(omp,     language : 'fortran')
 
 fsrcs  = []
-fapis  = []
+ftest  = []
 fmain  = 'source/program_dftd.f90'
-ftest  = 'source/tests_dftd.f90'
+ftest += 'tests/tests_dftd.f90'
+ftest += 'tests/assertion.f90'
+ftest += 'tests/geometry_reader.f90'
+ftest += 'tests/eeq_model.f90'
+ftest += 'tests/dftd4.f90'
 fsrcs += 'source/printout.f90'
 
 # MCTC library
 fsrcs += 'source/mctc_global.f90'
 fsrcs += 'source/mctc_systools.f90'
 fsrcs += 'source/mctc_readin.f90'
+fsrcs += 'source/mctc_strings.f90'
+fsrcs += 'source/mctc_constants.f90'
 fsrcs += 'source/mctc_econv.f90'
 fsrcs += 'source/mctc_timings.f90'
 fsrcs += 'source/error.f90'
@@ -41,6 +51,7 @@ fsrcs += 'source/error.f90'
 fsrcs += 'source/class_set.f90'
 fsrcs += 'source/class_molecule.f90'
 fsrcs += 'source/class_param.f90'
+fsrcs += 'source/class_wsc.f90'
 
 # I/O
 fsrcs += 'source/argparser.f90'
@@ -48,7 +59,11 @@ fsrcs += 'source/geometry_reader.f90'
 fsrcs += 'source/disp_output.f90'
 
 # API and interfaces
-fapis += 'source/d4_calculation.f90'
+fsrcs += 'source/d4_calculation.f90'
+
+# periodic boundary conditions
+fsrcs += 'source/pbc_tools.f90'
+fsrcs += 'source/pbc.f90'
 
 # charge model
 fsrcs += 'source/eeq_model.f90'
@@ -61,7 +76,7 @@ fsrcs += 'source/dftd4.f90'
 #incfil += 'include/param_ref.f'
 fsrcs += 'source/dfuncpar.f90'
 
-sources = fsrcs + fapis
+sources = fsrcs
 
 lapack_dep  = fc.find_library('lapack', required : true )
 blas_dep    = fc.find_library('blas',   required : true )
@@ -89,13 +104,22 @@ d4tester = executable('d4test', ftest,
                  link_args : '-fopenmp' )
 
 # some very basic checks to see if the executable reacts at all
-test('print version',d4exe,args : '--version')
-test('print help',   d4exe,args : '--help')
-test('print license',d4exe,args : '--license')
-test('no arguments', d4exe,should_fail : true)
+test('Argparser: print version',d4exe,args : '--version')
+test('Argparser: print help',   d4exe,args : '--help')
+test('Argparser: print license',d4exe,args : '--license')
+test('Argparser: no arguments', d4exe,should_fail : true)
 
 # more specific tests are implemented by the tester binary
-test('EEQ charges',          d4tester,args : '1')
-test('Dispersion properties',d4tester,args : '2')
-test('Dispersion energies',  d4tester,args : '3')
-test('API tests',            d4tester,args : '4')
+test('Geometry Reader: coord 3D',d4tester,args: ['geometry_reader','coord_3d'])
+test('Geometry Reader: coord 2D',d4tester,args: ['geometry_reader','coord_2d'])
+test('Geometry Reader: coord 1D',d4tester,args: ['geometry_reader','coord_1d'])
+test('Geometry Reader: coord 0D',d4tester,args: ['geometry_reader','coord_0d'])
+test('Geometry Reader: Xmol  0D',d4tester,args: ['geometry_reader','xmol_0d'])
+test('Geometry Reader: POSCAR',  d4tester,args: ['geometry_reader','poscar_3d'])
+
+test('EEQ model: water',     d4tester,args: ['eeq_model','water'])
+test('EEQ model: 3D Ewald',  d4tester,args: ['eeq_model','ewald'])
+
+test('Dispersion: properties',d4tester,args: ['dftd4','properties'])
+test('Dispersion: energies',  d4tester,args: ['dftd4','energies'])
+test('Dispersion: API',       d4tester,args: ['dftd4','api'])

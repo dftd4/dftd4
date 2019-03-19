@@ -410,4 +410,150 @@ pure subroutine dncoord_d4(mol,cn,dcn,thr)
 
 end subroutine dncoord_d4
 
+! gradients for sum of periodic error function coordination number
+! using CNi's from the pbc_erfcoord subroutine
+subroutine derfsum(mol,cn,cnp,dcnpdr,beta,thr)
+   use iso_fortran_env, wp => real64
+   use class_molecule
+   use pbc_tools, only : get_realspace_cutoff
+   implicit none
+
+   type(molecule),intent(in) :: mol
+   real(wp),intent(in)  :: cn(mol%nat)
+   real(wp),intent(out) :: cnp(mol%nat)
+   real(wp),intent(out) :: dcnpdr(3,mol%nat,mol%nat)
+   real(wp),intent(in)  :: beta
+   real(wp),intent(in),optional :: thr
+
+   real(wp) :: cn_thr
+   real(wp) :: expterm
+   real(wp) :: gamma
+   real(wp) :: dtmp
+
+   real(wp),parameter :: sqrtpi = 1.77245385091_wp
+
+   integer  :: i,j,tx,ty,tz
+   real(wp) :: rij(3), r, rco, den, rr, r2, t(3)
+   integer  :: rep_cn(3)
+   real(wp) :: dcnpdcn
+   integer  :: cnmax(94)
+   data    cnmax   / & ! used for cnp in solid states
+      & 2,                                                             2, &
+      & 2, 3,                                           4, 5, 5, 3, 2, 2, &
+      & 2, 3,                                           4, 5, 5, 3, 2, 2, &
+      & 2, 3, 5,          7, 7, 7, 7, 7, 7, 5, 5,  3,   4, 5, 5, 3, 2, 2, &
+      & 2, 3, 5,          7, 7, 7, 7, 7, 7, 5, 5,  3,   4, 5, 5, 3, 2, 2, &
+      & 2, 3, 5,14*6,     7, 7, 7, 7, 7, 7, 5, 5,  3,   4, 5, 5, 3, 2, 2, &
+      & 8*0 /
+
+   if (present(thr)) then
+      cn_thr = thr
+   else
+      cn_thr = 1600.0_wp
+   endif
+
+   cnp     = 0.0_wp
+   gamma   = 0.0_wp
+   expterm = 0.0_wp
+   dcnpdcn = 0.0_wp
+   dcnpdr  = 0.0_wp
+
+   call get_realspace_cutoff(mol%lattice,cn_thr,rep_cn)
+
+   do i = 1, mol%nat
+      gamma=cnmax(mol%at(i))
+      cnp(i)=0.5_wp*(&
+         cn(i)*(1+erf(-beta*(cn(i)-gamma))) &
+         + gamma*(1+erf( beta*(cn(i)-gamma))) )
+      expterm=exp(-beta**2*(cn(i)-gamma)**2)
+      dcnpdcn=0.5_wp*(&
+         (2*beta*(gamma-cn(i))*expterm)/sqrtpi&
+         +erf(beta*(gamma-cn(i))) + 1 )
+      do j = 1, i-1 ! loop over j atoms
+         do tx = -rep_cn(1),rep_cn(1),1
+         do ty = -rep_cn(2),rep_cn(2),1
+         do tz = -rep_cn(3),rep_cn(3),1
+            ! avoid self interaction
+            if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+            t = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)
+            rij = mol%xyz(:,j) - mol%xyz(:,i) + t
+            r2  = sum(rij**2)
+            if (r2.gt.cn_thr) cycle
+            r=sqrt(r2)
+            ! covalent distance in bohr
+            rco=rcov(mol%at(j)) + rcov(mol%at(i))
+            dtmp=dcnpdcn*(-kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2))
+            dcnpdr(:,i,i)=-dtmp*rij/r + dcnpdr(:,i,i)
+            dcnpdr(:,j,j)= dtmp*rij/r + dcnpdr(:,j,j)
+            dcnpdr(:,i,j)= dtmp*rij/r + dcnpdr(:,i,j)
+            dcnpdr(:,j,i)=-dtmp*rij/r + dcnpdr(:,j,i)
+         enddo
+         enddo
+         enddo
+      enddo
+   enddo
+
+end subroutine derfsum
+
+! gradients for pbc coordination number with error function
+subroutine pbc_derfcoord(mol,cn,dcn,thr)
+   use iso_fortran_env, wp => real64
+   use class_molecule
+   use pbc_tools, only : get_realspace_cutoff
+
+   implicit none
+
+   type(molecule),intent(in) :: mol
+   real(wp),intent(out) :: cn(mol%nat)
+   real(wp),intent(out) :: dcn(3,mol%nat,mol%nat)
+   real(wp),intent(in),optional :: thr
+   real(wp) :: cn_thr
+
+   integer  :: i,j,tx,ty,tz
+   real(wp) :: rij(3), r, rco, den, rr, r2, t(3)
+   integer  :: rep_cn(3)
+   real(wp) :: tmp,dtmp
+   real(wp),parameter :: sqrtpi = 1.77245385091_wp
+
+   if (present(thr)) then
+      cn_thr = thr
+   else
+      cn_thr = 1600.0_wp
+   endif
+
+   call get_realspace_cutoff(mol%lattice,cn_thr,rep_cn)
+
+   cn = 0.0_wp
+
+   do i = 1, mol%nat
+      do j = 1, i-1 ! loop over all atoms for PBC case
+         do tx = -rep_cn(1),rep_cn(1)
+         do ty = -rep_cn(2),rep_cn(2)
+         do tz = -rep_cn(3),rep_cn(3)
+            ! avoid self interaction
+            if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+            t = [tx,ty,tz]
+            rij = mol%xyz(:,j) - mol%xyz(:,i) + matmul(mol%lattice,t)
+            r2  = sum(rij**2)
+            if (r2.gt.cn_thr) cycle
+            r=sqrt(r2)
+!           covalent distance in bohr
+            rco=rcov(mol%at(j)) + rcov(mol%at(i))
+            tmp=0.5_wp*(1.0_wp+erf(-kn*(r-rco)/rco))
+            dtmp = -kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+            cn(i)=cn(i) + tmp
+            cn(j)=cn(j) + tmp
+            dcn(:,i,i)=-dtmp*rij/r + dcn(:,i,i)
+            dcn(:,j,j)= dtmp*rij/r + dcn(:,j,j)
+            dcn(:,i,j)=-dtmp*rij/r + dcn(:,i,j)
+            dcn(:,j,i)= dtmp*rij/r + dcn(:,j,i)
+         enddo
+         enddo
+         enddo
+      enddo
+   enddo
+
+end subroutine pbc_derfcoord
+
+
 end module coordination_number

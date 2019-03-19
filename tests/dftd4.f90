@@ -1,150 +1,8 @@
-program dftd_tester
-   use iso_fortran_env, istdout => output_unit, kdp => real64
-!$ use omp_lib
-! ------------------------------------------------------------------------
-!  general purpose library
-! ------------------------------------------------------------------------
-   use mctc_global
-   use mctc_timings
-   use mctc_systools
-   use mctc_econv
-   use mctc_readin
-
-! ------------------------------------------------------------------------
-!  class definitions
-! ------------------------------------------------------------------------
+!> @brief test calculation of dispersion related properties
+subroutine test_dftd4_properties
+   use iso_fortran_env, wp => real64
+   use assertion
    use class_molecule
-   use class_param
-   use class_set
-
-   implicit none
-
-! ------------------------------------------------------------------------
-!  local variables
-! ------------------------------------------------------------------------
-   integer  :: testid
-   integer  :: idum,nargs
-   character(len=:),allocatable :: arg
-
-!! ------------------------------------------------------------------------
-!!  signal processing
-!! ------------------------------------------------------------------------
-!   external :: wSIGTERM
-!   external :: wSIGINT
-!!  here two important signal handlers are installed, it seems that
-!!  FORTRAN by itself cannot handle signals in the way I expected it
-!!  to do, but this will force it to die when I hit CTRL^C.
-!   call signal(2,wSIGINT)
-!   call signal(15,wSIGTERM)
-
-! ------------------------------------------------------------------------
-!  general setup
-! ------------------------------------------------------------------------
-!  initialize the timing system
-   call start_timing_run
-   call init_timing(10,verb=.true.) ! verbosity allows printing of cputime
-   call start_timing(1)
-
-!  initialize the messagebuffer for the error handler
-   call init_errorbuffer
-
-!  set this for mctc_global
-   name = 'test'
-
-   nargs = command_argument_count()
-   if (nargs.eq.0) then
-      call raise('E',"Please give the tester a test to run!")
-   endif
-
-   call rdarg(1,arg)
-   if (get_value(arg,idum)) then
-      testid = idum
-   else
-      call raise('E',"Please give the tester a valid test number!")
-   endif
-
-
-   select case(testid)
-   case default; stop 77 ! test not available
-   case(1);      call test_1
-   case(2);      call test_2
-   case(3);      call test_3
-   case(4);      call test_4
-   end select
-
-   ! falling through the tester is always an error
-   call terminate(1)
-
-contains
-
-subroutine test_1
-   use coordination_number
-   use eeq_model
-   implicit none
-   type(molecule)       :: mol
-   type(chrg_parameter) :: chrgeq
-
-   real(wp),parameter :: thr = 1.0e-10_wp
-   integer, parameter :: nat = 3
-   integer, parameter :: at(nat) = [8,1,1]
-   real(wp),parameter :: xyz(3,nat) = reshape(&
-      [ 0.00000000000000_wp,  0.00000000000000_wp, -0.73578586109551_wp, &
-      & 1.44183152868459_wp,  0.00000000000000_wp,  0.36789293054775_wp, &
-      &-1.44183152868459_wp,  0.00000000000000_wp,  0.36789293054775_wp  &
-      & ],shape(xyz))
-
-   real(wp) :: es
-   real(wp),allocatable :: cn(:),dcndr(:,:,:)
-   real(wp),allocatable :: q(:),dqdr(:,:,:),ges(:,:)
-
-   allocate( cn(nat),dcndr(3,nat,nat),q(nat),dqdr(3,nat,nat+1),ges(3,nat) )
-   es  = 0.0_wp
-   ges = 0.0_wp
-
-   call mol%allocate(nat,.false.)
-   mol%at  = at
-   mol%xyz = xyz
-   mol%chrg = 0.0_wp
-   
-   call dncoord_erf(mol,cn,dcndr)
-   ! test for correct CN and correct symmetry in CN
-   call assert_close(cn(1),1.9895544818182_wp,thr)
-   call assert_close(cn(2),cn(3),             thr)
-   call assert_close(cn(1),cn(2)+cn(3),       thr)
-
-   ! test CN derivative, correct summation of diagonals
-   call assert_close(dcndr(3,1,1), 0.80973220519637E-01_wp,thr)
-   call assert_close(dcndr(1,2,1), 0.52891177763104E-01_wp,thr)
-   call assert_close(dcndr(3,1,3),-0.40486610259818E-01_wp,thr)
-
-   call new_charge_model_2019(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges,.false.,.true.,.true.)
-
-   ! test electrostatic energy
-   call assert_close(es,-0.64308088326667E-01_wp,thr)
-
-   ! test molecular gradient of ES, also check symmetry
-   call assert_close(ges(3,1),-0.44053031985285E-01_wp,thr)
-   call assert_close(ges(3,2),ges(3,3),                thr)
-   call assert_close(ges(1,2), 0.18102071036002E-01_wp,thr)
-
-   ! test for charge constraint
-   call assert_close(sum(q),0.0_wp,            thr)
-   call assert_close(q(1),-0.59582744708873_wp,thr)
-
-   ! test derivative of partial charges
-   call assert_close(dqdr(3,1,1),-0.41466763854730E+00_wp,thr)
-   call assert_close(dqdr(1,2,1), 0.17196993180581E+00_wp,thr)
-   call assert_close(dqdr(1,3,2), 0.18631992989121E-01_wp,thr)
-   call assert_close(dqdr(2,1,3), 0.00000000000000E+00_wp,thr)
-
-   call mol%deallocate
-
-   ! done: everythings fine
-   call terminate(0)
-end subroutine test_1
-
-subroutine test_2
    use dftd4
    implicit none
    type(molecule)       :: mol
@@ -212,9 +70,14 @@ subroutine test_2
 
    ! done: everythings fine
    call terminate(0)
-end subroutine test_2
+end subroutine test_dftd4_properties
 
-subroutine test_3
+!> @brief test calculation of dispersion energies
+subroutine test_dftd4_energies
+   use iso_fortran_env, wp => real64
+   use assertion
+   use class_molecule
+   use class_param
    use dftd4
    implicit none
    type(molecule)       :: mol
@@ -298,9 +161,15 @@ subroutine test_3
 
    ! done: everythings fine
    call terminate(0)
-end subroutine test_3
+end subroutine test_dftd4_energies
 
-subroutine test_4
+!> @brief test the general wrapper for DFT-D4 calculations
+subroutine test_dftd4_api
+   use iso_fortran_env, wp => real64, istdout => output_unit
+   use assertion
+   use class_molecule
+   use class_set
+   use class_param
    use dftd4
    implicit none
    type(molecule)       :: mol
@@ -360,30 +229,5 @@ subroutine test_4
 
    ! done: everythings fine
    call terminate(0)
-end subroutine test_4
+end subroutine test_dftd4_api
 
-subroutine assert_eq(val1,val2)
-   use iso_fortran_env, istderr => error_unit
-   integer,intent(in) :: val1,val2
-
-   if (val1 /= val2) then
-      write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
-         val1,val2
-      call terminate(1)
-   endif
-end subroutine assert_eq
-
-subroutine assert_close(val1,val2,thr)
-   use iso_fortran_env, istderr => error_unit
-   real(wp),intent(in) :: val1,val2,thr
-   real(wp) :: diff
-
-   diff = val1 - val2
-   if (abs(diff) > thr) then
-      write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
-         val1,val2
-      call terminate(1)
-   endif
-end subroutine assert_close
-
-end program dftd_tester

@@ -173,3 +173,80 @@ write(iunit,'('//dum2//'x,a)') trim(outstring)
 write(iunit,'('//dum2//'x,1x,'//dum1//'("-"),1x)')
 end subroutine generic_header
 
+subroutine print_pbcsum(iunit,mol)
+   use iso_fortran_env, wp => real64
+   use mctc_constants
+   use mctc_econv
+   use class_molecule
+   implicit none
+   integer, intent(in)  :: iunit
+   type(molecule),intent(in) :: mol
+
+   integer  :: i
+   real(wp) :: conv
+
+   conv = autoaa
+
+   call generic_header(iunit,"Geometry Summary",49,10)
+   write(iunit,'(a)')
+
+   ! atomic coordinates
+   write(iunit,'(1x,"*",1x,i0,1x,a)') mol%nat,"atoms in unit cell"
+   write(iunit,'(a)')
+   write(iunit,'(5x,"#",3x,"Z",3x,32x,"position/Å",8x,"charge")')
+   do i = 1, mol%nat
+      write(iunit,'(i6,1x,i3,1x,a2)',advance='no') i,mol%at(i),mol%sym(i)
+      write(iunit,'(3f14.7)',advance='no') mol%xyz(:,i)*conv
+      write(iunit,'(f14.7)') mol%z(i)
+   enddo
+   write(iunit,'(a)')
+
+   ! periodicity
+   write(iunit,'(1x,"*",1x,i0,a)') mol%npbc,"D periodic system"
+   write(iunit,'(a)')
+
+   if (mol%npbc > 0) then
+      ! cell parameters
+      write(iunit,'(1x,"*",1x,a)') "cell parameter"
+      write(iunit,'(a)')
+      write(iunit,'(a12,2a15,2x,3a11)') &
+         "|a|/Å", "|b|/Å", "|c|/Å", "α/°", "β/°", "γ/°"
+      write(iunit,'(f13.7,2f14.7,1x,3f9.3)') &
+         mol%cellpar(:3)*conv,mol%cellpar(4:)*180.0_wp/pi
+      write(iunit,'(a)')
+
+      ! direct lattice (transformation abc -> xyz)
+      write(iunit,'(1x,"*",1x,a)') "direct lattice/Å"
+      write(iunit,'(a)')
+      write(iunit,'(12x,a,3f14.7)') "a",mol%lattice(:,1)*conv
+      write(iunit,'(12x,a,3f14.7)') "b",mol%lattice(:,2)*conv
+      write(iunit,'(12x,a,3f14.7)') "c",mol%lattice(:,3)*conv
+      write(iunit,'(a)')
+
+      ! reciprocal lattice
+      write(iunit,'(1x,"*",1x,a)') "reciprocal lattice/Å⁻¹"
+      write(iunit,'(a)')
+      write(iunit,'(11x,a,3f14.7)') "a*",mol%rec_lat(:,1)/conv
+      write(iunit,'(11x,a,3f14.7)') "b*",mol%rec_lat(:,2)/conv
+      write(iunit,'(11x,a,3f14.7)') "c*",mol%rec_lat(:,3)/conv
+      write(iunit,'(a)')
+
+      ! geometry in fractional coordinates
+      write(iunit,'(1x,"*",1x,a)') "geometry in fractional coordinates"
+      write(iunit,'(a)')
+      write(iunit,'(5x,"#",3x,"Z",3x,20x,"fractional coordinates")')
+      do i = 1, mol%nat
+         write(iunit,'(i6,1x,i3,1x,a2)',advance='no') i,mol%at(i),mol%sym(i)
+         write(iunit,'(3f14.7)',advance='no') mol%abc(:,i)
+         write(iunit,'(a)')
+      enddo
+      write(iunit,'(a)')
+
+      ! volume of unit cell
+      write(iunit,'(1x,"*",1x,a,1x,"=",f14.7)') "volume of direct unit cell/Å³", &
+         mol%volume*conv**3
+      write(iunit,'(a)')
+   endif
+
+end subroutine print_pbcsum
+

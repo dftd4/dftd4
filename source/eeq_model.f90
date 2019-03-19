@@ -226,9 +226,10 @@ end subroutine print_chrgeq
 !  Implemented by SAW in 2018, see focusing lab course report for details.
 ! ========================================================================
 subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
-                            lverbose,lgrad,lcpq)
+                      lverbose,lgrad,lcpq)
    use iso_fortran_env, wp => real64, istdout => output_unit
    use class_molecule
+   use coordination_number
    implicit none
 
 ! ------------------------------------------------------------------------
@@ -262,12 +263,23 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 ! ------------------------------------------------------------------------
 !  local variables
 ! ------------------------------------------------------------------------
-   integer  :: i,j,k,l,n
+   integer  :: i,j,k,l
    real(wp) :: r,rij(3),r2
    real(wp) :: gamij,gamij2
    real(wp) :: arg,tmp,dtmp
    real(wp) :: lambda
    real(wp) :: es
+
+!! ------------------------------------------------------------------------
+!  for periodic case
+!! ------------------------------------------------------------------------
+   integer  :: wscAt
+   real(wp) :: gamii,riw(3),dAtmp(3)
+   real(wp) :: cf ! convergence factor
+   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
+   integer, parameter :: ewaldCutD(3) = [2,2,2]
+   integer, parameter :: ewaldCutR(3) = [2,2,2]
+
 
 ! ------------------------------------------------------------------------
 !  scratch variables
@@ -276,6 +288,8 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    real(wp),allocatable :: atmp(:,:)
    real(wp),allocatable :: Xfac(:)
    real(wp),allocatable :: Afac(:,:)
+   real(wp),allocatable :: cnp(:)
+   real(wp),allocatable :: dcnpdr(:,:,:)
 
 ! ------------------------------------------------------------------------
 !  Lapack work variables
@@ -286,16 +300,24 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    integer  :: lwork
    integer  :: info
    real(wp) :: test(1)
+   
+   associate( n => mol%nat, at => mol%at, xyz => mol%xyz, chrg => mol%chrg, &
+      &       wsc => mol%wsc )
+
+   ! quick return if possible
+   if (n == 1) then
+      q = chrg
+      return
+   endif
 
 ! ------------------------------------------------------------------------
 !  initizialization
 ! ------------------------------------------------------------------------
-   n    = mol%nat
    m    = n+1
    q    = 0.0_wp
    dqdr = 0.0_wp
    allocate( ipiv(m), source = 0 )
-   allocate( Amat(m,m), Xvec(m), Xfac(m), source = 0.0_wp )
+   allocate( Amat(m,m), Xvec(m), Xfac(m), cnp(n), dcnpdr(3,n,n), source = 0.0_wp )
 
 ! ------------------------------------------------------------------------
 !  set up the A matrix and X vector
@@ -308,9 +330,17 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 ! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "Setup of the A matrix and the RHS X vector"
+
+   if (mol%npbc > 0) then
+      call derfsum(mol,cn,cnp,dcnpdr,7.5_wp,900.0_wp)
+   else
+      cnp = cn
+      dcnpdr = dcndr
+   endif
+
 !  prepare some arrays
 !$omp parallel default(none) &
-!$omp shared(n,cn,chrgeq) &
+!$omp shared(cn,chrgeq) &
 !$omp private(i,tmp) &
 !$omp shared(Xvec,Xfac)
 !$omp do schedule(dynamic)
@@ -322,8 +352,44 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 !$omp enddo
 !$omp endparallel
 
+   if (mol%npbc > 0) then
+   cf = sqrtpi/mol%volume**(1.0_wp/3.0_wp)
+   ! build Ewald matrix
 !$omp parallel default(none) &
-!$omp shared(n,mol,chrgeq) &
+!$omp private(i,j,wscAt,riw,gamii,gamij) &
+!$omp shared(mol,chrgeq,cf) &
+!$omp reduction(+:Amat)
+!$omp do schedule(dynamic)
+   do i = 1, n
+      gamii = 1.0/sqrt(chrgeq%alpha(i)+chrgeq%alpha(i))
+      riw = xyz(:,i) - xyz(:,i)
+      Amat(i,i) = chrgeq%gam(i) + sqrt2pi/sqrt(chrgeq%alpha(i)) &
+         ! reciprocal for 0th atom
+         + eeq_ewald_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf) &
+         ! direct for 0th atom
+         + eeq_ewald_3d_dir(riw,ewaldCutD,mol%lattice,gamii,cf) &
+         ! neutralizing background contribution
+         - pi/mol%volume/cf**2
+      do j = 1, n
+         if(wsc%at(j,i).eq.0) cycle
+         gamij = 1.0_wp/sqrt(chrgeq%alpha(i)+chrgeq%alpha(j))
+         do wscAt = 1, wsc%itbl(j,i)
+            riw   = xyz(:,i) - wsc%xyz(:,wscAt,j,i)
+            Amat(i,j) = Amat(i,j) + wsc%w(j,i) * ( &
+               ! reciprocal lattice sums
+               + eeq_ewald_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf) &
+               ! direct lattice sums
+               + eeq_ewald_3d_dir(riw,ewaldCutD,mol%lattice,gamij,cf) &
+               ! neutralizing background contribution
+               - pi/mol%volume/cf**2 )
+         end do
+      end do
+   end do
+!$omp enddo
+!$omp endparallel
+   else
+!$omp parallel default(none) &
+!$omp shared(mol,chrgeq) &
 !$omp private(i,j,r,gamij) &
 !$omp shared(Xvec,Xfac,Amat)
 !$omp do schedule(dynamic)
@@ -340,6 +406,7 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    enddo
 !$omp enddo
 !$omp endparallel
+   endif
 
 ! ------------------------------------------------------------------------
 !  solve the linear equations to obtain partial charges
@@ -401,12 +468,48 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 !  dE/dR = (½∂A/∂R·q - ∂X/∂R)·q
 !  ∂Aij/∂Rj = ∂Aij/∂Ri
 ! ------------------------------------------------------------------------
+do_molecular_gradient: if (lgrad .or. lcpq) then
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "molecular gradient calculation"
    allocate( dAmat(3,n,m), dXvec(3,n,m), Afac(3,n), source = 0.0_wp )
    !allocate( dAmat(3,n,m), Afac(3,n), source = 0.0_wp )
+   if (mol%npbc > 0) then
 !$omp parallel default(none) &
-!$omp shared(n,mol,dcndr,Amat,Xfac,Xtmp,chrgeq) &
+!$omp shared(mol,chrgeq,dcnpdr,Xfac,Xtmp,cf) &
+!$omp private(i,j,wscAt,riw,gamij,dAtmp) &
+!$omp shared(dXvec) &
+!$omp reduction(+:Afac,dAmat)
+!$omp do schedule(dynamic)
+    do i = 1, n
+       dXvec(:,i,i) = +dcnpdr(:,i,i)*Xfac(i)
+       do j = 1, i-1
+          dXvec(:,j,i) = +dcnpdr(:,i,j)*Xfac(i)
+          dXvec(:,i,j) = +dcnpdr(:,j,i)*Xfac(j)
+          if(wsc%at(j,i).eq.0) cycle
+          ! over WSC partner
+          gamij = 1.0_wp/sqrt(chrgeq%alpha(i) + chrgeq%alpha(j))
+          do wscAt = 1, wsc%itbl(j,i)
+             riw = xyz(:,i) - wsc%xyz(:,wscAt,j,i)
+             dAtmp = wsc%w(j,i) &
+                * eeq_ewald_dx_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf)
+             dAmat(:,i,j) = dAmat(:,i,j) - dAtmp(:)*Xtmp(i)
+             dAmat(:,j,i) = dAmat(:,j,i) + dAtmp(:)*Xtmp(j)
+             Afac(:,i)    =  Afac(:,i)   - dAtmp(:)*Xtmp(j)
+             Afac(:,j)    =  Afac(:,j)   + dAtmp(:)*Xtmp(i)
+             dAtmp = wsc%w(j,i) &
+                * eeq_ewald_dx_3d_dir(riw,ewaldCutD,mol%lattice,gamij,cf)
+             dAmat(:,i,j) = dAmat(:,i,j) + dAtmp(:)*Xtmp(i)
+             dAmat(:,j,i) = dAmat(:,j,i) - dAtmp(:)*Xtmp(j)
+             Afac(:,i)    =  Afac(:,i)   + dAtmp(:)*Xtmp(j)
+             Afac(:,j)    =  Afac(:,j)   - dAtmp(:)*Xtmp(i)
+          enddo  ! k WSC partner
+       enddo     ! j
+    enddo
+!$omp enddo
+!$omp endparallel
+   else
+!$omp parallel default(none) &
+!$omp shared(mol,dcndr,Amat,Xfac,Xtmp,chrgeq) &
 !$omp private(i,j,rij,r2,gamij,arg,dtmp) &
 !$omp shared(dXvec,dAmat) &
 !$omp reduction(+:Afac)
@@ -431,8 +534,13 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    enddo
 !$omp enddo
 !$omp endparallel
+   endif
+endif do_molecular_gradient
+
+   if (lgrad) then
    call dgemv('n',3*n,m,+1.0_wp,dAmat,3*n,Xtmp,1,1.0_wp,gradient,1)
    call dgemv('n',3*n,m,-1.0_wp,dXvec,3*n,Xtmp,1,1.0_wp,gradient,1)
+   endif
 
 ! ------------------------------------------------------------------------
 !  invert the A matrix using a Bunch-Kaufman factorization
@@ -487,6 +595,8 @@ do_partial_charge_derivative: if (lcpq) then
 
 endif do_partial_charge_derivative
 
+   end associate
+
 ! ------------------------------------------------------------------------
 !  Clean up
 ! ------------------------------------------------------------------------
@@ -502,5 +612,132 @@ endif do_partial_charge_derivative
    if (allocated(ipiv))  deallocate(ipiv)
 
 end subroutine eeq_chrgeq
+
+pure function eeq_ewald_3d_dir(riw,rep,dlat,gamij,cf) result(Amat)
+   use iso_fortran_env, wp => real64
+   use mctc_constants
+   implicit none
+   real(wp),intent(in) :: riw(3)    !< distance from i to WSC atom
+   integer, intent(in) :: rep(3)    !< images to consider
+   real(wp),intent(in) :: dlat(3,3) !< direct lattice
+   real(wp),intent(in) :: gamij     !< interaction radius
+   real(wp),intent(in) :: cf        !< convergence factor
+   real(wp) :: Amat                 !< element of interaction matrix
+   real(wp),parameter :: eps = 1.0e-9_wp
+   integer  :: dx,dy,dz
+   real(wp) :: distiw,rij(3)
+   real(wp) :: t(3)
+   Amat = 0.0_wp
+   do dx= -rep(1),rep(1)
+      do dy= -rep(2),rep(2)
+         do dz= -rep(3),rep(3)
+            t = [dx,dy,dz]
+            rij = riw + matmul(dlat,t)
+            distiw = norm2(rij)
+            ! self-interaction correction
+            if(distiw < eps) then
+               Amat = Amat - cf/sqrtpi
+            else
+               Amat = Amat - erf(   cf*distiw)/distiw &
+                  &        + erf(gamij*distiw)/distiw
+            end if
+         end do
+      end do
+   end do
+end function eeq_ewald_3d_dir
+
+pure function eeq_ewald_dx_3d_dir(riw,rep,dlat,gamij,cf) result(dAmat)
+   use iso_fortran_env, wp => real64
+   use mctc_constants
+   implicit none
+   real(wp),intent(in) :: riw(3)    !< distance from i to WSC atom
+   integer, intent(in) :: rep(3)    !< images to consider
+   real(wp),intent(in) :: dlat(3,3) !< direct lattice
+   real(wp),intent(in) :: gamij     !< interaction radius
+   real(wp),intent(in) :: cf        !< convergence factor
+   real(wp) :: dAmat(3)             !< element of interaction matrix
+   real(wp),parameter :: eps = 1.0e-9_wp
+   integer  :: dx,dy,dz
+   real(wp) :: distiw,rij(3),arga,argb
+   real(wp) :: t(3),dtmp
+   dAmat = 0.0_wp
+   do dx = -rep(1),rep(1)
+      do dy = -rep(2),rep(2)
+         do dz = -rep(3),rep(3)
+            ! real contributions
+            t = [dx,dy,dz]
+            rij = riw + matmul(dlat,t)
+            distiw = norm2(rij)
+            if(distiw < eps) cycle
+            arga = cf**2   *distiw**2
+            argb = gamij**2*distiw**2
+            dtmp = - 2*cf*exp(-arga)/(sqrtpi*distiw**2) &
+               &   + erf(cf*distiw)/(distiw**3)           &
+               &   + 2*gamij*exp(-argb)/(sqrtpi*distiw**2) &
+               &   - erf(gamij*distiw)/(distiw**3)
+            dAmat = dAmat + rij*dtmp
+         enddo ! dz
+      enddo ! dy
+   enddo ! dx
+
+end function eeq_ewald_dx_3d_dir
+
+pure function eeq_ewald_3d_rec(riw,rep,rlat,vol,cf) result(Amat)
+   use iso_fortran_env, wp => real64
+   use mctc_constants
+   implicit none
+   real(wp),intent(in) :: riw(3)    !< distance from i to WSC atom
+   integer, intent(in) :: rep(3)    !< images to consider
+   real(wp),intent(in) :: rlat(3,3) !< reciprocal lattice
+   real(wp),intent(in) :: vol       !< direct cell volume
+   real(wp),intent(in) :: cf        !< convergence factor
+   real(wp) :: Amat                 !< element of interaction matrix
+   integer  :: dx,dy,dz
+   real(wp) :: rik2,rik(3)
+   real(wp) :: t(3)
+   Amat = 0.0_wp
+   do dx = -rep(1),rep(1)
+      do dy = -rep(2),rep(2)
+         do dz = -rep(3),rep(3)
+            if (dx==0 .and. dy==0 .and. dz==0) cycle
+            t = [dx,dy,dz]
+            rik = matmul(rlat,t)
+            rik2 = dot_product(rik,rik)
+            Amat=Amat + cos(dot_product(rik,riw) ) * 4.0_wp*pi/vol &
+                        * exp(-rik2/(4.0_wp*cf**2))/rik2
+         end do
+      end do
+   end do
+end function eeq_ewald_3d_rec
+
+pure function eeq_ewald_dx_3d_rec(riw,rep,rlat,vol,cf) result(dAmat)
+   use iso_fortran_env, wp => real64
+   use mctc_constants
+   implicit none
+   real(wp),intent(in) :: riw(3)    !< distance from i to WSC atom
+   integer, intent(in) :: rep(3)    !< images to consider
+   real(wp),intent(in) :: rlat(3,3) !< reciprocal lattice
+   real(wp),intent(in) :: vol       !< direct cell volume
+   real(wp),intent(in) :: cf        !< convergence factor
+   real(wp) :: dAmat(3)             !< element of interaction matrix
+   integer  :: dx,dy,dz
+   real(wp) :: rik2,rik(3)
+   real(wp) :: t(3),dtmp
+   dAmat = 0.0_wp
+   do dx = -rep(1),rep(1)
+      do dy = -rep(2),rep(2)
+         do dz = -rep(3),rep(3)
+            if (dx==0 .and. dy==0 .and. dz==0) cycle
+            t = [dx,dy,dz]
+            rik = matmul(rlat,t)
+            rik2 = dot_product(rik,rik)
+            dtmp = sin(dot_product(rik,riw)) &
+               &   * exp(-rik2/(4.0_wp*cf**2))/rik2 &
+               &   * 4.0_wp*pi/vol
+            dAmat = dAmat + rik*dtmp
+         end do
+      end do
+   end do
+end function eeq_ewald_dx_3d_rec
 
 end module eeq_model
