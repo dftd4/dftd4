@@ -34,6 +34,7 @@ ftest += 'tests/assertion.f90'
 ftest += 'tests/geometry_reader.f90'
 ftest += 'tests/eeq_model.f90'
 ftest += 'tests/dftd4.f90'
+ftest += 'tests/pbc_tools.f90'
 fsrcs += 'source/printout.f90'
 
 # MCTC library
@@ -117,9 +118,13 @@ test('Geometry Reader: coord 0D',d4tester,args: ['geometry_reader','coord_0d'])
 test('Geometry Reader: Xmol  0D',d4tester,args: ['geometry_reader','xmol_0d'])
 test('Geometry Reader: POSCAR',  d4tester,args: ['geometry_reader','poscar_3d'])
 
+test('PBC tools: convert',   d4tester,args: ['pbc_tools','convert'])
+test('PBC tools: cutoff',    d4tester,args: ['pbc_tools','cutoff'])
+
 test('EEQ model: water',     d4tester,args: ['eeq_model','water'])
 test('EEQ model: 3D Ewald',  d4tester,args: ['eeq_model','ewald'])
 
 test('Dispersion: properties',d4tester,args: ['dftd4','properties'])
 test('Dispersion: energies',  d4tester,args: ['dftd4','energies'])
 test('Dispersion: API',       d4tester,args: ['dftd4','api'])
+test('Dispersion: periodic',  d4tester,args: ['dftd4','periodic'])

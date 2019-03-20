@@ -70,6 +70,7 @@ program dftd_tester
       case('properties'); call test_dftd4_properties
       case('energies');   call test_dftd4_energies
       case('api');        call test_dftd4_api
+      case('periodic');   call test_dftd4_pbc
       end select
    case('geometry_reader')
       select case(sec)
@@ -79,6 +80,11 @@ program dftd_tester
       case('coord_0d');  call test_geometry_reader_file_coord_general_0d
       case('xmol_0d');   call test_geometry_reader_file_xmol_water_0d
       case('poscar_3d'); call test_geometry_reader_file_poscar_sio2_3d
+      end select
+   case('pbc_tools')
+      select case(sec)
+      case('convert'); call test_pbc_tools_convert
+      case('cutoff');  call test_pbc_tools_cutoff
       end select
    end select
 

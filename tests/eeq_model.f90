@@ -1,5 +1,6 @@
 !> @brief test calculation of EEQ charges
 subroutine test_eeq_model_water
+   use iso_fortran_env, wp => real64
    use assertion
    use class_molecule
    use class_param
@@ -70,7 +71,7 @@ subroutine test_eeq_model_water
 end subroutine test_eeq_model_water
 
 subroutine test_eeq_model_ewald
-   use iso_fortran_env, wp => real64, istdout => output_unit
+   use iso_fortran_env, wp => real64
    use assertion
    use class_molecule
    use class_param
@@ -78,33 +79,21 @@ subroutine test_eeq_model_ewald
    use coordination_number
    use pbc_tools
    implicit none
-   real(wp),parameter :: thr = 1.0e-10_wp
-   ! CaF2
-!   integer, parameter :: nat = 3
-!   integer, parameter :: at(nat) = [9,9,20]
-!   real(wp),parameter :: abc(3,nat) = reshape(&
-!      &[0.25_wp, 0.25_wp, 0.25_wp, &
-!      & 0.75_wp, 0.75_wp, 0.75_wp, &
-!      & 0.00_wp, 0.00_wp, 0.00_wp], shape(abc))
-!   real(wp),parameter :: lattice(3,3) = reshape(&
-!      &[5.9598811567890_wp,      2.1071361905157_wp,      3.6496669404404_wp,    &
-!      & 0.0000000000000_wp,      6.3214085715472_wp,      3.6496669404404_wp,    &
-!      & 0.0000000000000_wp,      0.0000000000000_wp,      7.2993338808807_wp],   &
-!      & shape(lattice))
+   real(wp),parameter :: thr = 1.0e-9_wp
    integer, parameter :: nat = 6
    integer, parameter :: at(nat) = [14,14,8,8,8,8]
    real(wp),parameter :: abc(3,nat) = reshape(&
-      &[.095985472469032_wp,     .049722204206931_wp,     0.10160624337938_wp, &
-      & 0.54722204206931_wp,     0.52863628207623_wp,     0.38664208660311_wp, &
-      & 0.29843937068984_wp,     0.39572194413818_wp,     0.20321248675876_wp, &
-      & 0.23364982659922_wp,     0.85647058758674_wp,     0.31884968761485_wp, &
-      & 0.72250232459952_wp,     0.65548544066844_wp,     .056207709103487_wp, &
-      & 0.70514214000043_wp,     0.28321754549582_wp,     0.36424822189074_wp],&
+      &[.095985472469032_wp, .049722204206931_wp, 0.10160624337938_wp, &
+      & 0.54722204206931_wp, 0.52863628207623_wp, 0.38664208660311_wp, &
+      & 0.29843937068984_wp, 0.39572194413818_wp, 0.20321248675876_wp, &
+      & 0.23364982659922_wp, 0.85647058758674_wp, 0.31884968761485_wp, &
+      & 0.72250232459952_wp, 0.65548544066844_wp, .056207709103487_wp, &
+      & 0.70514214000043_wp, 0.28321754549582_wp, 0.36424822189074_wp],&
       & shape(abc))
    real(wp),parameter :: lattice(3,3) = reshape(&
-      &[ 8.7413053236641_wp,      0.0000000000000_wp,      0.0000000000000_wp,   &
-      &  0.0000000000000_wp,      8.7413053236641_wp,      0.0000000000000_wp,   &
-      &  0.0000000000000_wp,      0.0000000000000_wp,      8.7413053236641_wp],  &
+      &[ 8.7413053236641_wp,  0.0000000000000_wp,  0.0000000000000_wp,   &
+      &  0.0000000000000_wp,  8.7413053236641_wp,  0.0000000000000_wp,   &
+      &  0.0000000000000_wp,  0.0000000000000_wp,  8.7413053236641_wp],  &
       & shape(lattice))
    integer, parameter :: wsc_rep(3) = [1,1,1]
 
@@ -138,8 +127,6 @@ subroutine test_eeq_model_ewald
    energy = 0.0_wp
 
    call generate_wsc(mol,mol%wsc,wsc_rep)
-
-   call print_pbcsum(istdout,mol)
 
    call pbc_derfcoord(mol,cn,dcndr,900.0d0)
 

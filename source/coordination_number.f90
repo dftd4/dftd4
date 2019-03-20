@@ -555,5 +555,62 @@ subroutine pbc_derfcoord(mol,cn,dcn,thr)
 
 end subroutine pbc_derfcoord
 
+! same for the pbc case 
+pure subroutine pbc_dncoord_d4(mol,cn,dcn,rep,thr)
+   use class_molecule
+   implicit none
+
+   type(molecule),intent(in) :: mol
+   integer, intent(in)  :: rep(3)
+   integer              :: tx,ty,tz
+   real(wp)             :: t(3)
+   real(wp),intent(out) :: cn(mol%nat)
+   real(wp),intent(out) :: dcn(3,mol%nat,mol%nat)
+   real(wp),intent(in),optional :: thr
+   real(wp) :: cn_thr
+
+   integer  :: i,j
+   real(wp) :: rij(3), r, rco, den, r2, xn, tmp, dtmp
+   real(wp),parameter :: sqrtpi = 1.77245385091_wp
+
+   if (present(thr)) then
+      cn_thr = thr
+   else
+      cn_thr = cnthr
+   endif
+
+   cn  = 0.0_wp
+   dcn = 0.0_wp
+
+   do i=1,mol%nat
+      do j=1,i-1
+         do tx = -rep(1),rep(1)
+            do ty = -rep(2),rep(2)
+               do tz = -rep(3),rep(3)
+                  ! avoid self interaction
+                  if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+                  t = [tx,ty,tz]
+                  rij = mol%xyz(:,j) - mol%xyz(:,i) + matmul(mol%lattice,t)
+                  r2  = sum(rij**2)
+                  if (r2.gt.cn_thr) cycle 
+                  r=sqrt(r2)
+                  ! covalent distance in bohr
+                  rco=rcov(mol%at(j)) + rcov(mol%at(i))
+                  den=k4*exp(-(abs((en(mol%at(i))-en(mol%at(j))))+ k5)**2/k6 )
+                  tmp = den * 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
+                  dtmp = -den*kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+                  cn(i)=cn(i)+tmp
+                  cn(j)=cn(j)+tmp
+                  dcn(:,i,i)=-dtmp*rij/r + dcn(:,i,i)
+                  dcn(:,j,j)= dtmp*rij/r + dcn(:,j,j)
+                  dcn(:,i,j)=-dtmp*rij/r + dcn(:,i,j)
+                  dcn(:,j,i)= dtmp*rij/r + dcn(:,j,i)
+               enddo
+            enddo
+         enddo
+      enddo
+   enddo
+
+end subroutine pbc_dncoord_d4
 
 end module coordination_number
