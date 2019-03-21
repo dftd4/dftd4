@@ -6,11 +6,13 @@
 !! operations can be used to obtain the molecular gradient
 module coordination_number
    use iso_fortran_env, only : wp => real64
+   use mctc_param
    implicit none
 
    real(wp),private,parameter :: cnthr = 1600.0_wp
 
    real(wp),parameter :: k1 = 16.0_wp !< steepness of counting function
+   real(wp),parameter :: k2 = 4.0_wp/3.0_wp
 
    real(wp),parameter :: ka=10.0_wp !< steepness of first counting function
    real(wp),parameter :: kb=20.0_wp !< steepness of second counting function
@@ -25,74 +27,35 @@ module coordination_number
    real(wp),parameter :: ke=0.05_wp
 
    integer,private,parameter :: max_elem = 118
-!  D3 radii
-!   real(wp),parameter :: rcov(max_elem) = (/ &
-!  & 0.80628308, 1.15903197, 3.02356173, 2.36845659, 1.94011865, &
-!  & 1.88972601, 1.78894056, 1.58736983, 1.61256616, 1.68815527, &
-!  & 3.52748848, 3.14954334, 2.84718717, 2.62041997, 2.77159820, &
-!  & 2.57002732, 2.49443835, 2.41884923, 4.43455700, 3.88023730, &
-!  & 3.35111422, 3.07395437, 3.04875805, 2.77159820, 2.69600923, &
-!  & 2.62041997, 2.51963467, 2.49443835, 2.54483100, 2.74640188, &
-!  & 2.82199085, 2.74640188, 2.89757982, 2.77159820, 2.87238349, &
-!  & 2.94797246, 4.76210950, 4.20778980, 3.70386304, 3.50229216, &
-!  & 3.32591790, 3.12434702, 2.89757982, 2.84718717, 2.84718717, &
-!  & 2.72120556, 2.89757982, 3.09915070, 3.22513231, 3.17473967, &
-!  & 3.17473967, 3.09915070, 3.32591790, 3.30072128, 5.26603625, &
-!  & 4.43455700, 4.08180818, 3.70386304, 3.98102289, 3.95582657, &
-!  & 3.93062995, 3.90543362, 3.80464833, 3.82984466, 3.80464833, &
-!  & 3.77945201, 3.75425569, 3.75425569, 3.72905937, 3.85504098, &
-!  & 3.67866672, 3.45189952, 3.30072128, 3.09915070, 2.97316878, &
-!  & 2.92277614, 2.79679452, 2.82199085, 2.84718717, 3.32591790, &
-!  & 3.27552496, 3.27552496, 3.42670319, 3.30072128, 3.47709584, &
-!  & 3.57788113, 5.06446567, 4.56053862, 4.20778980, 3.98102289, &
-!  & 3.82984466, 3.85504098, 3.88023730, 3.90543362 /)
-
 !> @brief covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
 !! 188-197), values for metals decreased by 10 %
-   real(wp),private,parameter :: rad(max_elem) = (/  &
-   & 0.32,0.46, & ! H,He
-   & 1.20,0.94,0.77,0.75,0.71,0.63,0.64,0.67, & ! Li-Ne
-   & 1.40,1.25,1.13,1.04,1.10,1.02,0.99,0.96, & ! Na-Ar
-   & 1.76,1.54, & ! K,Ca
-   &           1.33,1.22,1.21,1.10,1.07,1.04,1.00,0.99,1.01,1.09, & ! Sc-Zn
-   &           1.12,1.09,1.15,1.10,1.14,1.17, & ! Ga-Kr
-   & 1.89,1.67, & ! Rb,Sr
-   &           1.47,1.39,1.32,1.24,1.15,1.13,1.13,1.08,1.15,1.23, & ! Y-Cd
-   &           1.28,1.26,1.26,1.23,1.32,1.31, & ! In-Xe
-   & 2.09,1.76, & ! Cs,Ba
-   &      1.62,1.47,1.58,1.57,1.56,1.55,1.51, & ! La-Eu
-   &      1.52,1.51,1.50,1.49,1.49,1.48,1.53, & ! Gd-Yb
-   &           1.46,1.37,1.31,1.23,1.18,1.16,1.11,1.12,1.13,1.32, & ! Lu-Hg
-   &           1.30,1.30,1.36,1.31,1.38,1.42, & ! Tl-Rn
-   & 2.01,1.81, & ! Fr,Ra
-   &      1.67,1.58,1.52,1.53,1.54,1.55,1.49, & ! Ac-Am
-   &      1.49,1.51,1.51,1.48,1.50,1.56,1.58, & ! Cm-No
-   &           1.45,1.41,1.34,1.29,1.27,1.21,1.16,1.15,1.09,1.22, & ! Lr-Cn
-   &           1.22,1.29,1.46,1.58,1.48,1.41 /) ! Nh-Og
-   real(wp),parameter :: rcov(max_elem) = 4.0_wp/3.0_wp*rad/0.52917726_wp
 
 !> @brief pauling EN's 
    real(wp),parameter :: en(max_elem) = (/ &
-   & 2.20,3.00, & ! H,He
-   & 0.98,1.57,2.04,2.55,3.04,3.44,3.98,4.50, & ! Li-Ne
-   & 0.93,1.31,1.61,1.90,2.19,2.58,3.16,3.50, & ! Na-Ar
-   & 0.82,1.00, & ! K,Ca
-   &           1.36,1.54,1.63,1.66,1.55,1.83,1.88,1.91,1.90,1.65, & ! Sc-Zn
-   &           1.81,2.01,2.18,2.55,2.96,3.00, & ! Ga-Kr
-   & 0.82,0.95, & ! Rb,Sr
-   &           1.22,1.33,1.60,2.16,1.90,2.20,2.28,2.20,1.93,1.69, & ! Y-Cd
-   &           1.78,1.96,2.05,2.10,2.66,2.60, & ! In-Xe
-   & 0.79,0.89, & ! Cs,Ba
-   &      1.10,1.12,1.13,1.14,1.15,1.17,1.18, & ! La-Eu
-   &      1.20,1.21,1.22,1.23,1.24,1.25,1.26, & ! Gd-Yb
-   &           1.27,1.30,1.50,2.36,1.90,2.20,2.20,2.28,2.54,2.00, & ! Lu-Hg
-   &           1.62,2.33,2.02,2.00,2.20,2.20, & ! Tl-Rn
+   & 2.20_wp,3.00_wp, & ! H,He
+   & 0.98_wp,1.57_wp,2.04_wp,2.55_wp,3.04_wp,3.44_wp,3.98_wp,4.50_wp, & ! Li-Ne
+   & 0.93_wp,1.31_wp,1.61_wp,1.90_wp,2.19_wp,2.58_wp,3.16_wp,3.50_wp, & ! Na-Ar
+   & 0.82_wp,1.00_wp, & ! K,Ca
+   &           1.36_wp,1.54_wp,1.63_wp,1.66_wp,1.55_wp, &
+   &           1.83_wp,1.88_wp,1.91_wp,1.90_wp,1.65_wp, & ! Sc-Zn
+   &           1.81_wp,2.01_wp,2.18_wp,2.55_wp,2.96_wp,3.00_wp, & ! Ga-Kr
+   & 0.82_wp,0.95_wp, & ! Rb,Sr
+   &           1.22_wp,1.33_wp,1.60_wp,2.16_wp,1.90_wp, &
+   &           2.20_wp,2.28_wp,2.20_wp,1.93_wp,1.69_wp, & ! Y-Cd
+   &           1.78_wp,1.96_wp,2.05_wp,2.10_wp,2.66_wp,2.60_wp, & ! In-Xe
+   & 0.79_wp,0.89_wp, & ! Cs,Ba
+   &      1.10_wp,1.12_wp,1.13_wp,1.14_wp,1.15_wp,1.17_wp,1.18_wp, & ! La-Eu
+   &      1.20_wp,1.21_wp,1.22_wp,1.23_wp,1.24_wp,1.25_wp,1.26_wp, & ! Gd-Yb
+   &           1.27_wp,1.30_wp,1.50_wp,2.36_wp,1.90_wp, &
+   &           2.20_wp,2.20_wp,2.28_wp,2.54_wp,2.00_wp, & ! Lu-Hg
+   &           1.62_wp,2.33_wp,2.02_wp,2.00_wp,2.20_wp,2.20_wp, & ! Tl-Rn
    ! only dummies below
-   & 1.50,1.50, & ! Fr,Ra
-   &      1.50,1.50,1.50,1.50,1.50,1.50,1.50, & ! Ac-Am
-   &      1.50,1.50,1.50,1.50,1.50,1.50,1.50, & ! Cm-No
-   &           1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50, & ! Rf-Cn
-   &           1.50,1.50,1.50,1.50,1.50,1.50 /) ! Nh-Og
+   & 1.50_wp,1.50_wp, & ! Fr,Ra
+   &      1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Ac-Am
+   &      1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Cm-No
+   &           1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, &
+   &           1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Rf-Cn
+   &           1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp /) ! Nh-Og
 
 
 !  test for PBC case: divergence of GFN2-xTB CN [TODO]
@@ -134,7 +97,7 @@ pure subroutine ncoord_erf(mol,cn,thr)
          if (r2.gt.cn_thr) cycle 
          r=sqrt(r2)
 !        covalent distance in bohr
-         rco=rcov(mol%at(j)) + rcov(mol%at(i))
+         rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
 !        error function has an even better long range behavior
          tmp = 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
          cn(i)=cn(i)+tmp
@@ -184,7 +147,7 @@ pure subroutine dncoord_erf(mol,cn,dcn,thr)
          r2  = sum( rij**2 )
          if (r2.gt.cn_thr) cycle
          r = sqrt(r2)
-         rcovij=(rcov(mol%at(i))+rcov(mol%at(j)))
+         rcovij=k2*(covalent_radius(mol%at(i))+covalent_radius(mol%at(j)))
          tmp = 0.5_wp * (1.0_wp + erf(-kn*(r-rcovij)/rcovij))
          dtmp =-hlfosqrtpi*kn*exp(-kn**2*(r-rcovij)**2/rcovij**2)/rcovij
          cn(i) = cn(i) + tmp
@@ -233,7 +196,7 @@ pure subroutine ncoord_d3(mol,cn,thr)
          if (r2.gt.cn_thr) cycle 
          r=sqrt(r2)
 !        covalent distance in bohr
-         rco=rcov(mol%at(j)) + rcov(mol%at(i))
+         rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
          rr=rco/r
 !        counting function exponential has a better long-range 
 !        behavior than MHGs inverse damping
@@ -284,7 +247,7 @@ pure subroutine dncoord_d3(mol,cn,dcn,thr)
          r2  = sum( rij**2 )
          if (r2.gt.cn_thr) cycle
          r = sqrt(r2)
-         rcovij=(rcov(mol%at(i))+rcov(mol%at(j)))
+         rcovij=k2*(covalent_radius(mol%at(i))+covalent_radius(mol%at(j)))
          expterm=exp(-k1*(rcovij/r-1._wp))
          tmp = 1._wp/(1._wp+expterm)
          dtmp = (-k1*rcovij*expterm)/(r2*((expterm+1._wp)**2))
@@ -334,7 +297,7 @@ pure subroutine ncoord_d4(mol,cn,thr)
          if (r2.gt.cn_thr) cycle 
          r=sqrt(r2)
 !        covalent distance in bohr
-         rco=rcov(mol%at(j)) + rcov(mol%at(i))
+         rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
          rr=rco/r
          den=k4*exp(-(abs((en(mol%at(i))-en(mol%at(j))))+ k5)**2/k6 )
 !        counting function exponential has a better long-range 
@@ -392,7 +355,7 @@ pure subroutine dncoord_d4(mol,cn,dcn,thr)
          r2  = sum( rij**2 )
          if (r2.gt.cn_thr) cycle
          r = sqrt(r2)
-         rcovij=(rcov(ia)+rcov(ja))
+         rcovij=k2*(covalent_radius(ia)+covalent_radius(ja))
          den=k4*exp(-(abs((en(ia)-en(ja)))+ k5)**2/k6 )
          !expterm=exp(-k1*(rcovij/r-1._wp))
          !tmp = den/(1._wp+expterm)
@@ -481,7 +444,7 @@ subroutine derfsum(mol,cn,cnp,dcnpdr,beta,thr)
             if (r2.gt.cn_thr) cycle
             r=sqrt(r2)
             ! covalent distance in bohr
-            rco=rcov(mol%at(j)) + rcov(mol%at(i))
+            rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
             dtmp=dcnpdcn*(-kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2))
             dcnpdr(:,i,i)=-dtmp*rij/r + dcnpdr(:,i,i)
             dcnpdr(:,j,j)= dtmp*rij/r + dcnpdr(:,j,j)
@@ -538,7 +501,7 @@ subroutine pbc_derfcoord(mol,cn,dcn,thr)
             if (r2.gt.cn_thr) cycle
             r=sqrt(r2)
 !           covalent distance in bohr
-            rco=rcov(mol%at(j)) + rcov(mol%at(i))
+            rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
             tmp=0.5_wp*(1.0_wp+erf(-kn*(r-rco)/rco))
             dtmp = -kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
             cn(i)=cn(i) + tmp
@@ -595,7 +558,7 @@ pure subroutine pbc_dncoord_d4(mol,cn,dcn,rep,thr)
                   if (r2.gt.cn_thr) cycle 
                   r=sqrt(r2)
                   ! covalent distance in bohr
-                  rco=rcov(mol%at(j)) + rcov(mol%at(i))
+                  rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
                   den=k4*exp(-(abs((en(mol%at(i))-en(mol%at(j))))+ k5)**2/k6 )
                   tmp = den * 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
                   dtmp = -den*kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)

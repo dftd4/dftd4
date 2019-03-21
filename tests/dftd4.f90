@@ -46,25 +46,25 @@ subroutine test_dftd4_properties
    call d4(mol,ndim,wf,g_a,g_c,covcn,gweights,refc6)
    call mdisp(mol,ndim,q,g_a,g_c,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
 
-   call assert_close(molpol,9.4271529107854_wp,thr)
-   call assert_close(molc6, 44.521545727311_wp,thr)
-   call assert_close(molc8, 798.69639423703_wp,thr)
+   call assert_close(molpol,9.4271529762816_wp,thr)
+   call assert_close(molc6, 44.521546516541_wp,thr)
+   call assert_close(molc8, 798.69642220617_wp,thr)
 
-   call assert_close(aw(1,1),6.7482856960122_wp,thr)
-   call assert_close(aw(4,2),1.1637689328906_wp,thr)
+   call assert_close(aw(1,1),6.7482856791776_wp,thr)
+   call assert_close(aw(4,2),1.1637689932984_wp,thr)
    call assert_close(aw(7,2),aw(7,3),           thr)
 
    call assert_close(c6ab(1,2),c6ab(2,1),         thr)
-   call assert_close(c6ab(1,1),24.900853125836_wp,thr)
-   call assert_close(c6ab(1,3),4.1779697881925_wp,thr)
+   call assert_close(c6ab(1,1),24.900853294042_wp,thr)
+   call assert_close(c6ab(1,3),4.1779699081826_wp,thr)
    call assert_close(c6ab(2,2),c6ab(2,3),         thr)
 
    call assert_close(sum(gweights),3.0_wp,               thr)
-   call assert_close(gweights(2),0.18388886232894E-01_wp,thr)
-   call assert_close(gweights(7),0.21400765336381E-01_wp,thr)
+   call assert_close(gweights(2),0.18388891750767E-01_wp,thr)
+   call assert_close(gweights(7),0.21400765778468E-01_wp,thr)
 
-   call assert_close(refc6(5,1),10.282422024500_wp,thr)
-   call assert_close(refc6(8,6),3.0374149102818_wp,thr)
+   call assert_close(refc6(5,1),10.282421843343_wp,thr)
+   call assert_close(refc6(8,6),3.0374149547985_wp,thr)
 
    call mol%deallocate
 
@@ -213,8 +213,8 @@ subroutine test_dftd4_api
    call d4_calculation(istdout,opt_1,mol,dparam_tpss,energy,gradient,hessian)
    call assert_close(energy,-0.26682682254336E-03_wp,thr)
 
-   call assert_close(hessian(3,1), 7.9334628241320_wp,thr)
-   call assert_close(hessian(4,8),-3.2756224894310_wp,thr)
+   call assert_close(hessian(3,1), 7.9334628253105_wp,thr)
+   call assert_close(hessian(4,8),-3.2756224794964_wp,thr)
    call assert_close(hessian(5,3), 0.0000000000000_wp,thr)
 
    call d4_calculation(istdout,opt_2,mol,dparam_b2plyp,energy,gradient,hessian)
@@ -269,7 +269,9 @@ subroutine test_dftd4_pbc
    integer, parameter :: cn_rep(3)  = [5,5,5]
    type(dftd_parameter),parameter :: dparam_pbe    = dftd_parameter ( &
    &  s6=1.0000_wp, s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp )
+   real(wp),parameter :: step = 1.0e-4_wp, step2 = 0.5_wp/step
 
+   integer              :: i,j
    type(molecule)       :: mol
    integer              :: ndim
    real(wp) :: molpol,molc6,molc8        ! molecular Polarizibility
@@ -279,15 +281,24 @@ subroutine test_dftd4_pbc
    real(wp),allocatable :: aw(:,:)
    type(chrg_parameter) :: chrgeq
    real(wp)             :: energy
+   real(wp)             :: er,el,ees
    real(wp),allocatable :: cn(:)
    real(wp),allocatable :: dcndr(:,:,:)
+   real(wp),allocatable :: covcn(:)
+   real(wp),allocatable :: dcovcndr(:,:,:)
    real(wp),allocatable :: q(:)
+   real(wp),allocatable :: qr(:)
+   real(wp),allocatable :: ql(:)
    real(wp),allocatable :: dqdr(:,:,:)
    real(wp),allocatable :: gradient(:,:)
+   real(wp),allocatable :: ges(:,:)
+   real(wp),allocatable :: numg(:,:)
+   real(wp),allocatable :: numq(:,:,:)
 
 
    allocate( cn(nat), dcndr(3,nat,nat), q(nat), dqdr(3,nat,nat+1), &
-      &      gradient(3,nat), source = 0.0_wp )
+      &      gradient(3,nat), ges(3,nat), numg(3,nat), ql(nat), qr(nat), &
+      &      numq(3,nat,nat), covcn(nat), dcovcndr(3,nat,nat), source = 0.0_wp )
 
    call mol%allocate(nat,.true.)
    mol%at   = at
@@ -300,6 +311,7 @@ subroutine test_dftd4_pbc
    call dlat_to_rlat(mol%lattice,mol%rec_lat)
    call coord_trafo(nat,lattice,abc,mol%xyz)
    call mol%wrap_back
+   call mol%calculate_distances
 
    call generate_wsc(mol,mol%wsc,wsc_rep)
    call d4init(mol,g_a,g_c,refqmode,ndim)
@@ -308,7 +320,7 @@ subroutine test_dftd4_pbc
 
    call print_pbcsum(istdout,mol)
 
-   call pbc_derfcoord(mol,cn,dcndr,900.0d0)
+   call pbc_derfcoord(mol,cn,dcndr,900.0_wp)
    print'(a)',"CN"
    print'(3g21.14)',cn
    print*
@@ -329,12 +341,12 @@ subroutine test_dftd4_pbc
    print'(3g21.14)',dqdr
    print*
 
-   call pbc_dncoord_d4(mol,cn,dcndr,cn_rep,rthr_cn)
+   call pbc_dncoord_d4(mol,covcn,dcovcndr,cn_rep,rthr_cn)
    print'(a)',"covCN"
-   print'(3g21.14)',cn
+   print'(3g21.14)',covcn
    print*
    print'(a)',"dcovCN/dR"
-   print'(3g21.14)',dcndr
+   print'(3g21.14)',dcovcndr
    print*
 
    call d4(mol,ndim,wf,g_a,g_c,cn,gweights,refc6)
@@ -345,25 +357,63 @@ subroutine test_dftd4_pbc
    print'(3g21.14)',refc6
    print*
 
-   call dispgrad(mol,ndim,q,dqdr,cn,dcndr,dparam_pbe,wf,g_a,g_c, &
-      &        refc6,lmbd,gradient,energy)
-   print'(a)',"energy"
-   print'(3g21.14)',energy
-   print*
-   print'(a)',"gradient"
-   print'(3g21.14)',gradient
-   print*
+!   call dispgrad(mol,ndim,q,dqdr,cn,dcndr,dparam_pbe,wf,g_a,g_c, &
+!      &        refc6,lmbd,gradient,energy)
+!   print'(a)',"energy"
+!   print'(3g21.14)',energy
+!   print*
+!   print'(a)',"gradient"
+!   print'(3g21.14)',gradient
+!   print*
 
    energy = 0.0_wp
    gradient = 0.0_wp
 
-   call dispgrad_3d(mol,ndim,q,cn,dcndr,vdw_rep,cn_rep,dparam_pbe, &
-      &             wf,g_a,g_c,refc6,lmbd,gradient,energy,dqdr)
+   call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,vdw_rep,cn_rep,dparam_pbe, &
+      &             wf,g_a,g_c,refc6,0,gradient,energy,dqdr)
+
    print'(a)',"energy"
    print'(3g21.14)',energy
    print*
+!   do i = 1, nat
+!      do j = 1, 3
+!         mol%xyz(j,i) = mol%xyz(j,i) +   step
+!
+!         call pbc_derfcoord(mol,cn,dcndr,900.0_wp)
+!         er = 0.0_wp
+!         call eeq_chrgeq(chrgeq,mol,cn,dcndr,qr,dqdr,er,ges,&
+!            &            .false.,.false.,.false.)
+!         call pbc_dncoord_d4(mol,cn,dcndr,cn_rep,rthr_cn)
+!
+!         call dispgrad_3d(mol,ndim,q,cn,dcndr,vdw_rep,cn_rep,dparam_pbe, &
+!            &             wf,g_a,g_c,refc6,0,ges,er,dqdr)
+!
+!         mol%xyz(j,i) = mol%xyz(j,i) - 2*step
+!
+!         call pbc_derfcoord(mol,cn,dcndr,900.0_wp)
+!         el = 0.0_wp
+!         call eeq_chrgeq(chrgeq,mol,cn,dcndr,ql,dqdr,el,ges,&
+!            &            .false.,.false.,.false.)
+!         call pbc_dncoord_d4(mol,cn,dcndr,cn_rep,rthr_cn)
+!
+!         call dispgrad_3d(mol,ndim,q,cn,dcndr,vdw_rep,cn_rep,dparam_pbe, &
+!            &             wf,g_a,g_c,refc6,0,ges,el,dqdr)
+!
+!         mol%xyz(j,i) = mol%xyz(j,i) +   step
+!
+!         numg(j,i) = (er - el)*step2
+!         numq(j,i,:) = (qr - ql)*step2
+!      enddo
+!   enddo
+!   print*
    print'(a)',"gradient"
    print'(3g21.14)',gradient
+   print*
+   print'(a)',"numg"
+   print'(3g21.14)',numg
+   print*
+   print'(a)',"diff"
+   print'(3g21.14)',gradient-numg
    print*
 
    stop 1

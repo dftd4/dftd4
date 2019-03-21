@@ -21,7 +21,7 @@ module class_molecule
       real(wp),allocatable :: xyz(:,:)       !< cartesian coordinates in bohr
       real(wp),allocatable :: abc(:,:)       !< fractional coordinates
       real(wp),allocatable :: dist(:,:)      !< interatomic distances
-      real(wp),allocatable :: atmass(:)      !< atomic masses in amu
+      real(wp),allocatable :: atmass(:)      !< atomic masses in au (!)
       real(wp),allocatable :: z(:)           !< nuclear charges
       real(wp),allocatable :: cn(:)          !< coordination number
       real(wp) :: cellpar(6) = 0.0_wp        !< cell parameters
@@ -33,7 +33,10 @@ module class_molecule
       procedure :: allocate => allocate_molecule
       procedure :: deallocate => deallocate_molecule
       procedure :: write => write_molecule
+      procedure :: assign_atomic_mass
+      procedure :: calculate_distances
       procedure :: wrap_back
+      procedure :: molecular_mass
       procedure :: center_of_geometry
       procedure :: center_of_mass
       procedure :: shift_to_center_of_geometry
@@ -190,6 +193,46 @@ subroutine write_molecule(self,iunit,comment)
    call self%wsc%write(iunit,comment//"%wsc")
    write(iunit,'(72("<"))')
 end subroutine write_molecule
+
+!> @brief set masses for molecular structure
+subroutine assign_atomic_mass(self)
+   use iso_fortran_env, wp => real64
+   use mctc_param
+   implicit none
+   class(molecule),intent(inout) :: self !< molecular structure information
+
+   self%atmass = atomic_mass(self%at)
+
+end subroutine assign_atomic_mass
+
+!> @brief calculates all distances for molecular structures and minimum
+!!        image distances for peridic structures
+subroutine calculate_distances(self)
+   use iso_fortran_env, wp => real64
+   use pbc_tools
+   implicit none
+   class(molecule),intent(inout) :: self !< molecular structure information
+   integer :: i,j
+   if (self%npbc > 0) then
+      do i = 1, self%nat
+         do j = 1, i-1
+            self%dist(j,i) = minimum_image_distance(.false.,self%abc(:,i), &
+               &              self%abc(:,j),self%lattice,self%pbc)
+            self%dist(i,j) = self%dist(j,i)
+         enddo
+         self%dist(j,i) = minimum_image_distance(.true.,self%abc(:,i), &
+            &              self%abc(:,i),self%lattice,self%pbc)
+      enddo
+   else
+      do i = 1, self%nat
+         do j = 1, i-1
+            self%dist(j,i) = norm2(self%xyz(:,j)-self%xyz(:,i))
+            self%dist(i,j) = self%dist(j,i)
+         enddo
+         self%dist(i,i) = 0.0_wp
+      enddo
+   endif
+end subroutine calculate_distances
 
 !> @brief wrap cartesian coordinates back into cell
 !!

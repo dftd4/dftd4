@@ -300,24 +300,21 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    integer  :: lwork
    integer  :: info
    real(wp) :: test(1)
-   
-   associate( n => mol%nat, at => mol%at, xyz => mol%xyz, chrg => mol%chrg, &
-      &       wsc => mol%wsc )
 
    ! quick return if possible
-   if (n == 1) then
-      q = chrg
+   if (mol%nat == 1) then
+      q = mol%chrg
       return
    endif
 
 ! ------------------------------------------------------------------------
 !  initizialization
 ! ------------------------------------------------------------------------
-   m    = n+1
+   m    = mol%nat+1
    q    = 0.0_wp
    dqdr = 0.0_wp
    allocate( ipiv(m), source = 0 )
-   allocate( Amat(m,m), Xvec(m), Xfac(m), cnp(n), dcnpdr(3,n,n), source = 0.0_wp )
+   allocate( Amat(m,m), Xvec(m), Xfac(m), cnp(mol%nat), dcnpdr(3,mol%nat,mol%nat), source = 0.0_wp )
 
 ! ------------------------------------------------------------------------
 !  set up the A matrix and X vector
@@ -340,11 +337,11 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 
 !  prepare some arrays
 !$omp parallel default(none) &
-!$omp shared(cn,chrgeq) &
+!$omp shared(mol,cn,chrgeq) &
 !$omp private(i,tmp) &
 !$omp shared(Xvec,Xfac)
 !$omp do schedule(dynamic)
-   do i = 1, n
+   do i = 1, mol%nat
       tmp = chrgeq%kappa(i)/(sqrt(cn(i))+1e-14_wp)
       Xvec(i) = -chrgeq%xi(i) + tmp*cn(i)
       Xfac(i) = 0.5_wp*tmp
@@ -360,9 +357,9 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 !$omp shared(mol,chrgeq,cf) &
 !$omp reduction(+:Amat)
 !$omp do schedule(dynamic)
-   do i = 1, n
+   do i = 1, mol%nat
       gamii = 1.0/sqrt(chrgeq%alpha(i)+chrgeq%alpha(i))
-      riw = xyz(:,i) - xyz(:,i)
+      riw = mol%xyz(:,i) - mol%xyz(:,i)
       Amat(i,i) = chrgeq%gam(i) + sqrt2pi/sqrt(chrgeq%alpha(i)) &
          ! reciprocal for 0th atom
          + eeq_ewald_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf) &
@@ -370,12 +367,12 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
          + eeq_ewald_3d_dir(riw,ewaldCutD,mol%lattice,gamii,cf) &
          ! neutralizing background contribution
          - pi/mol%volume/cf**2
-      do j = 1, n
-         if(wsc%at(j,i).eq.0) cycle
+      do j = 1, mol%nat
+         if(mol%wsc%at(j,i).eq.0) cycle
          gamij = 1.0_wp/sqrt(chrgeq%alpha(i)+chrgeq%alpha(j))
-         do wscAt = 1, wsc%itbl(j,i)
-            riw   = xyz(:,i) - wsc%xyz(:,wscAt,j,i)
-            Amat(i,j) = Amat(i,j) + wsc%w(j,i) * ( &
+         do wscAt = 1, mol%wsc%itbl(j,i)
+            riw   = mol%xyz(:,i) - mol%wsc%xyz(:,wscAt,j,i)
+            Amat(i,j) = Amat(i,j) + mol%wsc%w(j,i) * ( &
                ! reciprocal lattice sums
                + eeq_ewald_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf) &
                ! direct lattice sums
@@ -394,7 +391,7 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 !$omp shared(Xvec,Xfac,Amat)
 !$omp do schedule(dynamic)
    ! prepare A matrix
-   do i = 1, n
+   do i = 1, mol%nat
       ! EN of atom i
       do j = 1, i-1
          r = norm2(mol%xyz(:,j) - mol%xyz(:,i))
@@ -429,7 +426,7 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
    call dsysv('u',m,1,Atmp,m,ipiv,Xtmp,m,work,lwork,info)
    if(info > 0) call raise('E','(goedecker_solve) DSYSV failed')
 
-   q = Xtmp(:n)
+   q = Xtmp(:mol%nat)
    if(abs(sum(q)-mol%chrg) > 1.e-6_wp) &
       call raise('E','(goedecker_solve) charge constrain error')
    !print'(3f20.14)',Xtmp
@@ -471,8 +468,8 @@ subroutine eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
 do_molecular_gradient: if (lgrad .or. lcpq) then
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "molecular gradient calculation"
-   allocate( dAmat(3,n,m), dXvec(3,n,m), Afac(3,n), source = 0.0_wp )
-   !allocate( dAmat(3,n,m), Afac(3,n), source = 0.0_wp )
+   allocate( dAmat(3,mol%nat,m), dXvec(3,mol%nat,m), Afac(3,mol%nat), source = 0.0_wp )
+   !allocate( dAmat(3,mol%nat,m), Afac(3,mol%nat), source = 0.0_wp )
    if (mol%npbc > 0) then
 !$omp parallel default(none) &
 !$omp shared(mol,chrgeq,dcnpdr,Xfac,Xtmp,cf) &
@@ -480,23 +477,23 @@ do_molecular_gradient: if (lgrad .or. lcpq) then
 !$omp shared(dXvec) &
 !$omp reduction(+:Afac,dAmat)
 !$omp do schedule(dynamic)
-    do i = 1, n
+    do i = 1, mol%nat
        dXvec(:,i,i) = +dcnpdr(:,i,i)*Xfac(i)
        do j = 1, i-1
           dXvec(:,j,i) = +dcnpdr(:,i,j)*Xfac(i)
           dXvec(:,i,j) = +dcnpdr(:,j,i)*Xfac(j)
-          if(wsc%at(j,i).eq.0) cycle
+          if(mol%wsc%at(j,i).eq.0) cycle
           ! over WSC partner
           gamij = 1.0_wp/sqrt(chrgeq%alpha(i) + chrgeq%alpha(j))
-          do wscAt = 1, wsc%itbl(j,i)
-             riw = xyz(:,i) - wsc%xyz(:,wscAt,j,i)
-             dAtmp = wsc%w(j,i) &
+          do wscAt = 1, mol%wsc%itbl(j,i)
+             riw = mol%xyz(:,i) - mol%wsc%xyz(:,wscAt,j,i)
+             dAtmp = mol%wsc%w(j,i) &
                 * eeq_ewald_dx_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf)
              dAmat(:,i,j) = dAmat(:,i,j) - dAtmp(:)*Xtmp(i)
              dAmat(:,j,i) = dAmat(:,j,i) + dAtmp(:)*Xtmp(j)
              Afac(:,i)    =  Afac(:,i)   - dAtmp(:)*Xtmp(j)
              Afac(:,j)    =  Afac(:,j)   + dAtmp(:)*Xtmp(i)
-             dAtmp = wsc%w(j,i) &
+             dAtmp = mol%wsc%w(j,i) &
                 * eeq_ewald_dx_3d_dir(riw,ewaldCutD,mol%lattice,gamij,cf)
              dAmat(:,i,j) = dAmat(:,i,j) + dAtmp(:)*Xtmp(i)
              dAmat(:,j,i) = dAmat(:,j,i) - dAtmp(:)*Xtmp(j)
@@ -514,7 +511,7 @@ do_molecular_gradient: if (lgrad .or. lcpq) then
 !$omp shared(dXvec,dAmat) &
 !$omp reduction(+:Afac)
 !$omp do schedule(dynamic)
-   do i = 1, n
+   do i = 1, mol%nat
       dXvec(:,i,i) = +dcndr(:,i,i)*Xfac(i) ! merge dX and dA for speedup
       do j = 1, i-1
 
@@ -538,8 +535,8 @@ do_molecular_gradient: if (lgrad .or. lcpq) then
 endif do_molecular_gradient
 
    if (lgrad) then
-   call dgemv('n',3*n,m,+1.0_wp,dAmat,3*n,Xtmp,1,1.0_wp,gradient,1)
-   call dgemv('n',3*n,m,-1.0_wp,dXvec,3*n,Xtmp,1,1.0_wp,gradient,1)
+   call dgemv('n',3*mol%nat,m,+1.0_wp,dAmat,3*mol%nat,Xtmp,1,1.0_wp,gradient,1)
+   call dgemv('n',3*mol%nat,m,-1.0_wp,dXvec,3*mol%nat,Xtmp,1,1.0_wp,gradient,1)
    endif
 
 ! ------------------------------------------------------------------------
@@ -584,18 +581,16 @@ do_partial_charge_derivative: if (lcpq) then
 ! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "calculating the derivative of the partial charges"
-   do i = 1, n
+   do i = 1, mol%nat
       dAmat(:,i,i) = Afac(:,i) + dAmat(:,i,i)
    enddo
-   !call dsymm('r','l',3*n,m,-1.0_wp,Ainv,m,dAmat,3*n,1.0_wp,dqdr,3*n)
-   call dgemm('n','n',3*n,m,m,-1.0_wp,dAmat,3*n,Ainv,m,1.0_wp,dqdr,3*n)
-   call dgemm('n','n',3*n,m,m,+1.0_wp,dXvec,3*n,Ainv,m,1.0_wp,dqdr,3*n)
+   !call dsymm('r','l',3*mol%nat,m,-1.0_wp,Ainv,m,dAmat,3*mol%nat,1.0_wp,dqdr,3*mol%nat)
+   call dgemm('n','n',3*mol%nat,m,m,-1.0_wp,dAmat,3*mol%nat,Ainv,m,1.0_wp,dqdr,3*mol%nat)
+   call dgemm('n','n',3*mol%nat,m,m,+1.0_wp,dXvec,3*mol%nat,Ainv,m,1.0_wp,dqdr,3*mol%nat)
    !print'(/,"analytical gradient")'
-   !print'(3f20.14)',dqdr(:,:,:n)
+   !print'(3f20.14)',dqdr(:,:,:mol%nat)
 
 endif do_partial_charge_derivative
-
-   end associate
 
 ! ------------------------------------------------------------------------
 !  Clean up

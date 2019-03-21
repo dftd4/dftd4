@@ -34,14 +34,14 @@ subroutine test_eeq_model_water
    
    call dncoord_erf(mol,cn,dcndr)
    ! test for correct CN and correct symmetry in CN
-   call assert_close(cn(1),1.9895544818182_wp,thr)
+   call assert_close(cn(1),1.9895544848535_wp,thr)
    call assert_close(cn(2),cn(3),             thr)
    call assert_close(cn(1),cn(2)+cn(3),       thr)
 
    ! test CN derivative, correct summation of diagonals
-   call assert_close(dcndr(3,1,1), 0.80973220519637E-01_wp,thr)
-   call assert_close(dcndr(1,2,1), 0.52891177763104E-01_wp,thr)
-   call assert_close(dcndr(3,1,3),-0.40486610259818E-01_wp,thr)
+   call assert_close(dcndr(3,1,1), 0.80973198569003E-01_wp,thr)
+   call assert_close(dcndr(1,2,1), 0.52891163425093E-01_wp,thr)
+   call assert_close(dcndr(3,1,3),-0.40486599284501E-01_wp,thr)
 
    call new_charge_model_2019(chrgeq,mol)
    call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges,.false.,.true.,.true.)
@@ -50,18 +50,18 @@ subroutine test_eeq_model_water
    call assert_close(es,-0.64308088326667E-01_wp,thr)
 
    ! test molecular gradient of ES, also check symmetry
-   call assert_close(ges(3,1),-0.44053031985285E-01_wp,thr)
+   call assert_close(ges(3,1),-0.44053032330503E-01_wp,thr)
    call assert_close(ges(3,2),ges(3,3),                thr)
-   call assert_close(ges(1,2), 0.18102071036002E-01_wp,thr)
+   call assert_close(ges(1,2), 0.18102071270235E-01_wp,thr)
 
    ! test for charge constraint
    call assert_close(sum(q),0.0_wp,            thr)
-   call assert_close(q(1),-0.59582744708873_wp,thr)
+   call assert_close(q(1),-0.59582744684480_wp,thr)
 
    ! test derivative of partial charges
-   call assert_close(dqdr(3,1,1),-0.41466763854730E+00_wp,thr)
-   call assert_close(dqdr(1,2,1), 0.17196993180581E+00_wp,thr)
-   call assert_close(dqdr(1,3,2), 0.18631992989121E-01_wp,thr)
+   call assert_close(dqdr(3,1,1),-0.41466764014389E+00_wp,thr)
+   call assert_close(dqdr(1,2,1), 0.17196993288918E+00_wp,thr)
+   call assert_close(dqdr(1,3,2), 0.18631993794394E-01_wp,thr)
    call assert_close(dqdr(2,1,3), 0.00000000000000E+00_wp,thr)
 
    call mol%deallocate
@@ -116,6 +116,7 @@ subroutine test_eeq_model_ewald
    call dlat_to_cell(lattice,mol%cellpar)
    call dlat_to_rlat(lattice,mol%rec_lat)
    call coord_trafo(nat,lattice,abc,mol%xyz)
+   call mol%wrap_back
 
    allocate( cn(nat), dcndr(3,nat,nat), q(nat), dqdr(3,nat,nat+1), &
       &      gradient(3,nat), source = 0.0_wp )
@@ -128,37 +129,46 @@ subroutine test_eeq_model_ewald
 
    call generate_wsc(mol,mol%wsc,wsc_rep)
 
-   call pbc_derfcoord(mol,cn,dcndr,900.0d0)
+   call pbc_derfcoord(mol,cn,dcndr,900.0_wp)
 
-   call assert_close(cn(2),3.6864723770739_wp,thr)
-   call assert_close(cn(5),1.0523557617324_wp,thr)
-   call assert_close(cn(6),1.1699487724900_wp,thr)
+   call assert_close(cn(2),3.6864725130236_wp,thr)
+   call assert_close(cn(5),1.0523558225297_wp,thr)
+   call assert_close(cn(6),1.1699488478421_wp,thr)
 
-   call assert_close(dcndr(2,3,2),0.24281208190040E-02_wp,thr)
-   call assert_close(dcndr(1,6,6),0.42240778640017E+00_wp,thr)
-   call assert_close(dcndr(1,1,2),0.71913063700324E-01_wp,thr)
+   call assert_close(dcndr(2,3,2),0.24281192795725E-02_wp,thr)
+   call assert_close(dcndr(1,6,6),0.42240789876965E+00_wp,thr)
+   call assert_close(dcndr(1,1,2),0.71913132896636E-01_wp,thr)
 
    call new_charge_model_2019(chrgeq,mol)
 
    call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,energy,gradient,&
       &            .false.,.true.,.true.)
 
-   call assert_close(energy,-0.90576573072013E-01_wp,thr)
+   call assert_close(energy,-0.90576568382295E-01_wp,thr)
+
+   print*
+   print'(3g21.14)',energy
+   print*
+   print'(3g21.14)',gradient
+   print*
+   print'(3g21.14)',q
+   print*
+   print'(3g21.14)',dqdr
    
-   call assert_close(gradient(2,1), 0.59224555288324E-02_wp,thr)
-   call assert_close(gradient(1,3),-0.17291063655794E-02_wp,thr)
+   call assert_close(gradient(2,1), 0.59224535834402E-02_wp,thr)
+   call assert_close(gradient(1,3),-0.17291053212403E-02_wp,thr)
    call assert_close(gradient(3,5), 0.13109348427124E-02_wp,thr)
-   call assert_close(gradient(1,6), 0.10491053931694E-01_wp,thr)
+   call assert_close(gradient(1,6), 0.10491055487509E-01_wp,thr)
 
    call assert_close(sum(q),0.0_wp,            thr)
-   call assert_close(q(1), 0.39808669536607_wp,thr)
-   call assert_close(q(3),-0.16133275992899_wp,thr)
-   call assert_close(q(4),-0.19939813398061_wp,thr)
+   call assert_close(q(1), 0.39808668429315_wp,thr)
+   call assert_close(q(3),-0.16133275860565_wp,thr)
+   call assert_close(q(4),-0.19939812633388_wp,thr)
 
-   call assert_close(dqdr(1,4,2),-0.16619684227607E-01_wp,thr)
-   call assert_close(dqdr(2,5,7),-0.71529121856161E-04_wp,thr)
-   call assert_close(dqdr(1,2,2), 0.36177439010511E-01_wp,thr)
-   call assert_close(dqdr(3,1,4),-0.39909178885213E-01_wp,thr)
+   call assert_close(dqdr(1,4,2),-0.16619680140869E-01_wp,thr)
+   call assert_close(dqdr(2,5,7),-0.71528076609028E-04_wp,thr)
+   call assert_close(dqdr(1,2,2), 0.36177437391610E-01_wp,thr)
+   call assert_close(dqdr(3,1,4),-0.39909176876716E-01_wp,thr)
 
    call mol%deallocate
 

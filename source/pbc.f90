@@ -32,31 +32,25 @@ subroutine generate_wsc(mol,wsc,rep)
 !  reference some dangling pointers which leads to segfaults...
    call wsc%allocate(mol%nat,rep,mol%lattice)
 
-   associate( n    => mol%nat,      cells    => wsc%cells, &
-         &    at   => mol%at,       pbc_at   => wsc%at, &
-         &    xyz  => mol%xyz,      pbc_xyz  => wsc%xyz, &
-         &    lat  => mol%lattice,  pbc_w    => wsc%w, &
-         &                          pbc_itbl => wsc%itbl)
-
 ! ------------------------------------------------------------------------
 ! initialize
 ! ------------------------------------------------------------------------
-   allocate( txyz(3,cells,n) ); txyz = 0.0_wp
-   allocate( dist(cells) );     dist = 0.0_wp
-   allocate( trans(cells) );    trans = .true.
+   allocate( txyz(3,wsc%cells,mol%nat) ); txyz = 0.0_wp
+   allocate( dist(wsc%cells) );     dist = 0.0_wp
+   allocate( trans(wsc%cells) );    trans = .true.
 ! ------------------------------------------------------------------------
 ! Create the Wigner-Seitz Cell (WSC)
 ! ------------------------------------------------------------------------
-   pbc_at  = 0
-   pbc_itbl= 0
+   wsc%at  = 0
+   wsc%itbl= 0
 !$omp parallel default(none) &
 !$omp private(ii,jj,wc,c,dist,trans) &
-!$omp shared(rep,txyz) &
+!$omp shared(mol,wsc,rep,txyz) &
 !$omp shared(mindist,minpos,nmindist,nminpos)
 !$omp do schedule(dynamic)
    ! Each WSC of one atom consists of n atoms
-   do ii=1,n
-      do jj=1,n
+   do ii=1,mol%nat
+      do jj=1,mol%nat
          if (ii.eq.jj) cycle
          ! find according neighbours
          c=1
@@ -64,8 +58,8 @@ subroutine generate_wsc(mol,wsc,rep)
          do aa=-rep(1),rep(1),1
             do bb=-rep(1),rep(1),1
                do cc=-rep(1),rep(1),1
-                  call get_translation(aa,bb,cc,xyz(:,jj),lat,txyz(:,c,ii))
-                  dist(c)=norm2(xyz(:,ii)-txyz(:,c,ii))
+                  call get_translation(aa,bb,cc,mol%xyz(:,jj),wsc%lattice,txyz(:,c,ii))
+                  dist(c)=norm2(mol%xyz(:,ii)-txyz(:,c,ii))
                   c=c+1
                end do
             end do
@@ -78,7 +72,7 @@ subroutine generate_wsc(mol,wsc,rep)
          mindist=dist(minpos)
          trans(minpos)=.false.
          wc=1
-         pbc_xyz(:,wc,jj,ii)=txyz(:,minpos,ii)
+         wsc%xyz(:,wc,jj,ii)=txyz(:,minpos,ii)
          ! get other images with same distance
          find_images : do
             nminpos=minloc(dist(:),dim=1,mask=trans(:))
@@ -86,11 +80,11 @@ subroutine generate_wsc(mol,wsc,rep)
             if(abs(mindist-nmindist).lt.tol)then
                trans(nminpos)=.false.
                wc=wc+1
-               pbc_xyz(:,wc,jj,ii)=txyz(:,nminpos,ii)
+               wsc%xyz(:,wc,jj,ii)=txyz(:,nminpos,ii)
             else
-               pbc_w(jj,ii)=1.0_wp/real(wc,wp)
-               pbc_itbl(jj,ii)=wc
-               pbc_at(jj,ii)=jj
+               wsc%w(jj,ii)=1.0_wp/real(wc,wp)
+               wsc%itbl(jj,ii)=wc
+               wsc%at(jj,ii)=jj
                exit find_images
             end if
          end do find_images
@@ -98,8 +92,6 @@ subroutine generate_wsc(mol,wsc,rep)
    end do
 !$omp enddo
 !$omp endparallel
-
-   end associate
 
 contains
 

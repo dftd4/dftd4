@@ -86,6 +86,11 @@ program dftd_tester
       case('convert'); call test_pbc_tools_convert
       case('cutoff');  call test_pbc_tools_cutoff
       end select
+   case('class_molecule')
+      select case(sec)
+      case('mic');  call test_class_molecule_mic_distances
+      case('axis'); call test_class_molecule_axis_trafo
+      end select
    end select
 
    ! falling through the tester is always an error

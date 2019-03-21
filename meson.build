@@ -31,6 +31,7 @@ ftest  = []
 fmain  = 'source/program_dftd.f90'
 ftest += 'tests/tests_dftd.f90'
 ftest += 'tests/assertion.f90'
+ftest += 'tests/class_molecule.f90'
 ftest += 'tests/geometry_reader.f90'
 ftest += 'tests/eeq_model.f90'
 ftest += 'tests/dftd4.f90'
@@ -44,6 +45,7 @@ fsrcs += 'source/mctc_readin.f90'
 fsrcs += 'source/mctc_strings.f90'
 fsrcs += 'source/mctc_constants.f90'
 fsrcs += 'source/mctc_econv.f90'
+fsrcs += 'source/mctc_param.f90'
 fsrcs += 'source/mctc_timings.f90'
 fsrcs += 'source/error.f90'
 #srcs += 'source/signal.c'
@@ -111,6 +113,9 @@ test('Argparser: print license',d4exe,args : '--license')
 test('Argparser: no arguments', d4exe,should_fail : true)
 
 # more specific tests are implemented by the tester binary
+test('Molecule Class: axis',d4tester,args: ['class_molecule','axis'])
+test('Molecule Class: MIC', d4tester,args: ['class_molecule','mic'])
+
 test('Geometry Reader: coord 3D',d4tester,args: ['geometry_reader','coord_3d'])
 test('Geometry Reader: coord 2D',d4tester,args: ['geometry_reader','coord_2d'])
 test('Geometry Reader: coord 1D',d4tester,args: ['geometry_reader','coord_1d'])
@@ -127,4 +132,4 @@ test('EEQ model: 3D Ewald',  d4tester,args: ['eeq_model','ewald'])
 test('Dispersion: properties',d4tester,args: ['dftd4','properties'])
 test('Dispersion: energies',  d4tester,args: ['dftd4','energies'])
 test('Dispersion: API',       d4tester,args: ['dftd4','api'])
-test('Dispersion: periodic',  d4tester,args: ['dftd4','periodic'])
+#test('Dispersion: periodic',  d4tester,args: ['dftd4','periodic'])

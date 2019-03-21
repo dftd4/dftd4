@@ -50,49 +50,49 @@ module dftd4
 !! (ii:ii)=(IP-EA)=d^2 E/dN^2 but the hardness
 !! definition they use is 1/2d^2 E/dN^2 (in Eh)
    real(wp),parameter :: gam(1:max_elem) = (/ &
-  &0.47259288,0.92203391,0.17452888,0.25700733,0.33949086,0.42195412, & ! H-C
-  &0.50438193,0.58691863,0.66931351,0.75191607,0.17964105,0.22157276, & ! N-Mg
-  &0.26348578,0.30539645,0.34734014,0.38924725,0.43115670,0.47308269, & ! Al-Ar
-  &0.17105469,0.20276244,0.21007322,0.21739647,0.22471039,0.23201501, & ! Ca-Cr
-  &0.23933969,0.24665638,0.25398255,0.26128863,0.26859476,0.27592565, & ! Mn-Zn
-  &0.30762999,0.33931580,0.37235985,0.40273549,0.43445776,0.46611708, & ! Ga-Kr
-  &0.15585079,0.18649324,0.19356210,0.20063311,0.20770522,0.21477254, & ! Rb-Mo
-  &0.22184614,0.22891872,0.23598621,0.24305612,0.25013018,0.25719937, & ! Tc-Cd
-  &0.28784780,0.31848673,0.34912431,0.37976593,0.41040808,0.44105777, & ! In-Xe
-  &0.05019332,0.06762570,0.08504445,0.10247736,0.11991105,0.13732772, & ! Cs-Nd
-  &0.15476297,0.17218265,0.18961288,0.20704760,0.22446752,0.24189645, & ! Pm-Dy
-  &0.25932503,0.27676094,0.29418231,0.31159587,0.32902274,0.34592298, & ! Ho-Hf
-  &0.36388048,0.38130586,0.39877476,0.41614298,0.43364510,0.45104014, & ! Ta-Pt
-  &0.46848986,0.48584550,0.12526730,0.14268677,0.16011615,0.17755889, & ! Au-Po
-  &0.19497557,0.21240778,0.07263525,0.09422158,0.09920295,0.10418621, & ! At-Th
-  &0.14235633,0.16394294,0.18551941,0.22370139,0.00000000,0.00000000, & ! Pa-Cm
-  &0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000, & ! Bk-No
-  &0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000, & ! Rf-Mt
-  &0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000, & ! Ds-Mc
-  &0.00000000,0.00000000,0.00000000,0.00000000 /) ! Lv-Og
+  &0.47259288_wp,0.92203391_wp,0.17452888_wp,0.25700733_wp,0.33949086_wp,0.42195412_wp, & ! H-C
+  &0.50438193_wp,0.58691863_wp,0.66931351_wp,0.75191607_wp,0.17964105_wp,0.22157276_wp, & ! N-Mg
+  &0.26348578_wp,0.30539645_wp,0.34734014_wp,0.38924725_wp,0.43115670_wp,0.47308269_wp, & ! Al-Ar
+  &0.17105469_wp,0.20276244_wp,0.21007322_wp,0.21739647_wp,0.22471039_wp,0.23201501_wp, & ! Ca-Cr
+  &0.23933969_wp,0.24665638_wp,0.25398255_wp,0.26128863_wp,0.26859476_wp,0.27592565_wp, & ! Mn-Zn
+  &0.30762999_wp,0.33931580_wp,0.37235985_wp,0.40273549_wp,0.43445776_wp,0.46611708_wp, & ! Ga-Kr
+  &0.15585079_wp,0.18649324_wp,0.19356210_wp,0.20063311_wp,0.20770522_wp,0.21477254_wp, & ! Rb-Mo
+  &0.22184614_wp,0.22891872_wp,0.23598621_wp,0.24305612_wp,0.25013018_wp,0.25719937_wp, & ! Tc-Cd
+  &0.28784780_wp,0.31848673_wp,0.34912431_wp,0.37976593_wp,0.41040808_wp,0.44105777_wp, & ! In-Xe
+  &0.05019332_wp,0.06762570_wp,0.08504445_wp,0.10247736_wp,0.11991105_wp,0.13732772_wp, & ! Cs-Nd
+  &0.15476297_wp,0.17218265_wp,0.18961288_wp,0.20704760_wp,0.22446752_wp,0.24189645_wp, & ! Pm-Dy
+  &0.25932503_wp,0.27676094_wp,0.29418231_wp,0.31159587_wp,0.32902274_wp,0.34592298_wp, & ! Ho-Hf
+  &0.36388048_wp,0.38130586_wp,0.39877476_wp,0.41614298_wp,0.43364510_wp,0.45104014_wp, & ! Ta-Pt
+  &0.46848986_wp,0.48584550_wp,0.12526730_wp,0.14268677_wp,0.16011615_wp,0.17755889_wp, & ! Au-Po
+  &0.19497557_wp,0.21240778_wp,0.07263525_wp,0.09422158_wp,0.09920295_wp,0.10418621_wp, & ! At-Th
+  &0.14235633_wp,0.16394294_wp,0.18551941_wp,0.22370139_wp,0.00000000_wp,0.00000000_wp, & ! Pa-Cm
+  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp, & ! Bk-No
+  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp, & ! Rf-Mt
+  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp, & ! Ds-Mc
+  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp /) ! Lv-Og
 
 !> @brief pauling EN's
    real(wp),parameter :: en(max_elem) = (/ &
-   & 2.20,3.00, & ! H,He
-   & 0.98,1.57,2.04,2.55,3.04,3.44,3.98,4.50, & ! Li-Ne
-   & 0.93,1.31,1.61,1.90,2.19,2.58,3.16,3.50, & ! Na-Ar
-   & 0.82,1.00, & ! K,Ca
-   &           1.36,1.54,1.63,1.66,1.55,1.83,1.88,1.91,1.90,1.65, & ! Sc-Zn
-   &           1.81,2.01,2.18,2.55,2.96,3.00, & ! Ga-Kr
-   & 0.82,0.95, & ! Rb,Sr
-   &           1.22,1.33,1.60,2.16,1.90,2.20,2.28,2.20,1.93,1.69, & ! Y-Cd
-   &           1.78,1.96,2.05,2.10,2.66,2.60, & ! In-Xe
-   & 0.79,0.89, & ! Cs,Ba
-   &      1.10,1.12,1.13,1.14,1.15,1.17,1.18, & ! La-Eu
-   &      1.20,1.21,1.22,1.23,1.24,1.25,1.26, & ! Gd-Yb
-   &           1.27,1.30,1.50,2.36,1.90,2.20,2.20,2.28,2.54,2.00, & ! Lu-Hg
-   &           1.62,2.33,2.02,2.00,2.20,2.20, & ! Tl-Rn
+   & 2.20_wp,3.00_wp, & ! H,He
+   & 0.98_wp,1.57_wp,2.04_wp,2.55_wp,3.04_wp,3.44_wp,3.98_wp,4.50_wp, & ! Li-Ne
+   & 0.93_wp,1.31_wp,1.61_wp,1.90_wp,2.19_wp,2.58_wp,3.16_wp,3.50_wp, & ! Na-Ar
+   & 0.82_wp,1.00_wp, & ! K,Ca
+   &           1.36_wp,1.54_wp,1.63_wp,1.66_wp,1.55_wp,1.83_wp,1.88_wp,1.91_wp,1.90_wp,1.65_wp, & ! Sc-Zn
+   &           1.81_wp,2.01_wp,2.18_wp,2.55_wp,2.96_wp,3.00_wp, & ! Ga-Kr
+   & 0.82_wp,0.95_wp, & ! Rb,Sr
+   &           1.22_wp,1.33_wp,1.60_wp,2.16_wp,1.90_wp,2.20_wp,2.28_wp,2.20_wp,1.93_wp,1.69_wp, & ! Y-Cd
+   &           1.78_wp,1.96_wp,2.05_wp,2.10_wp,2.66_wp,2.60_wp, & ! In-Xe
+   & 0.79_wp,0.89_wp, & ! Cs,Ba
+   &      1.10_wp,1.12_wp,1.13_wp,1.14_wp,1.15_wp,1.17_wp,1.18_wp, & ! La-Eu
+   &      1.20_wp,1.21_wp,1.22_wp,1.23_wp,1.24_wp,1.25_wp,1.26_wp, & ! Gd-Yb
+   &           1.27_wp,1.30_wp,1.50_wp,2.36_wp,1.90_wp,2.20_wp,2.20_wp,2.28_wp,2.54_wp,2.00_wp, & ! Lu-Hg
+   &           1.62_wp,2.33_wp,2.02_wp,2.00_wp,2.20_wp,2.20_wp, & ! Tl-Rn
    ! only dummies below
-   & 1.50,1.50, & ! Fr,Ra
-   &      1.50,1.50,1.50,1.50,1.50,1.50,1.50, & ! Ac-Am
-   &      1.50,1.50,1.50,1.50,1.50,1.50,1.50, & ! Cm-No
-   &           1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50, & ! Rf-Cn
-   &           1.50,1.50,1.50,1.50,1.50,1.50 /) ! Nh-Og
+   & 1.50_wp,1.50_wp, & ! Fr,Ra
+   &      1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Ac-Am
+   &      1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Cm-No
+   &           1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Rf-Cn
+   &           1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp /) ! Nh-Og
 ! same values in old arrangement
 ! &         2.200,3.000,0.980,1.570,2.040,2.550,3.040,3.440,3.980 &
 ! &        ,4.500,0.930,1.310,1.610,1.900,2.190,2.580,3.160,3.500 &
@@ -103,53 +103,6 @@ module dftd4
 ! &,0.79,0.89,1.10,1.12,1.13,1.14,1.15,1.17,1.18,1.20,1.21,1.22 &
 ! &,1.23,1.24,1.25,1.26,1.27,1.3,1.5,2.36,1.9,2.2,2.20,2.28,2.54 &
 ! &,2.00,1.62,2.33,2.02,2.0,2.2,2.2,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5/)
-
-!  D3 radii
-!   real(wp),parameter :: rcov(max_elem) = (/ &
-!  & 0.80628308, 1.15903197, 3.02356173, 2.36845659, 1.94011865, &
-!  & 1.88972601, 1.78894056, 1.58736983, 1.61256616, 1.68815527, &
-!  & 3.52748848, 3.14954334, 2.84718717, 2.62041997, 2.77159820, &
-!  & 2.57002732, 2.49443835, 2.41884923, 4.43455700, 3.88023730, &
-!  & 3.35111422, 3.07395437, 3.04875805, 2.77159820, 2.69600923, &
-!  & 2.62041997, 2.51963467, 2.49443835, 2.54483100, 2.74640188, &
-!  & 2.82199085, 2.74640188, 2.89757982, 2.77159820, 2.87238349, &
-!  & 2.94797246, 4.76210950, 4.20778980, 3.70386304, 3.50229216, &
-!  & 3.32591790, 3.12434702, 2.89757982, 2.84718717, 2.84718717, &
-!  & 2.72120556, 2.89757982, 3.09915070, 3.22513231, 3.17473967, &
-!  & 3.17473967, 3.09915070, 3.32591790, 3.30072128, 5.26603625, &
-!  & 4.43455700, 4.08180818, 3.70386304, 3.98102289, 3.95582657, &
-!  & 3.93062995, 3.90543362, 3.80464833, 3.82984466, 3.80464833, &
-!  & 3.77945201, 3.75425569, 3.75425569, 3.72905937, 3.85504098, &
-!  & 3.67866672, 3.45189952, 3.30072128, 3.09915070, 2.97316878, &
-!  & 2.92277614, 2.79679452, 2.82199085, 2.84718717, 3.32591790, &
-!  & 3.27552496, 3.27552496, 3.42670319, 3.30072128, 3.47709584, &
-!  & 3.57788113, 5.06446567, 4.56053862, 4.20778980, 3.98102289, &
-!  & 3.82984466, 3.85504098, 3.88023730, 3.90543362 /)
-
-!> @brief covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
-!! 188-197), values for metals decreased by 10 %
-   real(wp),private,parameter :: rad(max_elem) = (/  &
-   & 0.32,0.46, & ! H,He
-   & 1.20,0.94,0.77,0.75,0.71,0.63,0.64,0.67, & ! Li-Ne
-   & 1.40,1.25,1.13,1.04,1.10,1.02,0.99,0.96, & ! Na-Ar
-   & 1.76,1.54, & ! K,Ca
-   &           1.33,1.22,1.21,1.10,1.07,1.04,1.00,0.99,1.01,1.09, & ! Sc-Zn
-   &           1.12,1.09,1.15,1.10,1.14,1.17, & ! Ga-Kr
-   & 1.89,1.67, & ! Rb,Sr
-   &           1.47,1.39,1.32,1.24,1.15,1.13,1.13,1.08,1.15,1.23, & ! Y-Cd
-   &           1.28,1.26,1.26,1.23,1.32,1.31, & ! In-Xe
-   & 2.09,1.76, & ! Cs,Ba
-   &      1.62,1.47,1.58,1.57,1.56,1.55,1.51, & ! La-Eu
-   &      1.52,1.51,1.50,1.49,1.49,1.48,1.53, & ! Gd-Yb
-   &           1.46,1.37,1.31,1.23,1.18,1.16,1.11,1.12,1.13,1.32, & ! Lu-Hg
-   &           1.30,1.30,1.36,1.31,1.38,1.42, & ! Tl-Rn
-   & 2.01,1.81, & ! Fr,Ra
-   &      1.67,1.58,1.52,1.53,1.54,1.55,1.49, & ! Ac-Am
-   &      1.49,1.51,1.51,1.48,1.50,1.56,1.58, & ! Cm-No
-   &           1.45,1.41,1.34,1.29,1.27,1.21,1.16,1.15,1.09,1.22, & ! Lr-Cn
-   &           1.36,1.43,1.46,1.58,1.48,1.57 /) ! Nh-Og
-   real(wp),parameter :: rcov(max_elem) = 4.0_wp/3.0_wp * rad / 0.52917726_wp
-
 
 !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
 !  the large number of digits is just to keep the results consistent
@@ -186,29 +139,29 @@ module dftd4
 !!  H: 8.0589 ->10.9359, Li:29.0974 ->39.7226, Be:14.8517 ->17.7460
 !! also new super heavies Cn,Nh,Fl,Lv,Og
    real(wp),private,parameter :: r2r4(max_elem) = (/  &
-   &  8.0589, 3.4698, & ! H,He
-   & 29.0974,14.8517,11.8799, 7.8715, 5.5588, 4.7566, 3.8025, 3.1036, & ! Li-Ne
-   & 26.1552,17.2304,17.7210,12.7442, 9.5361, 8.1652, 6.7463, 5.6004, & ! Na-Ar
-   & 29.2012,22.3934, & ! K,Ca
-   &         19.0598,16.8590,15.4023,12.5589,13.4788, & ! Sc-
-   &         12.2309,11.2809,10.5569,10.1428, 9.4907, & ! -Zn
-   &                 13.4606,10.8544, 8.9386, 8.1350, 7.1251, 6.1971, & ! Ga-Kr
-   & 30.0162,24.4103, & ! Rb,Sr
-   &         20.3537,17.4780,13.5528,11.8451,11.0355, & ! Y-
-   &         10.1997, 9.5414, 9.0061, 8.6417, 8.9975, & ! -Cd
-   &                 14.0834,11.8333,10.0179, 9.3844, 8.4110, 7.5152, & ! In-Xe
-   & 32.7622,27.5708, & ! Cs,Ba
-   &         23.1671,21.6003,20.9615,20.4562,20.1010,19.7475,19.4828, & ! La-Eu
-   &         15.6013,19.2362,17.4717,17.8321,17.4237,17.1954,17.1631, & ! Gd-Yb
-   &         14.5716,15.8758,13.8989,12.4834,11.4421, & ! Lu-
-   &         10.2671, 8.3549, 7.8496, 7.3278, 7.4820, & ! -Hg
-   &                 13.5124,11.6554,10.0959, 9.7340, 8.8584, 8.0125, & ! Tl-Rn
-   & 29.8135,26.3157, & ! Fr,Ra
-   &         19.1885,15.8542,16.1305,15.6161,15.1226,16.1576, 0.0000, & ! Ac-Am
-   &          0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, & ! Cm-No
-   &          0.0000, 0.0000, 0.0000, 0.0000, 0.0000, & ! Lr-
-   &          0.0000, 0.0000, 0.0000, 0.0000, 5.4929, & ! -Cn
-   &                  6.7286, 6.5144, 0.0000,10.3600, 0.0000, 8.6641 /) ! Nh-Og
+   &  8.0589_wp, 3.4698_wp, & ! H,He
+   & 29.0974_wp,14.8517_wp,11.8799_wp, 7.8715_wp, 5.5588_wp, 4.7566_wp, 3.8025_wp, 3.1036_wp, & ! Li-Ne
+   & 26.1552_wp,17.2304_wp,17.7210_wp,12.7442_wp, 9.5361_wp, 8.1652_wp, 6.7463_wp, 5.6004_wp, & ! Na-Ar
+   & 29.2012_wp,22.3934_wp, & ! K,Ca
+   &         19.0598_wp,16.8590_wp,15.4023_wp,12.5589_wp,13.4788_wp, & ! Sc-
+   &         12.2309_wp,11.2809_wp,10.5569_wp,10.1428_wp, 9.4907_wp, & ! -Zn
+   &                 13.4606_wp,10.8544_wp, 8.9386_wp, 8.1350_wp, 7.1251_wp, 6.1971_wp, & ! Ga-Kr
+   & 30.0162_wp,24.4103_wp, & ! Rb,Sr
+   &         20.3537_wp,17.4780_wp,13.5528_wp,11.8451_wp,11.0355_wp, & ! Y-
+   &         10.1997_wp, 9.5414_wp, 9.0061_wp, 8.6417_wp, 8.9975_wp, & ! -Cd
+   &                 14.0834_wp,11.8333_wp,10.0179_wp, 9.3844_wp, 8.4110_wp, 7.5152_wp, & ! In-Xe
+   & 32.7622_wp,27.5708_wp, & ! Cs,Ba
+   &         23.1671_wp,21.6003_wp,20.9615_wp,20.4562_wp,20.1010_wp,19.7475_wp,19.4828_wp, & ! La-Eu
+   &         15.6013_wp,19.2362_wp,17.4717_wp,17.8321_wp,17.4237_wp,17.1954_wp,17.1631_wp, & ! Gd-Yb
+   &         14.5716_wp,15.8758_wp,13.8989_wp,12.4834_wp,11.4421_wp, & ! Lu-
+   &         10.2671_wp, 8.3549_wp, 7.8496_wp, 7.3278_wp, 7.4820_wp, & ! -Hg
+   &                 13.5124_wp,11.6554_wp,10.0959_wp, 9.7340_wp, 8.8584_wp, 8.0125_wp, & ! Tl-Rn
+   & 29.8135_wp,26.3157_wp, & ! Fr,Ra
+   &         19.1885_wp,15.8542_wp,16.1305_wp,15.6161_wp,15.1226_wp,16.1576_wp, 0.0000_wp, & ! Ac-Am
+   &          0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, & ! Cm-No
+   &          0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, & ! Lr-
+   &          0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 5.4929_wp, & ! -Cn
+   &                  6.7286_wp, 6.5144_wp, 0.0000_wp,10.3600_wp, 0.0000_wp, 8.6641_wp /) ! Nh-Og
    integer,private :: idum
 !> @brief weighted <r4>/<r2> expectation values used for C6 -> C8 extrapolation
    real(wp),parameter :: r4r2(max_elem) = &
@@ -235,7 +188,7 @@ module dftd4
    real(wp),dimension(8)       :: seccnd3
    real(wp),dimension(23,8)    :: secaiw
 
-   include 'param_ref.f'
+   include 'param_ref.f90'
 
 contains
 
@@ -1472,7 +1425,6 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 !  print*,ed,eabc
 
 !  print'(" * Dispersion all done, saving variables")'
-   print'(3g21.14)',ed+eabc,ed,eabc
    if (present(eout)) eout = ed + eabc
 
    if (present(aout)) then
@@ -2281,10 +2233,8 @@ function lmbd2string(lmbd) result(string)
 end function lmbd2string
 
 ! compute D4 gradient under pbc
-subroutine dispgrad_3d(mol,ndim,q,cn,dcn, &
-      rep,rep2,par,wf,g_a,g_c, &
-      c6abns,mbd, &
-      g,eout,dq,aout)
+subroutine dispgrad_3d(mol,ndim,q,cn,dcn,rep,rep2,par,wf,g_a,g_c, &
+      c6abns,mbd,g,eout,dq,aout)
    use iso_fortran_env, only : wp => real64
    use class_molecule
    implicit none
@@ -2444,37 +2394,36 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcn, &
          enddo
       enddo
       ! i in primitive cell with i in images
-      r4r2ij = 3*r4r2(ia)*r4r2(ia)
+      r4r2ij = 3*r4r2(ia)**2
       r0 = par%a1*sqrt(r4r2ij) + par%a2
-      do tx = -rep(1),rep(1),1
-         do ty = -rep(2),rep(2),1
-            do tz = -rep(3),rep(3),1
-               ! cycle i with i interaction in same cell
-               if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
-               t = [tx,ty,tz]
-               rij = matmul(mol%lattice,t)
-               r2  = sum( rij**2 )
-               if (r2.gt.r_thr) cycle
-               r   = sqrt(r2)
-               oor6 = 1._wp/(r2**3+r0**6)
-               oor8 = 1._wp/(r2**4+r0**8)
-               oor10 = 1._wp/(r2**5+r0**10)
-               door6 = -6*r2**2*r*oor6**2
-               door8 = -8*r2**3*r*oor8**2
-               door10 = -10*r2**4*r*oor10**2
-               disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
-                  + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-               ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
-                  + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-               ed = ed - c6ij*disp
-               ! save this
-               dc6dq(i)  = dc6dq(i)  + (dizij  + djzij )*disp
-               dc6dcn(i) = dc6dcn(i) + (dic6ij + djc6ij)*disp
-               drdx = rij/r
-               g(:,i) = g(:,i) - c6ij*ddisp*drdx
-            enddo ! tz
-         enddo ! ty
-      enddo ! tx
+      do concurrent( tx = -rep(1):rep(1), &
+            &        ty = -rep(2):rep(2), &
+            &        tz = -rep(3):rep(3))
+         ! cycle i with i interaction in same cell
+         if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
+         t = [tx,ty,tz]
+         rij = matmul(mol%lattice,t)
+         rij = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)
+         r2  = sum( rij**2 )
+         if (r2.gt.r_thr) cycle
+         r   = sqrt(r2)
+         oor6 = 1._wp/(r2**3+r0**6)
+         oor8 = 1._wp/(r2**4+r0**8)
+         oor10 = 1._wp/(r2**5+r0**10)
+         door6 = -6*r2**2*r*oor6**2
+         door8 = -8*r2**3*r*oor8**2
+         door10 = -10*r2**4*r*oor10**2
+         disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
+            + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+         ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
+            + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
+         ed = ed - c6ij*disp
+         ! save this
+         dc6dq(i)  = dc6dq(i)  + (dizij  + djzij )*disp
+         dc6dcn(i) = dc6dcn(i) + (dic6ij + djc6ij)*disp
+         drdx = rij/r
+         g(:,i) = g(:,i) - c6ij*ddisp*drdx
+      enddo ! translations
       ! over all j atoms
       do j = 1, i-1
          ja = mol%at(j)
@@ -2498,48 +2447,44 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcn, &
          enddo
          r4r2ij = 3*r4r2(ia)*r4r2(ja)
          r0 = par%a1*sqrt(r4r2ij) + par%a2
-         do tx = -rep(1),rep(1),1
-            do ty = -rep(2),rep(2),1
-               do tz = -rep(3),rep(3),1
-                  ! cycle self interaction
-                  if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
-                  t = [tx,ty,tz]
-                  rij = mol%xyz(:,i) - mol%xyz(:,j) + matmul(mol%lattice,t)
-                  r2 = sum(rij**2)
-                  if (r2.gt.r_thr) cycle
-                  r = sqrt(r2)
-                  oor6 = 1._wp/(r2**3+r0**6)
-                  oor8 = 1._wp/(r2**4+r0**8)
-                  oor10 = 1._wp/(r2**5+r0**10)
-                  door6 = -6*r2**2*r*oor6**2
-                  door8 = -8*r2**3*r*oor8**2
-                  door10 = -10*r2**4*r*oor10**2
-                  disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
-                     + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-                  ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
-                     + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-                  ed = ed - c6ij*disp
-                  ! save this
-                  dc6dq(i)  = dc6dq(i)  + dizij  *disp
-                  dc6dq(j)  = dc6dq(j)  + djzij  *disp
-                  dc6dcn(i) = dc6dcn(i) + dic6ij *disp
-                  dc6dcn(j) = dc6dcn(j) + djc6ij *disp
-                  dtmp = c6ij*ddisp
-                  drdx = rij/r
-                  g(:,i) = g(:,i) - dtmp * drdx
-                  g(:,j) = g(:,j) + dtmp * drdx
-               enddo ! tz
-            enddo ! ty
-         enddo ! tx
+         do concurrent( tx = -rep(1):rep(1), &
+               &        ty = -rep(2):rep(2), &
+               &        tz = -rep(3):rep(3))
+            t = [tx,ty,tz]
+            rij = mol%xyz(:,i) - mol%xyz(:,j) + matmul(mol%lattice,t)
+            r2 = sum(rij**2)
+            if (r2.gt.r_thr) cycle
+            r = sqrt(r2)
+            oor6 = 1._wp/(r2**3+r0**6)
+            oor8 = 1._wp/(r2**4+r0**8)
+            oor10 = 1._wp/(r2**5+r0**10)
+            door6 = -6*r2**2*r*oor6**2
+            door8 = -8*r2**3*r*oor8**2
+            door10 = -10*r2**4*r*oor10**2
+            disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
+               + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+            ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
+               + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
+            ed = ed - c6ij*disp
+            ! save this
+            dc6dq(i)  = dc6dq(i)  + dizij  *disp
+            dc6dq(j)  = dc6dq(j)  + djzij  *disp
+            dc6dcn(i) = dc6dcn(i) + dic6ij *disp
+            dc6dcn(j) = dc6dcn(j) + djc6ij *disp
+            dtmp = c6ij*ddisp
+            drdx = rij/r
+            g(:,i) = g(:,i) - dtmp * drdx
+            g(:,j) = g(:,j) + dtmp * drdx
+         enddo ! translations
       enddo
    enddo
 !$omp enddo
 !$omp end parallel
 
-   !if (mbd > 0) then
-      eabc = 0.0_wp
+   eabc = 0.0_wp
+   if (mbd > 0) then
       call dabcappr_3d(mol,ndim,par,gw,dgw,c6abns,itbl,rep2,g,dc6dcn,eabc)
-   !endif
+   endif
 
    if(present(dq)) then
       ! handle dq  :: gradient is exact e-11
@@ -2550,7 +2495,6 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcn, &
    call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dcn,3*mol%nat,dc6dcn,1,1.0_wp,g,1)
 
    !  print'(" * Dispersion all done, saving variables")'
-   print'(3g21.14)',ed+eabc,ed,eabc
    if (present(eout)) eout = ed + eabc
 
    if (present(aout)) then
@@ -2583,7 +2527,7 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,c6abns,itbl,rep,g,dc6dcn,eout)
 
    integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
    integer  :: ij,jk,ik
-   real(wp),allocatable :: c6ab(:),dc6ab(:,:),r2ab(:)
+   real(wp),allocatable :: c6ab(:),dc6ab(:,:)
    real(wp) :: r2ij,r2jk,r2ik,r
    real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
    real(wp) :: c9iii,c9iij,c9ijk,oor9ijk,rijk
@@ -2601,14 +2545,13 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,c6abns,itbl,rep,g,dc6dcn,eout)
 
    intrinsic :: present,sqrt
 
-   allocate( c6ab(mol%nat*(mol%nat+1)/2),dc6ab(mol%nat,mol%nat), &
-      &      r2ab(mol%nat*(mol%nat+1)/2), source = 0.0_wp )
+   allocate( c6ab(mol%nat*(mol%nat+1)/2),dc6ab(mol%nat,mol%nat), source = 0.0_wp )
 
    eabc = 0.0_wp
 
 !$OMP parallel default(none) &
 !$omp private(i,ia,j,ja,ij,r2ij,c6ij,dic6ij,djc6ij,k,l,r)  &
-!$omp shared (mol,refn,itbl,c6abns,zvec,dzvec,r2ab) &
+!$omp shared (mol,refn,itbl,c6abns,zvec,dzvec) &
 !$omp shared (c6ab,dc6ab)
 !$omp do schedule(dynamic)
    do i = 1, mol%nat
@@ -2633,20 +2576,13 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,c6abns,itbl,rep,g,dc6dcn,eout)
       c6ab(ij) = c6ij
       dc6ab(i,i) = dic6ij + djc6ij
 
-      r = minimum_image_distance(.true.,mol%abc(:,i),mol%abc(:,i),mol%lattice,mol%pbc)
-      r2ab(ij) = r**2
-
       do j = 1, i-1
 !        if(i.eq.j) cycle
          ja = mol%at(j)
          ij = i*(i-1)/2 + j
 
 !        first check if we want this contribution
-         r = minimum_image_distance(.false.,mol%abc(:,i),mol%abc(:,j), &
-            &                       mol%lattice,mol%pbc)
-         r2ab(ij) = r**2
-         !r2ij = r2ab(ij)
-         !if(r2ij.gt.r_thr) cycle
+         !if(mol%dist(j,i)**2.gt.r_thr) cycle
 
          ! temps
          c6ij = 0.0_wp
@@ -2671,14 +2607,14 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,c6abns,itbl,rep,g,dc6dcn,eout)
 !$omp enddo
 !$omp end parallel
 
-   !call dabcappr_3d_wsc(mol,par,[2,2,2],r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
-   call dabcappr_3d_rsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
+   call dabcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
+   !call dabcappr_3d_rsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
 
    if (present(eout)) eout=eabc
 
 end subroutine dabcappr_3d
 
-subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
+subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
    use class_molecule
    implicit none
    type(molecule),intent(in) :: mol !< molecular structure information
@@ -2687,7 +2623,6 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
    real(wp),intent(in)  :: r_thr
    real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
    real(wp),intent(in)  :: dc6ab(mol%nat,mol%nat)
-   real(wp),intent(in)  :: r2ab(mol%nat*(mol%nat+1)/2)
    real(wp),intent(inout) :: g(3,mol%nat)
    real(wp),intent(inout) :: dc6dcn(mol%nat)
    real(wp),intent(inout) :: eabc
@@ -2696,6 +2631,7 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
    integer  :: ij,jk,ik,kwsAt,jwsAt
    real(wp) :: r2ij,r2jk,r2ik,r
    real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
+   real(wp) :: c9tmp
    real(wp) :: c9iii,c9iij,c9ijk,oor9ijk,rijk
    real(wp) :: rij(3),rjk(3),rik(3)
    real(wp) :: dijfdmp,dikfdmp,djkfdmp
@@ -2705,14 +2641,12 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
    real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijk,djc9ijk,dkc9ijk
    real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
 
-   associate( wsc => mol%wsc )
-
 !$OMP parallel default(none) &
 !$omp private(i,j,ii,ij,ia,ja,k,ka,ik,jk,rjk,rik,jwsAt,kwsAt,wscw,  &
 !$omp         cii,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
-!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk, &
+!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,c9tmp, &
 !$omp         c9ijk,dic9ijk,djc9ijk,dkc9ijk) &
-!$omp shared(mol,r2ab,par,c6ab,dc6ab,rep,r_thr) &
+!$omp shared(mol,par,c6ab,dc6ab,rep,r_thr) &
 !$omp reduction(+:eabc,g,dc6dcn)
 !$omp do schedule(dynamic)
    do i = 1, mol%nat
@@ -2732,56 +2666,56 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
          &    mol%lattice,rep,r_thr)
 
       do j = 1, i-1
-         if (wsc%at(j,i) == 0) cycle
+         if (mol%wsc%at(j,i) == 0) cycle
          ja = mol%at(j)
          ij = i*(i-1)/2 + j
 
 !        first check if we want this contribution
-         r2ij = r2ab(ij)
+         r2ij = mol%dist(i,j)**2
          if(r2ij.gt.r_thr) cycle
          cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
 
          ciij = cii**2*cij
 
-         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))
+         c9tmp = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))
 
-         dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9iij
-         djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9iij
+         do concurrent (jwsAt = 1:mol%wsc%itbl(j,i))
+            rij  = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
 
-         do concurrent (jwsAt = 1:wsc%itbl(j,i))
-            rij  = wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
+            wscw = mol%wsc%w(j,i)
+            c9iij = c9tmp*wscw
+            dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9tmp*wscw
+            djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9tmp*wscw
 
-            c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))*wsc%w(j,i)
-            dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9iij*wsc%w(j,i)
-            djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9iij*wsc%w(j,i)
-
-            call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,j,zero,rij,rij,ciij, &
+            call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,j,zero,rij,-rij,ciij, &
                &    c9iij,dic9iij,dic9iij,djc9iij,par%alp,mol%lattice,rep,r_thr)
          enddo
 
          do k = 1, j-1
-            if (wsc%at(k,i).eq.0) cycle
+            if (mol%wsc%at(k,i).eq.0) cycle
             ka = mol%at(k)
             ik = i*(i-1)/2 + k
             jk = j*(j-1)/2 + k
-            r2ik = r2ab(ik)
-            r2jk = r2ab(jk)
+            r2ik = mol%dist(i,k)**2
+            r2jk = mol%dist(j,k)**2
             if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
             cik  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2
             cjk  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
             cijk = cij*cjk*cik
 
-            do concurrent (jwsAt = 1:wsc%itbl(j,i), &
-                  &        kwsAt = 1:wsc%itbl(k,i) )
-               rij = wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
-               rik = mol%xyz(:,i) - wsc%xyz(:,jwsAt,k,i)
-               rjk = rij - rik
-               wscw = wsc%w(j,i)*wsc%w(k,i)
-               c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))*wscw
+            c9tmp = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
 
-               dic9ijk = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,k)/c6ab(ik))*c9ijk*wscw
-               djc9ijk = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,k)/c6ab(jk))*c9ijk*wscw
-               dkc9ijk = (dc6ab(k,j)/c6ab(jk) + dc6ab(k,i)/c6ab(ik))*c9ijk*wscw
+            do concurrent (jwsAt = 1:mol%wsc%itbl(j,i), &
+                  &        kwsAt = 1:mol%wsc%itbl(k,i) )
+               rij = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
+               rik = mol%xyz(:,i) - mol%wsc%xyz(:,kwsAt,k,i)
+               rjk = - (rij + rik)
+               wscw = mol%wsc%w(j,i)*mol%wsc%w(k,i)
+               c9ijk = c9tmp*wscw
+
+               dic9ijk = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,k)/c6ab(ik))*c9tmp*wscw
+               djc9ijk = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,k)/c6ab(jk))*c9tmp*wscw
+               dkc9ijk = (dc6ab(k,j)/c6ab(jk) + dc6ab(k,i)/c6ab(ik))*c9tmp*wscw
 
                call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,k, &
                   &    rij,rjk,rik,cijk,c9ijk,dic9ijk,djc9ijk,dkc9ijk,par%alp, &
@@ -2794,11 +2728,9 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
 !$omp enddo
 !$omp end parallel
 
-   end associate
-
 end subroutine dabcappr_3d_wsc
 
-subroutine dabcappr_3d_rsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
+subroutine dabcappr_3d_rsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
    use class_molecule
    implicit none
    type(molecule),intent(in) :: mol !< molecular structure information
@@ -2807,7 +2739,6 @@ subroutine dabcappr_3d_rsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
    real(wp),intent(in)  :: r_thr
    real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
    real(wp),intent(in)  :: dc6ab(mol%nat,mol%nat)
-   real(wp),intent(in)  :: r2ab(mol%nat*(mol%nat+1)/2)
    real(wp),intent(inout) :: g(3,mol%nat)
    real(wp),intent(inout) :: dc6dcn(mol%nat)
    real(wp),intent(inout) :: eabc
@@ -2830,7 +2761,7 @@ subroutine dabcappr_3d_rsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
 !$omp         cii,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
 !$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk, &
 !$omp         c9ijk,dic9ijk,djc9ijk,dkc9ijk) &
-!$omp shared(mol,r2ab,par,c6ab,dc6ab,rep,r_thr) &
+!$omp shared(mol,par,c6ab,dc6ab,rep,r_thr) &
 !$omp reduction(+:eabc,g,dc6dcn)
 !$omp do schedule(dynamic)
    do i = 1, mol%nat
@@ -2854,7 +2785,7 @@ subroutine dabcappr_3d_rsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
          ij = i*(i-1)/2 + j
 
 !        first check if we want this contribution
-         r2ij = r2ab(ij)
+         r2ij = mol%dist(i,j)**2
          if(r2ij.gt.r_thr) cycle
          cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
          rij  = mol%xyz(:,j) - mol%xyz(:,i)
@@ -2867,15 +2798,15 @@ subroutine dabcappr_3d_rsc(mol,par,rep,r_thr,r2ab,c6ab,dc6ab,g,dc6dcn,eabc)
          djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9iij
 
          call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,j, &
-            &    zero,rij,rij,ciij,c9iij,dic9iij,dic9iij,djc9iij,par%alp, &
+            &    zero,rij,-rij,ciij,c9iij,dic9iij,dic9iij,djc9iij,par%alp, &
             &    mol%lattice,rep,r_thr)
 
          do k = 1, j-1
             ka = mol%at(k)
             ik = i*(i-1)/2 + k
             jk = j*(j-1)/2 + k
-            r2ik = r2ab(ik)
-            r2jk = r2ab(jk)
+            r2ik = mol%dist(i,k)**2
+            r2jk = mol%dist(j,k)**2
             if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
             rjk  = mol%xyz(:,k) - mol%xyz(:,j)
             rik  = mol%xyz(:,i) - mol%xyz(:,k)
@@ -3003,12 +2934,12 @@ pure subroutine disp_atm_3d_dx_dir(n,disp,g,dc6dcn,i,j,k, &
 
          disp = disp + c9*r9ijk
 
-         g(:,i) = g(:,i) - (atm*dijfdmp - dijatm*fdmp)*c9 * trij
-         g(:,j) = g(:,j) + (atm*dijfdmp - dijatm*fdmp)*c9 * trij
-         g(:,i) = g(:,i) - (atm*dikfdmp - dikatm*fdmp)*c9 * trik
-         g(:,k) = g(:,k) + (atm*dikfdmp - dikatm*fdmp)*c9 * trik
-         g(:,j) = g(:,j) - (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
-         g(:,k) = g(:,k) + (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
+         g(:,i) = g(:,i) + (atm*dijfdmp - dijatm*fdmp)*c9 * trij
+         g(:,j) = g(:,j) - (atm*dijfdmp - dijatm*fdmp)*c9 * trij
+         g(:,i) = g(:,i) + (atm*dikfdmp - dikatm*fdmp)*c9 * trik
+         g(:,k) = g(:,k) - (atm*dikfdmp - dikatm*fdmp)*c9 * trik
+         g(:,j) = g(:,j) + (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
+         g(:,k) = g(:,k) - (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
 
          dc6dcn(i) = dc6dcn(i) - 0.5_wp*r9ijk*dic9ijk
          dc6dcn(j) = dc6dcn(j) - 0.5_wp*r9ijk*djc9ijk
