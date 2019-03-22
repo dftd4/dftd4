@@ -71,6 +71,7 @@ program dftd_tester
       case('energies');   call test_dftd4_energies
       case('api');        call test_dftd4_api
       case('periodic');   call test_dftd4_pbc
+      case('pbc_disp');   call test_dftd4_pbc_energies
       end select
    case('geometry_reader')
       select case(sec)

@@ -56,8 +56,8 @@ subroutine generate_wsc(mol,wsc,rep)
          c=1
          dist = 0.0_wp
          do aa=-rep(1),rep(1),1
-            do bb=-rep(1),rep(1),1
-               do cc=-rep(1),rep(1),1
+            do bb=-rep(2),rep(2),1
+               do cc=-rep(3),rep(3),1
                   call get_translation(aa,bb,cc,mol%xyz(:,jj),wsc%lattice,txyz(:,c,ii))
                   dist(c)=norm2(mol%xyz(:,ii)-txyz(:,c,ii))
                   c=c+1

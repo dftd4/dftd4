@@ -623,21 +623,19 @@ pure function eeq_ewald_3d_dir(riw,rep,dlat,gamij,cf) result(Amat)
    real(wp) :: distiw,rij(3)
    real(wp) :: t(3)
    Amat = 0.0_wp
-   do dx= -rep(1),rep(1)
-      do dy= -rep(2),rep(2)
-         do dz= -rep(3),rep(3)
-            t = [dx,dy,dz]
-            rij = riw + matmul(dlat,t)
-            distiw = norm2(rij)
-            ! self-interaction correction
-            if(distiw < eps) then
-               Amat = Amat - cf/sqrtpi
-            else
-               Amat = Amat - erf(   cf*distiw)/distiw &
-                  &        + erf(gamij*distiw)/distiw
-            end if
-         end do
-      end do
+   do concurrent( dx = -rep(1):rep(1), &
+         &        dy = -rep(2):rep(2), &
+         &        dz = -rep(3):rep(3) )
+      t = [dx,dy,dz]
+      rij = riw + matmul(dlat,t)
+      distiw = norm2(rij)
+      ! self-interaction correction
+      if(distiw < eps) then
+         Amat = Amat - cf/sqrtpi
+      else
+         Amat = Amat - erf(   cf*distiw)/distiw &
+            &        + erf(gamij*distiw)/distiw
+      end if
    end do
 end function eeq_ewald_3d_dir
 
@@ -656,24 +654,22 @@ pure function eeq_ewald_dx_3d_dir(riw,rep,dlat,gamij,cf) result(dAmat)
    real(wp) :: distiw,rij(3),arga,argb
    real(wp) :: t(3),dtmp
    dAmat = 0.0_wp
-   do dx = -rep(1),rep(1)
-      do dy = -rep(2),rep(2)
-         do dz = -rep(3),rep(3)
-            ! real contributions
-            t = [dx,dy,dz]
-            rij = riw + matmul(dlat,t)
-            distiw = norm2(rij)
-            if(distiw < eps) cycle
-            arga = cf**2   *distiw**2
-            argb = gamij**2*distiw**2
-            dtmp = - 2*cf*exp(-arga)/(sqrtpi*distiw**2) &
-               &   + erf(cf*distiw)/(distiw**3)           &
-               &   + 2*gamij*exp(-argb)/(sqrtpi*distiw**2) &
-               &   - erf(gamij*distiw)/(distiw**3)
-            dAmat = dAmat + rij*dtmp
-         enddo ! dz
-      enddo ! dy
-   enddo ! dx
+   do concurrent( dx = -rep(1):rep(1), &
+         &        dy = -rep(2):rep(2), &
+         &        dz = -rep(3):rep(3) )
+      ! real contributions
+      t = [dx,dy,dz]
+      rij = riw + matmul(dlat,t)
+      distiw = norm2(rij)
+      if(distiw < eps) cycle
+      arga = cf**2   *distiw**2
+      argb = gamij**2*distiw**2
+      dtmp = - 2*cf*exp(-arga)/(sqrtpi*distiw**2) &
+         &   + erf(cf*distiw)/(distiw**3)           &
+         &   + 2*gamij*exp(-argb)/(sqrtpi*distiw**2) &
+         &   - erf(gamij*distiw)/(distiw**3)
+      dAmat = dAmat + rij*dtmp
+   enddo
 
 end function eeq_ewald_dx_3d_dir
 
@@ -691,17 +687,15 @@ pure function eeq_ewald_3d_rec(riw,rep,rlat,vol,cf) result(Amat)
    real(wp) :: rik2,rik(3)
    real(wp) :: t(3)
    Amat = 0.0_wp
-   do dx = -rep(1),rep(1)
-      do dy = -rep(2),rep(2)
-         do dz = -rep(3),rep(3)
-            if (dx==0 .and. dy==0 .and. dz==0) cycle
-            t = [dx,dy,dz]
-            rik = matmul(rlat,t)
-            rik2 = dot_product(rik,rik)
-            Amat=Amat + cos(dot_product(rik,riw) ) * 4.0_wp*pi/vol &
-                        * exp(-rik2/(4.0_wp*cf**2))/rik2
-         end do
-      end do
+   do concurrent( dx = -rep(1):rep(1), &
+         &        dy = -rep(2):rep(2), &
+         &        dz = -rep(3):rep(3) )
+      if (dx==0 .and. dy==0 .and. dz==0) cycle
+      t = [dx,dy,dz]
+      rik = matmul(rlat,t)
+      rik2 = dot_product(rik,rik)
+      Amat=Amat + cos(dot_product(rik,riw) ) * 4.0_wp*pi/vol &
+         * exp(-rik2/(4.0_wp*cf**2))/rik2
    end do
 end function eeq_ewald_3d_rec
 
@@ -719,19 +713,17 @@ pure function eeq_ewald_dx_3d_rec(riw,rep,rlat,vol,cf) result(dAmat)
    real(wp) :: rik2,rik(3)
    real(wp) :: t(3),dtmp
    dAmat = 0.0_wp
-   do dx = -rep(1),rep(1)
-      do dy = -rep(2),rep(2)
-         do dz = -rep(3),rep(3)
-            if (dx==0 .and. dy==0 .and. dz==0) cycle
-            t = [dx,dy,dz]
-            rik = matmul(rlat,t)
-            rik2 = dot_product(rik,rik)
-            dtmp = sin(dot_product(rik,riw)) &
-               &   * exp(-rik2/(4.0_wp*cf**2))/rik2 &
-               &   * 4.0_wp*pi/vol
-            dAmat = dAmat + rik*dtmp
-         end do
-      end do
+   do concurrent( dx = -rep(1):rep(1), &
+         &        dy = -rep(2):rep(2), &
+         &        dz = -rep(3):rep(3) )
+      if (dx==0 .and. dy==0 .and. dz==0) cycle
+      t = [dx,dy,dz]
+      rik = matmul(rlat,t)
+      rik2 = dot_product(rik,rik)
+      dtmp = sin(dot_product(rik,riw)) &
+         &   * exp(-rik2/(4.0_wp*cf**2))/rik2 &
+         &   * 4.0_wp*pi/vol
+      dAmat = dAmat + rik*dtmp
    end do
 end function eeq_ewald_dx_3d_rec
 

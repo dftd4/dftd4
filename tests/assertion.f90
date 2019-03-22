@@ -59,17 +59,6 @@ subroutine assert_eq_int64(val1,val2)
    endif
 end subroutine assert_eq_int64
 
-subroutine assert_eq(val1,val2)
-   use iso_fortran_env, istderr => error_unit
-   integer,intent(in) :: val1,val2
-
-   if (val1 /= val2) then
-      write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
-         val1,val2
-      call terminate(1)
-   endif
-end subroutine assert_eq
-
 subroutine assert_close_real64(val1,val2,thr)
    use iso_fortran_env, istderr => error_unit
    real(real64),intent(in) :: val1,val2,thr

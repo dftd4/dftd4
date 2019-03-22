@@ -231,6 +231,123 @@ subroutine test_dftd4_api
    call terminate(0)
 end subroutine test_dftd4_api
 
+subroutine test_dftd4_pbc_energies
+   use iso_fortran_env, wp => real64, istdout => output_unit
+   use assertion
+   use class_molecule
+   use class_param
+   use dftd4
+   use eeq_model
+   use coordination_number
+   use pbc_tools
+   implicit none
+   real(wp),parameter :: thr = 1.0e-10_wp
+   integer, parameter :: nat = 6
+   integer, parameter :: at(nat) = [14,14,8,8,8,8]
+   real(wp),parameter :: abc(3,nat) = reshape(&
+      &[.095985472469032_wp, .049722204206931_wp, 0.10160624337938_wp, &
+      & 0.54722204206931_wp, 0.52863628207623_wp, 0.38664208660311_wp, &
+      & 0.29843937068984_wp, 0.39572194413818_wp, 0.20321248675876_wp, &
+      & 0.23364982659922_wp, 0.85647058758674_wp, 0.31884968761485_wp, &
+      & 0.72250232459952_wp, 0.65548544066844_wp, .056207709103487_wp, &
+      & 0.70514214000043_wp, 0.28321754549582_wp, 0.36424822189074_wp],&
+      & shape(abc))
+   real(wp),parameter :: lattice(3,3) = reshape(&
+      &[ 8.7413053236641_wp,  0.0000000000000_wp,  0.0000000000000_wp,   &
+      &  0.0000000000000_wp,  8.7413053236641_wp,  0.0000000000000_wp,   &
+      &  0.0000000000000_wp,  0.0000000000000_wp,  8.7413053236641_wp],  &
+      & shape(lattice))
+   real(wp),parameter :: covcn(nat) = &
+      &[1.7036310879369_wp, 2.8486795615265_wp, 1.4951928728082_wp, &
+      & 1.3047953045826_wp, .81178816819290_wp, .90351747314633_wp]
+   real(wp),parameter :: q(nat) = &
+      &[.39808668429315_wp, .41552173661168_wp,-.16133275860565_wp, &
+      &-.19939812633388_wp,-.20923526498153_wp,-.24364227098378_wp]
+   integer, parameter :: wsc_rep(3) = [1,1,1]
+   real(wp),parameter :: g_a = 3.0_wp
+   real(wp),parameter :: g_c = 2.0_wp
+   real(wp),parameter :: wf  = 6.0_wp
+   integer, parameter :: lmbd = p_mbd_approx_atm
+   integer, parameter :: refqmode = p_refq_goedecker
+   real(wp),parameter :: rthr_atm = 1600.0_wp
+   real(wp),parameter :: rthr_vdw = 4000.0_wp
+   integer, parameter :: vdw_rep(3) = [8,8,8]
+   integer, parameter :: atm_rep(3)  = [5,5,5]
+   type(dftd_parameter),parameter :: dparam_pbe    = dftd_parameter ( &
+      &  s6=1.0000_wp, s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp )
+   type(dftd_parameter),parameter :: dparam_tpss   = dftd_parameter ( &
+      &  s6=1.0000_wp, s8=1.76596355_wp, a1=0.42822303_wp, a2=4.54257102_wp )
+   type(dftd_parameter),parameter :: dparam_random = dftd_parameter ( &
+      &  s6=0.95_wp, s8=0.45_wp, s10=0.65_wp, s9=1.10_wp, a1=0.43_wp, a2=5.10_wp )
+   real(wp),parameter :: step = 1.0e-4_wp, step2 = 0.5_wp/step
+
+   integer              :: i,j
+   type(molecule)       :: mol
+   integer              :: ndim
+   real(wp),allocatable :: gweights(:)   ! gaussian weights
+   real(wp),allocatable :: refc6(:,:)    ! reference C6 coeffients
+   real(wp)             :: energy,e2,e3
+
+   call mol%allocate(nat,.true.)
+   mol%at   = at
+   mol%abc  = abc
+   mol%npbc = 3
+   mol%pbc  = .true.
+   mol%lattice = lattice
+   mol%volume = dlat_to_dvol(mol%lattice)
+   call dlat_to_cell(mol%lattice,mol%cellpar)
+   call dlat_to_rlat(mol%lattice,mol%rec_lat)
+   call coord_trafo(nat,lattice,abc,mol%xyz)
+   call mol%wrap_back
+   call mol%calculate_distances
+
+   call generate_wsc(mol,mol%wsc,wsc_rep)
+   call d4init(mol,g_a,g_c,refqmode,ndim)
+   call assert_eq(ndim,26)
+
+   allocate( gweights(ndim),refc6(ndim,ndim) )
+
+   call d4(mol,ndim,wf,g_a,g_c,covcn,gweights,refc6)
+   call assert_close(gweights( 4),0.78386266917391E-03_wp,thr)
+   call assert_close(gweights(13),0.74644931926423E+00_wp,thr)
+   call assert_close(gweights(22),0.41525004702946E+00_wp,thr)
+
+   call assert_close(refc6( 5,23),46.767562973793_wp,thr)
+   call assert_close(refc6(12,12),20.848889774951_wp,thr)
+   call assert_close(refc6(25, 9),68.827000333505_wp,thr)
+
+   ! energies are intent(out)
+   energy = 1.0_wp
+   e2     = 1.0_wp
+   e3     = 1.0_wp
+
+   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_pbe, &
+      &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
+
+   call assert_close(e2,    -0.42718167450879E-01_wp,thr)
+   call assert_close(e3,    -0.83527570573934E-02_wp,thr)
+   call assert_close(energy,-0.51070924508272E-01_wp,thr)
+
+   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_tpss, &
+      &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
+
+   call assert_close(e2,    -0.55866613130346E-01_wp,thr)
+   call assert_close(e3,    -0.83331536943000E-02_wp,thr)
+   call assert_close(energy,-0.64199766824646E-01_wp,thr)
+
+   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_random, &
+      &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
+
+   call assert_close(e2,    -0.32596125360232E-01_wp,thr)
+   call assert_close(e3,    -0.63107299044000E-02_wp,thr)
+   call assert_close(energy,-0.38906855264632E-01_wp,thr)
+
+   call mol%deallocate
+
+   call terminate(0)
+
+end subroutine test_dftd4_pbc_energies
+
 subroutine test_dftd4_pbc
    use iso_fortran_env, wp => real64, istdout => output_unit
    use assertion
@@ -321,12 +438,6 @@ subroutine test_dftd4_pbc
    call print_pbcsum(istdout,mol)
 
    call pbc_derfcoord(mol,cn,dcndr,900.0_wp)
-   print'(a)',"CN"
-   print'(3g21.14)',cn
-   print*
-   print'(a)',"dCN/dR"
-   print'(3g21.14)',dcndr
-   print*
 
    call new_charge_model_2019(chrgeq,mol)
 
@@ -334,28 +445,10 @@ subroutine test_dftd4_pbc
       &            .false.,.true.,.true.)
    energy = 0.0_wp
    gradient = 0.0_wp
-   print'(a)',"q"
-   print'(3g21.14)',q
-   print*
-   print'(a)',"dq/dR"
-   print'(3g21.14)',dqdr
-   print*
 
    call pbc_dncoord_d4(mol,covcn,dcovcndr,cn_rep,rthr_cn)
-   print'(a)',"covCN"
-   print'(3g21.14)',covcn
-   print*
-   print'(a)',"dcovCN/dR"
-   print'(3g21.14)',dcovcndr
-   print*
 
    call d4(mol,ndim,wf,g_a,g_c,cn,gweights,refc6)
-   print'(a)',"gweights"
-   print'(3g21.14)',gweights
-   print*
-   print'(a)',"refC6"
-   print'(3g21.14)',refc6
-   print*
 
 !   call dispgrad(mol,ndim,q,dqdr,cn,dcndr,dparam_pbe,wf,g_a,g_c, &
 !      &        refc6,lmbd,gradient,energy)

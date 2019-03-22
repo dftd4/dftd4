@@ -689,6 +689,69 @@ end subroutine get_coord
 
 end subroutine read_coord
 
+subroutine read_xmol(iunit,mol)
+   use iso_fortran_env, wp => real64
+   use class_molecule
+   use mctc_readin, getline => strip_line
+   use mctc_strings
+   use mctc_econv
+   implicit none
+   integer,intent(in) :: iunit !< file handle
+   type(molecule),intent(inout) :: mol
+   character(len=:),allocatable :: line
+   integer :: err
+   integer :: idum
+   logical,parameter :: debug = .true.
+   integer :: natoms
+   integer :: iat,icoord
+   integer :: ncount
+   logical :: exist
+   integer  :: narg
+   real(wp) :: ddum,xyz(3)
+   character(len=p_str_length),dimension(p_arg_length) :: argv
+
+   rewind(iunit)
+
+   call getline(iunit,line,err)
+   if (debug) print'(" ->",a)',line
+   read(line,*,iostat=err) natoms
+   if (err.ne.0) then
+      call raise('E',"Could not read number of atoms")
+   endif
+   read(iunit,'(a)')
+
+   call mol%allocate(natoms,.false.)
+
+   ncount = 0
+   do
+      call getline(iunit,line,err)
+      if (err.eq.iostat_end) exit
+      if (debug) print'(" ->",a)',line
+
+      if (line.eq.'') cycle ! skip empty lines
+      ncount = ncount + 1   ! but count non-empty lines first
+      if (ncount.gt.mol%nat) &
+         call raise('E',"Internal error while reading coord data group")
+      call parse(line,' ',argv,narg)
+      if (narg.lt.4) &
+         call raise('E',"not enough arguments in line in coord data group")
+      iat = elem(argv(1))
+      if (iat.eq.0) &
+         call raise('E',"invalid element input in line in coord data group")
+      mol%sym(ncount) = trim(argv(4))
+      mol%at(ncount) = iat
+      do icoord = 1, 3
+         if (get_value(trim(argv(icoord+1)),ddum)) then
+            xyz(icoord) = aatoau*ddum
+         else
+            call raise('E',"invalid coordinate input in line in coord data group")
+         endif
+      enddo
+
+   enddo
+
+end subroutine read_xmol
+
 !! ------------------------------------------------------------------------
 !  Purpose:
 !  translates element symbol into ordinal number
