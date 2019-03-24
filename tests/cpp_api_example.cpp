@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include <cassert>
 
 #include "dftd_api.h"
@@ -36,20 +37,20 @@ main (int argc, char **argv)
 
    dftd::D4_calculation(natoms, attyp, charge, coord, dparam_tpss, opt_1,
          energy, grad, hess);
-   assert(abs(-0.26682682254336E-03 - energy) < thr);
+   assert(fabs(-0.26682682254336E-03 - energy) < thr);
 
-   assert(abs( 7.9334628241320 - hess[2]             ) < thr);
-   assert(abs(-3.2756224894310 - hess[7*(3*natoms)+3]) < thr);
-   assert(abs( 0.0000000000000 - hess[2*(3*natoms)+4]) < thr);
+   assert(fabs( 7.9334628241320 - hess[2]             ) < thr);
+   assert(fabs(-3.2756224894310 - hess[7*(3*natoms)+3]) < thr);
+   assert(fabs( 0.0000000000000 - hess[2*(3*natoms)+4]) < thr);
 
    dftd::D4_calculation(natoms, attyp, charge, coord, dparam_b2plyp, opt_2,
          energy, grad, hess);
-   assert(abs(-0.13368190339570E-03 - energy) < thr);
+   assert(fabs(-0.13368190339570E-03 - energy) < thr);
 
-   assert(abs( 0.00000000000000E+00 - grad[0]) < thr);
-   assert(abs( 0.39778648945254E-04 - grad[2]) < thr);
-   assert(abs(-0.19889324472627E-04 - grad[5]) < thr);
-   assert(abs(grad[3]+grad[6])                 < thr);
+   assert(fabs( 0.00000000000000E+00 - grad[0]) < thr);
+   assert(fabs( 0.39778648945254E-04 - grad[2]) < thr);
+   assert(fabs(-0.19889324472627E-04 - grad[5]) < thr);
+   assert(fabs(grad[3]+grad[6])                 < thr);
 
    return EXIT_SUCCESS;
 }
