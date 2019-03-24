@@ -2245,7 +2245,8 @@ subroutine edisp_3d(mol,ndim,q,rep,rep2,par,g_a,g_c, &
    real(wp) :: dexpw,expw
    real(wp) :: twf,tgw,r4r2ij
    real(wp) :: rij(3),R0
-   real(wp) :: c6ii,c6ij,dic6ii,dic6ij,djc6ij,dizii,dizij,djzij
+   real(wp) :: c6ii,c6ij,dic6ii,dic6ij,djc6ij,dizii,dizij,djzij,c6ii0,c6ij0
+   real(wp),allocatable :: c6ab(:)
 
    real(wp) :: gwk,dgwk
    real(wp),allocatable :: zetavec(:)
@@ -2260,7 +2261,7 @@ subroutine edisp_3d(mol,ndim,q,rep,rep2,par,g_a,g_c, &
    intrinsic :: present,sum,maxval,exp,abs
 
    !  print'(" * Allocating local memory")'
-   allocate( &
+   allocate( c6ab(mol%nat*(mol%nat+1)/2), &
       &      zetavec(ndim), zerovec(ndim), &
       &      source = 0.0_wp )
    allocate( itbl(7,mol%nat), source = 0 )
@@ -2294,22 +2295,26 @@ subroutine edisp_3d(mol,ndim,q,rep,rep2,par,g_a,g_c, &
 !$omp end parallel
 
 !$OMP parallel default(none) &
-!$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ij,rij,r4r2ij,r0 ) &
-!$omp shared(mol,refn,itbl,zetavec,refc6,par,rep) &
+!$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ii0,c6ij,c6ij0,rij,r4r2ij,r0 ) &
+!$omp shared(mol,refn,itbl,zetavec,zerovec,refc6,par,rep,c6ab) &
 !$omp reduction(+:ed)
 !$omp do schedule(dynamic)
    do i = 1, mol%nat
       ia = mol%at(i)
+      ij = i*(i-1)/2+i
       ! temps
       c6ij   = 0.0_wp
+      c6ij0  = 0.0_wp
       ! all refs
       do ii = 1, refn(ia)
          k = itbl(ii,i)
          do jj = 1, refn(ia)
             l = itbl(jj,i)
             c6ij = c6ij + zetavec(k) * zetavec(l) * refc6(k,l)
+            c6ij0 = c6ij0 + zerovec(k) * zerovec(l) * refc6(k,l)
          enddo
       enddo
+      c6ab(ij) = c6ij0
       ! i in primitive cell with i in images
       r4r2ij = 3*r4r2(ia)**2
       r0 = par%a1*sqrt(r4r2ij) + par%a2
@@ -2318,16 +2323,20 @@ subroutine edisp_3d(mol,ndim,q,rep,rep2,par,g_a,g_c, &
       ! over all j atoms
       do j = 1, i-1
          ja = mol%at(j)
+         ij = i*(i-1)/2+j
          ! temps
          c6ij   = 0.0_wp
+         c6ij0  = 0.0_wp
          ! all refs
          do ii = 1, refn(ia)
             k = itbl(ii,i)
             do jj = 1, refn(ja)
                l = itbl(jj,j)
                c6ij = c6ij + zetavec(k) * zetavec(l) * refc6(k,l)
+               c6ij0 = c6ij0 + zerovec(k) * zerovec(l) * refc6(k,l)
             enddo
          enddo
+         c6ab(ij) = c6ij0
          r4r2ij = 3*r4r2(ia)*r4r2(ja)
          r0 = par%a1*sqrt(r4r2ij) + par%a2
          rij = mol%xyz(:,i) - mol%xyz(:,j)
@@ -2340,7 +2349,9 @@ subroutine edisp_3d(mol,ndim,q,rep,rep2,par,g_a,g_c, &
 
    eabc = 0.0_wp
    if (mbd > 0) then
-      call abcappr_3d(mol,ndim,par,zerovec,refc6,itbl,rep2,eabc)
+      !call abcappr_3d(mol,ndim,par,zerovec,refc6,itbl,rep2,eabc)
+      call abcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,cn_thr,rep2, &
+         &                             mol%lattice,c6ab,eabc)
    endif
 
    !  print'(" * Dispersion all done, saving variables")'
@@ -3046,7 +3057,10 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,g,dc6dcn,eout)
 !$omp enddo
 !$omp end parallel
 
-   call dabcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
+
+   call dabcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,r_thr,rep,&
+      &    mol%lattice,c6ab,dc6ab,eabc,dc6dcn,g)
+   !call dabcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
    !call dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
 
    if (present(eout)) eout=eabc
@@ -3487,4 +3501,964 @@ pure subroutine disp_atm_3d_dx_dir(n,disp,g,dc6dcn,i,j,k, &
 
 end subroutine disp_atm_3d_dx_dir
 
+subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
+   implicit none
+   integer, intent(in) :: nat
+   integer, intent(in) :: at(nat)
+   real(wp),intent(in) :: xyz(3,nat)
+   type(dftd_parameter),intent(in) :: par
+   real(wp),intent(in) :: thr
+   integer, intent(in) :: rep(3)
+   real(wp),intent(in) :: c6ab(nat*(nat+1)/2)
+   real(wp),intent(in) :: dlat(3,3)
+
+   real(wp),intent(inout) :: eabc
+
+   real(wp),parameter :: six = 6.0_wp, oth = 1.0_wp/3.0_wp
+
+   integer iat,jat,kat
+   real(wp) x1
+   real(wp) r2,r
+   real(wp) fdmp,tmp1
+
+   real(wp) rij(3),rik(3),rjk(3)
+   real(wp), allocatable,dimension(:,:,:,:) ::  dc6dr  !d(E)/d(r_ij) derivative wrt. dist. iat-jat
+   !dCN(jat)/d(r_ij)
+   real(wp) :: r9ijk
+   real(wp) vec(3)
+   integer ij,ik,jk
+
+   real(wp),dimension(3) ::ijvec,ikvec,jkvec,t,s,dumvec
+   integer tx,ty,tz,sx,sy,sz
+   real(wp) rij2,rik2,rjk2,c9,c6ij,c6ik,c6jk,rijk,rijk3
+   real(wp) :: cij,cjk,cik,cijk
+   real(wp) time1,time2,rijk2,dc9,dfdmp,dang,ang
+   integer,dimension(3) :: repmin,repmax
+
+   allocate(dc6dr(-rep(3):rep(3),-rep(2):rep(2), &
+      &           -rep(1):rep(1),nat*(nat+1)/2))
+   dc6dr = 0.0_wp
+
+
+   !        write(*,*)'!!!!!!!!!!    THREEBODY  GRADIENT  !!!!!!!!!!'
+   eabc=0.0d0
+   !        write(*,*)'thr:',sqrt(thr)
+
+   do iat=3,nat
+      do jat=2,iat-1
+         ij=iat*(iat-1)/2+jat
+         ijvec=xyz(:,jat)-xyz(:,iat)
+
+         c6ij=c6ab(ij)
+         do kat=1,jat-1
+            ik=iat*(iat-1)/2+kat
+            jk=jat*(jat-1)/2+kat
+            ikvec=xyz(:,kat)-xyz(:,iat)
+            jkvec=xyz(:,kat)-xyz(:,jat)
+
+            c6ik=c6ab(ik)
+            c6jk=c6ab(jk)
+            c9=-sqrt(c6ij*c6ik*c6jk)
+            cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+            cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+            cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+            cijk = cij*cjk*cik
+
+            do concurrent (tx=-rep(1):rep(1), &
+                  &        ty=-rep(2):rep(2), &
+                  &        tz=-rep(3):rep(3))
+               repmin(1)=max(-rep(1),tx-rep(1))
+               repmax(1)=min(+rep(1),tx+rep(1))
+               repmin(2)=max(-rep(2),ty-rep(2))
+               repmax(2)=min(+rep(2),ty+rep(2))
+               repmin(3)=max(-rep(3),tz-rep(3))
+               repmax(3)=min(+rep(3),tz+rep(3))
+               t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+               rij2=SUM((ijvec+t)*(ijvec+t))
+               if(rij2.gt.thr)cycle
+
+               !rr0ij=sqrt(rij2)/r0ab(at(iat),at(jat))
+
+
+               do concurrent (sx=repmin(1):repmax(1), &
+                     &        sy=repmin(2):repmax(2), &
+                     &        sz=repmin(3):repmax(3))
+                  s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+                  rik2=SUM((ikvec+s)*(ikvec+s))
+                  if(rik2.gt.thr)cycle
+
+                  dumvec=jkvec+s-t
+                  rjk2=SUM(dumvec*dumvec)
+                  if(rjk2.gt.thr)cycle
+                  !rr0ik=sqrt(rik2)/r0ab(at(iat),at(kat))
+                  !rr0jk=sqrt(rjk2)/r0ab(at(jat),at(kat))
+                  rijk2=(rij2*rjk2*rik2)
+                  ! first calculate the three components for the energy calculation fdmp
+                  ! and ang
+                  !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+                  !damp9=1./(1.+6.*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+                  rijk=sqrt(rijk2)
+                  fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+                  rijk3=rijk*rijk2
+                  ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+                     *(-rij2+rjk2+rik2)/(rijk3*rijk2) &
+                     +1.0d0/(rijk3)
+
+                  r9ijk=ang*fdmp
+                  eabc=eabc+r9ijk*c9
+
+               enddo !sz
+            enddo !tx
+         enddo !kat
+      enddo !jat
+   enddo !iat
+
+   ! Now the interaction with jat=iat of the triples iat,iat,kat
+   DO iat=2,nat
+      jat=iat
+      ij=iat*(iat-1)/2+jat
+      ijvec=0.0d0
+
+      c6ij=c6ab(ij)
+      DO kat=1,iat-1
+         jk=jat*(jat-1)/2+kat
+         ik=jk
+
+         c6ik=c6ab(ik)
+         c6jk=c6ik
+         ikvec=xyz(:,kat)-xyz(:,iat)
+         jkvec=ikvec
+         c9=-sqrt(c6ij*c6ik*c6jk)
+         cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+         cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+         cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+         cijk = cij*cjk*cik
+         do concurrent (tx=-rep(1):rep(1), &
+               &        ty=-rep(2):rep(2), &
+               &        tz=-rep(3):rep(3))
+            repmin(1)=max(-rep(1),tx-rep(1))
+            repmax(1)=min(+rep(1),tx+rep(1))
+            repmin(2)=max(-rep(2),ty-rep(2))
+            repmax(2)=min(+rep(2),ty+rep(2))
+            repmin(3)=max(-rep(3),tz-rep(3))
+            repmax(3)=min(+rep(3),tz+rep(3))
+            IF (tx.eq.0 .and. ty.eq.0 .and. tz.eq.0) cycle
+            t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+            dumvec=t
+            rij2=SUM(dumvec*dumvec)
+            if(rij2.gt.thr)cycle
+
+            !rr0ij=sqrt(rij2)/r0ab(at(iat),at(jat))
+
+            do concurrent (sx=repmin(1):repmax(1), &
+                  &        sy=repmin(2):repmax(2), &
+                  &        sz=repmin(3):repmax(3))
+               ! every result * 0.5
+
+               s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+               dumvec=ikvec+s
+               dumvec=dumvec*dumvec
+               rik2=SUM(dumvec)
+               if(rik2.gt.thr)cycle
+
+               dumvec=jkvec+s-t
+               dumvec=dumvec*dumvec
+               rjk2=SUM(dumvec)
+               if(rjk2.gt.thr)cycle
+               !rr0ik=sqrt(rik2)/r0ab(at(iat),at(kat))
+               !rr0jk=sqrt(rjk2)/r0ab(at(jat),at(kat))
+
+
+               rijk2=(rij2*rjk2*rik2)
+               !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+               !damp9=1./(1.+6.*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+               rijk=sqrt(rijk2)
+               fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+               rijk3=rijk*rijk2
+               ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+                  *(-rij2+rjk2+rik2)/(rijk3*rijk2) &
+                  +1.0d0/(rijk3)
+
+
+               r9ijk=ang*fdmp/2.0d0   !factor 1/2 for doublecounting
+               eabc=eabc+r9ijk*c9
+
+            ENDDO !sx
+
+         ENDDO !tx
+      ENDDO !kat
+   ENDDO !iat
+   ! And now kat=jat, but cycling throug all imagecells without t=s. and jat>iat going though all cells    (iat,jat,jat)
+   ! But this counts only 1/2
+
+   DO iat=2,nat
+      DO jat=1,iat-1
+         kat=jat
+         ij=iat*(iat-1)/2+jat
+         jk=jat*(jat-1)/2+kat
+         ik=ij
+
+         c6ij=c6ab(ij)
+         c6ik=c6ij
+
+         c6jk=c6ab(jk)
+         ikvec=xyz(:,kat)-xyz(:,iat)
+         ijvec=ikvec
+         jkvec=0.0d0
+         cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+         cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+         cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+         cijk = cij*cjk*cik
+
+         c9=-sqrt(c6ij*c6ik*c6jk)
+         do concurrent(tx=-rep(1):rep(1), &
+               &       ty=-rep(2):rep(2), &
+               &       tz=-rep(3):rep(3))
+            repmin(1)=max(-rep(1),tx-rep(1))
+            repmax(1)=min(+rep(1),tx+rep(1))
+            repmin(2)=max(-rep(2),ty-rep(2))
+            repmax(2)=min(+rep(2),ty+rep(2))
+            repmin(3)=max(-rep(3),tz-rep(3))
+            repmax(3)=min(+rep(3),tz+rep(3))
+
+            t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+            dumvec=ijvec+t
+            dumvec=dumvec*dumvec
+            rij2=SUM(dumvec)
+            if(rij2.gt.thr)cycle
+
+            !rr0ij=SQRT(rij2)/r0ab(at(iat),at(jat))
+
+            do concurrent (sx=repmin(1):repmax(1), &
+                  &        sy=repmin(2):repmax(2), &
+                  &        sz=repmin(3):repmax(3))
+               ! every result * 0.5
+               IF (tx.eq.sx .and. ty.eq.sy  &
+                  .and. tz.eq.sz) cycle
+               s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+               dumvec=ikvec+s
+               dumvec=dumvec*dumvec
+               rik2=SUM(dumvec)
+               if(rik2.gt.thr)cycle
+               !rr0ik=SQRT(rik2)/r0ab(at(iat),at(kat))
+
+               dumvec=jkvec+s-t
+               dumvec=dumvec*dumvec
+               rjk2=SUM(dumvec)
+               if(rjk2.gt.thr)cycle
+               !rr0jk=SQRT(rjk2)/r0ab(at(jat),at(kat))
+
+               !              if (rij*rjk*rik.gt.thr)cycle
+
+               rijk2=(rij2*rjk2*rik2)
+               !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+               !damp9=1./(1.+6.d0*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+               rijk=sqrt(rijk2)
+               fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+               rijk3=rijk*rijk2
+               ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+                  *(-rij2+rjk2+rik2)/(rijk2*rijk3) &
+                  +1.0d0/(rijk3)
+               r9ijk=ang*fdmp/2.0d0   !factor 1/2 for doublecounting
+               eabc=eabc+r9ijk*c9
+
+            ENDDO !sx
+
+         ENDDO !tx
+      ENDDO !kat
+   ENDDO !iat
+
+
+   ! And finally the self interaction iat=jat=kat all
+
+   DO iat=1,nat
+      jat=iat
+      kat=iat
+      ijvec=0.0d0
+      ij=iat*(iat-1)/2+jat
+      ik=iat*(iat-1)/2+kat
+      jk=jat*(jat-1)/2+kat
+      ikvec=ijvec
+      jkvec=ikvec
+      c6ij=c6ab(ij)
+      c6ik=c6ij
+      c6jk=c6ij
+      c9=-sqrt(c6ij*c6ij*c6ij)
+      cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+      cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+      cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+      cijk = cij*cjk*cik
+
+      do concurrent ( tx=-rep(1):rep(1), &
+            &         ty=-rep(2):rep(2), &
+            &         tz=-rep(3):rep(3))
+         repmin(1)=max(-rep(1),tx-rep(1))
+         repmax(1)=min(+rep(1),tx+rep(1))
+         repmin(2)=max(-rep(2),ty-rep(2))
+         repmax(2)=min(+rep(2),ty+rep(2))
+         repmin(3)=max(-rep(3),tz-rep(3))
+         repmax(3)=min(+rep(3),tz+rep(3))
+         IF ((tx.eq.0) .and.(ty.eq.0) .and.(tz.eq.0))cycle !IF iat and jat are the same then cycle
+         t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+         dumvec=t
+         dumvec=dumvec*dumvec
+         rij2=SUM(dumvec)
+         if(rij2.gt.thr)cycle
+         !rr0ij=SQRT(rij2)/r0ab(at(iat),at(jat))
+
+         do concurrent (sx=repmin(1):repmax(1), &
+               &        sy=repmin(2):repmax(2), &
+               &        sz=repmin(3):repmax(3))
+            IF ((sx.eq.0) .and.( sy.eq.0) .and.( sz.eq.0))cycle !IF iat and kat are the same then cycle
+            IF ((sx.eq.tx) .and. (sy.eq.ty)  &
+               .and. (sz.eq.tz)) cycle      !If kat and jat are the same then cycle
+
+            ! every result * 1/6 becaues every triple is counted twice due to the two loops t and s going from -rep to rep -> *1/2
+            !
+            !plus 1/3 becaues every triple is three times in each unitcell
+            s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+            dumvec=s
+            dumvec=dumvec*dumvec
+            rik2=SUM(dumvec)
+            if(rik2.gt.thr)cycle
+            !rr0ik=SQRT(rik2)/r0ab(at(iat),at(kat))
+
+            dumvec=jkvec+s-t
+            dumvec=dumvec*dumvec
+            rjk2=SUM(dumvec)
+            if(rjk2.gt.thr)cycle
+            !rr0jk=SQRT(rjk2)/r0ab(at(jat),at(kat))
+
+            rijk2=(rij2*rjk2*rik2)
+            !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+            !damp9=1./(1.+6.*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+            rijk=sqrt(rijk2)
+            fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+            rijk3=rijk*rijk2
+            ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+               *(-rij2+rjk2+rik2)/(rijk2*rijk3) &
+               +1.0d0/(rijk3)
+            r9ijk=ang*fdmp/6.0d0
+            eabc=eabc+c9*r9ijk
+
+         ENDDO !sx
+      ENDDO !tx
+
+
+   ENDDO !iat
+
+   eabc = -eabc ! seriously, we must FIX this -- SAW
+
+end subroutine abcappr_3d_dftd3_like_style
+
+subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, &
+      &    eabc,dc6dcn,g)
+   implicit none
+   integer, intent(in) :: nat
+   integer, intent(in) :: at(nat)
+   real(wp),intent(in) :: xyz(3,nat)
+   type(dftd_parameter),intent(in) :: par
+   real(wp),intent(in) :: thr
+   integer, intent(in) :: rep(3)
+   real(wp),intent(in) :: c6ab(nat*(nat+1)/2)
+   real(wp),intent(in) :: dc6ab(nat,nat)    !dC6(iat,jat)/cCN(iat) in dc6ab(i,j) for ABC-grad
+   real(wp),intent(in) :: dlat(3,3)
+
+   real(wp),intent(inout) :: g(3,nat)
+   real(wp),intent(inout) :: eabc
+   real(wp),intent(inout) :: dc6dcn(nat)
+
+   real(wp),parameter :: six = 6.0_wp, oth = 1.0_wp/3.0_wp
+
+   integer iat,jat,kat
+   real(wp) x1
+   real(wp) r2,r
+   real(wp) fdmp,tmp1
+
+   real(wp) rij(3),rik(3),rjk(3)
+   real(wp), allocatable,dimension(:,:,:,:) ::  dc6dr  !d(E)/d(r_ij) derivative wrt. dist. iat-jat
+   !dCN(jat)/d(r_ij)
+   real(wp) :: r9ijk
+   real(wp) vec(3)
+   integer ij,ik,jk
+
+   real(wp),dimension(3) ::ijvec,ikvec,jkvec,t,s,dumvec
+   integer tx,ty,tz,sx,sy,sz
+   real(wp) rij2,rik2,rjk2,c9,c6ij,c6ik,c6jk,rijk,rijk3
+   real(wp) :: cij,cjk,cik,cijk
+   real(wp) time1,time2,rijk2,dc9,dfdmp,dang,ang
+   integer,dimension(3) :: repmin,repmax
+
+   allocate(dc6dr(-rep(3):rep(3),-rep(2):rep(2), &
+      &           -rep(1):rep(1),nat*(nat+1)/2))
+   dc6dr = 0.0_wp
+
+
+   !        write(*,*)'!!!!!!!!!!    THREEBODY  GRADIENT  !!!!!!!!!!'
+   eabc=0.0d0
+   !        write(*,*)'thr:',sqrt(thr)
+
+   do iat=3,nat
+      do jat=2,iat-1
+         ij=iat*(iat-1)/2+jat
+         ijvec=xyz(:,jat)-xyz(:,iat)
+
+         c6ij=c6ab(ij)
+         do kat=1,jat-1
+            ik=iat*(iat-1)/2+kat
+            jk=jat*(jat-1)/2+kat
+            ikvec=xyz(:,kat)-xyz(:,iat)
+            jkvec=xyz(:,kat)-xyz(:,jat)
+
+            c6ik=c6ab(ik)
+            c6jk=c6ab(jk)
+            c9=-sqrt(c6ij*c6ik*c6jk)
+            cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+            cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+            cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+            cijk = cij*cjk*cik
+
+            do concurrent (tx=-rep(1):rep(1), &
+                  &        ty=-rep(2):rep(2), &
+                  &        tz=-rep(3):rep(3))
+               repmin(1)=max(-rep(1),tx-rep(1))
+               repmax(1)=min(+rep(1),tx+rep(1))
+               repmin(2)=max(-rep(2),ty-rep(2))
+               repmax(2)=min(+rep(2),ty+rep(2))
+               repmin(3)=max(-rep(3),tz-rep(3))
+               repmax(3)=min(+rep(3),tz+rep(3))
+               t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+               rij2=SUM((ijvec+t)*(ijvec+t))
+               if(rij2.gt.thr)cycle
+
+               !rr0ij=sqrt(rij2)/r0ab(at(iat),at(jat))
+
+
+               do concurrent (sx=repmin(1):repmax(1), &
+                     &        sy=repmin(2):repmax(2), &
+                     &        sz=repmin(3):repmax(3))
+                  s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+                  rik2=SUM((ikvec+s)*(ikvec+s))
+                  if(rik2.gt.thr)cycle
+
+                  dumvec=jkvec+s-t
+                  rjk2=SUM(dumvec*dumvec)
+                  if(rjk2.gt.thr)cycle
+                  !rr0ik=sqrt(rik2)/r0ab(at(iat),at(kat))
+                  !rr0jk=sqrt(rjk2)/r0ab(at(jat),at(kat))
+                  rijk2=(rij2*rjk2*rik2)
+                  ! first calculate the three components for the energy calculation fdmp
+                  ! and ang
+                  !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+                  !damp9=1./(1.+6.*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+                  rijk=sqrt(rijk2)
+                  fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+                  rijk3=rijk*rijk2
+                  ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+                     *(-rij2+rjk2+rik2)/(rijk3*rijk2) &
+                     +1.0d0/(rijk3)
+
+                  r9ijk=ang*fdmp
+                  eabc=eabc+r9ijk*c9
+                  !
+                  !start calculating the gradient components dfdmp, dang and dc9
+
+                  !dfdmp is the same for all three distances
+                  !dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*fdmp*fdmp
+                  dfdmp = -(oth*six*par%alp*((cijk/rijk)**oth)**par%alp)*fdmp**2
+
+                  !start calculating the derivatives of each part w.r.t. r_ij
+                  r=sqrt(rij2)
+
+
+                  dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2) &
+                     +rij2*(3.0d0*rjk2**2+2.0*rjk2*rik2+3.0*rik2**2) &
+                     -5.0*(rjk2-rik2)**2*(rjk2+rik2)) &
+                     /(r*rijk3*rijk2)
+
+                  tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+                  dc6dr(tz,ty,tx,ij) = dc6dr(tz,ty,tx,ij)-tmp1
+
+                  !start calculating the derivatives of each part w.r.t. r_ik
+
+                  r=sqrt(rik2)
+
+
+                  dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2) &
+                     +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2) &
+                     -5.0*(rjk2-rij2)**2*(rjk2+rij2)) &
+                     /(r*rijk3*rijk2)
+
+                  tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+                  !                 tmp1=-dc9
+                  dc6dr(sz,sy,sx,ik) = dc6dr(sz,sy,sx,ik)-tmp1
+
+                  !
+                  !start calculating the derivatives of each part w.r.t. r_jk
+
+                  r=sqrt(rjk2)
+
+                  dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2) &
+                     +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2) &
+                     -5.0*(rik2-rij2)**2*(rik2+rij2)) &
+                     /(r*rijk3*rijk2)
+
+                  tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+                  dc6dr(sz-tz,sy-ty,sx-tx,jk) = dc6dr(sz-tz,sy-ty,sx-tx,jk)-tmp1
+
+                  !calculating the CN derivative dE_disp(ijk)/dCN(i)
+
+                  dc9=dc6ab(iat,jat)/c6ij+dc6ab(iat,kat)/c6ik
+                  dc9=0.5d0*c9*dc9
+                  dc6dcn(iat)=dc6dcn(iat)+r9ijk*dc9
+
+                  dc9=dc6ab(jat,iat)/c6ij+dc6ab(jat,kat)/c6jk
+                  dc9=0.5d0*c9*dc9
+                  dc6dcn(jat)=dc6dcn(jat)+r9ijk*dc9
+
+                  dc9=dc6ab(kat,iat)/c6ik+dc6ab(kat,jat)/c6jk
+                  dc9=0.5d0*c9*dc9
+                  dc6dcn(kat)=dc6dcn(kat)+r9ijk*dc9
+
+
+               enddo !sz
+            enddo !tx
+         enddo !kat
+      enddo !jat
+   enddo !iat
+
+   ! Now the interaction with jat=iat of the triples iat,iat,kat
+   DO iat=2,nat
+      jat=iat
+      ij=iat*(iat-1)/2+jat
+      ijvec=0.0d0
+
+      c6ij=c6ab(ij)
+      DO kat=1,iat-1
+         jk=jat*(jat-1)/2+kat
+         ik=jk
+
+         c6ik=c6ab(ik)
+         c6jk=c6ik
+         ikvec=xyz(:,kat)-xyz(:,iat)
+         jkvec=ikvec
+         c9=-sqrt(c6ij*c6ik*c6jk)
+         cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+         cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+         cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+         cijk = cij*cjk*cik
+         do concurrent (tx=-rep(1):rep(1), &
+               &        ty=-rep(2):rep(2), &
+               &        tz=-rep(3):rep(3))
+            repmin(1)=max(-rep(1),tx-rep(1))
+            repmax(1)=min(+rep(1),tx+rep(1))
+            repmin(2)=max(-rep(2),ty-rep(2))
+            repmax(2)=min(+rep(2),ty+rep(2))
+            repmin(3)=max(-rep(3),tz-rep(3))
+            repmax(3)=min(+rep(3),tz+rep(3))
+            IF (tx.eq.0 .and. ty.eq.0 .and. tz.eq.0) cycle
+            t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+            dumvec=t
+            rij2=SUM(dumvec*dumvec)
+            if(rij2.gt.thr)cycle
+
+            !rr0ij=sqrt(rij2)/r0ab(at(iat),at(jat))
+
+            do concurrent (sx=repmin(1):repmax(1), &
+                  &        sy=repmin(2):repmax(2), &
+                  &        sz=repmin(3):repmax(3))
+               ! every result * 0.5
+
+               s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+               dumvec=ikvec+s
+               dumvec=dumvec*dumvec
+               rik2=SUM(dumvec)
+               if(rik2.gt.thr)cycle
+
+               dumvec=jkvec+s-t
+               dumvec=dumvec*dumvec
+               rjk2=SUM(dumvec)
+               if(rjk2.gt.thr)cycle
+               !rr0ik=sqrt(rik2)/r0ab(at(iat),at(kat))
+               !rr0jk=sqrt(rjk2)/r0ab(at(jat),at(kat))
+
+
+               rijk2=(rij2*rjk2*rik2)
+               !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+               !damp9=1./(1.+6.*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+               rijk=sqrt(rijk2)
+               fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+               rijk3=rijk*rijk2
+               ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+                  *(-rij2+rjk2+rik2)/(rijk3*rijk2) &
+                  +1.0d0/(rijk3)
+
+
+               r9ijk=ang*fdmp/2.0d0   !factor 1/2 for doublecounting
+               eabc=eabc+r9ijk*c9
+
+               !              iat=jat
+               !dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*fdmp*fdmp
+               dfdmp = -(oth*six*par%alp*((cijk/rijk)**oth)**par%alp)*fdmp**2
+
+               !start calculating the derivatives of each part w.r.t. r_ij
+               r=sqrt(rij2)
+
+               dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2) &
+                  +rij2*(3.0d0*rjk2**2+2.0*rjk2*rik2+3.0*rik2**2) &
+                  -5.0*(rjk2-rik2)**2*(rjk2+rik2)) &
+                  /(r*rijk3*rijk2)
+
+               tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+               dc6dr(tz,ty,tx,ij) = dc6dr(tz,ty,tx,ij)-tmp1/2.0
+
+               !start calculating the derivatives of each part w.r.t. r_ik
+               r=sqrt(rik2)
+
+
+               dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2) &
+                  +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2) &
+                  -5.0*(rjk2-rij2)**2*(rjk2+rij2)) &
+                  /(r*rijk3*rijk2)
+
+               tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+               dc6dr(sz,sy,sx,ik) = dc6dr(sz,sy,sx,ik)-tmp1/2.0
+               !
+               !start calculating the derivatives of each part w.r.t. r_ik
+               r=sqrt(rjk2)
+
+               dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2) &
+                  +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2) &
+                  -5.0*(rik2-rij2)**2*(rik2+rij2)) &
+                  /(r*rijk3*rijk2)
+
+               tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+
+               dc6dr(sz-tz,sy-ty,sx-tx,jk) = dc6dr(sz-tz,sy-ty,sx-tx,jk)-tmp1/2.0
+
+               dc9=dc6ab(iat,jat)/c6ij+dc6ab(iat,kat)/c6ik
+               dc9=0.5d0*c9*dc9
+               dc6dcn(iat)=dc6dcn(iat)+r9ijk*dc9
+
+               dc9=dc6ab(jat,iat)/c6ij+dc6ab(jat,kat)/c6jk
+               dc9=0.5d0*c9*dc9
+               dc6dcn(jat)=dc6dcn(jat)+r9ijk*dc9
+
+               dc9=dc6ab(kat,iat)/c6ik+dc6ab(kat,jat)/c6jk
+               dc9=0.5d0*c9*dc9
+               dc6dcn(kat)=dc6dcn(kat)+r9ijk*dc9
+
+
+
+
+            ENDDO !sx
+
+         ENDDO !tx
+      ENDDO !kat
+   ENDDO !iat
+   ! And now kat=jat, but cycling throug all imagecells without t=s. and jat>iat going though all cells    (iat,jat,jat)
+   ! But this counts only 1/2
+
+   DO iat=2,nat
+      DO jat=1,iat-1
+         kat=jat
+         ij=iat*(iat-1)/2+jat
+         jk=jat*(jat-1)/2+kat
+         ik=ij
+
+         c6ij=c6ab(ij)
+         c6ik=c6ij
+
+         c6jk=c6ab(jk)
+         ikvec=xyz(:,kat)-xyz(:,iat)
+         ijvec=ikvec
+         jkvec=0.0d0
+         cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+         cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+         cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+         cijk = cij*cjk*cik
+
+         c9=-sqrt(c6ij*c6ik*c6jk)
+         do concurrent(tx=-rep(1):rep(1), &
+               &       ty=-rep(2):rep(2), &
+               &       tz=-rep(3):rep(3))
+            repmin(1)=max(-rep(1),tx-rep(1))
+            repmax(1)=min(+rep(1),tx+rep(1))
+            repmin(2)=max(-rep(2),ty-rep(2))
+            repmax(2)=min(+rep(2),ty+rep(2))
+            repmin(3)=max(-rep(3),tz-rep(3))
+            repmax(3)=min(+rep(3),tz+rep(3))
+
+            t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+            dumvec=ijvec+t
+            dumvec=dumvec*dumvec
+            rij2=SUM(dumvec)
+            if(rij2.gt.thr)cycle
+
+            !rr0ij=SQRT(rij2)/r0ab(at(iat),at(jat))
+
+            do concurrent (sx=repmin(1):repmax(1), &
+                  &        sy=repmin(2):repmax(2), &
+                  &        sz=repmin(3):repmax(3))
+               ! every result * 0.5
+               IF (tx.eq.sx .and. ty.eq.sy  &
+                  .and. tz.eq.sz) cycle
+               s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+               dumvec=ikvec+s
+               dumvec=dumvec*dumvec
+               rik2=SUM(dumvec)
+               if(rik2.gt.thr)cycle
+               !rr0ik=SQRT(rik2)/r0ab(at(iat),at(kat))
+
+               dumvec=jkvec+s-t
+               dumvec=dumvec*dumvec
+               rjk2=SUM(dumvec)
+               if(rjk2.gt.thr)cycle
+               !rr0jk=SQRT(rjk2)/r0ab(at(jat),at(kat))
+
+               !              if (rij*rjk*rik.gt.thr)cycle
+
+               rijk2=(rij2*rjk2*rik2)
+               !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+               !damp9=1./(1.+6.d0*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+               rijk=sqrt(rijk2)
+               fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+               rijk3=rijk*rijk2
+               ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+                  *(-rij2+rjk2+rik2)/(rijk2*rijk3) &
+                  +1.0d0/(rijk3)
+               r9ijk=ang*fdmp/2.0d0   !factor 1/2 for doublecounting
+               eabc=eabc+r9ijk*c9
+
+
+               !              jat=kat
+               !dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*fdmp*fdmp
+               dfdmp = -(oth*six*par%alp*((cijk/rijk)**oth)**par%alp)*fdmp**2
+               !start calculating the derivatives of each part w.r.t. r_ij
+               r=sqrt(rij2)
+
+               dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2) &
+                  +rij2*(3.0d0*rjk2**2+2.0d0*rjk2*rik2+3.0d0*rik2**2) &
+                  -5.0d0*(rjk2-rik2)**2*(rjk2+rik2)) &
+                  /(r*rijk3*rijk2)
+
+               tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+               dc6dr(tz,ty,tx,ij) = dc6dr(tz,ty,tx,ij)-tmp1/2.0d0
+
+               !start calculating the derivatives of each part w.r.t. r_ik
+               r=sqrt(rik2)
+
+
+               dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2) &
+                  +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2) &
+                  -5.0*(rjk2-rij2)**2*(rjk2+rij2)) &
+                  /(r*rijk3*rijk2)
+
+               tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+               !                 tmp1=-dc9
+               dc6dr(sz,sy,sx,ik) = dc6dr(sz,sy,sx,ik)-tmp1/2.0d0
+               !
+               !start calculating the derivatives of each part w.r.t. r_jk
+               r=sqrt(rjk2)
+
+               dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2) &
+                  +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2) &
+                  -5.0d0*(rik2-rij2)**2*(rik2+rij2)) &
+                  /(r*rijk3*rijk2)
+
+               tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+               dc6dr(sz-tz,sy-ty,sx-tx,jk) = dc6dr(sz-tz,sy-ty,sx-tx,jk)-tmp1/2.0d0
+
+               !calculating the CN derivative dE_disp(ijk)/dCN(i)
+
+               dc9=dc6ab(iat,jat)/c6ij+dc6ab(iat,kat)/c6ik
+               dc9=0.5d0*c9*dc9
+               dc6dcn(iat)=dc6dcn(iat)+r9ijk*dc9
+
+               dc9=dc6ab(jat,iat)/c6ij+dc6ab(jat,kat)/c6jk
+               dc9=0.5d0*c9*dc9
+               dc6dcn(jat)=dc6dcn(jat)+r9ijk*dc9
+
+               dc9=dc6ab(kat,iat)/c6ik+dc6ab(kat,jat)/c6jk
+               dc9=0.5d0*c9*dc9
+               dc6dcn(kat)=dc6dcn(kat)+r9ijk*dc9
+
+
+
+
+            ENDDO !sx
+
+         ENDDO !tx
+      ENDDO !kat
+   ENDDO !iat
+
+
+   ! And finally the self interaction iat=jat=kat all
+
+   DO iat=1,nat
+      jat=iat
+      kat=iat
+      ijvec=0.0d0
+      ij=iat*(iat-1)/2+jat
+      ik=iat*(iat-1)/2+kat
+      jk=jat*(jat-1)/2+kat
+      ikvec=ijvec
+      jkvec=ikvec
+      c6ij=c6ab(ij)
+      c6ik=c6ij
+      c6jk=c6ij
+      c9=-sqrt(c6ij*c6ij*c6ij)
+      cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
+      cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
+      cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
+      cijk = cij*cjk*cik
+
+      do concurrent ( tx=-rep(1):rep(1), &
+            &         ty=-rep(2):rep(2), &
+            &         tz=-rep(3):rep(3))
+         repmin(1)=max(-rep(1),tx-rep(1))
+         repmax(1)=min(+rep(1),tx+rep(1))
+         repmin(2)=max(-rep(2),ty-rep(2))
+         repmax(2)=min(+rep(2),ty+rep(2))
+         repmin(3)=max(-rep(3),tz-rep(3))
+         repmax(3)=min(+rep(3),tz+rep(3))
+         IF ((tx.eq.0) .and.(ty.eq.0) .and.(tz.eq.0))cycle !IF iat and jat are the same then cycle
+         t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+         dumvec=t
+         dumvec=dumvec*dumvec
+         rij2=SUM(dumvec)
+         if(rij2.gt.thr)cycle
+         !rr0ij=SQRT(rij2)/r0ab(at(iat),at(jat))
+
+         do concurrent (sx=repmin(1):repmax(1), &
+               &        sy=repmin(2):repmax(2), &
+               &        sz=repmin(3):repmax(3))
+            IF ((sx.eq.0) .and.( sy.eq.0) .and.( sz.eq.0))cycle !IF iat and kat are the same then cycle
+            IF ((sx.eq.tx) .and. (sy.eq.ty)  &
+               .and. (sz.eq.tz)) cycle      !If kat and jat are the same then cycle
+
+            ! every result * 1/6 becaues every triple is counted twice due to the two loops t and s going from -rep to rep -> *1/2
+            !
+            !plus 1/3 becaues every triple is three times in each unitcell
+            s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
+            dumvec=s
+            dumvec=dumvec*dumvec
+            rik2=SUM(dumvec)
+            if(rik2.gt.thr)cycle
+            !rr0ik=SQRT(rik2)/r0ab(at(iat),at(kat))
+
+            dumvec=jkvec+s-t
+            dumvec=dumvec*dumvec
+            rjk2=SUM(dumvec)
+            if(rjk2.gt.thr)cycle
+            !rr0jk=SQRT(rjk2)/r0ab(at(jat),at(kat))
+
+            rijk2=(rij2*rjk2*rik2)
+            !r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+            !damp9=1./(1.+6.*(sr9*r0av)**alp9)  !alp9 is already saved with "-"
+
+            rijk=sqrt(rijk2)
+            fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**par%alp)
+            rijk3=rijk*rijk2
+            ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2) &
+               *(-rij2+rjk2+rik2)/(rijk2*rijk3) &
+               +1.0d0/(rijk3)
+            r9ijk=ang*fdmp/6.0d0
+            eabc=eabc+c9*r9ijk
+
+            !                          iat=jat=kat
+            !dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*fdmp*fdmp
+            dfdmp = -(oth*six*par%alp*((cijk/rijk)**oth)**par%alp)*fdmp**2
+            !start calculating the derivatives of each part w.r.t. r_ij
+
+            r=sqrt(rij2)
+            dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2) &
+               +rij2*(3.0d0*rjk2**2+2.0*rjk2*rik2+3.0*rik2**2) &
+               -5.0*(rjk2-rik2)**2*(rjk2+rik2)) &
+               /(r*rijk3*rijk2)
+
+
+            tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+            dc6dr(tz,ty,tx,ij) = dc6dr(tz,ty,tx,ij)-tmp1/6.0d0
+
+            !start calculating the derivatives of each part w.r.t. r_ik
+
+            r=sqrt(rik2)
+
+            dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2) &
+               +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2) &
+               -5.0*(rjk2-rij2)**2*(rjk2+rij2)) &
+               /(r*rijk3*rijk2)
+
+            tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+            dc6dr(sz,sy,sx,ik) = dc6dr(sz,sy,sx,ik)-tmp1/6.0d0
+            !
+            !start calculating the derivatives of each part w.r.t. r_jk
+
+            r=sqrt(rjk2)
+            dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2) &
+               +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2) &
+               -5.0*(rik2-rij2)**2*(rik2+rij2)) &
+               /(r*rijk3*rijk2)
+
+            tmp1=-dang*c9*fdmp+dfdmp/r*c9*ang
+            dc6dr(sz-tz,sy-ty,sx-tx,jk) = dc6dr(sz-tz,sy-ty,sx-tx,jk)-tmp1/6.0d0
+
+
+            !calculating the CN derivative dE_disp(ijk)/dCN(i)
+
+            dc9=dc6ab(iat,jat)/c6ij+dc6ab(iat,kat)/c6ik
+            dc9=0.5d0*c9*dc9
+            dc6dcn(iat)=dc6dcn(iat)+r9ijk*dc9
+
+            dc9=dc6ab(jat,iat)/c6ij+dc6ab(jat,kat)/c6jk
+            dc9=0.5d0*c9*dc9
+            dc6dcn(jat)=dc6dcn(jat)+r9ijk*dc9
+
+            dc9=dc6ab(kat,iat)/c6ik+dc6ab(kat,jat)/c6jk
+            dc9=0.5d0*c9*dc9
+            dc6dcn(kat)=dc6dcn(kat)+r9ijk*dc9
+
+         ENDDO !sx
+      ENDDO !tx
+
+
+   ENDDO !iat
+
+   ! After calculating all derivatives dE/dr_ij w.r.t. distances,
+   ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
+   do iat=2,nat
+      do jat=1,iat-1
+         ij=iat*(iat-1)/2+jat
+         !       write(*,'(3E17.6,XX,2I2)'),dc6dr(0,0,-1:1,lin(iat,jat)),iat,jat
+         do concurrent(tx=-rep(1):rep(1),&
+               &       ty=-rep(2):rep(2),&
+               &       tz=-rep(3):rep(3))
+            t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
+
+            rij=xyz(:,jat)-xyz(:,iat)+t
+            r2=sum(rij*rij)
+            if (r2.gt.thr.or.r2.lt.0.5) cycle
+            r=sqrt(r2)
+
+            x1=dc6dr(tz,ty,tx,ij)!+dcnn*(dc6dcn(iat)+dc6dcn(jat))
+
+            vec=x1*rij/r
+            g(:,iat)=g(:,iat)+vec
+            g(:,jat)=g(:,jat)-vec
+
+         enddo !tx
+      enddo !jat
+   enddo !iat
+
+   eabc = -eabc ! seriously, we must FIX this -- SAW
+
+end subroutine dabcappr_3d_dftd3_like_style
 end module dftd4
