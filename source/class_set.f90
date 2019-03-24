@@ -1,11 +1,14 @@
 !> @brief provides definition of calculation options type
 module class_set
    use iso_fortran_env, wp => real64
+   use iso_c_binding
    use class_param, only : dftd_parameter
    implicit none
 
    public :: options
    public :: dftd_options
+   public :: c_dftd_options
+   public :: convert_dftd_options
    private
 
 !> @brief calculation setup
@@ -24,6 +27,28 @@ module class_set
       logical  :: veryverbose = .false.     !< clutter the screen more
       logical  :: silent = .false.          !< clutter the screen less
    end type dftd_options
+
+!> @brief calculation setup
+   type,bind(C) :: c_dftd_options
+      integer(c_int)  :: lmbd = -1             !< kind of non-additivity correction
+      integer(c_int)  :: refq = -1             !< kind of charge model
+      real(c_double)  :: wf = 0.0_wp           !< weighting factor
+      real(c_double)  :: g_a = 0.0_wp          !< charge scale height
+      real(c_double)  :: g_c = 0.0_wp          !< charge scale steepness
+      logical(c_bool) :: lmolpol = .false.     !< calculate molecular properties?
+      logical(c_bool) :: lenergy = .false.     !< calculate dispersion energy?
+      logical(c_bool) :: lgradient = .false.   !< calculate dispersion gradient?
+      logical(c_bool) :: lhessian = .false.    !< calculate dispersion hessian?
+      logical(c_bool) :: verbose = .false.     !< print more information
+      logical(c_bool) :: veryverbose = .false. !< clutter the screen more
+      logical(c_bool) :: silent = .false.      !< clutter the screen less
+   end type c_dftd_options
+
+   interface convert_dftd_options
+      module procedure :: convert_dftd_options_c_to_f
+      module procedure :: convert_dftd_options_f_to_c
+   end interface convert_dftd_options
+
 
 !> @brief contains all calculation options for the DFT-D run
    type :: options
@@ -94,5 +119,43 @@ pure function export_dftd_options(self) result(opt)
    opt%silent      = self%silent
 
 end function export_dftd_options
+
+pure elemental function convert_dftd_options_c_to_f &
+      (c_dopt) result(f_dopt)
+   implicit none
+   type(c_dftd_options),intent(in) :: c_dopt
+   type(dftd_options)              :: f_dopt
+   f_dopt%lmbd        = c_dopt%lmbd
+   f_dopt%refq        = c_dopt%refq
+   f_dopt%wf          = c_dopt%wf
+   f_dopt%g_a         = c_dopt%g_a
+   f_dopt%g_c         = c_dopt%g_c
+   f_dopt%lmolpol     = c_dopt%lmolpol
+   f_dopt%lenergy     = c_dopt%lenergy
+   f_dopt%lgradient   = c_dopt%lgradient
+   f_dopt%lhessian    = c_dopt%lhessian
+   f_dopt%verbose     = c_dopt%verbose
+   f_dopt%veryverbose = c_dopt%veryverbose
+   f_dopt%silent      = c_dopt%silent
+end function convert_dftd_options_c_to_f
+
+pure elemental function convert_dftd_options_f_to_c &
+      (f_dopt) result(c_dopt)
+   implicit none
+   type(c_dftd_options)            :: c_dopt
+   type(dftd_options),  intent(in) :: f_dopt
+   c_dopt%lmbd        = f_dopt%lmbd
+   c_dopt%refq        = f_dopt%refq
+   c_dopt%wf          = f_dopt%wf
+   c_dopt%g_a         = f_dopt%g_a
+   c_dopt%g_c         = f_dopt%g_c
+   c_dopt%lmolpol     = f_dopt%lmolpol
+   c_dopt%lenergy     = f_dopt%lenergy
+   c_dopt%lgradient   = f_dopt%lgradient
+   c_dopt%lhessian    = f_dopt%lhessian
+   c_dopt%verbose     = f_dopt%verbose
+   c_dopt%veryverbose = f_dopt%veryverbose
+   c_dopt%silent      = f_dopt%silent
+end function convert_dftd_options_f_to_c
 
 end module class_set

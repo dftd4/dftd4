@@ -1,5 +1,5 @@
 # 
-project('dftd4', 'fortran',
+project('dftd4', 'fortran', 'cpp',
         version : '2.0',
         license : 'GPL',
         meson_version : '>=0.49')
@@ -49,6 +49,7 @@ fsrcs += 'source/disp_output.f90'
 
 # API and interfaces
 fapis += 'source/d4_calculation.f90'
+fapis += 'source/d4_api.f90'
 
 # charge model
 fsrcs += 'source/eeq_model.f90'
@@ -60,6 +61,10 @@ fsrcs += 'source/coordination_number.f90'
 fsrcs += 'source/dftd4.f90'
 #incfil += 'include/param_ref.f'
 fsrcs += 'source/dfuncpar.f90'
+
+# C++ API example
+cpp_srcs = []
+cpp_srcs += 'tests/cpp_api_example.cpp'
 
 sources = fsrcs + fapis
 
@@ -75,6 +80,14 @@ incdir = include_directories('include')
 d4lib_static = static_library(meson.project_name(), sources,
                  include_directories : incdir, pic : true)
 
+# create a shared library as well
+d4lib_shared = shared_library(meson.project_name(),
+                 version : meson.project_version(),
+                 dependencies : dependencies,
+                 include_directories : incdir,
+                 link_whole : d4lib_static,
+                 link_args : '-fopenmp' )
+
 # and link it into an executable
 d4exe = executable(meson.project_name(), fmain,
                  dependencies : dependencies,
@@ -83,6 +96,12 @@ d4exe = executable(meson.project_name(), fmain,
                  link_args : '-fopenmp' )
 
 d4tester = executable('d4test', ftest,
+                 dependencies : dependencies,
+                 include_directories : incdir,
+                 link_with : d4lib_static,
+                 link_args : '-fopenmp' )
+
+d4cpp = executable('dftd4_cpp', cpp_srcs,
                  dependencies : dependencies,
                  include_directories : incdir,
                  link_with : d4lib_static,
@@ -99,3 +118,5 @@ test('EEQ charges',          d4tester,args : '1')
 test('Dispersion properties',d4tester,args : '2')
 test('Dispersion energies',  d4tester,args : '3')
 test('API tests',            d4tester,args : '4')
+
+test('API: C++', d4cpp)
