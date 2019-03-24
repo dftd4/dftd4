@@ -13,29 +13,29 @@ static const int p_mbd_rpalike    = 1; // RPA-like (=MBD) non-additivity
 static const int p_mbd_approx_atm = 3; // approximate C9 from C6
 
 struct DFTD_parameter {
-   double s6  {-1.0};
-   double s8  {-1.0};
-   double s10 { 0.0};
-   double a1  {-1.0};
-   double a2  {-1.0};
-   double s9  { 1.0};
-   int alp {16};
-   double beta {1.0};
+   double s6;
+   double s8;
+   double s10;
+   double a1;
+   double a2;
+   double s9;
+   int alp;
+   double beta;
 };
 
 struct DFTD_options {
-   int lmbd = -1;
-   int refq = -1;
-   double wf = 0.0;
-   double g_a = 0.0;
-   double g_c = 0.0;
-   bool lmolpol = false;
-   bool lenergy = false;
-   bool lgradient = false;
-   bool lhessian = false;
-   bool verbose = false;
-   bool veryverbose = false;
-   bool silent = false;
+   int lmbd;
+   int refq;
+   double wf;
+   double g_a;
+   double g_c;
+   bool lmolpol;
+   bool lenergy;
+   bool lgradient;
+   bool lhessian;
+   bool verbose;
+   bool veryverbose;
+   bool silent;
 };
 
 extern void D4_calculation(const int& natoms, const int* attyp,

@@ -19,20 +19,16 @@ main (int argc, char **argv)
        1.44183152868459,  0.00000000000000,  0.36789293054775,
       -1.44183152868459,  0.00000000000000,  0.36789293054775};
 
-   const dftd::DFTD_parameter dparam_b2plyp {
-      s6 : 0.6400, s8 : 1.16888646, a1 : 0.44154604, a2 : 4.73114642};
-   const dftd::DFTD_parameter dparam_tpss {
-      s6 : 1.0000, s8 : 1.76596355, a1 : 0.42822303, a2 : 4.54257102};
-   const dftd::DFTD_options opt_1 {
-      lmbd : dftd::p_mbd_approx_atm, refq : dftd::p_refq_goedecker,
-      wf : 6.0, g_a : 3.0, g_c : 2.0,
-      lmolpol : false, lenergy : true, lgradient : false, lhessian : true,
-      verbose : false, veryverbose : false, silent : false };
-   const dftd::DFTD_options opt_2 = {
-      lmbd : dftd::p_mbd_approx_atm, refq : dftd::p_refq_goedecker,
-      wf : 6.0, g_a : 3.0, g_c : 2.0,
-      lmolpol : false, lenergy : false, lgradient : true, lhessian : false,
-      verbose : false, veryverbose : false, silent : true };
+   dftd::DFTD_parameter dparam_b2plyp = {
+      0.6400, 1.16888646, 0.0, 0.44154604, 4.73114642, 1.0, 16, 1.0};
+   dftd::DFTD_parameter dparam_tpss = {
+      1.0000, 1.76596355, 0.0, 0.42822303, 4.54257102, 1.0, 16, 1.0};
+   dftd::DFTD_options opt_1 = {
+      dftd::p_mbd_approx_atm, dftd::p_refq_goedecker,
+      6.0, 3.0, 2.0, false, true, false, true, false, false, false };
+   dftd::DFTD_options opt_2 = {
+      dftd::p_mbd_approx_atm, dftd::p_refq_goedecker,
+      6.0, 3.0, 2.0, false, false, true, false, false, false, true };
 
    double energy {0.0};
    double grad[3*natoms] {0.0};
@@ -46,7 +42,7 @@ main (int argc, char **argv)
    assert(abs(-3.2756224894310 - hess[7*(3*natoms)+3]) < thr);
    assert(abs( 0.0000000000000 - hess[2*(3*natoms)+4]) < thr);
 
-   D4_calculation(natoms, attyp, charge, coord, dparam_b2plyp, opt_2,
+   dftd::D4_calculation(natoms, attyp, charge, coord, dparam_b2plyp, opt_2,
          energy, grad, hess);
    assert(abs(-0.13368190339570E-03 - energy) < thr);
 

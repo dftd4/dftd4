@@ -25,10 +25,10 @@ add_project_arguments(omp,     language : 'fortran')
 cpp_std = ''
 cc = meson.get_compiler('cpp')
 if cc.get_id() == 'gcc'
-  cpp_std = '-std=c++14'
+  cpp_std = '-std=c++11'
 endif
 if fc.get_id() == 'intel'
-  cpp_std = '-std=c++14'
+  cpp_std = '-std=c++11'
 endif
 
 add_project_arguments(cpp_std, language : 'cpp')
