@@ -1,39 +1,4 @@
 !> @brief interface to the DFT-D4 module
-!
-!  extern void d4_interface(const int& natoms, const int* attyp,
-!                           const double& charge, const double* coord,
-!                           const dftd_parameter& dparam, double& energy,
-!                           double* grad, int lmbd, bool verbose, bool silent);
-!subroutine d4_interface(natoms,attyp,charge,coord,dparam,energy,grad, &
-!      &                 lmbd,verbose,silent) bind(C)
-!   use iso_fortran_env, wp => real64
-!   use iso_c_binding
-!
-!   use class_molecule
-!   use class_param
-!
-!   implicit none
-!   integer(c_int),intent(in) :: natoms
-!   integer(c_int),intent(in) :: attyp(natoms)
-!   real(c_double),intent(in) :: charge
-!   real(c_double),intent(in) :: coord(3,natoms)
-!   type(dftd_parameter),intent(in) :: dparam
-!   real(c_double),intent(inout) :: energy
-!   real(c_double),intent(inout) :: grad(3,natoms)
-!   integer(c_int), value,intent(in) :: lmbd
-!   logical(c_bool),value,intent(in) :: verbose
-!   logical(c_bool),value,intent(in) :: silent
-!
-!   type(molecule) :: mol
-!
-!   mol%allocate(natoms)
-!   mol%at = attyp
-!   mol%xyz = coord
-!   mol%chrg = charge
-!
-!   
-!end subroutine d4_interface
-
 subroutine d4_calculation(iunit,opt,mol,dparam,energy,gradient,hessian)
    use iso_fortran_env, wp => real64
 !$ use omp_lib

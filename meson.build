@@ -1,5 +1,5 @@
 # 
-project('dftd4', 'fortran',
+project('dftd4', 'fortran', 'cpp',
         version : '2.0',
         license : 'GPL',
         meson_version : '>=0.49')
@@ -25,6 +25,17 @@ endif
 add_project_arguments(dialect, language : 'fortran')
 add_project_arguments(bounds,  language : 'fortran')
 add_project_arguments(omp,     language : 'fortran')
+
+cpp_std = ''
+cc = meson.get_compiler('cpp')
+if cc.get_id() == 'gcc'
+  cpp_std = '-std=c++11'
+endif
+if fc.get_id() == 'intel'
+  cpp_std = '-std=c++11'
+endif
+
+add_project_arguments(cpp_std, language : 'cpp')
 
 fsrcs  = []
 ftest  = []
@@ -63,6 +74,7 @@ fsrcs += 'source/disp_output.f90'
 
 # API and interfaces
 fsrcs += 'source/d4_calculation.f90'
+fsrcs += 'source/d4_api.f90'
 
 # periodic boundary conditions
 fsrcs += 'source/pbc_tools.f90'
@@ -79,6 +91,10 @@ fsrcs += 'source/dftd4.f90'
 #incfil += 'include/param_ref.f'
 fsrcs += 'source/dfuncpar.f90'
 
+# C++ API example
+cpp_srcs = []
+cpp_srcs += 'tests/cpp_api_example.cpp'
+
 sources = fsrcs
 
 lapack_dep  = fc.find_library('lapack', required : true )
@@ -93,6 +109,14 @@ incdir = include_directories('include')
 d4lib_static = static_library(meson.project_name(), sources,
                  include_directories : incdir, pic : true)
 
+# create a shared library as well
+d4lib_shared = shared_library(meson.project_name(),
+                 version : meson.project_version(),
+                 dependencies : dependencies,
+                 include_directories : incdir,
+                 link_whole : d4lib_static,
+                 link_args : '-fopenmp' )
+
 # and link it into an executable
 d4exe = executable(meson.project_name(), fmain,
                  dependencies : dependencies,
@@ -101,6 +125,12 @@ d4exe = executable(meson.project_name(), fmain,
                  link_args : '-fopenmp' )
 
 d4tester = executable('d4test', ftest,
+                 dependencies : dependencies,
+                 include_directories : incdir,
+                 link_with : d4lib_static,
+                 link_args : '-fopenmp' )
+
+d4cpp = executable('dftd4_cpp', cpp_srcs,
                  dependencies : dependencies,
                  include_directories : incdir,
                  link_with : d4lib_static,
@@ -133,4 +163,5 @@ test('Dispersion: properties',    d4tester,args: ['dftd4','properties'])
 test('Dispersion: energies',      d4tester,args: ['dftd4','energies'])
 test('Dispersion: API',           d4tester,args: ['dftd4','api'])
 test('Dispersion: energies (PBC)',d4tester,args: ['dftd4','pbc_disp'])
-#test('Dispersion: periodic',      d4tester,args: ['dftd4','periodic'])
+
+test('API: C++', d4cpp)
