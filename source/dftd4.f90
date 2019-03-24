@@ -2368,9 +2368,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,eabc)
    integer  :: ij
    real(wp),allocatable :: c6ab(:)
    real(wp) :: r,r2ij
-   real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
    real(wp) :: c6ij
-   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
    real(wp) :: r_thr,gw_thr
    parameter( r_thr=1600._wp)
    parameter(gw_thr=0.0001_wp)
@@ -2443,18 +2441,18 @@ subroutine abcappr_3d_wsc(mol,par,rep,r_thr,c6ab,eabc)
    real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
    real(wp),intent(inout) :: eabc
 
-   integer  :: i,ii,ia,j,ja,k,ka
+   integer  :: i,ii,ia,j,jj,ja,k,ka
    integer  :: ij,jk,ik,kwsAt,jwsAt
    real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
+   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
    real(wp) :: c9tmp
-   real(wp) :: c9iii,c9iij,c9ijk
+   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
    real(wp) :: rij(3),rjk(3),rik(3)
    real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
 
 !$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,ia,ja,k,ka,ik,jk,rjk,rik,jwsAt,kwsAt,  &
-!$omp         cii,ciii,c9iii,ciij,c9iij, &
+!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,jwsAt,kwsAt,  &
+!$omp         cii,cjj,ciii,c9iii,ciij,cijj,c9iij,c9ijj, &
 !$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,c9tmp,c9ijk) &
 !$omp shared(mol,par,c6ab,rep,r_thr) &
 !$omp reduction(+:eabc)
@@ -2467,7 +2465,7 @@ subroutine abcappr_3d_wsc(mol,par,rep,r_thr,c6ab,eabc)
       cii  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ia))+par%a2
       ciii = cii**3
 
-      c9iii = par%s9*sqrt(c6ab(ii)**3) * 1.0_wp/6.0_wp ! avoid triple counting
+      c9iii = par%s9*sqrt(c6ab(ii)**3)/6.0_wp ! avoid triple counting
 
       call disp_atm_3d_dir(mol%nat,eabc,i,i,i,zero,zero,zero,ciii,c9iii, &
          &                 par%alp,mol%lattice,rep,r_thr)
@@ -2476,22 +2474,31 @@ subroutine abcappr_3d_wsc(mol,par,rep,r_thr,c6ab,eabc)
          if (mol%wsc%at(j,i) == 0) cycle
          ja = mol%at(j)
          ij = i*(i-1)/2 + j
+         jj = j*(j-1)/2 + j
 
 !        first check if we want this contribution
          r2ij = mol%dist(i,j)**2
          if(r2ij.gt.r_thr) cycle
          cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
+         cjj  = par%a1*sqrt(3._wp*r4r2(ja)**2)+par%a2
 
          ciij = cii**2*cij
+         cijj = cij*cjj**2
 
-         c9tmp = par%s9*sqrt(c6ab(ii)**2*c6ab(ij)) * 0.5_wp ! no double counting
+         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))
+         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))
 
          do concurrent (jwsAt = 1:mol%wsc%itbl(j,i))
             rij  = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
 
-            c9iij = c9tmp*mol%wsc%w(j,i)
+            c9tmp = c9iij*mol%wsc%w(j,i)/2.0_wp  ! no double counting
 
-            call disp_atm_3d_dir(mol%nat,eabc,i,i,j,zero,rij,-rij,ciij,c9iij, &
+            call disp_atm_3d_dir(mol%nat,eabc,i,i,j,zero,rij,-rij,ciij,c9tmp, &
+               &                 par%alp,mol%lattice,rep,r_thr)
+
+            c9tmp = c9ijj*mol%wsc%w(j,i)**2/2.0_wp  ! no double counting
+
+            call disp_atm_3d_dir(mol%nat,eabc,i,j,j,rij,zero,-rij,cijj,c9tmp, &
                &                 par%alp,mol%lattice,rep,r_thr)
          enddo
 
@@ -2507,16 +2514,16 @@ subroutine abcappr_3d_wsc(mol,par,rep,r_thr,c6ab,eabc)
             cjk  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
             cijk = cij*cjk*cik
 
-            c9tmp = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
+            c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
 
             do concurrent (jwsAt = 1:mol%wsc%itbl(j,i), &
                   &        kwsAt = 1:mol%wsc%itbl(k,i) )
                rij = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
                rik = mol%xyz(:,i) - mol%wsc%xyz(:,kwsAt,k,i)
                rjk = - (rij + rik)
-               c9ijk = c9tmp*mol%wsc%w(j,i)*mol%wsc%w(k,i)
+               c9tmp = c9ijk*mol%wsc%w(j,i)*mol%wsc%w(k,i)
 
-               call disp_atm_3d_dir(mol%nat,eabc,i,j,k,rij,rjk,rik,cijk,c9ijk, &
+               call disp_atm_3d_dir(mol%nat,eabc,i,j,k,rij,rjk,rik,cijk,c9tmp, &
                   &                 par%alp,mol%lattice,rep,r_thr)
             enddo
 
@@ -2538,17 +2545,17 @@ subroutine abcappr_3d_bvk(mol,par,rep,r_thr,c6ab,eabc)
    real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
    real(wp),intent(inout) :: eabc
 
-   integer  :: i,ii,ia,j,ja,k,ka
+   integer  :: i,ii,ia,j,jj,ja,k,ka
    integer  :: ij,jk,ik
    real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
-   real(wp) :: c9iii,c9iij,c9ijk
+   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
+   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
    real(wp) :: rij(3),rjk(3),rik(3)
    real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
 
 !$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,ia,ja,k,ka,ik,jk,rjk,rik,  &
-!$omp         cii,ciii,c9iii,ciij,c9iij, &
+!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,  &
+!$omp         cii,ciii,c9iii,ciij,c9iij,cijj,cjj,c9ijj, &
 !$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk, &
 !$omp         c9ijk) &
 !$omp shared(mol,par,c6ab,rep,r_thr) &
@@ -2562,7 +2569,7 @@ subroutine abcappr_3d_bvk(mol,par,rep,r_thr,c6ab,eabc)
       cii  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ia))+par%a2
       ciii = cii**3
 
-      c9iii = par%s9*sqrt(c6ab(ii)**3)
+      c9iii = par%s9*sqrt(c6ab(ii)**3)/6.0_wp ! avoid triple counting
 
       call disp_atm_3d_dir(mol%nat,eabc,i,i,i,zero,zero,zero,ciii,c9iii, &
          &                 par%alp,mol%lattice,rep,r_thr)
@@ -2570,18 +2577,24 @@ subroutine abcappr_3d_bvk(mol,par,rep,r_thr,c6ab,eabc)
       do j = 1, i-1
          ja = mol%at(j)
          ij = i*(i-1)/2 + j
+         jj = j*(j-1)/2 + j
 
 !        first check if we want this contribution
          r2ij = mol%dist(i,j)**2
          if(r2ij.gt.r_thr) cycle
          cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         rij  = mol%xyz(:,j) - mol%xyz(:,i)
+         cjj  = par%a1*sqrt(3._wp*r4r2(ja)**2)+par%a2
 
          ciij = cii**2*cij
+         cijj = cij*cjj**2
 
-         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))
+         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))/2.0_wp ! avoid double counting
+         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))/2.0_wp ! avoid double counting
 
          call disp_atm_3d_dir(mol%nat,eabc,i,i,j,zero,rij,-rij,ciij,c9iij, &
+            &                 par%alp,mol%lattice,rep,r_thr)
+
+         call disp_atm_3d_dir(mol%nat,eabc,i,j,j,rij,zero,-rij,cijj,c9ijj, &
             &                 par%alp,mol%lattice,rep,r_thr)
 
          do k = 1, j-1
@@ -2859,7 +2872,7 @@ pure subroutine disp_3d_dir(n,ed,i,j,rij,r0,r4r2ij,s6,s8,s10, &
       t = [tx,ty,tz]
       trij = rij + matmul(dlat,t)
       r2  = sum( trij**2 )
-      if (r2 > thr .or. r2 < same) cycle
+      if (r2 > thr .or. r2 < same) cycle ! too far away or same atom
       r   = sqrt(r2)
       oor6 = 1._wp/(r2**3+r0**6)
       oor8 = 1._wp/(r2**4+r0**8)
@@ -2908,7 +2921,7 @@ pure subroutine disp_3d_dx_dir(n,ed,g,dc6dcn,dc6dq,i,j,rij,r0,r4r2ij,s6,s8,s10, 
       t = [tx,ty,tz]
       trij = rij + matmul(dlat,t)
       r2  = sum( trij**2 )
-      if (r2 > thr .or. r2 < same) cycle
+      if (r2 > thr .or. r2 < same) cycle ! too far away or same atom
       r   = sqrt(r2)
       oor6 = 1._wp/(r2**3+r0**6)
       oor8 = 1._wp/(r2**4+r0**8)
@@ -3053,22 +3066,22 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
    real(wp),intent(inout) :: dc6dcn(mol%nat)
    real(wp),intent(inout) :: eabc
 
-   integer  :: i,ii,ia,j,ja,k,ka
+   integer  :: i,ii,ia,j,jj,ja,k,ka
    integer  :: ij,jk,ik,kwsAt,jwsAt
    real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
+   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
    real(wp) :: c9tmp
-   real(wp) :: c9iii,c9iij,c9ijk
+   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
    real(wp) :: rij(3),rjk(3),rik(3)
    real(wp) :: wscw
-   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijk,djc9ijk,dkc9ijk
+   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijj,djc9ijj,dic9ijk,djc9ijk,dkc9ijk
    real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
 
 !$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,ia,ja,k,ka,ik,jk,rjk,rik,jwsAt,kwsAt,wscw,  &
-!$omp         cii,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
-!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,c9tmp, &
-!$omp         c9ijk,dic9ijk,djc9ijk,dkc9ijk) &
+!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,jwsAt,kwsAt,wscw,  &
+!$omp         cii,cjj,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
+!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,c9tmp,cijj,c9ijj, &
+!$omp         c9ijk,dic9ijk,djc9ijk,dkc9ijk,dic9ijj,djc9ijj) &
 !$omp shared(mol,par,c6ab,dc6ab,rep,r_thr) &
 !$omp reduction(+:eabc,g,dc6dcn)
 !$omp do schedule(dynamic)
@@ -3082,8 +3095,9 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
 
       c9iii = par%s9*sqrt(c6ab(ii)**3)
 
-      dic9iii = 2*dc6ab(i,i)/c6ab(ii)*c9ijk * 1.0_wp/6.0_wp
+      dic9iii = 2*dc6ab(i,i)/c6ab(ii)*c9ijk/6.0_wp ! avoid triple counting
 
+      ! i,i',i" contribution
       call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,i, &
          &    zero,zero,zero,ciii,c9iii,dic9iii,dic9iii,dic9iii,par%alp, &
          &    mol%lattice,rep,r_thr)
@@ -3092,26 +3106,40 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
          if (mol%wsc%at(j,i) == 0) cycle
          ja = mol%at(j)
          ij = i*(i-1)/2 + j
+         jj = j*(j-1)/2 + j
 
 !        first check if we want this contribution
          r2ij = mol%dist(i,j)**2
          if(r2ij.gt.r_thr) cycle
          cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
+         cjj  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ja))+par%a2
 
          ciij = cii**2*cij
+         cijj = cjj**2*cij
 
-         c9tmp = par%s9*sqrt(c6ab(ii)**2*c6ab(ij)) * 0.5_wp
+         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))/2.0_wp ! avoid double counting
+         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))/2.0_wp ! avoid double counting
 
          do concurrent (jwsAt = 1:mol%wsc%itbl(j,i))
             rij  = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
 
             wscw = mol%wsc%w(j,i)
-            c9iij = c9tmp*wscw
-            dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9tmp*wscw
-            djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9tmp*wscw
+            c9tmp = c9iij*wscw
+            dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9iij*wscw
+            djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9iij*wscw
 
+            ! i,i',j contribution
             call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,j, &
                &    zero,rij,-rij,ciij,c9iij,dic9iij,dic9iij,djc9iij, &
+               &    par%alp,mol%lattice,rep,r_thr)
+
+            c9tmp = c9iij*wscw**2
+            dic9ijj = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,j)/c6ab(ij))*c9ijj*wscw**2
+            djc9ijj = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,j)/c6ab(jj))*c9ijj*wscw**2
+
+            ! i,j,j' contribution
+            call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,j, &
+               &    rij,zero,-rij,cijj,c9ijj,dic9ijj,djc9ijj,djc9ijj, &
                &    par%alp,mol%lattice,rep,r_thr)
          enddo
 
@@ -3141,6 +3169,7 @@ subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
                djc9ijk = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,k)/c6ab(jk))*c9tmp*wscw
                dkc9ijk = (dc6ab(k,j)/c6ab(jk) + dc6ab(k,i)/c6ab(ik))*c9tmp*wscw
 
+               ! i,j,k contribution
                call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,k, &
                   &    rij,rjk,rik,cijk,c9ijk,dic9ijk,djc9ijk,dkc9ijk,par%alp, &
                   &    mol%lattice,rep,r_thr)
@@ -3167,19 +3196,19 @@ subroutine dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
    real(wp),intent(inout) :: dc6dcn(mol%nat)
    real(wp),intent(inout) :: eabc
 
-   integer  :: i,ii,ia,j,ja,k,ka
+   integer  :: i,ii,ia,j,jj,ja,k,ka
    integer  :: ij,jk,ik
    real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
-   real(wp) :: c9iii,c9iij,c9ijk
+   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
+   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
    real(wp) :: rij(3),rjk(3),rik(3)
-   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijk,djc9ijk,dkc9ijk
+   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijj,djc9ijj,dic9ijk,djc9ijk,dkc9ijk
    real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
 
 !$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,ia,ja,k,ka,ik,jk,rjk,rik,  &
-!$omp         cii,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
-!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk, &
+!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,dic9ijj,djc9ijj,  &
+!$omp         cii,cjj,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
+!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,cijj,c9ijj, &
 !$omp         c9ijk,dic9ijk,djc9ijk,dkc9ijk) &
 !$omp shared(mol,par,c6ab,dc6ab,rep,r_thr) &
 !$omp reduction(+:eabc,g,dc6dcn)
@@ -3192,10 +3221,11 @@ subroutine dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
       cii  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ia))+par%a2
       ciii = cii**3
 
-      c9iii = par%s9*sqrt(c6ab(ii)**3)
+      c9iii = par%s9*sqrt(c6ab(ii)**3)/6.0_wp
 
       dic9iii = 2*dc6ab(i,i)/c6ab(ii)*c9ijk
 
+      ! i,i',i" contribution
       call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,i, &
          &    zero,zero,zero,ciii,c9iii,dic9iii,dic9iii,dic9iii,par%alp, &
          &    mol%lattice,rep,r_thr)
@@ -3203,22 +3233,35 @@ subroutine dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
       do j = 1, i-1
          ja = mol%at(j)
          ij = i*(i-1)/2 + j
+         jj = j*(j-1)/2 + j
 
 !        first check if we want this contribution
          r2ij = mol%dist(i,j)**2
          if(r2ij.gt.r_thr) cycle
          cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
+         cjj  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ja))+par%a2
          rij  = mol%xyz(:,j) - mol%xyz(:,i)
 
          ciij = cii**2*cij
+         cijj = cjj**2*cij
 
-         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))
+         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))/2.0_wp ! avoid double counting
+         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))/2.0_wp ! avoid double counting
 
-         dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9iij
-         djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9iij
+         dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9ijj
+         djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9ijj
 
+         dic9ijj = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,j)/c6ab(ij))*c9ijj
+         djc9ijj = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,j)/c6ab(jj))*c9ijj
+
+         ! i,i',j contribution
          call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,j, &
             &    zero,rij,-rij,ciij,c9iij,dic9iij,dic9iij,djc9iij,par%alp, &
+            &    mol%lattice,rep,r_thr)
+
+         ! i,j,j' contribution
+         call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,j, &
+            &    rij,zero,-rij,cijj,c9ijj,dic9ijj,djc9ijj,djc9ijj,par%alp, &
             &    mol%lattice,rep,r_thr)
 
          do k = 1, j-1
@@ -3240,6 +3283,7 @@ subroutine dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
             djc9ijk = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,k)/c6ab(jk))*c9ijk
             dkc9ijk = (dc6ab(k,j)/c6ab(jk) + dc6ab(k,i)/c6ab(ik))*c9ijk
 
+            ! i,j,k contribution
             call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,k, &
                &    rij,rjk,rik,cijk,c9ijk,dic9ijk,djc9ijk,dkc9ijk,par%alp, &
                &    mol%lattice,rep,r_thr)
@@ -3291,21 +3335,21 @@ pure subroutine disp_atm_3d_dir(n,disp,i,j,k, &
       trij = rij + matmul(dlat,t)
 
       r2ij = sum(trij**2)
-      if (r2ij > thr .or. r2ij < same) cycle ! too far away
+      if (r2ij > thr .or. r2ij < same) cycle ! too far away or same atom
 
       do concurrent(sx = minrep(1):maxrep(1),&
             &       sy = minrep(2):maxrep(2),&
             &       sz = minrep(3):maxrep(3))
-         if (i.eq.k .and. (sx   ==0 .and. sy   ==0 .and. sz   ==0)) cycle
-         if (j.eq.k .and. (sx-tx==0 .and. sy-ty==0 .and. sz-tz==0)) cycle
+         if (i.eq.k .and. (sx==0  .and. sy==0  .and. sz==0 )) cycle
+         if (j.eq.k .and. (sx==tx .and. sy==ty .and. sz==tz)) cycle
          s = [sx,sy,sz]
          trjk = rjk + matmul(dlat,s-t)
          trik = rik + matmul(dlat,s)
 
          r2jk = sum(trjk**2)
-         if (r2jk > thr .or. r2jk < same) cycle ! too far away
+         if (r2jk > thr .or. r2jk < same) cycle ! too far away or same atom
          r2ik = sum(trik**2)
-         if (r2ik > thr .or. r2ik < same) cycle ! too far away
+         if (r2ik > thr .or. r2ik < same) cycle ! too far away or same atom
 
          r2ijk = r2ij*r2jk*r2ik
          rijk = sqrt(r2ijk)
@@ -3373,22 +3417,22 @@ pure subroutine disp_atm_3d_dx_dir(n,disp,g,dc6dcn,i,j,k, &
       trij = rij + matmul(dlat,t)
 
       r2ij = sum(trij**2)
-      if (r2ij > thr .or. r2ij < same) cycle ! too far away
+      if (r2ij > thr .or. r2ij < same) cycle ! too far away or same atom
       oorij = 1._wp/sqrt(r2ij)
 
       do concurrent(sx = minrep(1):maxrep(1),&
             &       sy = minrep(2):maxrep(2),&
             &       sz = minrep(3):maxrep(3))
-         if (i.eq.k .and. (sx   ==0 .and. sy   ==0 .and. sz   ==0)) cycle
-         if (j.eq.k .and. (sx-tx==0 .and. sy-ty==0 .and. sz-tz==0)) cycle
+         if (i.eq.k .and. (sx==0  .and. sy==0  .and. sz==0 )) cycle
+         if (j.eq.k .and. (sx==tx .and. sy==ty .and. sz==tz)) cycle
          s = [sx,sy,sz]
          trjk = rjk + matmul(dlat,s-t)
          trik = rik + matmul(dlat,s)
 
          r2jk = sum(trjk**2)
-         if (r2jk > thr .or. r2jk < same) cycle ! too far away
+         if (r2jk > thr .or. r2jk < same) cycle ! too far away or same atom
          r2ik = sum(trik**2)
-         if (r2ik > thr .or. r2ik < same) cycle ! too far away
+         if (r2ik > thr .or. r2ik < same) cycle ! too far away or same atom
 
          oorjk = 1._wp/sqrt(r2jk)
          oorik = 1._wp/sqrt(r2ik)
@@ -3424,10 +3468,13 @@ pure subroutine disp_atm_3d_dx_dir(n,disp,g,dc6dcn,i,j,k, &
          disp = disp + c9*r9ijk
 
          g(:,i) = g(:,i) + (atm*dijfdmp - dijatm*fdmp)*c9 * trij
+         if (i.ne.j) &
          g(:,j) = g(:,j) - (atm*dijfdmp - dijatm*fdmp)*c9 * trij
          g(:,i) = g(:,i) + (atm*dikfdmp - dikatm*fdmp)*c9 * trik
+         if (i.ne.k) &
          g(:,k) = g(:,k) - (atm*dikfdmp - dikatm*fdmp)*c9 * trik
          g(:,j) = g(:,j) + (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
+         if (j.ne.k) &
          g(:,k) = g(:,k) - (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
 
          dc6dcn(i) = dc6dcn(i) - 0.5_wp*r9ijk*dic9ijk

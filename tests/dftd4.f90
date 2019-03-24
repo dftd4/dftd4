@@ -325,22 +325,22 @@ subroutine test_dftd4_pbc_energies
       &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
 
    call assert_close(e2,    -0.42718167450879E-01_wp,thr)
-   call assert_close(e3,    -0.83527570573934E-02_wp,thr)
-   call assert_close(energy,-0.51070924508272E-01_wp,thr)
+   call assert_close(e3,    -0.10018817909529E-01_wp,thr)
+   call assert_close(energy,-0.52736985360408E-01_wp,thr)
 
    call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_tpss, &
       &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
 
    call assert_close(e2,    -0.55866613130346E-01_wp,thr)
-   call assert_close(e3,    -0.83331536943000E-02_wp,thr)
-   call assert_close(energy,-0.64199766824646E-01_wp,thr)
+   call assert_close(e3,    -0.99747709195572E-02_wp,thr)
+   call assert_close(energy,-0.65841384049904E-01_wp,thr)
 
    call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_random, &
       &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
 
    call assert_close(e2,    -0.32596125360232E-01_wp,thr)
-   call assert_close(e3,    -0.63107299044000E-02_wp,thr)
-   call assert_close(energy,-0.38906855264632E-01_wp,thr)
+   call assert_close(e3,    -0.78601879248680E-02_wp,thr)
+   call assert_close(energy,-0.40456313285100E-01_wp,thr)
 
    call mol%deallocate
 
@@ -463,7 +463,7 @@ subroutine test_dftd4_pbc
    gradient = 0.0_wp
 
    call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,vdw_rep,cn_rep,dparam_pbe, &
-      &             wf,g_a,g_c,refc6,0,gradient,energy,dqdr)
+      &             wf,g_a,g_c,refc6,lmbd,gradient,energy,dqdr)
 
    print'(a)',"energy"
    print'(3g21.14)',energy
