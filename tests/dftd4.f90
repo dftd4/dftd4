@@ -321,26 +321,26 @@ subroutine test_dftd4_pbc_energies
    e2     = 1.0_wp
    e3     = 1.0_wp
 
-   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_pbe, &
+   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,rthr_vdw,rthr_atm,dparam_pbe, &
       &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
 
-   call assert_close(e2,    -0.42718167450879E-01_wp,thr)
+   call assert_close(e2,    -0.42709214619586E-01_wp,thr)
    call assert_close(e3,     0.19951867090604E-02_wp,thr)
-   call assert_close(energy,-0.40722980741818E-01_wp,thr)
+   call assert_close(energy,-0.40714027910526E-01_wp,thr)
 
-   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_tpss, &
+   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,rthr_vdw,rthr_atm,dparam_tpss, &
       &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
 
-   call assert_close(e2,    -0.55866613130346E-01_wp,thr)
+   call assert_close(e2,    -0.55857575773063E-01_wp,thr)
    call assert_close(e3,     0.19786934360753E-02_wp,thr)
-   call assert_close(energy,-0.53887919694271E-01_wp,thr)
+   call assert_close(energy,-0.53878882336988E-01_wp,thr)
 
-   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,dparam_random, &
+   call edisp_3d(mol,ndim,q,vdw_rep,atm_rep,rthr_vdw,rthr_atm,dparam_random, &
       &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
 
-   call assert_close(e2,    -0.32596125360232E-01_wp,thr)
+   call assert_close(e2,    -0.32587667412892E-01_wp,thr)
    call assert_close(e3,     0.16050327438669E-02_wp,thr)
-   call assert_close(energy,-0.30991092616365E-01_wp,thr)
+   call assert_close(energy,-0.30982634669025E-01_wp,thr)
 
    call mol%deallocate
 
@@ -462,8 +462,8 @@ subroutine test_dftd4_pbc
    energy = 0.0_wp
    gradient = 0.0_wp
 
-   call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,vdw_rep,cn_rep,dparam_pbe, &
-      &             wf,g_a,g_c,refc6,lmbd,gradient,energy,dqdr)
+   call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,vdw_rep,cn_rep,rthr_vdw,rthr_cn, &
+      &             dparam_pbe,wf,g_a,g_c,refc6,lmbd,gradient,energy,dqdr)
 
    print'(a)',"energy"
    print'(3g21.14)',energy

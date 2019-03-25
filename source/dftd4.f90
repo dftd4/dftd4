@@ -2217,152 +2217,179 @@ function lmbd2string(lmbd) result(string)
    end select
 end function lmbd2string
 
-!> @brief compute D4 energy under periodic boundary conditions
-subroutine edisp_3d(mol,ndim,q,rep,rep2,par,g_a,g_c, &
-      gw,refc6,mbd,energy,etwo,embd)
-   use iso_fortran_env, only : wp => real64
+! compute D4 gradient under pbc
+subroutine edisp_3d(mol,ndim,q,rep,mbd_rep,r_thr,mbd_thr,par,g_a,g_c, &
+      &             gw,c6abns,mbd,ed,etwo,embd)
+  use iso_fortran_env, only : wp => real64
    use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol
-   integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: q(mol%nat)
-   integer, intent(in)  :: rep(3)
-   integer, intent(in)  :: rep2(3)
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: g_a,g_c
-   real(wp),intent(in)  :: gw(ndim)
-   real(wp),intent(in)  :: refc6(ndim,ndim)
-   integer, intent(in)  :: mbd
-   real(wp),intent(out) :: energy
-   real(wp),intent(out),optional :: etwo
-   real(wp),intent(out),optional :: embd
+  implicit none
+  type(molecule),intent(in) :: mol
+  integer, intent(in)  :: ndim
+  real(wp),intent(in)  :: q(mol%nat)
+  integer, intent(in)  :: rep(3),mbd_rep(3)
+  real(wp),intent(in)  :: r_thr,mbd_thr
+  integer              :: tx,ty,tz
+  real(wp)             :: t(3)
+  real(wp)             :: aiw(23)
+  type(dftd_parameter),intent(in) :: par
+  real(wp),intent(in)  :: g_a,g_c
+  real(wp),intent(in)  :: gw(ndim)
+  real(wp),intent(in)  :: c6abns(ndim,ndim)
+  integer, intent(in)  :: mbd
+  real(wp),intent(out) :: ed
+  real(wp),intent(out),optional :: etwo
+  real(wp),intent(out),optional :: embd
 
-   integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
-   integer, allocatable :: itbl(:,:)
-   real(wp) :: iz
-   real(wp) :: ed,eabc
-   real(wp) :: norm,dnorm
-   real(wp) :: dexpw,expw
-   real(wp) :: twf,tgw,r4r2ij
-   real(wp) :: rij(3),R0
-   real(wp) :: c6ii,c6ij,dic6ii,dic6ij,djc6ij,dizii,dizij,djzij,c6ii0,c6ij0
-   real(wp),allocatable :: c6ab(:)
+  integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
+  integer, allocatable :: itbl(:,:)
+  real(wp) :: iz
+  real(wp) :: qmod,eabc
+  real(wp) :: norm,dnorm
+  real(wp) :: dexpw,expw
+  real(wp) :: twf,tgw,r4r2ij
+  real(wp) :: rij(3),r,r2,r4,r6,r8,R0
+  real(wp) :: oor6,oor8,oor10,door6,door8,door10,cutoff
+  real(wp) :: c8abns,disp,ddisp,x1,x2,x3
+  real(wp) :: c6ii,c6ij,dic6ii,dic6ij,djc6ij,dizii,dizij,djzij
+  real(wp) :: rcovij,expterm,den,dcndr
 
-   real(wp) :: gwk,dgwk
-   real(wp),allocatable :: zetavec(:)
-   real(wp),allocatable :: zerovec(:)
-   real(wp) :: cn_thr,r_thr,gw_thr
-   real(wp),parameter   :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
+  real(wp) :: drdx(3),dtmp,gwk,dgwk
+  real(wp),allocatable :: r2ab(:)
+  real(wp),allocatable :: dc6dcn(:)
+  real(wp),allocatable :: zetavec(:)
+  real(wp),allocatable :: zerovec(:)
+  real(wp) :: cn_thr,gw_thr
+  
+  parameter(cn_thr = 1600.0_wp)
+  parameter(gw_thr=0.000001_wp)
+  real(wp),parameter :: sqrtpi = 1.77245385091_wp
+  real(wp),parameter :: hlfosqrtpi = 0.5_wp/1.77245385091_wp
+  real(wp),parameter :: sf = 0.5_wp
+  
+  intrinsic :: present,sqrt,sum,maxval,exp,abs
 
-   parameter(cn_thr = 1600.0_wp)
-   parameter( r_thr=5000._wp)
-   parameter(gw_thr=0.000001_wp)
+  !  print'(" * Allocating local memory")'
+  allocate( zetavec(ndim),zerovec(ndim), source = 0.0_wp )
+  allocate( itbl(7,mol%nat), source = 0 )
 
-   intrinsic :: present,sum,maxval,exp,abs
+  ed = 0.0_wp
+  eabc = 0.0_wp
 
-   !  print'(" * Allocating local memory")'
-   allocate( c6ab(mol%nat*(mol%nat+1)/2), &
-      &      zetavec(ndim), zerovec(ndim), &
-      &      source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
+  k = 0
+  do i = 1, mol%nat
+     do ii = 1, refn(mol%at(i))
+        k = k+1
+        itbl(ii,i) = k
+     enddo
+  enddo
 
-   ed = 0.0_wp
+  !  print'(" * Entering first OMP section")'
+  !$OMP parallel default(none) &
+  !$omp private(i,ii,iii,ia,iz,k)  &
+  !$omp shared (mol,refn,refc,refcovcn,itbl,refq,g_a,g_c,q) &
+  !$omp shared (gw,zetavec,zerovec,r_thr)
+  !$omp do
+  do i = 1, mol%nat
+     ia = mol%at(i)
+     iz = zeff(ia)
+     do ii = 1, refn(ia)
+        k = itbl(ii,i)
+        zetavec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gw(k)
+        ! NEW: q=0 for ATM
+        zerovec(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gw(k)
 
-   k = 0
-   do i = 1, mol%nat
-      do ii = 1, refn(mol%at(i))
-         k = k+1
-         itbl(ii,i) = k
-      enddo
-   enddo
+     enddo
+  enddo
+  !$omp end do
+  !$omp end parallel
 
-   !  print'(" * Entering first OMP section")'
-!$OMP parallel default(none) &
-!$omp private(i,ii,ia,iz,k) &
-!$omp shared (mol,refn,itbl,refq,g_a,g_c,q) &
-!$omp shared (gw,zerovec,zetavec)
-!$omp do
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      iz = zeff(ia)
-      do ii = 1, refn(ia)
-         k = itbl(ii,i)
-         zetavec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gw(k)
-         zerovec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gw(k)
-      enddo
-   enddo
-!$omp end do
-!$omp end parallel
-
-!$OMP parallel default(none) &
-!$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ii0,c6ij,c6ij0,rij,r4r2ij,r0 ) &
-!$omp shared(mol,refn,itbl,zetavec,zerovec,refc6,par,rep,c6ab) &
-!$omp reduction(+:ed)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      ij = i*(i-1)/2+i
-      ! temps
-      c6ij   = 0.0_wp
-      c6ij0  = 0.0_wp
-      ! all refs
-      do ii = 1, refn(ia)
-         k = itbl(ii,i)
-         do jj = 1, refn(ia)
-            l = itbl(jj,i)
-            c6ij = c6ij + zetavec(k) * zetavec(l) * refc6(k,l)
-            c6ij0 = c6ij0 + zerovec(k) * zerovec(l) * refc6(k,l)
-         enddo
-      enddo
-      c6ab(ij) = c6ij0
-      ! i in primitive cell with i in images
-      r4r2ij = 3*r4r2(ia)**2
-      r0 = par%a1*sqrt(r4r2ij) + par%a2
-      call disp_3d_dir(mol%nat,ed,i,i,zero,r0,r4r2ij,par%s6,par%s8,par%s10, &
-         &             c6ij,mol%lattice,rep,r_thr)
-      ! over all j atoms
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2+j
-         ! temps
-         c6ij   = 0.0_wp
-         c6ij0  = 0.0_wp
-         ! all refs
-         do ii = 1, refn(ia)
-            k = itbl(ii,i)
-            do jj = 1, refn(ja)
-               l = itbl(jj,j)
-               c6ij = c6ij + zetavec(k) * zetavec(l) * refc6(k,l)
-               c6ij0 = c6ij0 + zerovec(k) * zerovec(l) * refc6(k,l)
-            enddo
-         enddo
-         c6ab(ij) = c6ij0
-         r4r2ij = 3*r4r2(ia)*r4r2(ja)
-         r0 = par%a1*sqrt(r4r2ij) + par%a2
-         rij = mol%xyz(:,i) - mol%xyz(:,j)
-         call disp_3d_dir(mol%nat,ed,i,j,rij,r0,r4r2ij,par%s6,par%s8,par%s10, &
-            &             c6ij,mol%lattice,rep,r_thr)
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
+  !$OMP parallel default(none) &
+  !$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ij,disp,  &
+  !$omp         rij,r2,r,r4r2ij,r0,oor6,oor8,oor10, &
+  !$omp         t,tx,ty,tz)  &
+  !$omp shared(mol,refn,itbl,zetavec,c6abns,par,rep,r_Thr) &
+  !$omp shared(r2ab) reduction(+:ed)
+  !$omp do schedule(dynamic)
+  do i = 1, mol%nat
+     ia = mol%at(i)
+     ! temps
+     c6ij   = 0.0_wp
+     ! all refs
+     do ii = 1, refn(ia)
+        k = itbl(ii,i)
+        do jj = 1, refn(ia)
+           l = itbl(jj,i)
+           c6ij   = c6ij   +  zetavec(k) *  zetavec(l) * c6abns(k,l)
+        enddo
+     enddo
+     ! i in primitive cell with i in images
+     r4r2ij = 3*r4r2(ia)*r4r2(ia)
+     r0 = par%a1*sqrt(r4r2ij) + par%a2
+     do concurrent(tx = -rep(1):rep(1), &
+           &       ty = -rep(2):rep(2), &
+           &       tz = -rep(3):rep(3))
+        ! cycle i with i interaction in same cell
+        if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
+        rij = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)                
+        r2  = sum( rij**2 )
+        if (r2.gt.r_thr) cycle
+        r   = sqrt(r2)     
+        oor6 = 1._wp/(r2**3+r0**6)
+        oor8 = 1._wp/(r2**4+r0**8)
+        oor10 = 1._wp/(r2**5+r0**10)
+        disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
+           & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+        ed = ed - c6ij*disp
+     enddo ! tx
+     ! over all j atoms
+     do j = 1, i-1
+        ja = mol%at(j)
+        ! temps
+        c6ij   = 0.0_wp
+        ! all refs
+        do ii = 1, refn(ia)
+           k = itbl(ii,i)
+           do jj = 1, refn(ja)
+              l = itbl(jj,j)
+              c6ij   = c6ij   +  zetavec(k) *  zetavec(l) * c6abns(k,l)
+           enddo
+        enddo
+        r4r2ij = 3*r4r2(ia)*r4r2(ja)
+        r0 = par%a1*sqrt(r4r2ij) + par%a2
+        do concurrent(tx = -rep(1):rep(1), &
+              &       ty = -rep(2):rep(2), &
+              &       tz = -rep(3):rep(3))
+           t = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)                
+           rij = mol%xyz(:,i) - mol%xyz(:,j) + t
+           r2 = sum(rij**2)
+           if (r2.gt.r_thr) cycle
+           r = sqrt(r2)
+           oor6 = 1._wp/(r2**3+r0**6)
+           oor8 = 1._wp/(r2**4+r0**8)
+           oor10 = 1._wp/(r2**5+r0**10)
+           disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
+              & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+           ed = ed - c6ij*disp
+        enddo ! tx        
+     enddo
+  enddo
+  !$omp enddo
+  !$omp end parallel
 
    eabc = 0.0_wp
    if (mbd > 0) then
-      !call abcappr_3d(mol,ndim,par,zerovec,refc6,itbl,rep2,eabc)
-      call abcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,cn_thr,rep2, &
-         &                             mol%lattice,c6ab,eabc)
+      call abcappr_3d(mol,ndim,par,zerovec,c6abns,itbl,mbd_rep,mbd_thr,eabc)
    endif
 
-   !  print'(" * Dispersion all done, saving variables")'
-   energy = ed + eabc
-   if (present(etwo)) etwo = ed
-   if (present(embd)) embd = eabc
+  !  print'(" * Dispersion all done, saving variables")'
+  if (present(etwo)) etwo = ed
+  if (present(embd)) embd = eabc
+  ed = ed + eabc
 
 end subroutine edisp_3d
 
 !> @brief calculates threebody dispersion gradient from C6 coefficients
-subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,eabc)
+subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
    use class_molecule
    use pbc_tools
    implicit none
@@ -2373,6 +2400,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,eabc)
    real(wp),intent(in)  :: refc6(ndim,ndim)
    integer, intent(in)  :: itbl(7,mol%nat)
    integer, intent(in)  :: rep(3)
+   real(wp),intent(in)  :: r_thr
    real(wp),intent(out) :: eabc
 
    integer  :: i,ii,ia,j,jj,ja,k,l
@@ -2380,8 +2408,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,eabc)
    real(wp),allocatable :: c6ab(:)
    real(wp) :: r,r2ij
    real(wp) :: c6ij
-   real(wp) :: r_thr,gw_thr
-   parameter( r_thr=1600._wp)
+   real(wp) :: gw_thr
    parameter(gw_thr=0.0001_wp)
 
    intrinsic :: present,sqrt
@@ -2437,1069 +2464,12 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,eabc)
 !$omp enddo
 !$omp end parallel
 
-   call abcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,eabc)
+   call abcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,r_thr,rep, &
+      &                             mol%lattice,c6ab,eabc)
+   !call abcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,eabc)
    !call abcappr_3d_bvk(mol,par,rep,r_thr,c6ab,eabc)
 
 end subroutine abcappr_3d
-
-subroutine abcappr_3d_wsc(mol,par,rep,r_thr,c6ab,eabc)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   type(dftd_parameter),intent(in) :: par
-   integer, intent(in)  :: rep(3)
-   real(wp),intent(in)  :: r_thr
-   real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
-   real(wp),intent(inout) :: eabc
-
-   integer  :: i,ii,ia,j,jj,ja,k,ka
-   integer  :: ij,jk,ik,kwsAt,jwsAt
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
-   real(wp) :: c9tmp
-   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
-   real(wp) :: rij(3),rjk(3),rik(3)
-   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
-
-!$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,jwsAt,kwsAt,  &
-!$omp         cii,cjj,ciii,c9iii,ciij,cijj,c9iij,c9ijj, &
-!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,c9tmp,c9ijk) &
-!$omp shared(mol,par,c6ab,rep,r_thr) &
-!$omp reduction(+:eabc)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-
-      ii = i*(i-1)/2 + i
-
-      cii  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ia))+par%a2
-      ciii = cii**3
-
-      c9iii = par%s9*sqrt(c6ab(ii)**3)/6.0_wp ! avoid triple counting
-
-      call disp_atm_3d_dir(mol%nat,eabc,i,i,i,zero,zero,zero,ciii,c9iii, &
-         &                 par%alp,mol%lattice,rep,r_thr)
-
-      do j = 1, i-1
-         if (mol%wsc%at(j,i) == 0) cycle
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-         jj = j*(j-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = mol%dist(i,j)**2
-         if(r2ij.gt.r_thr) cycle
-         cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         cjj  = par%a1*sqrt(3._wp*r4r2(ja)**2)+par%a2
-
-         ciij = cii**2*cij
-         cijj = cij*cjj**2
-
-         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))
-         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))
-
-         do concurrent (jwsAt = 1:mol%wsc%itbl(j,i))
-            rij  = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
-
-            c9tmp = c9iij*mol%wsc%w(j,i)/2.0_wp  ! no double counting
-
-            call disp_atm_3d_dir(mol%nat,eabc,i,i,j,zero,rij,-rij,ciij,c9tmp, &
-               &                 par%alp,mol%lattice,rep,r_thr)
-
-            c9tmp = c9ijj*mol%wsc%w(j,i)**2/2.0_wp  ! no double counting
-
-            call disp_atm_3d_dir(mol%nat,eabc,i,j,j,rij,zero,-rij,cijj,c9tmp, &
-               &                 par%alp,mol%lattice,rep,r_thr)
-         enddo
-
-         do k = 1, j-1
-            if (mol%wsc%at(k,i).eq.0) cycle
-            ka = mol%at(k)
-            ik = i*(i-1)/2 + k
-            jk = j*(j-1)/2 + k
-            r2ik = mol%dist(i,k)**2
-            r2jk = mol%dist(j,k)**2
-            if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
-            cik  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2
-            cjk  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
-            cijk = cij*cjk*cik
-
-            c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
-
-            do concurrent (jwsAt = 1:mol%wsc%itbl(j,i), &
-                  &        kwsAt = 1:mol%wsc%itbl(k,i) )
-               rij = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
-               rik = mol%xyz(:,i) - mol%wsc%xyz(:,kwsAt,k,i)
-               rjk = - (rij + rik)
-               c9tmp = c9ijk*mol%wsc%w(j,i)*mol%wsc%w(k,i)
-
-               call disp_atm_3d_dir(mol%nat,eabc,i,j,k,rij,rjk,rik,cijk,c9tmp, &
-                  &                 par%alp,mol%lattice,rep,r_thr)
-            enddo
-
-         enddo ! k/C
-      enddo ! j/B
-   enddo ! i/A
-!$omp enddo
-!$omp end parallel
-
-end subroutine abcappr_3d_wsc
-
-subroutine abcappr_3d_bvk(mol,par,rep,r_thr,c6ab,eabc)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   type(dftd_parameter),intent(in) :: par
-   integer, intent(in)  :: rep(3)
-   real(wp),intent(in)  :: r_thr
-   real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
-   real(wp),intent(inout) :: eabc
-
-   integer  :: i,ii,ia,j,jj,ja,k,ka
-   integer  :: ij,jk,ik
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
-   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
-   real(wp) :: rij(3),rjk(3),rik(3)
-   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
-
-!$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,  &
-!$omp         cii,ciii,c9iii,ciij,c9iij,cijj,cjj,c9ijj, &
-!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk, &
-!$omp         c9ijk) &
-!$omp shared(mol,par,c6ab,rep,r_thr) &
-!$omp reduction(+:eabc)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-
-      ii = i*(i-1)/2 + i
-
-      cii  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ia))+par%a2
-      ciii = cii**3
-
-      c9iii = par%s9*sqrt(c6ab(ii)**3)/6.0_wp ! avoid triple counting
-
-      call disp_atm_3d_dir(mol%nat,eabc,i,i,i,zero,zero,zero,ciii,c9iii, &
-         &                 par%alp,mol%lattice,rep,r_thr)
-
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-         jj = j*(j-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = mol%dist(i,j)**2
-         if(r2ij.gt.r_thr) cycle
-         cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         cjj  = par%a1*sqrt(3._wp*r4r2(ja)**2)+par%a2
-
-         ciij = cii**2*cij
-         cijj = cij*cjj**2
-
-         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))/2.0_wp ! avoid double counting
-         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))/2.0_wp ! avoid double counting
-
-         call disp_atm_3d_dir(mol%nat,eabc,i,i,j,zero,rij,-rij,ciij,c9iij, &
-            &                 par%alp,mol%lattice,rep,r_thr)
-
-         call disp_atm_3d_dir(mol%nat,eabc,i,j,j,rij,zero,-rij,cijj,c9ijj, &
-            &                 par%alp,mol%lattice,rep,r_thr)
-
-         do k = 1, j-1
-            ka = mol%at(k)
-            ik = i*(i-1)/2 + k
-            jk = j*(j-1)/2 + k
-            r2ik = mol%dist(i,k)**2
-            r2jk = mol%dist(j,k)**2
-            if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
-            rjk  = mol%xyz(:,k) - mol%xyz(:,j)
-            rik  = mol%xyz(:,i) - mol%xyz(:,k)
-            cik  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2
-            cjk  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
-            cijk = cij*cjk*cik
-
-            c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
-
-            call disp_atm_3d_dir(mol%nat,eabc,i,j,k,rij,rjk,rik,cijk,c9ijk, &
-               &                 par%alp,mol%lattice,rep,r_thr)
-
-         enddo ! k/C
-      enddo ! j/B
-   enddo ! i/A
-!$omp enddo
-!$omp end parallel
-
-end subroutine abcappr_3d_bvk
-
-!> @brief compute D4 gradient under periodic boundary conditions
-subroutine dispgrad_3d(mol,ndim,q,cn,dcn,rep,rep2,par,wf,g_a,g_c, &
-      refc6,mbd,g,eout,dq,aout)
-   use iso_fortran_env, only : wp => real64
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol
-   integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: q(mol%nat)
-   real(wp),intent(in)  :: cn(mol%nat)
-   real(wp),intent(in)  :: dcn(3,mol%nat,mol%nat)
-   integer, intent(in)  :: rep(3)
-   integer, intent(in)  :: rep2(3)
-   integer              :: tx,ty,tz
-   real(wp)             :: t(3)
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: wf,g_a,g_c
-   real(wp),intent(in)  :: refc6(ndim,ndim)
-   integer, intent(in)  :: mbd
-   real(wp),intent(inout)        :: g(3,mol%nat)
-   real(wp),intent(out),optional :: eout
-   real(wp),intent(in), optional :: dq(3,mol%nat,mol%nat+1)
-   real(wp),intent(out),optional :: aout(23,mol%nat)
-
-   integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
-   integer, allocatable :: itbl(:,:)
-   real(wp) :: iz
-   real(wp) :: eabc,ed
-   real(wp) :: norm,dnorm
-   real(wp) :: dexpw,expw
-   real(wp) :: twf,tgw,r4r2ij
-   real(wp) :: rij(3),r2,R0
-   real(wp) :: oor6,oor8,oor10,door6,door8,door10
-   real(wp) :: disp,ddisp
-   real(wp) :: c6ii,c6ij,dic6ii,dic6ij,djc6ij,dizii,dizij,djzij
-   real(wp) :: rcovij,expterm,den,dcndr
-
-   real(wp) :: gwk,dgwk
-   real(wp),allocatable :: dc6dcn(:)
-   real(wp),allocatable :: zvec(:)
-   real(wp),allocatable :: dzvec(:)
-   real(wp),allocatable :: gw(:)
-   real(wp),allocatable :: dgw(:)
-   real(wp),allocatable :: dc6dq(:)
-   real(wp),allocatable :: dzdq(:)
-   real(wp) :: cn_thr,r_thr,gw_thr
-   real(wp),parameter   :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
-
-   parameter(cn_thr = 1600.0_wp)
-   parameter( r_thr=5000._wp)
-   parameter(gw_thr=0.000001_wp)
-
-   intrinsic :: present,sum,maxval,exp,abs
-
-   !  print'(" * Allocating local memory")'
-   allocate( dc6dcn(mol%nat),                  &
-      &      zvec(ndim),dzvec(ndim),  &
-      &      gw(ndim),dgw(ndim),dc6dq(mol%nat),dzdq(ndim),  &
-      &      source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
-
-   ed = 0.0_wp
-
-   k = 0
-   do i = 1, mol%nat
-      do ii = 1, refn(mol%at(i))
-         k = k+1
-         itbl(ii,i) = k
-      enddo
-   enddo
-
-   !  print'(" * Entering first OMP section")'
-!$OMP parallel default(none) &
-!$omp private(i,ii,iii,ia,iz,k,norm,dnorm,twf,tgw,dexpw,expw,gwk,dgwk) &
-!$omp shared (mol,refn,refc,refcovcn,itbl,refq,wf,cn,g_a,g_c,q) &
-!$omp shared (gw,dgw,zvec,dzvec,dzdq)
-!$omp do
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      iz = zeff(ia)
-      norm  = 0.0_wp
-      dnorm = 0.0_wp
-      do ii=1,refn(ia)
-         do iii = 1, refc(ii,ia)
-            twf = iii*wf
-            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
-            norm  =  norm + tgw
-            dnorm = dnorm + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
-         enddo
-      enddo
-      norm = 1._wp/norm
-      do ii = 1, refn(ia)
-         k = itbl(ii,i)
-         dexpw=0.0_wp
-         expw=0.0_wp
-         do iii = 1, refc(ii,ia)
-            twf = wf*iii
-            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
-            expw  =  expw + tgw
-            dexpw = dexpw + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
-         enddo
-
-         ! save
-         gwk = expw*norm
-         if (gwk.ne.gwk) then
-            if (maxval(refcovcn(:refn(ia),ia)).eq.refcovcn(ii,ia)) then
-               gwk = 1.0_wp
-            else
-               gwk = 0.0_wp
-            endif
-         endif
-         zvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
-         ! NEW: q=0 for ATM
-         gw(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gwk
-
-         dgwk = dexpw*norm-expw*dnorm*norm**2
-         if (dgwk.ne.dgwk) then
-            dgwk = 0.0_wp
-         endif
-         dzvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * dgwk
-         dzdq(k) = dzeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
-         ! NEW: q=0 for ATM
-         dgw(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * dgwk
-      enddo
-   enddo
-!$omp end do
-!$omp end parallel
-
-!$OMP parallel default(none) &
-!$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ij,dic6ii,dic6ij,djc6ij,disp,ddisp,dizii, &
-!$omp         rij,r4r2ij,r0,dizij,djzij) &
-!$omp shared(mol,refn,itbl,zvec,dzvec,refc6,par,dzdq,rep) &
-!$omp reduction(+:dc6dq,dc6dcn,ed,g)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      ! temps
-      c6ij   = 0.0_wp
-      dic6ij = 0.0_wp
-      djc6ij = 0.0_wp
-      dizij  = 0.0_wp
-      djzij  = 0.0_wp
-      ! all refs
-      do ii = 1, refn(ia)
-         k = itbl(ii,i)
-         do jj = 1, refn(ia)
-            l = itbl(jj,i)
-            c6ij   = c6ij   +  zvec(k) *  zvec(l) * refc6(k,l)
-            dic6ij = dic6ij + dzvec(k) *  zvec(l) * refc6(k,l)
-            djc6ij = djc6ij +  zvec(k) * dzvec(l) * refc6(k,l)
-            dizij  = dizij  +  dzdq(k) *  zvec(l) * refc6(k,l)
-            djzij  = djzij  +  zvec(k) *  dzdq(l) * refc6(k,l)
-         enddo
-      enddo
-      ! i in primitive cell with i in images
-      r4r2ij = 3*r4r2(ia)**2
-      r0 = par%a1*sqrt(r4r2ij) + par%a2
-      call disp_3d_dx_dir(mol%nat,ed,g,dc6dcn,dc6dq,i,i,zero,r0,r4r2ij, &
-         &                par%s6,par%s8,par%s10,c6ij,dic6ij,djc6ij,dizij,djzij, &
-         &                mol%lattice,rep,r_thr)
-      ! over all j atoms
-      do j = 1, i-1
-         ja = mol%at(j)
-         ! temps
-         c6ij   = 0.0_wp
-         dic6ij = 0.0_wp
-         djc6ij = 0.0_wp
-         dizij  = 0.0_wp
-         djzij  = 0.0_wp
-         ! all refs
-         do ii = 1, refn(ia)
-            k = itbl(ii,i)
-            do jj = 1, refn(ja)
-               l = itbl(jj,j)
-               c6ij   = c6ij   +  zvec(k) *  zvec(l) * refc6(k,l)
-               dic6ij = dic6ij + dzvec(k) *  zvec(l) * refc6(k,l)
-               djc6ij = djc6ij +  zvec(k) * dzvec(l) * refc6(k,l)
-               dizij  = dizij  +  dzdq(k) *  zvec(l) * refc6(k,l)
-               djzij  = djzij  +  zvec(k) *  dzdq(l) * refc6(k,l)
-            enddo
-         enddo
-         r4r2ij = 3*r4r2(ia)*r4r2(ja)
-         r0 = par%a1*sqrt(r4r2ij) + par%a2
-         rij = mol%xyz(:,i) - mol%xyz(:,j)
-         call disp_3d_dx_dir(mol%nat,ed,g,dc6dcn,dc6dq,i,j,rij,r0,r4r2ij, &
-            &                par%s6,par%s8,par%s10,c6ij,dic6ij,djc6ij,dizij,djzij,&
-            &                mol%lattice,rep,r_thr)
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
-
-   eabc = 0.0_wp
-   if (mbd > 0) then
-      call dabcappr_3d(mol,ndim,par,gw,dgw,refc6,itbl,rep2,g,dc6dcn,eabc)
-   endif
-
-   if(present(dq)) then
-      ! handle dq  :: gradient is exact e-11
-      call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dq,3*mol%nat,dc6dq,1,1.0_wp,g,1)
-   endif
-
-   ! always handle dCN :: gradient is exact e-11
-   call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dcn,3*mol%nat,dc6dcn,1,1.0_wp,g,1)
-
-   !  print'(" * Dispersion all done, saving variables")'
-   if (present(eout)) eout = ed + eabc
-
-   if (present(aout)) then
-      aout = 0._wp
-      do i = 1, mol%nat
-         ia = mol%at(i)
-         do ii = 1, refn(ia)
-            aout(:,i) = aout(:,i) + zvec(k) * refal(:,ii,ia)
-         enddo
-      enddo
-   endif
-end subroutine dispgrad_3d
-
-pure subroutine disp_3d_dir(n,ed,i,j,rij,r0,r4r2ij,s6,s8,s10, &
-      &                     c6ij,dlat,rep,thr)
-   implicit none
-   integer, intent(in) :: n,i,j
-   real(wp),intent(in) :: rij(3)
-   real(wp),intent(in) :: r0
-   real(wp),intent(in) :: r4r2ij
-   real(wp),intent(in) :: s6,s8,s10
-   real(wp),intent(in) :: c6ij
-   real(wp),intent(in) :: dlat(3,3)
-   integer, intent(in) :: rep(3)
-   real(wp),intent(in) :: thr
-
-   real(wp),intent(inout) :: ed
-
-   real(wp),parameter :: same = 1.0e-9_wp
-   integer  :: tx,ty,tz
-   real(wp) :: t(3),trij(3)
-   real(wp) :: r,r2
-   real(wp) :: oor6,oor8,oor10
-   real(wp) :: disp
-
-   do concurrent( tx = -rep(1):rep(1), &
-         &        ty = -rep(2):rep(2), &
-         &        tz = -rep(3):rep(3))
-      ! cycle i with i interaction in same cell
-      if (i.eq.j .and. (tx.eq.0.and.ty.eq.0.and.tz.eq.0)) cycle
-      t = [tx,ty,tz]
-      trij = rij + matmul(dlat,t)
-      r2  = sum( trij**2 )
-      if (r2 > thr .or. r2 < same) cycle ! too far away or same atom
-      r   = sqrt(r2)
-      oor6 = 1._wp/(r2**3+r0**6)
-      oor8 = 1._wp/(r2**4+r0**8)
-      oor10 = 1._wp/(r2**5+r0**10)
-      disp = s6*oor6 + s8*r4r2ij*oor8   &
-         + s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-      ed = ed - c6ij*disp
-   enddo ! translation
-
-end subroutine disp_3d_dir
-
-pure subroutine disp_3d_dx_dir(n,ed,g,dc6dcn,dc6dq,i,j,rij,r0,r4r2ij,s6,s8,s10, &
-      &                        c6ij,dic6ij,djc6ij,dizij,djzij,dlat,rep,thr)
-   implicit none
-   integer, intent(in) :: n,i,j
-   real(wp),intent(in) :: rij(3)
-   real(wp),intent(in) :: r0
-   real(wp),intent(in) :: r4r2ij
-   real(wp),intent(in) :: s6,s8,s10
-   real(wp),intent(in) :: c6ij
-   real(wp),intent(in) :: dic6ij
-   real(wp),intent(in) :: djc6ij
-   real(wp),intent(in) :: dizij
-   real(wp),intent(in) :: djzij
-   real(wp),intent(in) :: dlat(3,3)
-   integer, intent(in) :: rep(3)
-   real(wp),intent(in) :: thr
-
-   real(wp),intent(inout) :: ed
-   real(wp),intent(inout) :: g(3,n)
-   real(wp),intent(inout) :: dc6dcn(n)
-   real(wp),intent(inout) :: dc6dq(n)
-
-   real(wp),parameter :: same = 1.0e-9_wp
-   integer  :: tx,ty,tz
-   real(wp) :: t(3),trij(3)
-   real(wp) :: r,r2,drdx(3)
-   real(wp) :: oor6,oor8,oor10,door6,door8,door10
-   real(wp) :: disp,ddisp
-
-   do concurrent( tx = -rep(1):rep(1), &
-         &        ty = -rep(2):rep(2), &
-         &        tz = -rep(3):rep(3))
-      ! cycle i with i interaction in same cell
-      if (i.eq.j .and. (tx.eq.0.and.ty.eq.0.and.tz.eq.0)) cycle
-      t = [tx,ty,tz]
-      trij = rij + matmul(dlat,t)
-      r2  = sum( trij**2 )
-      if (r2 > thr .or. r2 < same) cycle ! too far away or same atom
-      r   = sqrt(r2)
-      oor6 = 1._wp/(r2**3+r0**6)
-      oor8 = 1._wp/(r2**4+r0**8)
-      oor10 = 1._wp/(r2**5+r0**10)
-      door6 = -6*r2**2*r*oor6**2
-      door8 = -8*r2**3*r*oor8**2
-      door10 = -10*r2**4*r*oor10**2
-      disp = s6*oor6 + s8*r4r2ij*oor8   &
-         + s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-      ddisp= s6*door6 + s8*r4r2ij*door8 &
-         + s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-      ed = ed - c6ij*disp
-      ! save this
-      dc6dq(i)  = dc6dq(i)  + dizij * disp
-      dc6dq(j)  = dc6dq(j)  + djzij * disp
-      dc6dcn(i) = dc6dcn(i) + dic6ij * disp
-      dc6dcn(j) = dc6dcn(j) + djc6ij * disp
-      drdx = trij/r
-      g(:,i) = g(:,i) - c6ij*ddisp*drdx
-      if (i.ne.j) &
-      g(:,j) = g(:,j) + c6ij*ddisp*drdx
-   enddo ! translation
-
-end subroutine disp_3d_dx_dir
-
-!> @brief calculates threebody dispersion gradient from C6 coefficients
-subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,g,dc6dcn,eout)
-   use class_molecule
-   use pbc_tools
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   integer, intent(in)  :: ndim
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: zvec(ndim)
-   real(wp),intent(in)  :: dzvec(ndim)
-   real(wp),intent(in)  :: refc6(ndim,ndim)
-   integer, intent(in)  :: itbl(7,mol%nat)
-   integer, intent(in)  :: rep(3)
-   real(wp),intent(inout)        :: g(3,mol%nat)
-   real(wp),intent(inout)        :: dc6dcn(mol%nat)
-   real(wp),intent(out),optional :: eout
-
-   integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
-   integer  :: ij,jk,ik
-   real(wp),allocatable :: c6ab(:),dc6ab(:,:)
-   real(wp) :: r2ij,r2jk,r2ik,r
-   real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
-   real(wp) :: c9iii,c9iij,c9ijk,oor9ijk,rijk
-   real(wp) :: rij(3),rjk(3),rik(3)
-   real(wp) :: dijfdmp,dikfdmp,djkfdmp
-   real(wp) :: dijatm,dikatm,djkatm
-   real(wp) :: dijoor9ijk,djkoor9ijk,dikoor9ijk
-   real(wp) :: c6ij,dic6ij,djc6ij
-   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijk,djc9ijk,dkc9ijk
-   real(wp) :: eabc
-   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
-   real(wp) :: r_thr,gw_thr
-   parameter( r_thr=1600._wp)
-   parameter(gw_thr=0.0001_wp)
-
-   intrinsic :: present,sqrt
-
-   allocate( c6ab(mol%nat*(mol%nat+1)/2),dc6ab(mol%nat,mol%nat), source = 0.0_wp )
-
-   eabc = 0.0_wp
-
-!$OMP parallel default(none) &
-!$omp private(i,ia,j,ja,ij,r2ij,c6ij,dic6ij,djc6ij,k,l,r)  &
-!$omp shared (mol,refn,itbl,refc6,zvec,dzvec) &
-!$omp shared (c6ab,dc6ab)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      ij = i*(i-1)/2+i
-
-      ! temps
-      c6ij = 0.0_wp
-      dic6ij = 0.0_wp
-      djc6ij = 0.0_wp
-      ! all refs
-      do ii = 1, refn(ia)
-         k = itbl(ii,i)
-         do jj = 1, refn(ia)
-            l = itbl(jj,i)
-            c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
-            dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)
-            djc6ij = djc6ij + zvec(k)*dzvec(l)*refc6(k,l)
-         enddo
-      enddo
-      ! save
-      c6ab(ij) = c6ij
-      dc6ab(i,i) = dic6ij + djc6ij
-
-      do j = 1, i-1
-!        if(i.eq.j) cycle
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-
-!        first check if we want this contribution
-         !if(mol%dist(j,i)**2.gt.r_thr) cycle
-
-         ! temps
-         c6ij = 0.0_wp
-         dic6ij = 0.0_wp
-         djc6ij = 0.0_wp
-         ! all refs
-         do ii = 1, refn(ia)
-            k = itbl(ii,i)
-            do jj = 1, refn(ja)
-               l = itbl(jj,j)
-               c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
-               dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)
-               djc6ij = djc6ij + zvec(k)*dzvec(l)*refc6(k,l)
-            enddo
-         enddo
-         ! save
-         c6ab(ij) = c6ij
-         dc6ab(i,j) = dic6ij
-         dc6ab(j,i) = djc6ij
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
-
-
-   call dabcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,r_thr,rep,&
-      &    mol%lattice,c6ab,dc6ab,eabc,dc6dcn,g)
-   !call dabcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
-   !call dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
-
-   if (present(eout)) eout=eabc
-
-end subroutine dabcappr_3d
-
-subroutine dabcappr_3d_wsc(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   type(dftd_parameter),intent(in) :: par
-   integer, intent(in)  :: rep(3)
-   real(wp),intent(in)  :: r_thr
-   real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
-   real(wp),intent(in)  :: dc6ab(mol%nat,mol%nat)
-   real(wp),intent(inout) :: g(3,mol%nat)
-   real(wp),intent(inout) :: dc6dcn(mol%nat)
-   real(wp),intent(inout) :: eabc
-
-   integer  :: i,ii,ia,j,jj,ja,k,ka
-   integer  :: ij,jk,ik,kwsAt,jwsAt
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
-   real(wp) :: c9tmp
-   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
-   real(wp) :: rij(3),rjk(3),rik(3)
-   real(wp) :: wscw
-   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijj,djc9ijj,dic9ijk,djc9ijk,dkc9ijk
-   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
-
-!$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,jwsAt,kwsAt,wscw,  &
-!$omp         cii,cjj,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
-!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,c9tmp,cijj,c9ijj, &
-!$omp         c9ijk,dic9ijk,djc9ijk,dkc9ijk,dic9ijj,djc9ijj) &
-!$omp shared(mol,par,c6ab,dc6ab,rep,r_thr) &
-!$omp reduction(+:eabc,g,dc6dcn)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-
-      ii = i*(i-1)/2 + i
-
-      cii  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ia))+par%a2
-      ciii = cii**3
-
-      c9iii = par%s9*sqrt(c6ab(ii)**3)
-
-      dic9iii = 2*dc6ab(i,i)/c6ab(ii)*c9ijk/6.0_wp ! avoid triple counting
-
-      ! i,i',i" contribution
-      call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,i, &
-         &    zero,zero,zero,ciii,c9iii,dic9iii,dic9iii,dic9iii,par%alp, &
-         &    mol%lattice,rep,r_thr)
-
-      do j = 1, i-1
-         if (mol%wsc%at(j,i) == 0) cycle
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-         jj = j*(j-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = mol%dist(i,j)**2
-         if(r2ij.gt.r_thr) cycle
-         cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         cjj  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ja))+par%a2
-
-         ciij = cii**2*cij
-         cijj = cjj**2*cij
-
-         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))/2.0_wp ! avoid double counting
-         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))/2.0_wp ! avoid double counting
-
-         do concurrent (jwsAt = 1:mol%wsc%itbl(j,i))
-            rij  = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
-
-            wscw = mol%wsc%w(j,i)
-            c9tmp = c9iij*wscw
-            dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9iij*wscw
-            djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9iij*wscw
-
-            ! i,i',j contribution
-            call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,j, &
-               &    zero,rij,-rij,ciij,c9iij,dic9iij,dic9iij,djc9iij, &
-               &    par%alp,mol%lattice,rep,r_thr)
-
-            c9tmp = c9iij*wscw**2
-            dic9ijj = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,j)/c6ab(ij))*c9ijj*wscw**2
-            djc9ijj = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,j)/c6ab(jj))*c9ijj*wscw**2
-
-            ! i,j,j' contribution
-            call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,j, &
-               &    rij,zero,-rij,cijj,c9ijj,dic9ijj,djc9ijj,djc9ijj, &
-               &    par%alp,mol%lattice,rep,r_thr)
-         enddo
-
-         do k = 1, j-1
-            if (mol%wsc%at(k,i).eq.0) cycle
-            ka = mol%at(k)
-            ik = i*(i-1)/2 + k
-            jk = j*(j-1)/2 + k
-            r2ik = mol%dist(i,k)**2
-            r2jk = mol%dist(j,k)**2
-            if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
-            cik  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2
-            cjk  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
-            cijk = cij*cjk*cik
-
-            c9tmp = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
-
-            do concurrent (jwsAt = 1:mol%wsc%itbl(j,i), &
-                  &        kwsAt = 1:mol%wsc%itbl(k,i) )
-               rij = mol%wsc%xyz(:,jwsAt,j,i) - mol%xyz(:,i)
-               rik = mol%xyz(:,i) - mol%wsc%xyz(:,kwsAt,k,i)
-               rjk = - (rij + rik)
-               wscw = mol%wsc%w(j,i)*mol%wsc%w(k,i)
-               c9ijk = c9tmp*wscw
-
-               dic9ijk = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,k)/c6ab(ik))*c9tmp*wscw
-               djc9ijk = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,k)/c6ab(jk))*c9tmp*wscw
-               dkc9ijk = (dc6ab(k,j)/c6ab(jk) + dc6ab(k,i)/c6ab(ik))*c9tmp*wscw
-
-               ! i,j,k contribution
-               call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,k, &
-                  &    rij,rjk,rik,cijk,c9ijk,dic9ijk,djc9ijk,dkc9ijk,par%alp, &
-                  &    mol%lattice,rep,r_thr)
-            enddo
-
-         enddo ! k/C
-      enddo ! j/B
-   enddo ! i/A
-!$omp enddo
-!$omp end parallel
-
-end subroutine dabcappr_3d_wsc
-
-subroutine dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   type(dftd_parameter),intent(in) :: par
-   integer, intent(in)  :: rep(3)
-   real(wp),intent(in)  :: r_thr
-   real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
-   real(wp),intent(in)  :: dc6ab(mol%nat,mol%nat)
-   real(wp),intent(inout) :: g(3,mol%nat)
-   real(wp),intent(inout) :: dc6dcn(mol%nat)
-   real(wp),intent(inout) :: eabc
-
-   integer  :: i,ii,ia,j,jj,ja,k,ka
-   integer  :: ij,jk,ik
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cii,cij,cjj,cjk,cik,ciii,ciij,cijj,cijk
-   real(wp) :: c9iii,c9iij,c9ijj,c9ijk
-   real(wp) :: rij(3),rjk(3),rik(3)
-   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijj,djc9ijj,dic9ijk,djc9ijk,dkc9ijk
-   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
-
-!$OMP parallel default(none) &
-!$omp private(i,j,ii,ij,jj,ia,ja,k,ka,ik,jk,rjk,rik,dic9ijj,djc9ijj,  &
-!$omp         cii,cjj,ciii,c9iii,dic9iii,ciij,c9iij,dic9iij,djc9iij, &
-!$omp         r2ij,cij,rij,r2ik,r2jk,cik,cjk,cijk,cijj,c9ijj, &
-!$omp         c9ijk,dic9ijk,djc9ijk,dkc9ijk) &
-!$omp shared(mol,par,c6ab,dc6ab,rep,r_thr) &
-!$omp reduction(+:eabc,g,dc6dcn)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-
-      ii = i*(i-1)/2 + i
-
-      cii  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ia))+par%a2
-      ciii = cii**3
-
-      c9iii = par%s9*sqrt(c6ab(ii)**3)/6.0_wp
-
-      dic9iii = 2*dc6ab(i,i)/c6ab(ii)*c9ijk
-
-      ! i,i',i" contribution
-      call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,i, &
-         &    zero,zero,zero,ciii,c9iii,dic9iii,dic9iii,dic9iii,par%alp, &
-         &    mol%lattice,rep,r_thr)
-
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-         jj = j*(j-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = mol%dist(i,j)**2
-         if(r2ij.gt.r_thr) cycle
-         cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         cjj  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ja))+par%a2
-         rij  = mol%xyz(:,j) - mol%xyz(:,i)
-
-         ciij = cii**2*cij
-         cijj = cjj**2*cij
-
-         c9iij = par%s9*sqrt(c6ab(ii)**2*c6ab(ij))/2.0_wp ! avoid double counting
-         c9ijj = par%s9*sqrt(c6ab(jj)**2*c6ab(ij))/2.0_wp ! avoid double counting
-
-         dic9iij = (dc6ab(i,i)/c6ab(ii) + dc6ab(i,j)/c6ab(ij))*c9ijj
-         djc9iij = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,i)/c6ab(ij))*c9ijj
-
-         dic9ijj = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,j)/c6ab(ij))*c9ijj
-         djc9ijj = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,j)/c6ab(jj))*c9ijj
-
-         ! i,i',j contribution
-         call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,i,j, &
-            &    zero,rij,-rij,ciij,c9iij,dic9iij,dic9iij,djc9iij,par%alp, &
-            &    mol%lattice,rep,r_thr)
-
-         ! i,j,j' contribution
-         call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,j, &
-            &    rij,zero,-rij,cijj,c9ijj,dic9ijj,djc9ijj,djc9ijj,par%alp, &
-            &    mol%lattice,rep,r_thr)
-
-         do k = 1, j-1
-            ka = mol%at(k)
-            ik = i*(i-1)/2 + k
-            jk = j*(j-1)/2 + k
-            r2ik = mol%dist(i,k)**2
-            r2jk = mol%dist(j,k)**2
-            if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
-            rjk  = mol%xyz(:,k) - mol%xyz(:,j)
-            rik  = mol%xyz(:,i) - mol%xyz(:,k)
-            cik  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2
-            cjk  = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
-            cijk = cij*cjk*cik
-
-            c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
-
-            dic9ijk = (dc6ab(i,j)/c6ab(ij) + dc6ab(i,k)/c6ab(ik))*c9ijk
-            djc9ijk = (dc6ab(j,i)/c6ab(ij) + dc6ab(j,k)/c6ab(jk))*c9ijk
-            dkc9ijk = (dc6ab(k,j)/c6ab(jk) + dc6ab(k,i)/c6ab(ik))*c9ijk
-
-            ! i,j,k contribution
-            call disp_atm_3d_dx_dir(mol%nat,eabc,g,dc6dcn,i,j,k, &
-               &    rij,rjk,rik,cijk,c9ijk,dic9ijk,djc9ijk,dkc9ijk,par%alp, &
-               &    mol%lattice,rep,r_thr)
-
-         enddo ! k/C
-      enddo ! j/B
-   enddo ! i/A
-!$omp enddo
-!$omp end parallel
-
-end subroutine dabcappr_3d_bvk
-
-pure subroutine disp_atm_3d_dir(n,disp,i,j,k, &
-      &    rij,rjk,rik,cijk,c9,alp,dlat,rep,thr)
-   implicit none
-   integer, intent(in) :: n,i,j,k
-   real(wp),intent(in) :: rij(3)
-   real(wp),intent(in) :: rjk(3)
-   real(wp),intent(in) :: rik(3)
-   real(wp),intent(in) :: cijk
-   real(wp),intent(in) :: c9
-   integer, intent(in) :: alp
-   real(wp),intent(in) :: dlat(3,3)
-   integer, intent(in) :: rep(3)
-   real(wp),intent(in) :: thr
-
-   real(wp),intent(inout) :: disp
-
-   real(wp),parameter :: same = 1.0e-9_wp
-   real(wp),parameter :: six = 6.0_wp, oth = 1.0_wp/3.0_wp
-   integer  :: minrep(3),maxrep(3)
-   integer  :: tx,ty,tz,sx,sy,sz
-   real(wp) :: t(3),s(3),trij(3),trjk(3),trik(3)
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: r2ijk,rijk,r9ijk
-   real(wp) :: atm,fdmp
-
-   do concurrent(tx = -rep(1):rep(1),&
-         &       ty = -rep(2):rep(2),&
-         &       tz = -rep(3):rep(3))
-      minrep(1) = max(-rep(1),tx-rep(1))
-      maxrep(1) = min(+rep(1),tx+rep(1))
-      minrep(2) = max(-rep(2),ty-rep(2))
-      maxrep(2) = min(+rep(2),ty+rep(2))
-      minrep(3) = max(-rep(3),tz-rep(3))
-      maxrep(3) = min(+rep(3),tz+rep(3))
-      if (i.eq.j .and. (tx==0 .and. ty==0 .and. tz==0)) cycle
-      t = [tx,ty,tz]
-      trij = rij + matmul(dlat,t)
-
-      r2ij = sum(trij**2)
-      if (r2ij > thr .or. r2ij < same) cycle ! too far away or same atom
-
-      do concurrent(sx = minrep(1):maxrep(1),&
-            &       sy = minrep(2):maxrep(2),&
-            &       sz = minrep(3):maxrep(3))
-         if (i.eq.k .and. (sx==0  .and. sy==0  .and. sz==0 )) cycle
-         if (j.eq.k .and. (sx==tx .and. sy==ty .and. sz==tz)) cycle
-         s = [sx,sy,sz]
-         trjk = rjk + matmul(dlat,s-t)
-         trik = rik + matmul(dlat,s)
-
-         r2jk = sum(trjk**2)
-         if (r2jk > thr .or. r2jk < same) cycle ! too far away or same atom
-         r2ik = sum(trik**2)
-         if (r2ik > thr .or. r2ik < same) cycle ! too far away or same atom
-
-         r2ijk = r2ij*r2jk*r2ik
-         rijk = sqrt(r2ijk)
-
-         atm = ((0.375_wp * (r2ij+r2jk-r2ik) &
-            &             * (r2ij+r2ik-r2jk) &
-            &             * (r2ik+r2jk-r2ij) / r2ijk ) + 1._wp)/(rijk**3)
-
-         fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**alp)
-
-         r9ijk = atm*fdmp
-
-         disp = disp + c9*r9ijk
-
-      enddo
-
-   enddo
-
-end subroutine disp_atm_3d_dir
-
-pure subroutine disp_atm_3d_dx_dir(n,disp,g,dc6dcn,i,j,k, &
-      &    rij,rjk,rik,cijk,c9,dic9ijk,djc9ijk,dkc9ijk,alp,dlat,rep,thr)
-   implicit none
-   integer, intent(in) :: n,i,j,k
-   real(wp),intent(in) :: rij(3)
-   real(wp),intent(in) :: rjk(3)
-   real(wp),intent(in) :: rik(3)
-   real(wp),intent(in) :: cijk
-   real(wp),intent(in) :: c9
-   real(wp),intent(in) :: dic9ijk
-   real(wp),intent(in) :: djc9ijk
-   real(wp),intent(in) :: dkc9ijk
-   integer, intent(in) :: alp
-   real(wp),intent(in) :: dlat(3,3)
-   integer, intent(in) :: rep(3)
-   real(wp),intent(in) :: thr
-
-   real(wp),intent(inout) :: disp
-   real(wp),intent(inout) :: g(3,n)
-   real(wp),intent(inout) :: dc6dcn(n)
-
-   real(wp),parameter :: same = 1.0e-9_wp
-   real(wp),parameter :: six = 6.0_wp, oth = 1.0_wp/3.0_wp
-   integer  :: minrep(3),maxrep(3)
-   integer  :: tx,ty,tz,sx,sy,sz
-   real(wp) :: t(3),s(3),trij(3),trjk(3),trik(3)
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: oorij,oorjk,oorik
-   real(wp) :: r2ijk,rijk,r9ijk
-   real(wp) :: dijfdmp,dikfdmp,djkfdmp
-   real(wp) :: dijatm,dikatm,djkatm
-   real(wp) :: atm,fdmp,dtmp
-
-   do concurrent(tx = -rep(1):rep(1),&
-         &       ty = -rep(2):rep(2),&
-         &       tz = -rep(3):rep(3))
-      minrep(1) = max(-rep(1),tx-rep(1))
-      maxrep(1) = min(+rep(1),tx+rep(1))
-      minrep(2) = max(-rep(2),ty-rep(2))
-      maxrep(2) = min(+rep(2),ty+rep(2))
-      minrep(3) = max(-rep(3),tz-rep(3))
-      maxrep(3) = min(+rep(3),tz+rep(3))
-      if (i.eq.j .and. (tx==0 .and. ty==0 .and. tz==0)) cycle
-      t = [tx,ty,tz]
-      trij = rij + matmul(dlat,t)
-
-      r2ij = sum(trij**2)
-      if (r2ij > thr .or. r2ij < same) cycle ! too far away or same atom
-      oorij = 1._wp/sqrt(r2ij)
-
-      do concurrent(sx = minrep(1):maxrep(1),&
-            &       sy = minrep(2):maxrep(2),&
-            &       sz = minrep(3):maxrep(3))
-         if (i.eq.k .and. (sx==0  .and. sy==0  .and. sz==0 )) cycle
-         if (j.eq.k .and. (sx==tx .and. sy==ty .and. sz==tz)) cycle
-         s = [sx,sy,sz]
-         trjk = rjk + matmul(dlat,s-t)
-         trik = rik + matmul(dlat,s)
-
-         r2jk = sum(trjk**2)
-         if (r2jk > thr .or. r2jk < same) cycle ! too far away or same atom
-         r2ik = sum(trik**2)
-         if (r2ik > thr .or. r2ik < same) cycle ! too far away or same atom
-
-         oorjk = 1._wp/sqrt(r2jk)
-         oorik = 1._wp/sqrt(r2ik)
-
-         r2ijk = r2ij*r2jk*r2ik
-         rijk = sqrt(r2ijk)
-
-         atm = ((0.375_wp * (r2ij+r2jk-r2ik) &
-            &             * (r2ij+r2ik-r2jk) &
-            &             * (r2ik+r2jk-r2ij) / r2ijk ) + 1._wp)/(rijk**3)
-         dijatm=-0.375_wp*(r2ij**3+r2ij**2*(r2jk+r2ik) &
-            &   +r2ij*(3._wp*r2jk**2+2._wp*r2jk*r2ik+3._wp*r2ik**2) &
-            &   -5._wp*(r2jk-r2ik)**2*(r2jk+r2ik)) &
-            &   /(r2ijk*rijk**3)*oorij
-         djkatm=-0.375_wp*(r2jk**3+r2jk**2*(r2ik+r2ij) &
-            &   +r2jk*(3._wp*r2ik**2+2._wp*r2ik*r2ij+3._wp*r2ij**2) &
-            &   -5._wp*(r2ik-r2ij)**2*(r2ik+r2ij)) &
-            &   /(r2ijk*rijk**3)*oorjk
-         dikatm=-0.375_wp*(r2ik**3+r2ik**2*(r2jk+r2ij) &
-            &   +r2ik*(3._wp*r2jk**2+2._wp*r2jk*r2ij+3._wp*r2ij**2) &
-            &   -5._wp*(r2jk-r2ij)**2*(r2jk+r2ij)) &
-            &   /(r2ijk*rijk**3)*oorik
-
-         fdmp = 1.0_wp/(1.0_wp+six*((cijk/rijk)**oth)**alp)
-
-         dtmp = -(oth*six*alp*((cijk/rijk)**oth)**alp)*fdmp**2
-         dijfdmp = dtmp*oorij
-         djkfdmp = dtmp*oorjk
-         dikfdmp = dtmp*oorik
-
-         r9ijk = atm*fdmp
-
-         disp = disp + c9*r9ijk
-
-         g(:,i) = g(:,i) + (atm*dijfdmp - dijatm*fdmp)*c9 * trij
-         if (i.ne.j) &
-         g(:,j) = g(:,j) - (atm*dijfdmp - dijatm*fdmp)*c9 * trij
-         g(:,i) = g(:,i) + (atm*dikfdmp - dikatm*fdmp)*c9 * trik
-         if (i.ne.k) &
-         g(:,k) = g(:,k) - (atm*dikfdmp - dikatm*fdmp)*c9 * trik
-         g(:,j) = g(:,j) + (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
-         if (j.ne.k) &
-         g(:,k) = g(:,k) - (atm*djkfdmp - djkatm*fdmp)*c9 * trjk
-
-         dc6dcn(i) = dc6dcn(i) - 0.5_wp*r9ijk*dic9ijk
-         dc6dcn(j) = dc6dcn(j) - 0.5_wp*r9ijk*djc9ijk
-         dc6dcn(k) = dc6dcn(k) - 0.5_wp*r9ijk*dkc9ijk
-
-      enddo
-
-   enddo
-
-end subroutine disp_atm_3d_dx_dir
 
 subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
    implicit none
@@ -3685,16 +2655,16 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
                r9ijk=ang*fdmp/2.0d0   !factor 1/2 for doublecounting
                eabc=eabc+r9ijk*c9
 
-            ENDDO !sx
+            enddo !sx
 
-         ENDDO !tx
-      ENDDO !kat
-   ENDDO !iat
+         enddo !tx
+      enddo !kat
+   enddo !iat
    ! And now kat=jat, but cycling throug all imagecells without t=s. and jat>iat going though all cells    (iat,jat,jat)
    ! But this counts only 1/2
 
-   DO iat=2,nat
-      DO jat=1,iat-1
+   do iat=2,nat
+      do jat=1,iat-1
          kat=jat
          ij=iat*(iat-1)/2+jat
          jk=jat*(jat-1)/2+kat
@@ -3765,16 +2735,16 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
                r9ijk=ang*fdmp/2.0d0   !factor 1/2 for doublecounting
                eabc=eabc+r9ijk*c9
 
-            ENDDO !sx
+            enddo !sx
 
-         ENDDO !tx
-      ENDDO !kat
-   ENDDO !iat
+         enddo !tx
+      enddo !kat
+   enddo !iat
 
 
-   ! And finally the self interaction iat=jat=kat all
+   ! and finally the self interaction iat=jat=kat all
 
-   DO iat=1,nat
+   do iat=1,nat
       jat=iat
       kat=iat
       ijvec=0.0d0
@@ -3801,7 +2771,7 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
          repmax(2)=min(+rep(2),ty+rep(2))
          repmin(3)=max(-rep(3),tz-rep(3))
          repmax(3)=min(+rep(3),tz+rep(3))
-         IF ((tx.eq.0) .and.(ty.eq.0) .and.(tz.eq.0))cycle !IF iat and jat are the same then cycle
+         if ((tx.eq.0) .and.(ty.eq.0) .and.(tz.eq.0))cycle !IF iat and jat are the same then cycle
          t=tx*dlat(:,1)+ty*dlat(:,2)+tz*dlat(:,3)
          dumvec=t
          dumvec=dumvec*dumvec
@@ -3812,8 +2782,8 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
          do concurrent (sx=repmin(1):repmax(1), &
                &        sy=repmin(2):repmax(2), &
                &        sz=repmin(3):repmax(3))
-            IF ((sx.eq.0) .and.( sy.eq.0) .and.( sz.eq.0))cycle !IF iat and kat are the same then cycle
-            IF ((sx.eq.tx) .and. (sy.eq.ty)  &
+            if ((sx.eq.0) .and.( sy.eq.0) .and.( sz.eq.0))cycle !IF iat and kat are the same then cycle
+            if ((sx.eq.tx) .and. (sy.eq.ty)  &
                .and. (sz.eq.tz)) cycle      !If kat and jat are the same then cycle
 
             ! every result * 1/6 becaues every triple is counted twice due to the two loops t and s going from -rep to rep -> *1/2
@@ -3845,18 +2815,405 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
             r9ijk=ang*fdmp/6.0d0
             eabc=eabc+c9*r9ijk
 
-         ENDDO !sx
-      ENDDO !tx
+         enddo !sx
+      enddo !tx
 
 
-   ENDDO !iat
+   enddo !iat
 
    eabc = -eabc ! seriously, we must FIX this -- SAW
 
+
 end subroutine abcappr_3d_dftd3_like_style
+
+! compute D4 gradient under pbc
+subroutine dispgrad_3d(mol,ndim,q,cn,dcn, &
+     rep,mbd_rep,r_thr,mbd_thr,par,wf,g_a,g_c, &
+     c6abns,mbd, &
+     g,eout,dq,aout)
+  use iso_fortran_env, only : wp => real64
+   use class_molecule
+  implicit none
+  type(molecule),intent(in) :: mol
+  integer, intent(in)  :: ndim
+  real(wp),intent(in)  :: q(mol%nat)
+  real(wp),intent(in)  :: cn(mol%nat)
+  real(wp),intent(in)  :: dcn(3,mol%nat,mol%nat)
+  integer, intent(in)  :: rep(3)
+  integer, intent(in)  :: mbd_rep(3)
+  real(wp),intent(in)  :: r_thr
+  real(wp),intent(in)  :: mbd_thr
+  integer              :: tx,ty,tz
+  real(wp)             :: t(3)
+  real(wp)             :: aiw(23)
+  type(dftd_parameter),intent(in) :: par
+  real(wp),intent(in)  :: wf,g_a,g_c
+  real(wp),intent(in)  :: c6abns(ndim,ndim)
+  integer, intent(in)  :: mbd
+  real(wp),intent(inout)        :: g(3,mol%nat)
+  real(wp),intent(out),optional :: eout
+  real(wp),intent(in), optional :: dq(3,mol%nat,mol%nat+1)
+  real(wp),intent(out),optional :: aout(23,mol%nat)
+
+
+  integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
+  integer, allocatable :: itbl(:,:)
+  real(wp) :: iz
+  real(wp) :: qmod,eabc,ed
+  real(wp) :: norm,dnorm
+  real(wp) :: dexpw,expw
+  real(wp) :: twf,tgw,r4r2ij
+  real(wp) :: rij(3),r,r2,r4,r6,r8,R0
+  real(wp) :: oor6,oor8,oor10,door6,door8,door10,cutoff
+  real(wp) :: c8abns,disp,ddisp,x1,x2,x3
+  real(wp) :: c6ii,c6ij,dic6ii,dic6ij,djc6ij,dizii,dizij,djzij
+  real(wp) :: rcovij,expterm,den,dcndr
+
+  real(wp) :: drdx(3),dtmp,gwk,dgwk
+  real(wp),allocatable :: r2ab(:)
+  real(wp),allocatable :: dc6dcn(:)
+  real(wp),allocatable :: zvec(:)
+  real(wp),allocatable :: dzvec(:)
+  real(wp),allocatable :: gw(:)
+  real(wp),allocatable :: dgw(:)
+  real(wp),allocatable :: dc6dq(:)
+  real(wp),allocatable :: dzdq(:)
+  real(wp) :: cn_thr,gw_thr
+  
+  parameter(cn_thr = 1600.0_wp)
+  parameter(gw_thr=0.000001_wp)
+  real(wp),parameter :: sqrtpi = 1.77245385091_wp
+  real(wp),parameter :: hlfosqrtpi = 0.5_wp/1.77245385091_wp
+  real(wp),parameter :: sf = 0.5_wp
+  
+  intrinsic :: present,sqrt,sum,maxval,exp,abs
+
+  !  print'(" * Allocating local memory")'
+  allocate( dc6dcn(mol%nat),                  &
+       &         r2ab(mol%nat*(mol%nat+1)/2),     &
+       &         zvec(ndim),dzvec(ndim),  &
+       &         gw(ndim),dgw(ndim),dc6dq(mol%nat),dzdq(ndim),  &
+       &         source = 0.0_wp )
+  allocate( itbl(7,mol%nat), source = 0 )
+
+  ed = 0.0_wp
+  eabc = 0.0_wp
+
+  k = 0
+  do i = 1, mol%nat
+     do ii = 1, refn(mol%at(i))
+        k = k+1
+        itbl(ii,i) = k
+     enddo
+  enddo
+
+  !  print'(" * Entering first OMP section")'
+  !$OMP parallel default(none) &
+  !$omp private(i,ii,iii,ia,iz,k,norm,dnorm,twf,tgw,dexpw,expw,gwk,dgwk)  &
+  !$omp shared (mol,refn,refc,refcovcn,itbl,refq,wf,cn,g_a,g_c,q) &
+  !$omp shared (gw,dgw,zvec,dzvec,dzdq,r_thr)
+  !$omp do
+  do i = 1, mol%nat
+     ia = mol%at(i)
+     iz = zeff(ia)
+     norm  = 0.0_wp
+     dnorm = 0.0_wp
+     do ii=1,refn(ia)
+        do iii = 1, refc(ii,ia)
+           twf = iii*wf
+           tgw = cngw(twf,cn(i),refcovcn(ii,ia))
+           norm  =  norm + tgw
+           dnorm = dnorm + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
+        enddo
+     enddo
+     norm = 1._wp/norm
+     do ii = 1, refn(ia)
+        k = itbl(ii,i)
+        dexpw=0.0_wp
+        expw=0.0_wp
+        do iii = 1, refc(ii,ia)
+           twf = wf*iii
+           tgw = cngw(twf,cn(i),refcovcn(ii,ia))
+           expw  =  expw + tgw
+           dexpw = dexpw + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
+        enddo
+
+        ! save
+        gwk = expw*norm
+        if (gwk.ne.gwk) then
+           if (maxval(refcovcn(:refn(ia),ia)).eq.refcovcn(ii,ia)) then
+              gwk = 1.0_wp
+           else
+              gwk = 0.0_wp
+           endif
+        endif
+        zvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
+        ! NEW: q=0 for ATM
+        gw(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gwk
+
+        dgwk = dexpw*norm-expw*dnorm*norm**2
+        if (dgwk.ne.dgwk) then
+           dgwk = 0.0_wp
+        endif
+        dzvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * dgwk
+        dzdq(k) = dzeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
+        ! NEW: q=0 for ATM
+        dgw(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * dgwk
+     enddo
+  enddo
+  !$omp end do
+  !$omp end parallel
+
+  !$OMP parallel default(none) &
+  !$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ij,dic6ii,dic6ij,djc6ij,disp,ddisp,dizii,dizij,djzij,  &
+  !$omp         rij,r2,r,r4r2ij,r0,oor6,oor8,oor10,door6,door8,door10, &
+  !$omp         t,tx,ty,tz,dtmp,drdx)  &
+  !$omp shared(mol,refn,itbl,zvec,dzvec,c6abns,par,dzdq,rep,r_Thr) &
+  !$omp shared(r2ab) reduction(+:dc6dq,dc6dcn,ed,g)
+  !$omp do schedule(dynamic)
+  do i = 1, mol%nat
+     ia = mol%at(i)
+     ! temps
+     c6ij   = 0.0_wp
+     dic6ij = 0.0_wp
+     djc6ij = 0.0_wp
+     dizij  = 0.0_wp
+     djzij  = 0.0_wp
+     ! all refs
+     do ii = 1, refn(ia)
+        k = itbl(ii,i)
+        do jj = 1, refn(ia)
+           l = itbl(jj,i)
+           c6ij   = c6ij   +  zvec(k) *  zvec(l) * c6abns(k,l)
+           dic6ij = dic6ij + dzvec(k) *  zvec(l) * c6abns(k,l)
+           djc6ij = djc6ij +  zvec(k) * dzvec(l) * c6abns(k,l)
+           dizij  = dizij  +  dzdq(k) *  zvec(l) * c6abns(k,l)
+           djzij  = djzij  +  zvec(k) *  dzdq(l) * c6abns(k,l)
+        enddo
+     enddo
+     ! i in primitive cell with i in images
+     r4r2ij = 3*r4r2(ia)*r4r2(ia)
+     r0 = par%a1*sqrt(r4r2ij) + par%a2
+     do concurrent(tx = -rep(1):rep(1), &
+           &       ty = -rep(2):rep(2), &
+           &       tz = -rep(3):rep(3))
+        ! cycle i with i interaction in same cell
+        if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
+        rij = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)                
+        r2  = sum( rij**2 )
+        if (r2.gt.r_thr) cycle
+        r   = sqrt(r2)     
+        oor6 = 1._wp/(r2**3+r0**6)
+        oor8 = 1._wp/(r2**4+r0**8)
+        oor10 = 1._wp/(r2**5+r0**10)
+        door6 = -6*r2**2*r*oor6**2
+        door8 = -8*r2**3*r*oor8**2
+        door10 = -10*r2**4*r*oor10**2
+        disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
+           & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+        ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
+           & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
+        ed = ed - c6ij*disp
+        ! save this
+        dc6dq(i)  = dc6dq(i)  + (dizij  + djzij )*disp 
+        dc6dcn(i) = dc6dcn(i) + (dic6ij + djc6ij)*disp
+        drdx = rij/r
+        g(:,i) = g(:,i) - c6ij*ddisp*drdx 
+     enddo ! tx
+     ! over all j atoms
+     do j = 1, i-1
+        ja = mol%at(j)
+        ! temps
+        c6ij   = 0.0_wp
+        dic6ij = 0.0_wp
+        djc6ij = 0.0_wp
+        dizij  = 0.0_wp
+        djzij  = 0.0_wp
+        ! all refs
+        do ii = 1, refn(ia)
+           k = itbl(ii,i)
+           do jj = 1, refn(ja)
+              l = itbl(jj,j)
+              c6ij   = c6ij   +  zvec(k) *  zvec(l) * c6abns(k,l)
+              dic6ij = dic6ij + dzvec(k) *  zvec(l) * c6abns(k,l)
+              djc6ij = djc6ij +  zvec(k) * dzvec(l) * c6abns(k,l)
+              dizij  = dizij  +  dzdq(k) *  zvec(l) * c6abns(k,l)
+              djzij  = djzij  +  zvec(k) *  dzdq(l) * c6abns(k,l)
+           enddo
+        enddo
+        r4r2ij = 3*r4r2(ia)*r4r2(ja)
+        r0 = par%a1*sqrt(r4r2ij) + par%a2
+        do concurrent(tx = -rep(1):rep(1), &
+              &       ty = -rep(2):rep(2), &
+              &       tz = -rep(3):rep(3))
+           t = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)                
+           rij = mol%xyz(:,i) - mol%xyz(:,j) + t
+           r2 = sum(rij**2)
+           if (r2.gt.r_thr) cycle
+           r = sqrt(r2)
+           oor6 = 1._wp/(r2**3+r0**6)
+           oor8 = 1._wp/(r2**4+r0**8)
+           oor10 = 1._wp/(r2**5+r0**10)
+           door6 = -6*r2**2*r*oor6**2
+           door8 = -8*r2**3*r*oor8**2
+           door10 = -10*r2**4*r*oor10**2        
+           disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
+              & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
+           ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
+              & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10 
+           ed = ed - c6ij*disp
+           ! save this
+           dc6dq(i)  = dc6dq(i)  + dizij  *disp
+           dc6dq(j)  = dc6dq(j)  + djzij  *disp
+           dc6dcn(i) = dc6dcn(i) + dic6ij *disp
+           dc6dcn(j) = dc6dcn(j) + djc6ij *disp
+           dtmp = c6ij*ddisp
+           drdx = rij/r
+           g(:,i) = g(:,i) - dtmp * drdx 
+           g(:,j) = g(:,j) + dtmp * drdx 
+        enddo ! tx        
+     enddo
+  enddo
+  !$omp enddo
+  !$omp end parallel
+
+   eabc = 0.0_wp
+   if (mbd > 0) then
+      call dabcappr_3d(mol,ndim,par,gw,dgw,c6abns,itbl,mbd_rep,mbd_thr, &
+         &             g,dc6dcn,eabc)
+      !dc6dcn = 0.0_wp
+   endif
+
+  if(present(dq)) then
+     ! handle dq  :: gradient is exact e-11
+     call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dq,3*mol%nat,dc6dq,1,1.0_wp,g,1)
+  endif
+  
+  ! always handle dCN :: gradient is exact e-11
+  call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dcn,3*mol%nat,dc6dcn,1,1.0_wp,g,1)
+
+  !  print'(" * Dispersion all done, saving variables")'
+  if (present(eout)) eout = ed + eabc
+
+  if (present(aout)) then
+     aout = 0._wp
+     do i = 1, mol%nat
+        ia = mol%at(i)
+        do ii = 1, refn(ia)
+           aout(:,i) = aout(:,i) + zvec(k) * refal(:,ii,ia)
+        enddo
+     enddo
+  endif
+end subroutine dispgrad_3d
+
+!> @brief calculates threebody dispersion gradient from C6 coefficients
+subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,dc6dcn,eabc)
+   use class_molecule
+   use pbc_tools
+   implicit none
+   type(molecule),intent(in) :: mol !< molecular structure information
+   integer, intent(in)  :: ndim
+   type(dftd_parameter),intent(in) :: par
+   real(wp),intent(in)  :: zvec(ndim)
+   real(wp),intent(in)  :: dzvec(ndim)
+   real(wp),intent(in)  :: refc6(ndim,ndim)
+   integer, intent(in)  :: itbl(7,mol%nat)
+   integer, intent(in)  :: rep(3)
+   real(wp),intent(in)  :: r_thr
+   real(wp),intent(inout) :: g(3,mol%nat)
+   real(wp),intent(inout) :: dc6dcn(mol%nat)
+   real(wp),intent(out)   :: eabc
+
+   integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
+   integer  :: ij,jk,ik
+   real(wp),allocatable :: c6ab(:),dc6ab(:,:)
+   real(wp) :: r2ij,r2jk,r2ik,r
+   real(wp) :: cii,cij,cjk,cik,ciii,ciij,cijk
+   real(wp) :: c9iii,c9iij,c9ijk,oor9ijk,rijk
+   real(wp) :: rij(3),rjk(3),rik(3)
+   real(wp) :: dijfdmp,dikfdmp,djkfdmp
+   real(wp) :: dijatm,dikatm,djkatm
+   real(wp) :: dijoor9ijk,djkoor9ijk,dikoor9ijk
+   real(wp) :: c6ij,dic6ij,djc6ij
+   real(wp) :: dic9iii,dic9iij,djc9iij,dic9ijk,djc9ijk,dkc9ijk
+   real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
+   real(wp) :: gw_thr
+   parameter(gw_thr=0.0001_wp)
+
+   intrinsic :: present,sqrt
+
+   allocate( c6ab(mol%nat*(mol%nat+1)/2),dc6ab(mol%nat,mol%nat), source = 0.0_wp )
+
+   eabc = 0.0_wp
+
+!$OMP parallel default(none) &
+!$omp private(i,ia,j,ja,ij,r2ij,c6ij,dic6ij,djc6ij,k,l,r)  &
+!$omp shared (mol,refn,itbl,refc6,zvec,dzvec) &
+!$omp shared (c6ab,dc6ab)
+!$omp do schedule(dynamic)
+   do i = 1, mol%nat
+      ia = mol%at(i)
+      ij = i*(i-1)/2+i
+
+      ! temps
+      c6ij = 0.0_wp
+      dic6ij = 0.0_wp
+      djc6ij = 0.0_wp
+      ! all refs
+      do ii = 1, refn(ia)
+         k = itbl(ii,i)
+         do jj = 1, refn(ia)
+            l = itbl(jj,i)
+            c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
+            dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)
+            djc6ij = djc6ij + zvec(k)*dzvec(l)*refc6(k,l)
+         enddo
+      enddo
+      ! save
+      c6ab(ij) = c6ij
+      dc6ab(i,i) = dic6ij! + djc6ij
+
+      do j = 1, i-1
+!        if(i.eq.j) cycle
+         ja = mol%at(j)
+         ij = i*(i-1)/2 + j
+
+!        first check if we want this contribution
+         !if(mol%dist(j,i)**2.gt.r_thr) cycle
+
+         ! temps
+         c6ij = 0.0_wp
+         dic6ij = 0.0_wp
+         djc6ij = 0.0_wp
+         ! all refs
+         do ii = 1, refn(ia)
+            k = itbl(ii,i)
+            do jj = 1, refn(ja)
+               l = itbl(jj,j)
+               c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
+               dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)
+               djc6ij = djc6ij + zvec(k)*dzvec(l)*refc6(k,l)
+            enddo
+         enddo
+         ! save
+         c6ab(ij) = c6ij
+         dc6ab(i,j) = dic6ij
+         dc6ab(j,i) = djc6ij
+      enddo
+   enddo
+!$omp enddo
+!$omp end parallel
+
+   call dabcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,r_thr,rep,&
+      &    mol%lattice,c6ab,dc6ab,eabc,dc6dcn,g)
+   !call dabcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
+   !call dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
+
+end subroutine dabcappr_3d
 
 subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, &
       &    eabc,dc6dcn,g)
+   use mctc_constants
    implicit none
    integer, intent(in) :: nat
    integer, intent(in) :: at(nat)
@@ -3878,6 +3235,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
    real(wp) x1
    real(wp) r2,r
    real(wp) fdmp,tmp1
+   real(wp) :: rco,den,tmp,dtmp
 
    real(wp) rij(3),rik(3),rjk(3)
    real(wp), allocatable,dimension(:,:,:,:) ::  dc6dr  !d(E)/d(r_ij) derivative wrt. dist. iat-jat
@@ -4448,7 +3806,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
             if (r2.gt.thr.or.r2.lt.0.5) cycle
             r=sqrt(r2)
 
-            x1=dc6dr(tz,ty,tx,ij)!+dcnn*(dc6dcn(iat)+dc6dcn(jat))
+            x1=dc6dr(tz,ty,tx,ij)!+dtmp*(dc6dcn(iat)+dc6dcn(jat))
 
             vec=x1*rij/r
             g(:,iat)=g(:,iat)+vec
@@ -4461,4 +3819,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
    eabc = -eabc ! seriously, we must FIX this -- SAW
 
 end subroutine dabcappr_3d_dftd3_like_style
+
+
+
 end module dftd4
