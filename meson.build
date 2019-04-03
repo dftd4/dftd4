@@ -1,5 +1,5 @@
 # 
-project('dftd4', 'fortran', 'cpp',
+project('dftd4', 'fortran', 'cpp', 'c',
         version : '2.0',
         license : 'GPL',
         meson_version : '>=0.49')
@@ -27,15 +27,25 @@ add_project_arguments(bounds,  language : 'fortran')
 add_project_arguments(omp,     language : 'fortran')
 
 cpp_std = ''
-cc = meson.get_compiler('cpp')
-if cc.get_id() == 'gcc'
+cxx = meson.get_compiler('cpp')
+if cxx.get_id() == 'gcc'
   cpp_std = '-std=c++11'
 endif
-if fc.get_id() == 'intel'
+if cxx.get_id() == 'intel'
   cpp_std = '-std=c++11'
 endif
-
 add_project_arguments(cpp_std, language : 'cpp')
+
+c_std = ''
+cc = meson.get_compiler('c')
+if cc.get_id() == 'gcc'
+  c_std = '-std=c11'
+endif
+if cc.get_id() == 'intel'
+  c_std = '-std=c11'
+endif
+add_project_arguments(c_std, language : 'c')
+
 
 fsrcs  = []
 ftest  = []
@@ -95,6 +105,10 @@ fsrcs += 'source/dfuncpar.f90'
 cpp_srcs = []
 cpp_srcs += 'tests/cpp_api_example.cpp'
 
+# C API example
+c_srcs = []
+c_srcs += 'tests/c_api_example.c'
+
 sources = fsrcs
 
 lapack_dep  = fc.find_library('lapack', required : true )
@@ -133,8 +147,12 @@ d4tester = executable('d4test', ftest,
 d4cpp = executable('dftd4_cpp', cpp_srcs,
                  dependencies : dependencies,
                  include_directories : incdir,
-                 link_with : d4lib_static,
-                 link_args : '-fopenmp' )
+                 link_with : d4lib_shared)
+
+d4c = executable('dftd4_c', c_srcs,
+                 dependencies : dependencies,
+                 include_directories : incdir,
+                 link_with : d4lib_shared)
 
 # some very basic checks to see if the executable reacts at all
 test('Argparser: print version',d4exe,args : '--version')
@@ -156,8 +174,8 @@ test('Geometry Reader: POSCAR',  d4tester,args: ['geometry_reader','poscar_3d'])
 test('PBC tools: convert',   d4tester,args: ['pbc_tools','convert'])
 test('PBC tools: cutoff',    d4tester,args: ['pbc_tools','cutoff'])
 
-test('EEQ model: water',     d4tester,args: ['eeq_model','water'])
-test('EEQ model: 3D Ewald',  d4tester,args: ['eeq_model','ewald'])
+test('EEQ model: water',        d4tester,args: ['eeq_model','water'])
+test('EEQ model: 3D Ewald',     d4tester,args: ['eeq_model','ewald'])
 
 test('Dispersion: properties',    d4tester,args: ['dftd4','properties'])
 test('Dispersion: energies',      d4tester,args: ['dftd4','energies'])
@@ -165,3 +183,4 @@ test('Dispersion: API',           d4tester,args: ['dftd4','api'])
 test('Dispersion: energies (PBC)',d4tester,args: ['dftd4','pbc_disp'])
 
 test('API: C++', d4cpp)
+test('API: C', d4c)

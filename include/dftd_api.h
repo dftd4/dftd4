@@ -3,6 +3,8 @@
 #ifdef __cplusplus
 namespace dftd {
 extern "C" {
+#else
+#include <stdbool.h>
 #endif
 
 // since there is no enumerator in Fortran, we define
@@ -12,7 +14,7 @@ static const int p_mbd_none       = 0; // just pair-wise dispersion
 static const int p_mbd_rpalike    = 1; // RPA-like (=MBD) non-additivity
 static const int p_mbd_approx_atm = 3; // approximate C9 from C6
 
-struct DFTD_parameter {
+typedef struct {
    double s6;
    double s8;
    double s10;
@@ -21,9 +23,9 @@ struct DFTD_parameter {
    double s9;
    int alp;
    double beta;
-};
+} DFTD_parameter;
 
-struct DFTD_options {
+typedef struct {
    int lmbd;
    int refq;
    double wf;
@@ -36,12 +38,12 @@ struct DFTD_options {
    bool verbose;
    bool veryverbose;
    bool silent;
-};
+} DFTD_options;
 
-extern void D4_calculation(const int& natoms, const int* attyp,
-      const double& charge, const double* coord,
-      const DFTD_parameter& dparam, const DFTD_options& dopt,
-      double& energy, double* grad, double* hess);
+extern void D4_calculation(const int* natoms, const int* attyp,
+      const double* charge, const double* coord,
+      const DFTD_parameter* dparam, const DFTD_options* dopt,
+      double* energy, double* grad, double* hess);
 
 #ifdef __cplusplus
 }

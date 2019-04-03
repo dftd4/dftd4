@@ -35,16 +35,16 @@ main (int argc, char **argv)
    double grad[3*natoms] {0.0};
    double hess[3*natoms*3*natoms] {0.0};
 
-   dftd::D4_calculation(natoms, attyp, charge, coord, dparam_tpss, opt_1,
-         energy, grad, hess);
+   dftd::D4_calculation(&natoms, attyp, &charge, coord, &dparam_tpss, &opt_1,
+         &energy, grad, hess);
    assert(fabs(-0.26682682254336E-03 - energy) < thr);
 
    assert(fabs( 7.9334628253105 - hess[2]             ) < thr);
    assert(fabs(-3.2756224794964 - hess[7*(3*natoms)+3]) < thr);
    assert(fabs( 0.0000000000000 - hess[2*(3*natoms)+4]) < thr);
 
-   dftd::D4_calculation(natoms, attyp, charge, coord, dparam_b2plyp, opt_2,
-         energy, grad, hess);
+   dftd::D4_calculation(&natoms, attyp, &charge, coord, &dparam_b2plyp, &opt_2,
+         &energy, grad, hess);
    assert(fabs(-0.13368190339570E-03 - energy) < thr);
 
    assert(fabs( 0.00000000000000E+00 - grad[0]) < thr);
@@ -54,3 +54,4 @@ main (int argc, char **argv)
 
    return EXIT_SUCCESS;
 }
+
