@@ -1,4 +1,4 @@
-!> @brief helper tools for periodic boundary conditions
+!> helper tools for periodic boundary conditions
 module pbc_tools
    use iso_fortran_env, only : wp => real64
    use mctc_constants,  only : pi
@@ -19,7 +19,7 @@ module pbc_tools
 
 contains
 
-!> @brief convert cell parameters to direct lattice
+!> convert cell parameters to direct lattice
 pure subroutine cell_to_dlat(cellpar,lattice)
    use iso_fortran_env, wp => real64
    implicit none
@@ -46,7 +46,7 @@ pure subroutine cell_to_dlat(cellpar,lattice)
 
 end subroutine cell_to_dlat
 
-!> @brief convert cell parameters to reciprocal lattice
+!> convert cell parameters to reciprocal lattice
 pure subroutine cell_to_rlat(cellpar,rec_lat)
    use iso_fortran_env, wp => real64
    implicit none
@@ -68,12 +68,12 @@ pure subroutine cell_to_rlat(cellpar,rec_lat)
    rec_lat(3,1) = tpi*(cos(gam)*cos(alp) - cos(bet))*blen*clen/(dvol*sin(gam))
    rec_lat(3,2) = tpi*(cos(gam)*cos(bet) - cos(alp))*alen*clen/(dvol*sin(gam))
    rec_lat(3,3) = tpi*sin(gam)*alen*blen/dvol
- 
+
    end associate
 
 end subroutine cell_to_rlat
 
-!> @brief convert direct lattice to cell parameters
+!> convert direct lattice to cell parameters
 pure subroutine dlat_to_cell(lattice,cellpar)
    use iso_fortran_env, wp => real64
    implicit none
@@ -86,7 +86,7 @@ pure subroutine dlat_to_cell(lattice,cellpar)
    alen = norm2(lattice(:,1))
    blen = norm2(lattice(:,2))
    clen = norm2(lattice(:,3))
-   
+
    alp = acos(dot_product(lattice(:,2),lattice(:,3))/(blen*clen))
    bet = acos(dot_product(lattice(:,1),lattice(:,3))/(alen*clen))
    gam = acos(dot_product(lattice(:,1),lattice(:,2))/(alen*blen))
@@ -95,7 +95,7 @@ pure subroutine dlat_to_cell(lattice,cellpar)
 
 end subroutine dlat_to_cell
 
-!> @brief convert direct lattice to cell parameters
+!> convert direct lattice to cell parameters
 pure subroutine dlat_to_rlat(lattice,rec_lat)
    use iso_fortran_env, wp => real64
    implicit none
@@ -112,7 +112,7 @@ pure subroutine dlat_to_rlat(lattice,rec_lat)
 !  end associate
 end subroutine dlat_to_rlat
 
-!> @brief implements the cross/vector product between two 3D vectors
+!> implements the cross/vector product between two 3D vectors
 pure function cross(a,b) result(c)
    use iso_fortran_env, wp => real64
    implicit none
@@ -124,7 +124,7 @@ pure function cross(a,b) result(c)
    c(3)=a(1)*b(2)-b(1)*a(2)
 end function cross
 
-!> @brief determinat of 3×3 matrix
+!> determinat of 3×3 matrix
 pure function mat_det_3x3(a) result (det)
    use iso_fortran_env, wp => real64
    implicit none
@@ -140,9 +140,9 @@ pure function mat_det_3x3(a) result (det)
 
 end function mat_det_3x3
 
-!> @brief Performs a direct calculation of the inverse of a 3×3 matrix.
-!!
-!! reference: http://fortranwiki.org/fortran/show/Matrix+inversion
+!> Performs a direct calculation of the inverse of a 3×3 matrix.
+!
+!  reference: http://fortranwiki.org/fortran/show/Matrix+inversion
 pure function mat_inv_3x3(a) result(b)
    use iso_fortran_env, wp => real64
    implicit none
@@ -165,7 +165,7 @@ pure function mat_inv_3x3(a) result(b)
   b(3,3) = +detinv * (a(1,1)*a(2,2) - a(1,2)*a(2,1))
 end function mat_inv_3x3
 
-!> @brief calculate the cell volume from the cell parameters
+!> calculate the cell volume from the cell parameters
 pure function cell_to_dvol(cellpar) result(dvol)
    use iso_fortran_env, wp => real64
    implicit none
@@ -186,7 +186,7 @@ pure function cell_to_dvol(cellpar) result(dvol)
    end associate
 end function cell_to_dvol
 
-!> @brief calculate the cell volume from the direct lattice
+!> calculate the cell volume from the direct lattice
 pure function dlat_to_dvol(lattice) result(dvol)
    use iso_fortran_env, wp => real64
    implicit none
@@ -197,7 +197,7 @@ pure function dlat_to_dvol(lattice) result(dvol)
 
 end function dlat_to_dvol
 
-!> @brief inverts volume of direct unit cell
+!> inverts volume of direct unit cell
 pure function dvol_to_rvol(dvol) result(rvol)
    use iso_fortran_env, wp => real64
    implicit none
@@ -206,7 +206,7 @@ pure function dvol_to_rvol(dvol) result(rvol)
    rvol = tpi**3/dvol
 end function dvol_to_rvol
 
-!> @brief transform from fractional coordinates into cartesian coordinates
+!> transform from fractional coordinates into cartesian coordinates
 pure subroutine abc_to_xyz(n,dlat,abc,xyz)
    use iso_fortran_env, wp => real64
    implicit none
@@ -219,7 +219,7 @@ pure subroutine abc_to_xyz(n,dlat,abc,xyz)
 
 end subroutine abc_to_xyz
 
-!> @brief transform from cartesian coordinates into fractional coordinates
+!> transform from cartesian coordinates into fractional coordinates
 pure subroutine xyz_to_abc(n,dlat,xyz,abc,pbc)
    use iso_fortran_env, wp => real64
    implicit none
@@ -245,7 +245,7 @@ pure subroutine xyz_to_abc(n,dlat,xyz,abc,pbc)
 
 end subroutine xyz_to_abc
 
-!> @brief shift back fractional coordinates into the range [0,1)
+!> shift back fractional coordinates into the range [0,1)
 pure elemental function shift_back_abc(in) result(out)
    use iso_fortran_env, wp => real64
    implicit none
@@ -261,7 +261,7 @@ pure elemental function shift_back_abc(in) result(out)
       out = in - 1.0_wp
 end function shift_back_abc
 
-!> @brief transform from one coordinate system into another
+!> transform from one coordinate system into another
 pure subroutine coord_trafo_12(dim,trafo,coord1,coord2)
    use iso_fortran_env, wp => real64
    implicit none
@@ -279,7 +279,7 @@ pure subroutine coord_trafo_12(dim,trafo,coord1,coord2)
 
 end subroutine coord_trafo_12
 
-!> @brief transform from one coordinate system into another
+!> transform from one coordinate system into another
 pure subroutine coord_trafo_inplace(dim,trafo,coord)
    use iso_fortran_env, wp => real64
    implicit none
@@ -297,7 +297,7 @@ pure subroutine coord_trafo_inplace(dim,trafo,coord)
 
 end subroutine coord_trafo_inplace
 
-!> @brief calculate distance between to atoms under minimum image convention
+!> calculate distance between to atoms under minimum image convention
 pure function minimum_image_distance(lsame,fi,fj,dlat,lpbc) result(dist)
    use iso_fortran_env, wp => real64
    implicit none
@@ -357,7 +357,7 @@ pure function minimum_image_distance(lsame,fi,fj,dlat,lpbc) result(dist)
 
 end function minimum_image_distance
 
-!> @brief calculate center of unit cell
+!> calculate center of unit cell
 pure function get_center_dlat(dlat) result(center)
    use iso_fortran_env, wp => real64
    implicit none
@@ -371,7 +371,7 @@ pure function get_center_dlat(dlat) result(center)
 
 end function get_center_dlat
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  generate a supercell based on a realspace cutoff, this subroutine
 !  doesn't know anything about the convergence behaviour of the
 !  associated property. rthr is assumed to be the *quadratic* threshold!
@@ -409,5 +409,13 @@ pure subroutine get_realspace_cutoff(lat,rthr,tau_max)
    tau_max(3)=ceiling(abs(r_cutoff/cos32))
 
 end subroutine get_realspace_cutoff
+
+pure function outer_prod_3x3(a,b) result(c)
+   real(wp),intent(in) :: a(3),b(3)
+   real(wp) :: c(3,3)
+   c(1,1) = a(1)*b(1); c(2,1) = a(2)*b(1); c(3,1) = a(3)*b(1)
+   c(1,2) = a(1)*b(2); c(2,2) = a(2)*b(2); c(3,2) = a(3)*b(2)
+   c(1,3) = a(1)*b(3); c(2,3) = a(2)*b(3); c(3,3) = a(3)*b(3)
+end function outer_prod_3x3
 
 end module pbc_tools

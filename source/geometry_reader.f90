@@ -10,14 +10,14 @@
 !! ------------------------------------------------------------------------
 subroutine get_geometry(mol,fname)
    use iso_fortran_env, only : wp => real64
-   
+
 !! ------------------------------------------------------------------------
 !  general purpose library
 !! ------------------------------------------------------------------------
    use mctc_systools
    use mctc_readin
    use mctc_econv
-   
+
 !! ------------------------------------------------------------------------
 !  Class definition
 !! ------------------------------------------------------------------------
@@ -144,11 +144,11 @@ subroutine readline(line,floats,strings,nfloats,nstrings)
    do i=1,len_trim(line)
       digit=line(i:i)
       ! should exclude tabstops and blanks, 9 is ascii code for tab
-      if(digit.ne.' '.and.digit.ne.char(9)) then  
+      if(digit.ne.' '.and.digit.ne.char(9)) then
          stmp=trim(stmp)//trim(digit)
       elseif(stmp.ne.'')then
          ! get type of string, 0=number, 1=character
-         call checktype(stmp,num,str,ty)      
+         call checktype(stmp,num,str,ty)
          if(ty.eq.0) then
             floats(cf)=num
             cf=cf+1
@@ -227,7 +227,7 @@ end subroutine checktype
 !! ------------------------------------------------------------------------
 !  Purpose:
 !  translates element symbol into ordinal number
-!  
+!
 !  Input:
 !     string - arbitary length string with element symbol
 !
@@ -265,7 +265,7 @@ pure elemental function elem(string) result(nat)
       if(string(i:i).ne.' ') L=i
    enddo
    k=1
-   do j=1,l           
+   do j=1,l
       if (k.gt.2)exit
       n=ichar(string(J:J))
       ! break if space after elem. symbol
@@ -292,9 +292,9 @@ end function elem
 
 end subroutine get_geometry
 
-!> @brief implements readers for different periodic geometry types
-!!
-!! currently Turbomole coord format and VASP POSCAR are supported
+!> implements readers for different periodic geometry types
+!
+!  currently Turbomole coord format and VASP POSCAR are supported
 module geometry_reader
    use iso_fortran_env, wp => real64
    implicit none
@@ -308,7 +308,7 @@ module geometry_reader
 
 contains
 
-!> @brief interface to read in a geometry from a file
+!> interface to read in a geometry from a file
 subroutine read_geometry(fname,mol)
    use iso_fortran_env, wp => real64
    use class_molecule
@@ -330,10 +330,155 @@ subroutine read_geometry(fname,mol)
    close(ifile)
 end subroutine read_geometry
 
+!> read geometry as POSCAR from iunit
+subroutine read_poscar(iunit,mol)
+   use iso_fortran_env, wp => real64
+   use class_molecule
+   use pbc_tools
+   implicit none
+   integer,intent(in) :: iunit !< file handle
+   type(molecule),intent(inout) :: mol
+   integer :: n
+
+   !call get_atomnumber(iunit,n)
+
+   if (n.lt.1) &
+      call raise('E','Found no atoms, cannot work without atoms!')
+
+   call mol%allocate(n)
+   mol%npbc = 3 ! VASP is always 3D
+   mol%pbc = .true.
+
+   !call get_coord(iunit,mol%lattice,mol%n,mol%xyz,mol%at)
+   call dlat_to_cell(mol%lattice,mol%cellpar)
+   call dlat_to_rlat(mol%lattice,mol%rec_lat)
+   mol%volume = dlat_to_dvol(mol%lattice)
+
+   call xyz_to_abc(mol%nat,mol%lattice,mol%xyz,mol%abc,mol%pbc)
+
+contains
+
+!!> read the coordinates from POSCAR
+!subroutine get_coord(iunit,lattice,n,xyz,iat)
+!   use mctc_econv
+!   use mctc_strings
+!   use mctc_systools
+!
+!   implicit none
+!
+!   integer, intent(in)  :: n
+!   real(wp),intent(out) :: xyz(3,n)
+!   real(wp),intent(out) :: lattice(3,3)
+!   integer, intent(out) :: iat(n)
+!   integer, intent(in)  :: iunit
+!   logical              :: selective=.false. ! Selective dynamics
+!   logical              :: cartesian=.true.  ! Cartesian or direct
+!
+!   real(wp) :: ddum,latvec(3)
+!   real(wp) xx(10),scalar
+!   character(len=:),allocatable :: line
+!   character(len=80) :: args(90),args2(90)
+!
+!   integer i,j,nn,ntype,ntype2,atnum,i_dummy1,i_dummy2,ncheck
+!
+!   lattice=0
+!
+!   rewind(iunit)
+!   ncheck=0
+!   ntype=0
+!   call getline(iunit,line,err)
+!   if (err.ne.0) call raise('E',"Could not read POSCAR")
+!   call parse(line,' ',args,ntype)
+!   call getline(iunit,line,err)
+!   read(line,*,iostat=err) ddum
+!   if (err.ne.0) call raise('E',"Could not read POSCAR")
+!   !the Ang->au conversion is included in the scaling factor
+!   scalar = ddum*aatoau
+!
+!   ! reading the lattice constants
+!   do i=1,3
+!      call getline(iunit,line,err)
+!      if (err.ne.0) call raise('E',"Could not read lattice from POSCAR")
+!      read(line,*,iostat=err) latvec
+!      if (err.ne.0) call raise('E',"Could not read lattice from POSCAR")
+!      lattice(:,i) = latvec * scalar
+!   ENDDO
+!   ! Either here are the numbers of each element,
+!   ! or (>vasp.5.1) here are the element symbols
+!   call getline(iunit,line,err)
+!   call readl(line,xx,nn)
+!   IF (nn.eq.0) then      ! CONTCAR files have additional Element line here since vasp.5.1
+!      call parse(line,' ',args,ntype)
+!      read(iunit,'(a)',end=20)line
+!      line=adjustl(line)
+!      call readl(line,xx,nn)
+!   ENDIF
+!   !       call elem(args(1),i_dummy2)
+!   !       IF (i_dummy2<1 .OR. i_dummy2>94) THEN
+!   !          args=args2
+!   !       ENDIF
+!   IF (nn.NE.ntype ) THEN
+!      call raise('E', 'Error reading number of atomtypes')
+!   ENDIF
+!   ncheck=0
+!   DO i=1,nn
+!      i_dummy1=INT(xx(i))
+!      call elem(args(i),i_dummy2)
+!      IF (i_dummy2<1 .OR. i_dummy2>94) call raise('E', 'Error: unknown element.')
+!      DO j=1,i_dummy1
+!         ncheck=ncheck+1
+!         iat(ncheck)=i_dummy2
+!      ENDDO
+!   ENDDO
+!   if (n.ne.ncheck) call raise('E','Error reading Number of Atoms')
+!
+!   read(iunit,'(a)',end=20)line
+!   line=adjustl(line)
+!   IF (line(:1).EQ.'s' .OR. line(:1).EQ.'S') THEN
+!      selective=.TRUE.
+!      read(iunit,'(a)',end=20)line
+!      line=adjustl(line)
+!   ENDIF
+!
+!   !c      write(*,*)line(:1)
+!   cartesian=(line(:1).EQ.'c' .OR. line(:1).EQ.'C' .OR. &
+!      &line(:1).EQ.'k' .OR. line(:1).EQ.'K')
+!   DO i=1,n
+!      read(iunit,'(a)',end=20)line
+!      call readl(line,xx,nn)
+!      IF (nn.NE.3) call raise('E', 'Error reading coordinates.')
+!
+!      IF (cartesian) THEN
+!         xyz(1,i)=xx(1)*scalar
+!         xyz(2,i)=xx(2)*scalar
+!         xyz(3,i)=xx(3)*scalar
+!      ELSE
+!         xyz(1,i)=lattice(1,1)*xx(1)+lattice(1,2)*&
+!            &    xx(2)+lattice(1,3)*xx(3)
+!         xyz(2,i)=lattice(2,1)*xx(1)+lattice(2,2)*xx(2)+lattice(2,3)*&
+!            &    xx(3)
+!         xyz(3,i)=lattice(3,1)*xx(1)+lattice(3,2)*xx(2)+lattice(3,3)*&
+!            &    xx(3)
+!      ENDIF
+!
+!      !c      write(*,'(3F20.10,1X,I3)')xyz(:,i),iat(i)   !debug printout
+!
+!   ENDDO
+!
+!
+!20 continue
+!
+!end subroutine get_coord
+
+
+
+end subroutine read_poscar
+
+
 ! ------------------------------------------------------------------------
 ! Turbomole's coord file for riper
 ! ------------------------------------------------------------------------
-!> @brief read geometry as coord from iunit
+!> read geometry as coord from iunit
 subroutine read_coord(iunit,mol)
    use iso_fortran_env, wp => real64
    use class_molecule
@@ -475,7 +620,7 @@ subroutine read_coord(iunit,mol)
 
 contains
 
-!> @brief count the number of lines in the coord block -> number of atoms
+!> count the number of lines in the coord block -> number of atoms
 subroutine get_atomnumber(ncount,iunit,line,err)
    implicit none
    integer,intent(in) :: iunit          !< file handle
@@ -494,7 +639,7 @@ subroutine get_atomnumber(ncount,iunit,line,err)
    enddo
 end subroutine get_atomnumber
 
-!> @brief get the dimensionality of the system
+!> get the dimensionality of the system
 subroutine get_periodic(npbc,iunit,line,err)
    implicit none
    integer,intent(in) :: iunit          !< file handle
@@ -514,7 +659,7 @@ subroutine get_periodic(npbc,iunit,line,err)
    call getline(iunit,line,err)
 end subroutine get_periodic
 
-!> @brief read the lattice vectors from the data group
+!> read the lattice vectors from the data group
 subroutine get_lattice(iunit,line,err,npbc,lat)
    use mctc_econv
    implicit none
@@ -559,7 +704,7 @@ subroutine get_lattice(iunit,line,err,npbc,lat)
    enddo
 end subroutine get_lattice
 
-!> @brief read the cell parameters and transform to lattice
+!> read the cell parameters and transform to lattice
 subroutine get_cell(iunit,line,err,npbc,cellpar)
    use mctc_constants
    use mctc_econv
@@ -619,7 +764,7 @@ subroutine get_cell(iunit,line,err,npbc,cellpar)
 
 end subroutine get_cell
 
-!> @brief read the coordinates from coord data group
+!> read the coordinates from coord data group
 subroutine get_coord(iunit,line,err,mol)
    use mctc_econv
    use mctc_strings
@@ -752,16 +897,16 @@ subroutine read_xmol(iunit,mol)
 
 end subroutine read_xmol
 
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 !  Purpose:
 !  translates element symbol into ordinal number
-!  
+!
 !  Input:
 !     string - arbitary length string with element symbol
 !
 !  Outout:
 !     nat    - ordinal number
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 pure elemental function elem(string) result(nat)
    implicit none
    character(len=*),intent(in)  :: string
@@ -793,7 +938,7 @@ pure elemental function elem(string) result(nat)
       if(string(i:i).ne.' ') L=i
    enddo
    k=1
-   do j=1,l           
+   do j=1,l
       if (k.gt.2)exit
       n=ichar(string(J:J))
       ! break if space after elem. symbol

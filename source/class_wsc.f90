@@ -1,8 +1,8 @@
-!> @brief defines the Wigner--Seitz-cell (ws_cell) data type
-!!
-!! The Wigner--Seitz cell is used to define periodic boundary conditions
-!! by the cyclic cluster model (CCM). This type is usually bound to
-!! the molecule class but can in principle be used independently.
+!> defines the Wigner--Seitz-cell (ws_cell) data type
+!
+!  The Wigner--Seitz cell is used to define periodic boundary conditions
+!  by the cyclic cluster model (CCM). This type is usually bound to
+!  the molecule class but can in principle be used independently.
 module class_wsc
    use iso_fortran_env, only : wp => real64
    implicit none
@@ -11,7 +11,7 @@ module class_wsc
 
    private
 
-!> @brief definition of the the Wigner--Seitz-cell (ws_cell) data type
+   !> definition of the the Wigner--Seitz-cell (ws_cell) data type
    type :: ws_cell
       integer  :: n = 0       !< number of atoms in the WSC
       integer  :: cells = 0   !< number of cells used to generate WSC
@@ -23,17 +23,20 @@ module class_wsc
       integer, allocatable :: itbl(:,:)    !< define index table
       real(wp),allocatable :: cn(:)        !< GFN0 derived max. CNs
    contains
+   !> constructor for the WSC
    procedure :: allocate => allocate_wsc
+   !> (optional) deconstructor for the WSC
    procedure :: deallocate => deallocate_wsc
+   !> debug printout of the WSC data
    procedure :: write => write_wsc
    end type ws_cell
 
 contains
 
-!> @brief constructor for Wigner--Seitz cell
+!> constructor for Wigner--Seitz cell
 subroutine allocate_wsc(self,n,rep,lattice)
    implicit none
-   class(ws_cell),intent(inout) :: self
+   class(ws_cell),intent(inout) :: self !< Wigner--Seitz cell
    integer,intent(in) :: n      !< number of atoms
    integer,intent(in) :: rep(3) !< translations
    real(wp),intent(in) :: lattice(3,3) !< lattice parameters
@@ -50,21 +53,22 @@ subroutine allocate_wsc(self,n,rep,lattice)
    allocate( self%itbl(n,n));        self%itbl = 0
 end subroutine allocate_wsc
 
-!> @brief deconstructor for Wigner--Seitz cell
+!> deconstructor for Wigner--Seitz cell
 subroutine deallocate_wsc(self)
    implicit none
-   class(ws_cell),intent(inout) :: self
+   class(ws_cell),intent(inout) :: self !< Wigner--Seitz cell
    if (allocated(self%at))   deallocate(self%at)
    if (allocated(self%xyz))  deallocate(self%xyz)
    if (allocated(self%w))    deallocate(self%w)
    if (allocated(self%itbl)) deallocate(self%itbl)
 end subroutine deallocate_wsc
 
+!> debug printout for the Wigner--Seitz cell
 subroutine write_wsc(self,iunit,comment)
    implicit none
-   class(ws_cell),  intent(in) :: self
-   integer,         intent(in) :: iunit
-   character(len=*),intent(in) :: comment
+   class(ws_cell),  intent(in) :: self    !< Wigner--Seitz cell
+   integer,         intent(in) :: iunit   !< output unit, usually STDOUT
+   character(len=*),intent(in) :: comment !< variable name
    character(len=*),parameter :: dfmt = '(1x,a,1x,"=",1x,g0)'
 
    write(iunit,'(72(">"))')

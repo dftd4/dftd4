@@ -1,4 +1,4 @@
-!> @brief unit conversion factors
+!> unit conversion factors
 module mctc_econv
    use iso_fortran_env, only : wp => real64
    use mctc_constants

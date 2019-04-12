@@ -17,6 +17,7 @@ program dftd
 ! ------------------------------------------------------------------------
 !  interfaces
 ! ------------------------------------------------------------------------
+   use geometry_reader
    use coordination_number
    use eeq_model
    use dftd4
@@ -43,6 +44,7 @@ program dftd
    real(wp) :: energy                    ! dispersion energy
    real(wp) :: etmp,etwo,emany,er,el,es
    real(wp) :: molpol,molc6,molc8        ! molecular Polarizibility
+   real(wp) :: lattice_grad(3,3)
    real(wp),allocatable :: gradient(:,:) ! nuclear gradient
    real(wp),allocatable :: hessian(:,:)  ! nuclear hessian
    real(wp),allocatable :: q(:)          ! partial charges
@@ -93,7 +95,11 @@ program dftd
 ! ------------------------------------------------------------------------
 !  get molecular geometry
 ! ------------------------------------------------------------------------
-   call get_geometry(mol,set%fname)
+   if (set%lperiodic) then
+      call read_geometry(set%fname,mol)
+   else
+      call get_geometry(mol,set%fname)
+   endif
    if (set%inchrg) mol%chrg = set%chrg
 
 ! ------------------------------------------------------------------------
@@ -125,13 +131,25 @@ program dftd
          call raise('E','Dispersion Hessian requested but no parameters given')
    endif
    if (.not.(set%lenergy.or.set%lgradient.or.set%lhessian)) set%lmolpol = .true.
+   if (set%lhessian .and. set%lperiodic) then
+      call raise('W',"Cannot calculate Hessian under periodic boundary conditions")
+      set%lhessian = .false.
+   endif
+   if (set%lorca .and. set%lperiodic) then
+      call raise('W',"To my knowledge there are no PBC in ORCA!")
+      set%lorca = .false.
+   endif
 
    dopt = set%export()
 
    if (dopt%lgradient) allocate( gradient(3,mol%nat) )
    if (dopt%lhessian)  allocate( hessian(3*mol%nat,3*mol%nat) )
 
-   call d4_calculation(istdout,dopt,mol,dparam,energy,gradient,hessian)
+   if (set%lperiodic) then
+      call d4_pbc_calculation(istdout,dopt,mol,dparam,energy,gradient,lattice_grad)
+   else
+      call d4_calculation(istdout,dopt,mol,dparam,energy,gradient,hessian)
+   endif
 
 ! ------------------------------------------------------------------------
 !  Output:
@@ -170,6 +188,9 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
          call orca_gradient(mol,istdout,gradient)
       else
          call out_gradient(mol,'gradient',energy,gradient)
+         if (mol%npbc > 0) then
+            call out_gradlatt(mol,'gradlatt',energy,lattice_grad)
+         endif
       endif
    endif
 

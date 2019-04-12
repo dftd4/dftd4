@@ -1,4 +1,4 @@
-!> @brief wrapper for IO functions to work with allocatable characters
+!> wrapper for IO functions to work with allocatable characters
 module mctc_systools
 
    character,parameter :: space = ' '
@@ -7,7 +7,7 @@ module mctc_systools
 
 contains
 
-!> @brief reads a line from unit into an allocatable character
+!> reads a line from unit into an allocatable character
 subroutine getline(unit,line,iostat)
    use iso_fortran_env, only : iostat_eor
    integer,intent(in) :: unit
@@ -37,7 +37,7 @@ subroutine getline(unit,line,iostat)
 
 end subroutine getline
 
-!> @brief searches for an file in a given path variable
+!> searches for an file in a given path variable
 subroutine rdpath(path,arg,fname,ex)
    implicit none
    character(len=*),intent(in)  :: arg  !< file to be found in path
@@ -72,10 +72,10 @@ subroutine rdpath(path,arg,fname,ex)
 
    if (exist) fname = fpath
    if (present(ex)) ex = exist
-   
+
 end subroutine rdpath
 
-!> @brief reads a command line argument in an allocatable character
+!> reads a command line argument in an allocatable character
 subroutine rdarg(i,arg,iostat)
    integer,intent(in) :: i !< number of argument
    character(len=:),allocatable,intent(out) :: arg !< contains argument on exit
@@ -112,7 +112,7 @@ subroutine rdarg(i,arg,iostat)
    if (present(iostat)) iostat=0
 end subroutine rdarg
 
-!> @brief reads a system cariable in an allocatable character
+!> reads a system cariable in an allocatable character
 subroutine rdvar(name,var,iostat)
    character(len=*),intent(in) :: name
    character(len=:),allocatable,intent(out) :: var

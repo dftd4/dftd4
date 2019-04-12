@@ -1,6 +1,9 @@
-!> @brief definition of the molecular structure class
-!!
-!! contains number of atoms, geometry, atomtypes and molecular charge
+!> definition of the molecular structure class
+!
+!  Contains number of atoms, geometry, atomtypes and molecular charge.
+!  With periodic boundary conditions the molecular structure holds
+!  information about the cell and the periodic directions as well
+!  a Wigner--Seitz cell as primitive unit.
 module class_molecule
    use iso_fortran_env, wp => real64
    use class_wsc
@@ -9,8 +12,7 @@ module class_molecule
    public :: molecule
    private
 
-!> @class molecule
-!> @brief molecule structure class
+!> molecule structure class
    type :: molecule
       integer  :: nat = 0          !< number of atoms
       real(wp) :: chrg = 0.0_wp    !< molecular charge in e
@@ -30,21 +32,38 @@ module class_molecule
       real(wp) :: volume = 0.0_wp            !< volume of unit cell
       type(ws_cell) :: wsc                   !< Wigner--Seitz cell
    contains
+      !> constructor for molecular structure information
       procedure :: allocate => allocate_molecule
+      !> (optional) deconstructor for molecular structure information
       procedure :: deallocate => deallocate_molecule
+      !> debug information of internal data of the molecular structure
       procedure :: write => write_molecule
+      !> retrieves atomic masses from MCTC library and stores them in au
       procedure :: assign_atomic_mass
+      !> calculates all interatomic distances for molecular case
+      !  or minimum image distances if periodic boundary conditions are
+      !  present
       procedure :: calculate_distances
+      !> wraps back the coordinates into the primitive cell for
+      !  periodic boundary conditions
       procedure :: wrap_back
+      !> calculates molecular mass (needs atomic masses assigned)
       procedure :: molecular_mass
+      !> returns the center of geometry for the non-periodic directions
       procedure :: center_of_geometry
+      !> returns the center of mass for the non-periodic directions
       procedure :: center_of_mass
+      !> shifts the non-periodic directions back to the center of geometry
       procedure :: shift_to_center_of_geometry
+      !> shifts the non-periodic directions back to the center of mass
       procedure :: shift_to_center_of_mass
+      !> calculates the moments of inertia (only for non-periodic directions)
       procedure :: moments_of_inertia
+      !> aligns the molecule to its principal axes of inertia
       procedure :: align_to_principal_axes
    end type
 
+   !> wrap Lapack and pretend it is a pure routine to call
    interface spev
       pure subroutine sspev(jobz,uplo,n,ap,w,z,ldz,work,info)
          use iso_fortran_env, only : wp => real32
@@ -74,12 +93,12 @@ module class_molecule
 
 contains
 
-!> @brief constructor for molecule class
+!> constructor for molecule class
 subroutine allocate_molecule(self,nat,lpbc)
    implicit none
-   class(molecule) :: self
-   integer,intent(in) :: nat
-   logical,intent(in) :: lpbc
+   class(molecule) :: self !< molecule structure information
+   integer,intent(in) :: nat !< number of atoms
+   logical,optional,intent(in) :: lpbc !< periodic boundary conditions
    call self%deallocate
    self%nat = nat
    allocate( self%sym(nat),      source = '  ')
@@ -92,10 +111,10 @@ subroutine allocate_molecule(self,nat,lpbc)
    allocate( self%cn(nat),       source = 0.0_wp )
 end subroutine allocate_molecule
 
-!> @brief deconstructor for molecule class
+!> deconstructor for molecule class
 subroutine deallocate_molecule(self)
    implicit none
-   class(molecule) :: self
+   class(molecule) :: self !< molecule structure information
    self%nat = 0
    self%pbc = .false.
    self%chrg = 0.0_wp
@@ -110,7 +129,7 @@ subroutine deallocate_molecule(self)
    if (allocated(self%cn))     deallocate(self%cn)
 end subroutine deallocate_molecule
 
-!> @brief print information about current molecular structure to unit
+!> print information about current molecular structure to unit
 subroutine write_molecule(self,iunit,comment)
    implicit none
    class(molecule),   intent(in) :: self    !< molecular structure information
@@ -194,7 +213,7 @@ subroutine write_molecule(self,iunit,comment)
    write(iunit,'(72("<"))')
 end subroutine write_molecule
 
-!> @brief set masses for molecular structure
+!> set masses for molecular structure
 subroutine assign_atomic_mass(self)
    use iso_fortran_env, wp => real64
    use mctc_param
@@ -205,8 +224,8 @@ subroutine assign_atomic_mass(self)
 
 end subroutine assign_atomic_mass
 
-!> @brief calculates all distances for molecular structures and minimum
-!!        image distances for peridic structures
+!> calculates all distances for molecular structures and minimum
+!  image distances for periodic structures
 subroutine calculate_distances(self)
    use iso_fortran_env, wp => real64
    use pbc_tools
@@ -234,10 +253,10 @@ subroutine calculate_distances(self)
    endif
 end subroutine calculate_distances
 
-!> @brief wrap cartesian coordinates back into cell
-!!
-!! This automatically done when calling @see xyz_to_abc, so we only have
-!! to perform the transformation there and back again
+!> wrap cartesian coordinates back into cell
+!
+!  This automatically done when calling xyz_to_abc, so we only have
+!  to perform the transformation there and back again
 subroutine wrap_back(self)
    use iso_fortran_env, wp => real64
    use pbc_tools
@@ -247,6 +266,8 @@ subroutine wrap_back(self)
    call abc_to_xyz(self%nat,self%lattice,self%abc,self%xyz)
 end subroutine wrap_back
 
+!> returns the center of geometry for the non-periodic directions of
+!  the system
 pure function center_of_geometry(self) result(center)
    use iso_fortran_env, wp => real64
    implicit none
@@ -262,6 +283,7 @@ pure function center_of_geometry(self) result(center)
    center = center/real(self%nat,wp)
 end function center_of_geometry
 
+!> shifts back the non-periodic directions to the center of geometry
 pure subroutine shift_to_center_of_geometry(self)
    use iso_fortran_env, wp => real64
    implicit none
@@ -274,6 +296,7 @@ pure subroutine shift_to_center_of_geometry(self)
    enddo
 end subroutine shift_to_center_of_geometry
 
+!> calculates the molecular mass, needs assigned molecular masses
 pure function molecular_mass(self) result(molmass)
    use iso_fortran_env, wp => real64
    implicit none
@@ -282,6 +305,7 @@ pure function molecular_mass(self) result(molmass)
    molmass = sum(self%atmass)
 end function molecular_mass
 
+!> returns the center of mass for the non-periodic directions of the system
 pure function center_of_mass(self) result(center)
    use iso_fortran_env, wp => real64
    implicit none
@@ -296,6 +320,7 @@ pure function center_of_mass(self) result(center)
    center = center/sum(self%atmass)
 end function center_of_mass
 
+!> shifts back the non-periodic directions to the center of mass
 pure subroutine shift_to_center_of_mass(self)
    use iso_fortran_env, wp => real64
    implicit none
@@ -308,6 +333,7 @@ pure subroutine shift_to_center_of_mass(self)
    enddo
 end subroutine shift_to_center_of_mass
 
+!> calculates the moments of inertia (only for non-periodic directions)
 pure function moments_of_inertia(self) result(moments)
    use iso_fortran_env, wp => real64
    implicit none
@@ -343,6 +369,7 @@ pure function moments_of_inertia(self) result(moments)
 
 end function moments_of_inertia
 
+!> aligns the molecule to its principal axes of inertia
 pure subroutine align_to_principal_axes(self,break_symmetry)
    use iso_fortran_env, wp => real64
    use pbc_tools

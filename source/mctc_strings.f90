@@ -24,10 +24,10 @@ pure function capitalize (str)
    enddo
 end function capitalize
 
-!> @brief Parses the string 'str' into arguments args(1), ..., args(nargs) based on
-!! the delimiters contained in the string 'delims'. Preceding a delimiter in
-!! 'str' by a backslash (\) makes this particular instance not a delimiter.
-!! The integer output variable nargs contains the number of arguments found.
+!> Parses the string 'str' into arguments args(1), ..., args(nargs) based on
+!  the delimiters contained in the string 'delims'. Preceding a delimiter in
+!  'str' by a backslash (\) makes this particular instance not a delimiter.
+!  The integer output variable nargs contains the number of arguments found.
 pure subroutine parse(str,delims,args,nargs)
 
    character(len=*), intent(in) :: str
@@ -43,7 +43,7 @@ pure subroutine parse(str,delims,args,nargs)
    na=size(args)
    do i=1,na
       args(i)=' '
-   end do  
+   end do
    nargs=0
    lenstr=len_trim(tmpstr)
    if(lenstr==0) return
@@ -55,14 +55,12 @@ pure subroutine parse(str,delims,args,nargs)
       if (nargs > size(args)) exit
       call split(tmpstr,delims,args(nargs))
       call removebksl(args(nargs))
-   end do   
+   end do
 
 end subroutine parse
 
-!**********************************************************************
-
-!> @brief Converts multiple spaces and tabs to single spaces; deletes control characters;
-!! removes initial spaces.
+!> Converts multiple spaces and tabs to single spaces; deletes control characters;
+!  removes initial spaces.
 pure subroutine compact(str)
 
 
@@ -104,7 +102,7 @@ pure subroutine compact(str)
 
 end subroutine compact
 
-!> @brief Removes spaces, tabs, and control characters in string str
+!> Removes spaces, tabs, and control characters in string str
 pure subroutine removesp(str)
 
    character(len=*), intent(inout) :: str
@@ -121,10 +119,10 @@ pure subroutine removesp(str)
    do i=1,lenstr
       ch=str(i:i)
       ich=iachar(ch)
-      select case(ich)    
+      select case(ich)
       case(0:32)  ! space, tab, or control character
-         cycle       
-      case(33:)  
+         cycle
+      case(33:)
          k=k+1
          outstr(k:k)=ch
       end select
@@ -134,10 +132,10 @@ pure subroutine removesp(str)
 
 end subroutine removesp
 
-!> @brief Shifts characters in in the string 'str' n positions (positive values
-!! denote a right shift and negative values denote a left shift). Characters
-!! that are shifted off the end are lost. Positions opened up by the shift 
-!! are replaced by spaces.
+!> Shifts characters in in the string 'str' n positions (positive values
+!  denote a right shift and negative values denote a left shift). Characters
+!  that are shifted off the end are lost. Positions opened up by the shift
+!  are replaced by spaces.
 pure subroutine shiftstr(str,n)
 
    character(len=*), intent(inout) :: str
@@ -152,15 +150,15 @@ pure subroutine shiftstr(str,n)
       return
    end if
    if(n<0) str=str(nabs+1:)//repeat(' ',nabs)  ! shift left
-   if(n>0) str=repeat(' ',nabs)//str(:lenstr-nabs)  ! shift right 
+   if(n>0) str=repeat(' ',nabs)//str(:lenstr-nabs)  ! shift right
    return
 
 end subroutine shiftstr
 
-!> @brief Inserts the string 'strins' into the string 'str' at position 'loc'. 
-!! Characters in 'str' starting at position 'loc' are shifted right to
-!! make room for the inserted string. Trailing spaces of 'strins' are 
-!! removed prior to insertion
+!> Inserts the string 'strins' into the string 'str' at position 'loc'.
+!  Characters in 'str' starting at position 'loc' are shifted right to
+!  make room for the inserted string. Trailing spaces of 'strins' are
+!  removed prior to insertion
 pure subroutine insertstr(str,strins,loc)
 
 
@@ -180,9 +178,9 @@ pure subroutine insertstr(str,strins,loc)
 
 end subroutine insertstr
 
-!> @brief Deletes first occurrence of substring 'substr' from string 'str' and
-!! shifts characters left to fill hole. Trailing spaces or blanks are
-!! not considered part of 'substr'.
+!> Deletes first occurrence of substring 'substr' from string 'str' and
+!  shifts characters left to fill hole. Trailing spaces or blanks are
+!  not considered part of 'substr'.
 pure subroutine delsubstr(str,substr)
 
    character(len=*), intent(inout) :: str
@@ -197,13 +195,13 @@ pure subroutine delsubstr(str,substr)
       str=str(lensubstr+1:)
    else
       str=str(:ipos-1)//str(ipos+lensubstr:)
-   end if   
+   end if
    return
 
 end subroutine delsubstr
 
-!> @brief Deletes all occurrences of substring 'substr' from string 'str' and
-!! shifts characters left to fill holes.
+!> Deletes all occurrences of substring 'substr' from string 'str' and
+!  shifts characters left to fill holes.
 pure subroutine delall(str,substr)
 
 
@@ -222,12 +220,12 @@ pure subroutine delall(str,substr)
       else
          str=str(:ipos-1)//str(ipos+lensubstr:)
       end if
-   end do   
+   end do
    return
 
 end subroutine delall
 
-!> @brief convert string to upper case
+!> convert string to upper case
 function uppercase(str) result(ucstr)
 
 
@@ -237,7 +235,7 @@ function uppercase(str) result(ucstr)
    integer :: ilen,ioffset,iquote,i,iav,iqc
 
    ilen=len_trim(str)
-   ioffset=iachar('A')-iachar('a')     
+   ioffset=iachar('A')-iachar('a')
    iquote=0
    ucstr=str
    do i=1,ilen
@@ -262,7 +260,7 @@ function uppercase(str) result(ucstr)
 
 end function uppercase
 
-!> @brief convert string to lower case
+!> convert string to lower case
 function lowercase(str) result(lcstr)
 
    character (len=*):: str
@@ -296,15 +294,15 @@ function lowercase(str) result(lcstr)
 
 end function lowercase
 
-!> @brief Reads line from unit=nunitr, ignoring blank lines
-!! and deleting comments beginning with an exclamation point(!)
+!> Reads line from unit=nunitr, ignoring blank lines
+!  and deleting comments beginning with an exclamation point(!)
 subroutine readline(nunitr,line,ios)
 
    character (len=*):: line
 
    integer :: nunitr,ios,ipos
 
-   do  
+   do
       read(nunitr,'(a)', iostat=ios) line      ! read input line
       if(ios /= 0) return
       line=adjustl(line)
@@ -317,8 +315,8 @@ subroutine readline(nunitr,line,ios)
 
 end subroutine readline
 
-!> @brief Sets imatch to the position in string of the delimiter matching the delimiter
-!! in position ipos. Allowable delimiters are (), [], {}, <>.
+!> Sets imatch to the position in string of the delimiter matching the delimiter
+!  in position ipos. Allowable delimiters are (), [], {}, <>.
 pure subroutine match(str,ipos,imatch,status)
 
    character(len=*), intent(in) :: str
@@ -381,7 +379,7 @@ pure subroutine match(str,ipos,imatch,status)
       if (present(status)) status = stat
       !write(*,*) delim1,' has no matching delimiter'
       return
-   end if   
+   end if
    imatch=i
    if (present(status)) status = 0
 
@@ -389,8 +387,8 @@ pure subroutine match(str,ipos,imatch,status)
 
 end subroutine match
 
-!> @brief Deletes nonsignificant trailing zeroes from number string str. If number
-!! string ends in a decimal point, one trailing zero is added.
+!> Deletes nonsignificant trailing zeroes from number string str. If number
+!  string ends in a decimal point, one trailing zero is added.
 pure subroutine trimzero(str)
 
    character(len=*), intent(inout) :: str
@@ -407,7 +405,7 @@ pure subroutine trimzero(str)
    lstr=len_trim(str)
    do i=lstr,1,-1
       ch=str(i:i)
-      if(ch=='0') cycle          
+      if(ch=='0') cycle
       if(ch=='.') then
          str=str(1:i)//'0'
          if(ipos>0) str=trim(str)//trim(exp)
@@ -420,7 +418,7 @@ pure subroutine trimzero(str)
 
 end subroutine trimzero
 
-!> @brief Returns .true. if ch is a letter and .false. otherwise
+!> Returns .true. if ch is a letter and .false. otherwise
 function is_letter(ch) result(res)
 
 
@@ -437,7 +435,7 @@ function is_letter(ch) result(res)
 
 end function is_letter
 
-!> @brief Returns .true. if ch is a digit (0,1,...,9) and .false. otherwise
+!> Returns .true. if ch is a digit (0,1,...,9) and .false. otherwise
 pure elemental function is_digit(ch) result(res)
 
    character, intent(in) :: ch
@@ -453,13 +451,13 @@ pure elemental function is_digit(ch) result(res)
 
 end function is_digit
 
-!> @brief Routine finds the first instance of a character from 'delims' in the
-!! the string 'str'. The characters before the found delimiter are
-!! output in 'before'. The characters after the found delimiter are
-!! output in 'str'. The optional output character 'sep' contains the 
-!! found delimiter. A delimiter in 'str' is treated like an ordinary 
-!! character if it is preceded by a backslash (\). If the backslash 
-!! character is desired in 'str', then precede it with another backslash.
+!> Routine finds the first instance of a character from 'delims' in the
+!  the string 'str'. The characters before the found delimiter are
+!  output in 'before'. The characters after the found delimiter are
+!  output in 'str'. The optional output character 'sep' contains the
+!  found delimiter. A delimiter in 'str' is treated like an ordinary
+!  character if it is preceded by a backslash (\). If the backslash
+!  character is desired in 'str', then precede it with another backslash.
 pure subroutine split(str,delims,before,sep)
 
    character(len=*), intent(inout) :: str
@@ -493,7 +491,7 @@ pure subroutine split(str,delims,before,sep)
          ibsl=1
          cycle
       end if
-      ipos=index(delims,ch)         
+      ipos=index(delims,ch)
       if(ipos == 0) then          ! character is not a delimiter
          k=k+1
          before(k:k)=ch
@@ -522,8 +520,8 @@ pure subroutine split(str,delims,before,sep)
 
 end subroutine split
 
-!> @brief Removes backslash (\) characters. Double backslashes (\\) are replaced
-!! by a single backslash.
+!> Removes backslash (\) characters. Double backslashes (\\) are replaced
+!  by a single backslash.
 pure subroutine removebksl(str)
 
    character(len=*), intent(inout) :: str
@@ -558,5 +556,5 @@ pure subroutine removebksl(str)
 
 end subroutine removebksl
 
-end module mctc_strings  
+end module mctc_strings
 

@@ -1,7 +1,11 @@
+!> saves all the damping parameters obtained by fitting the DFT-D4
+!  dispersion energies to CCSD(T) interaction energies obtained
+!  on different dissociation curves
 module dfuncpar
    use iso_fortran_env, only : wp => real64
    use class_param, only : dftd_parameter
    implicit none
+   !> unique idenifiers for all functionals known to me -- SAW
    integer,private,parameter ::  &
    &  p_df_none           =   0,  &
    &  p_df_hf             =   1,  &
@@ -136,15 +140,15 @@ module dfuncpar
 
 contains
 
-!!! ========================================================================
-!!  DFT-D4(EEQ)-ATM/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
+! ========================================================================
+!> DFT-D4(EEQ)-ATM/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
 function get_d4eeqbjatm_2019_parameter(dfnum,bsnum) result(param)
    implicit none
    integer,intent(in)   :: dfnum,bsnum
    type(dftd_parameter) :: param
    select case(dfnum)
    case default; call raise('E','No parameters for this Functional')
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    case(p_df_b1b95); param = dftd_parameter ( & ! (SAW190107)
    &  s6=1.0000_wp, s8=1.27701162_wp, a1=0.40554715_wp, a2=4.63323074_wp )
 !  Fitset: MD= 0.22852 MAD= 0.35189 RMSD= 0.46982
@@ -372,17 +376,17 @@ function get_d4eeqbjatm_2019_parameter(dfnum,bsnum) result(param)
 !  Fitset: MD= -0.03900 MAD= 0.27562 RMSD= 0.38491
    end select
 end function get_d4eeqbjatm_2019_parameter
-!! ========================================================================
+! ========================================================================
 
-!!! ========================================================================
-!!  DFT-D4(EEQ)-MBD/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
+! ========================================================================
+!> DFT-D4(EEQ)-MBD/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
 function get_d4eeqbjmbd_2019_parameter(dfnum,bsnum) result(param)
    implicit none
    integer,intent(in)   :: dfnum,bsnum
    type(dftd_parameter) :: param
    select case(dfnum)
    case default; call raise('E','No parameters for this Functional')
-!! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
    case(p_df_b1b95); param = dftd_parameter ( & ! (SAW190107)
    &  s6=1.0000_wp, s8=1.19549420_wp, a1=0.39241474_wp, a2=4.60397611_wp )
 !  Fitset: MD= 0.21329 MAD= 0.33289 RMSD= 0.44693
@@ -610,9 +614,10 @@ function get_d4eeqbjmbd_2019_parameter(dfnum,bsnum) result(param)
 !  Fitset: MD= -0.06152 MAD= 0.27318 RMSD= 0.38360
    end select
 end function get_d4eeqbjmbd_2019_parameter
-!! ========================================================================
+! ========================================================================
 
-
+!> get the unique identifier for most functionals, returns none if
+!  the functional was not known at the time I implemented this mapping
 function get_dfnum(df) result(num)
    integer :: num
    character(len=*),intent(in) :: df
@@ -777,7 +782,7 @@ subroutine d4par(inp,param,lmbd)
    endif
 end subroutine d4par
 
-! convert string to lower case
+!> convert string to lower case
 function lowercase(str) result(lcstr)
    implicit none
    character(len=*),intent(in)  :: str

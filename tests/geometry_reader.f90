@@ -24,12 +24,28 @@ subroutine test_geometry_reader_file_poscar_sio2_3d
 
    stop 77
 
-!   open(newunit=iunit,file='POSCAR')
-!   write(iunit,file_poscar_sio2_3d)
-!   call read_poscar(iunit,mol)
-!   rewind(iunit)
-!   mol%deallocate
-!   close(iunit,status='delete')
+   open(newunit=iunit,file='POSCAR')
+   write(iunit,file_poscar_sio2_3d)
+   rewind(iunit)
+   !call read_poscar(iunit,mol)
+
+   call assert_close(mol%volume,       667.92680030347_wp,thr)
+   call assert_close(mol%cellpar(1),8.7413053236641_wp,thr)
+   call assert_close(mol%cellpar(4),1.5707963267949_wp,thr)
+   call assert_close(mol%rec_lat(1,1),0.71879256867621_wp,thr)
+
+   call assert_close(mol%abc(1,3),0.29843937068984_wp,thr)
+   call assert_close(mol%abc(2,6),0.28321754549582_wp,thr)
+   call assert_close(mol%abc(3,1),0.10160624337938_wp,thr)
+
+   call assert_close(mol%xyz(2,4),7.4866709068338_wp,thr)
+   call assert_close(mol%xyz(1,5),6.3156134163815_wp,thr)
+   call assert_close(mol%xyz(3,2),3.3797565299764_wp,thr)
+
+   call mol%deallocate
+   close(iunit,status='delete')
+
+   call terminate(0)
 
 end subroutine test_geometry_reader_file_poscar_sio2_3d
 
@@ -71,7 +87,7 @@ subroutine test_geometry_reader_file_coord_general_0d
    use assertion
    use geometry_reader
    real(wp),parameter :: thr = 1.0e-10_wp
-   character(len=*),parameter :: file_coord_general_0d = &
+   character(len=*),parameter :: file_coord_general_0d_p1 = &
       & '("$coord",/,&
       & "   -2.83449054141383   -0.81686825435058    9.21776298032051      c ",/,&
       & "   -4.14924213549981   -2.27671857946298    7.51444609965666      n ",/,&
@@ -83,8 +99,9 @@ subroutine test_geometry_reader_file_coord_general_0d
       & "   -1.68673671654791   -2.71845226880146   -1.23223099384719      ge",/,&
       & "   -0.33836616422483    0.68435923235649   -0.64698844235331      c ",/,&
       & "   -2.14498825611689    2.50532279558922    0.70167668533214      c ",/,&
-      & "   -2.64687090621542    1.70512649775402    3.45551752220984      c ",/,&
-      & "   -1.15030356647053    5.16801694545513    0.70880247141464      c ",/,&
+      & "   -2.64687090621542    1.70512649775402    3.45551752220984      c ")'
+   character(len=*),parameter :: file_coord_general_0d_p2 = &
+      & '("   -1.15030356647053    5.16801694545513    0.70880247141464      c ",/,&
       & "   -2.66291175757117    7.37686607275785    0.92639065980257      c ",/,&
       & "   -1.04382559568649    9.50564213115659    0.99473552928660      c ",/,&
       & "    1.47621944151256    8.62625177628255    0.82443436691346      c ",/,&
@@ -102,8 +119,9 @@ subroutine test_geometry_reader_file_coord_general_0d
       & "   -1.51348788464750   11.95966574727045   -5.10636613657016      h ",/,&
       & "   -4.70456421906849    7.41962386476884    1.00495597944190      h ",/,&
       & "    3.15509261500725    9.78658966959972    0.80555833604958      h ",/,&
-      & "    3.04787658110567    4.74120850762418    0.49603302321748      h ",/,&
-      & "   -1.63030870810950   11.45617324545936    1.12534439746916      h ",/,&
+      & "    3.04787658110567    4.74120850762418    0.49603302321748      h ")'
+   character(len=*),parameter :: file_coord_general_0d_p3 = &
+      & '("   -1.63030870810950   11.45617324545936    1.12534439746916      h ",/,&
       & "   -3.94240915981432    2.55539341594866   -0.33639931534539      h ",/,&
       & "   -0.86691459289722    1.21603908477650    4.38240677647076      h ",/,&
       & "   -3.46915354865397    3.27986411922675    4.50330918125007      h ",/,&
@@ -137,7 +155,10 @@ subroutine test_geometry_reader_file_coord_general_0d
    type(molecule) :: mol
 
    open(newunit=iunit,file='coord')
-   write(iunit,file_coord_general_0d); rewind(iunit)
+   write(iunit,file_coord_general_0d_p1)
+   write(iunit,file_coord_general_0d_p2)
+   write(iunit,file_coord_general_0d_p3)
+   rewind(iunit)
 
    call read_coord(iunit,mol)
 

@@ -62,16 +62,19 @@ program dftd_tester
    select case(arg)
    case('eeq_model')
       select case(sec)
-      case('water'); call test_eeq_model_water
-      case('ewald'); call test_eeq_model_ewald
+      case('water');         call test_eeq_model_water
+      case('ewald');         call test_eeq_model_ewald
+      case('cell_gradient'); call test_eeq_model_cell_gradient
       end select
    case('dftd4')
       select case(sec)
-      case('properties'); call test_dftd4_properties
-      case('energies');   call test_dftd4_energies
-      case('api');        call test_dftd4_api
-      case('periodic');   call test_dftd4_pbc
-      case('pbc_disp');   call test_dftd4_pbc_energies
+      case('properties');    call test_dftd4_properties
+      case('energies');      call test_dftd4_energies
+      case('api');           call test_dftd4_api
+      case('pbc_api');       call test_dftd4_pbc_api
+      case('periodic');      call test_dftd4_pbc
+      case('pbc_disp');      call test_dftd4_pbc_energies
+      case('cell_gradient'); call test_dftd4_cell_gradient
       end select
    case('geometry_reader')
       select case(sec)

@@ -1,4 +1,4 @@
-!> @brief provides definition of calculation options type
+!> provides definition of calculation options type
 module class_set
    use iso_fortran_env, wp => real64
    use iso_c_binding
@@ -8,10 +8,10 @@ module class_set
    public :: options
    public :: dftd_options
    public :: c_dftd_options
-   public :: convert_dftd_options
+   public :: assignment(=)
    private
 
-!> @brief calculation setup
+!> calculation setup
    type :: dftd_options
       sequence
       integer  :: lmbd = -1                 !< kind of non-additivity correction
@@ -28,7 +28,7 @@ module class_set
       logical  :: silent = .false.          !< clutter the screen less
    end type dftd_options
 
-!> @brief calculation setup
+!> calculation setup
    type,bind(C) :: c_dftd_options
       integer(c_int)  :: lmbd = -1             !< kind of non-additivity correction
       integer(c_int)  :: refq = -1             !< kind of charge model
@@ -44,13 +44,13 @@ module class_set
       logical(c_bool) :: silent = .false.      !< clutter the screen less
    end type c_dftd_options
 
-   interface convert_dftd_options
+   interface assignment(=)
       module procedure :: convert_dftd_options_c_to_f
       module procedure :: convert_dftd_options_f_to_c
-   end interface convert_dftd_options
+   end interface
 
 
-!> @brief contains all calculation options for the DFT-D run
+!> contains all calculation options for the DFT-D run
    type :: options
       character(len=:),allocatable :: fname !< geometry file
       character(len=:),allocatable :: func  !< functional name
@@ -63,6 +63,7 @@ module class_set
       real(wp) :: wf = 6.0_wp               !< weighting factor
       real(wp) :: g_a = 3.0_wp              !< charge scale height
       real(wp) :: g_c = 2.0_wp              !< charge scale steepness
+      logical  :: lperiodic = .false.       !< use periodic boundary conditions
       logical  :: lorca = .false.           !< calculation for ORCA
       logical  :: ltmer = .false.           !< write TMER2++ output
       logical  :: lmolpol = .false.         !< calculate molecular properties?
@@ -120,11 +121,11 @@ pure function export_dftd_options(self) result(opt)
 
 end function export_dftd_options
 
-pure elemental function convert_dftd_options_c_to_f &
-      (c_dopt) result(f_dopt)
+pure elemental subroutine convert_dftd_options_c_to_f &
+      (f_dopt,c_dopt)
    implicit none
-   type(c_dftd_options),intent(in) :: c_dopt
-   type(dftd_options)              :: f_dopt
+   type(c_dftd_options),intent(in)  :: c_dopt
+   type(dftd_options),  intent(out) :: f_dopt
    f_dopt%lmbd        = c_dopt%lmbd
    f_dopt%refq        = c_dopt%refq
    f_dopt%wf          = c_dopt%wf
@@ -137,13 +138,13 @@ pure elemental function convert_dftd_options_c_to_f &
    f_dopt%verbose     = c_dopt%verbose
    f_dopt%veryverbose = c_dopt%veryverbose
    f_dopt%silent      = c_dopt%silent
-end function convert_dftd_options_c_to_f
+end subroutine convert_dftd_options_c_to_f
 
-pure elemental function convert_dftd_options_f_to_c &
-      (f_dopt) result(c_dopt)
+pure elemental subroutine convert_dftd_options_f_to_c &
+      (c_dopt,f_dopt)
    implicit none
-   type(c_dftd_options)            :: c_dopt
-   type(dftd_options),  intent(in) :: f_dopt
+   type(c_dftd_options),intent(out) :: c_dopt
+   type(dftd_options),  intent(in)  :: f_dopt
    c_dopt%lmbd        = f_dopt%lmbd
    c_dopt%refq        = f_dopt%refq
    c_dopt%wf          = f_dopt%wf
@@ -156,6 +157,6 @@ pure elemental function convert_dftd_options_f_to_c &
    c_dopt%verbose     = f_dopt%verbose
    c_dopt%veryverbose = f_dopt%veryverbose
    c_dopt%silent      = f_dopt%silent
-end function convert_dftd_options_f_to_c
+end subroutine convert_dftd_options_f_to_c
 
 end module class_set

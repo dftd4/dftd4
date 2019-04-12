@@ -74,12 +74,16 @@ For the D4(EEQ)-MBD method use
 Citation
 --------
 
+Always cite:
+
 Eike Caldeweyher, Christoph Bannwarth and Stefan Grimme, *J. Chem. Phys.*, **2017**, 147, 034112.
 DOI: [10.1063/1.4993215](https://doi.org/10.1063/1.4993215)
 
 Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, *ChemRxiv*, **2019**, preprint. DOI: [10.26434/chemrxiv.7430216](https://doi.org/10.26434/chemrxiv.7430216.v2)
 
+For DFT-D4 under periodic boundary conditions:
 
+Eike Caldeweyher, Sebastian Ehlert and Stefan Grimme, *in preparation*.
 
 Bugs
 ----

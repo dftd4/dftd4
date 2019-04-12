@@ -1,4 +1,4 @@
-!> @brief error handler for MCTC library
+!> error handler for MCTC library
 subroutine raise(mode,message)
    use iso_fortran_env
    use mctc_global

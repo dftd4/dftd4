@@ -176,11 +176,15 @@ test('PBC tools: cutoff',    d4tester,args: ['pbc_tools','cutoff'])
 
 test('EEQ model: water',        d4tester,args: ['eeq_model','water'])
 test('EEQ model: 3D Ewald',     d4tester,args: ['eeq_model','ewald'])
+test('EEQ model: cell gradient',d4tester,args: ['eeq_model','cell_gradient'])
 
 test('Dispersion: properties',    d4tester,args: ['dftd4','properties'])
 test('Dispersion: energies',      d4tester,args: ['dftd4','energies'])
 test('Dispersion: API',           d4tester,args: ['dftd4','api'])
+test('Dispersion: API (PBC)',     d4tester,args: ['dftd4','pbc_api'])
 test('Dispersion: energies (PBC)',d4tester,args: ['dftd4','pbc_disp'])
+test('Dispersion: cell gradient', d4tester,args: ['dftd4','cell_gradient'])
+#test('Dispersion: PBC test',      d4tester,args: ['dftd4','periodic'])
 
 test('API: C++', d4cpp)
 test('API: C', d4c)

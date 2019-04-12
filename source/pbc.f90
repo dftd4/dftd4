@@ -1,15 +1,15 @@
-!> @brief generate a Wigner--Seitz cell from a given structure
-!!
-!! param[in,out] mol  molecular structure informtion
-!! param[in,out] wsc  Wigner--Seitz cell data type (might be contained in mol)
-!! param[in]     rep  images of the unit cell to consider
+!> generate a Wigner--Seitz cell from a given structure
+!
 subroutine generate_wsc(mol,wsc,rep)
    use iso_fortran_env, wp => real64
    use class_molecule
    use class_wsc
    implicit none
+   !> molecular structure informtion
    type(molecule),intent(inout) :: mol
+   !> Wigner--Seitz cell data type (might be contained in mol)
    type(ws_cell), intent(inout) :: wsc
+   !> images of the unit cell to consider
    integer,       intent(in)    :: rep(3)
 ! ------------------------------------------------------------------------
 !  Variables
@@ -105,4 +105,4 @@ contains
    end subroutine get_translation
 
 end subroutine generate_wsc
- 
+

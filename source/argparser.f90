@@ -1,7 +1,4 @@
-! ------------------------------------------------------------------------
-!  Purpose:
-!> @brief reads in command line arguments and parses them
-! ------------------------------------------------------------------------
+!> reads in command line arguments and parses them into options type
 subroutine read_commandline_arguments(set)
    use iso_fortran_env, only : wp => real64
 !$ use omp_lib
@@ -103,6 +100,8 @@ subroutine read_commandline_arguments(set)
       !$       &                'I hope you know what you are doing.')
       !$       call omp_set_num_threads(idum)
       !$    endif
+         case('--pbc','--periodic')
+            set%lperiodic = .true.
          case('-c','--chrg')
             skip = 1
             call rdarg(iarg+1,sec)
