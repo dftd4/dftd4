@@ -62,6 +62,8 @@ program dftd
    real(wp),allocatable :: gl(:,:)
    real(wp),parameter   :: step = 1.0e-5_wp, step2 = 0.5_wp/step
 
+   integer, parameter   :: rep_wsc(3) = [1,1,1]
+
 !! ------------------------------------------------------------------------
 !!  signal processing
 !! ------------------------------------------------------------------------
@@ -97,6 +99,7 @@ program dftd
 ! ------------------------------------------------------------------------
    if (set%lperiodic) then
       call read_geometry(set%fname,mol)
+      call generate_wsc(mol,mol%wsc,rep_wsc)
    else
       call get_geometry(mol,set%fname)
    endif
