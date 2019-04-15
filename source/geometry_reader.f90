@@ -297,11 +297,13 @@ end subroutine get_geometry
 !  currently Turbomole coord format and VASP POSCAR are supported
 module geometry_reader
    use iso_fortran_env, wp => real64
+   use mctc_systools
    implicit none
 
    public :: read_geometry
    public :: read_coord
    public :: read_poscar
+   public :: read_xmol
    private
 
    integer,private,parameter :: p_str_length = 48
@@ -321,15 +323,66 @@ subroutine read_geometry(fname,mol)
    integer :: err
    logical :: exist
 
+   character(len=:),allocatable :: line
+   logical :: has_tmdg, named_poscar, named_coord
+   integer :: is
+
    inquire(file=fname,exist=exist)
    if (.not.exist) call raise('E',"Could not find '"//fname//"'")
    open(newunit=ifile,file=fname,iostat=err,action='read',status='old')
    if (err.ne.0)   call raise('E',"Could not open '"//fname//"'")
 
-   call read_coord(ifile,mol)
+   call getline(ifile,line,err)
+   if (err.ne.0)   call raise('E',"'"//fname//"' seems empty to me.")
+
+   is = index(fname,'/') + 1
+   has_tmdg = index(line,'$') > 0
+   named_poscar = index(fname(is:),'POSCAR') > 0
+   named_coord = index(fname(is:),'coord') > 0
+
+   if (has_tmdg .or. named_coord) then
+      call read_coord(ifile,mol)
+   else ! VASP's POSCAR input was default
+      call read_poscar(ifile,mol)
+   endif
 
    close(ifile)
 end subroutine read_geometry
+
+subroutine read_xmol(iunit,mol)
+   use iso_fortran_env, wp => real64
+   use class_molecule
+   use pbc_tools
+   implicit none
+   logical, parameter :: debug = .true.
+   integer,intent(in) :: iunit !< file handle
+   type(molecule),intent(inout) :: mol
+   integer :: n
+
+   integer :: err
+
+   rewind(iunit)
+
+   read(iunit,*,iostat=err) n
+   if (err.ne.0) call raise('E',"Could not read number of atoms, check format!")
+
+   if (n.lt.1) &
+      call raise('E','Found no atoms, cannot work without atoms!')
+
+   call mol%allocate(n)
+   mol%npbc = 0 ! Xmol is always molecular (there are extensions to this...)
+   mol%pbc = .false.
+
+   ! drop next record
+   read(iunit,'(a)')
+
+   do
+      call getline(iunit,line,err)
+      if (err.ne.0) call raise('E',"Could not read geometry from Xmol file")
+      if (debug) print'(">",a)',line
+   enddo
+
+end subroutine read_xmol
 
 !> read geometry as POSCAR from iunit
 subroutine read_poscar(iunit,mol)
@@ -351,7 +404,7 @@ subroutine read_poscar(iunit,mol)
    mol%npbc = 3 ! VASP is always 3D
    mol%pbc = .true.
 
-   call get_coord(iunit,mol%lattice,mol%nat,mol%xyz,mol%at)
+   call get_coord(iunit,mol%lattice,mol%nat,mol%xyz,mol%at,mol%sym)
    call dlat_to_cell(mol%lattice,mol%cellpar)
    call dlat_to_rlat(mol%lattice,mol%rec_lat)
    mol%volume = dlat_to_dvol(mol%lattice)
@@ -361,7 +414,7 @@ subroutine read_poscar(iunit,mol)
 contains
 
 !> read the coordinates from POSCAR
-subroutine get_coord(iunit,lattice,n,xyz,at)
+subroutine get_coord(iunit,lattice,n,xyz,at,sym)
    use mctc_econv
    use mctc_strings
    use mctc_systools
@@ -372,6 +425,7 @@ subroutine get_coord(iunit,lattice,n,xyz,at)
    real(wp),intent(out) :: xyz(3,n)
    real(wp),intent(out) :: lattice(3,3)
    integer, intent(out) :: at(n)
+   character(len=2),intent(out) :: sym(n)
    integer, intent(in)  :: iunit
    logical              :: selective=.false. ! Selective dynamics
    logical              :: cartesian=.true.  ! Cartesian or direct
@@ -438,6 +492,7 @@ subroutine get_coord(iunit,lattice,n,xyz,at)
       if (iat < 1 .or. inum < 1) call raise('E', 'Error: unknown element.')
       do j=1,inum
          ncheck=ncheck+1
+         sym(ncheck) = args(i)(1:2)
          at(ncheck)=iat
       enddo
    enddo
@@ -581,7 +636,7 @@ subroutine read_coord(iunit,mol)
    npbc   = -1
    natoms = -1
 
-!  we need to read this file twice, for a lot of reasons
+!  we need to read this file ~twice~ trice, for a lot of reasons
    rewind(iunit)
 
 !  read first line before the readloop starts, I have to do this
