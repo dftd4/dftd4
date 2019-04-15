@@ -69,14 +69,22 @@ subroutine test_geometry_reader_file_xmol_water_0d
    integer :: iunit
    type(molecule) :: mol
 
-   stop 77
+   open(newunit=iunit,status='scratch')
+   write(iunit,file_xmol_water_0d)
+   rewind(iunit)
+   call read_xmol(iunit,mol)
 
-!   open(newunit=iunit,file='water.xyz')
-!   write(iunit,file_xmol_water_0d)
-!   call read_xmol(iunit,mol)
-!   rewind(iunit)
-!   mol%deallocate
-!   close(iunit,status='delete')
+   call assert_eq(mol%nat,9)
+
+   call assert_close(mol%xyz(1,2), .93335227594625_wp,thr)
+   call assert_close(mol%xyz(2,5),-.98873655304085_wp,thr)
+   call assert_close(mol%xyz(1,9),-1.0206234107641_wp,thr)
+   call assert_close(mol%xyz(3,3), .81284993236482_wp,thr)
+
+   call mol%deallocate
+   close(iunit,status='delete')
+
+   call terminate(0)
 
 end subroutine test_geometry_reader_file_xmol_water_0d
 

@@ -351,15 +351,22 @@ end subroutine read_geometry
 
 subroutine read_xmol(iunit,mol)
    use iso_fortran_env, wp => real64
+   use mctc_econv
    use class_molecule
    use pbc_tools
    implicit none
-   logical, parameter :: debug = .true.
+   logical, parameter :: debug = .false.
    integer,intent(in) :: iunit !< file handle
    type(molecule),intent(inout) :: mol
-   integer :: n
+   integer  :: n, iat
+   real(wp) :: xyz(3)
+   real(wp) :: conv
 
-   integer :: err
+   character(len=:),allocatable :: line
+   character(len=10) :: chdum
+   integer  :: err
+
+   conv = aatoau
 
    rewind(iunit)
 
@@ -376,11 +383,28 @@ subroutine read_xmol(iunit,mol)
    ! drop next record
    read(iunit,'(a)')
 
+   n = 0
    do
       call getline(iunit,line,err)
+      if (is_iostat_end(err)) exit
       if (err.ne.0) call raise('E',"Could not read geometry from Xmol file")
       if (debug) print'(">",a)',line
+      read(line,*,iostat=err) chdum, xyz(1), xyz(2), xyz(3)
+      if (debug) print'("->",a)',chdum
+      if (debug) print'("->",3g0)',xyz
+
+      iat = elem(line)
+      if (debug) print'("->",g0)',iat
+      if (iat > 0) then
+         n = n+1
+         if (n > mol%nat) call raise('E',"Atom number missmatch in Xmol file")
+         mol%at(n) = iat
+         mol%sym(n) = line(1:2)
+         mol%xyz(:,n) = xyz*conv
+      endif
    enddo
+
+   if (n.ne.mol%nat) call raise('E',"Atom number missmatch in Xmol file")
 
 end subroutine read_xmol
 
@@ -390,7 +414,7 @@ subroutine read_poscar(iunit,mol)
    use class_molecule
    use pbc_tools
    implicit none
-   logical, parameter :: debug = .true.
+   logical, parameter :: debug = .false.
    integer,intent(in) :: iunit !< file handle
    type(molecule),intent(inout) :: mol
    integer :: n
@@ -623,7 +647,7 @@ subroutine read_coord(iunit,mol)
    character(len=:),allocatable :: line
    integer :: err
    integer :: idum
-   logical,parameter :: debug = .true.
+   logical,parameter :: debug = .false.
    integer :: natoms
    integer :: i
    integer :: npbc
@@ -967,68 +991,68 @@ end subroutine get_coord
 
 end subroutine read_coord
 
-subroutine read_xmol(iunit,mol)
-   use iso_fortran_env, wp => real64
-   use class_molecule
-   use mctc_readin, getline => strip_line
-   use mctc_strings
-   use mctc_econv
-   implicit none
-   integer,intent(in) :: iunit !< file handle
-   type(molecule),intent(inout) :: mol
-   character(len=:),allocatable :: line
-   integer :: err
-   integer :: idum
-   logical,parameter :: debug = .true.
-   integer :: natoms
-   integer :: iat,icoord
-   integer :: ncount
-   logical :: exist
-   integer  :: narg
-   real(wp) :: ddum,xyz(3)
-   character(len=p_str_length),dimension(p_arg_length) :: argv
-
-   rewind(iunit)
-
-   call getline(iunit,line,err)
-   if (debug) print'(" ->",a)',line
-   read(line,*,iostat=err) natoms
-   if (err.ne.0) then
-      call raise('E',"Could not read number of atoms")
-   endif
-   read(iunit,'(a)')
-
-   call mol%allocate(natoms,.false.)
-
-   ncount = 0
-   do
-      call getline(iunit,line,err)
-      if (err.eq.iostat_end) exit
-      if (debug) print'(" ->",a)',line
-
-      if (line.eq.'') cycle ! skip empty lines
-      ncount = ncount + 1   ! but count non-empty lines first
-      if (ncount.gt.mol%nat) &
-         call raise('E',"Internal error while reading coord data group")
-      call parse(line,' ',argv,narg)
-      if (narg.lt.4) &
-         call raise('E',"not enough arguments in line in coord data group")
-      iat = elem(argv(1))
-      if (iat.eq.0) &
-         call raise('E',"invalid element input in line in coord data group")
-      mol%sym(ncount) = trim(argv(4))
-      mol%at(ncount) = iat
-      do icoord = 1, 3
-         if (get_value(trim(argv(icoord+1)),ddum)) then
-            xyz(icoord) = aatoau*ddum
-         else
-            call raise('E',"invalid coordinate input in line in coord data group")
-         endif
-      enddo
-
-   enddo
-
-end subroutine read_xmol
+!subroutine read_xmol(iunit,mol)
+!   use iso_fortran_env, wp => real64
+!   use class_molecule
+!   use mctc_readin, getline => strip_line
+!   use mctc_strings
+!   use mctc_econv
+!   implicit none
+!   integer,intent(in) :: iunit !< file handle
+!   type(molecule),intent(inout) :: mol
+!   character(len=:),allocatable :: line
+!   integer :: err
+!   integer :: idum
+!   logical,parameter :: debug = .false.
+!   integer :: natoms
+!   integer :: iat,icoord
+!   integer :: ncount
+!   logical :: exist
+!   integer  :: narg
+!   real(wp) :: ddum,xyz(3)
+!   character(len=p_str_length),dimension(p_arg_length) :: argv
+!
+!   rewind(iunit)
+!
+!   call getline(iunit,line,err)
+!   if (debug) print'(" ->",a)',line
+!   read(line,*,iostat=err) natoms
+!   if (err.ne.0) then
+!      call raise('E',"Could not read number of atoms")
+!   endif
+!   read(iunit,'(a)')
+!
+!   call mol%allocate(natoms,.false.)
+!
+!   ncount = 0
+!   do
+!      call getline(iunit,line,err)
+!      if (err.eq.iostat_end) exit
+!      if (debug) print'(" ->",a)',line
+!
+!      if (line.eq.'') cycle ! skip empty lines
+!      ncount = ncount + 1   ! but count non-empty lines first
+!      if (ncount.gt.mol%nat) &
+!         call raise('E',"Internal error while reading coord data group")
+!      call parse(line,' ',argv,narg)
+!      if (narg.lt.4) &
+!         call raise('E',"not enough arguments in line in coord data group")
+!      iat = elem(argv(1))
+!      if (iat.eq.0) &
+!         call raise('E',"invalid element input in line in coord data group")
+!      mol%sym(ncount) = trim(argv(4))
+!      mol%at(ncount) = iat
+!      do icoord = 1, 3
+!         if (get_value(trim(argv(icoord+1)),ddum)) then
+!            xyz(icoord) = aatoau*ddum
+!         else
+!            call raise('E',"invalid coordinate input in line in coord data group")
+!         endif
+!      enddo
+!
+!   enddo
+!
+!end subroutine read_xmol
 
 ! ------------------------------------------------------------------------
 !  Purpose:
