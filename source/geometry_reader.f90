@@ -301,6 +301,7 @@ module geometry_reader
 
    public :: read_geometry
    public :: read_coord
+   public :: read_poscar
    private
 
    integer,private,parameter :: p_str_length = 48
@@ -336,11 +337,12 @@ subroutine read_poscar(iunit,mol)
    use class_molecule
    use pbc_tools
    implicit none
+   logical, parameter :: debug = .true.
    integer,intent(in) :: iunit !< file handle
    type(molecule),intent(inout) :: mol
    integer :: n
 
-   !call get_atomnumber(iunit,n)
+   call get_atomnumber(iunit,n)
 
    if (n.lt.1) &
       call raise('E','Found no atoms, cannot work without atoms!')
@@ -349,7 +351,7 @@ subroutine read_poscar(iunit,mol)
    mol%npbc = 3 ! VASP is always 3D
    mol%pbc = .true.
 
-   !call get_coord(iunit,mol%lattice,mol%n,mol%xyz,mol%at)
+   call get_coord(iunit,mol%lattice,mol%nat,mol%xyz,mol%at)
    call dlat_to_cell(mol%lattice,mol%cellpar)
    call dlat_to_rlat(mol%lattice,mol%rec_lat)
    mol%volume = dlat_to_dvol(mol%lattice)
@@ -358,117 +360,193 @@ subroutine read_poscar(iunit,mol)
 
 contains
 
-!!> read the coordinates from POSCAR
-!subroutine get_coord(iunit,lattice,n,xyz,iat)
-!   use mctc_econv
-!   use mctc_strings
-!   use mctc_systools
-!
-!   implicit none
-!
-!   integer, intent(in)  :: n
-!   real(wp),intent(out) :: xyz(3,n)
-!   real(wp),intent(out) :: lattice(3,3)
-!   integer, intent(out) :: iat(n)
-!   integer, intent(in)  :: iunit
-!   logical              :: selective=.false. ! Selective dynamics
-!   logical              :: cartesian=.true.  ! Cartesian or direct
-!
-!   real(wp) :: ddum,latvec(3)
-!   real(wp) xx(10),scalar
-!   character(len=:),allocatable :: line
-!   character(len=80) :: args(90),args2(90)
-!
-!   integer i,j,nn,ntype,ntype2,atnum,i_dummy1,i_dummy2,ncheck
-!
-!   lattice=0
-!
-!   rewind(iunit)
-!   ncheck=0
-!   ntype=0
-!   call getline(iunit,line,err)
-!   if (err.ne.0) call raise('E',"Could not read POSCAR")
-!   call parse(line,' ',args,ntype)
-!   call getline(iunit,line,err)
-!   read(line,*,iostat=err) ddum
-!   if (err.ne.0) call raise('E',"Could not read POSCAR")
-!   !the Ang->au conversion is included in the scaling factor
-!   scalar = ddum*aatoau
-!
-!   ! reading the lattice constants
-!   do i=1,3
-!      call getline(iunit,line,err)
-!      if (err.ne.0) call raise('E',"Could not read lattice from POSCAR")
-!      read(line,*,iostat=err) latvec
-!      if (err.ne.0) call raise('E',"Could not read lattice from POSCAR")
-!      lattice(:,i) = latvec * scalar
-!   ENDDO
-!   ! Either here are the numbers of each element,
-!   ! or (>vasp.5.1) here are the element symbols
-!   call getline(iunit,line,err)
-!   call readl(line,xx,nn)
-!   IF (nn.eq.0) then      ! CONTCAR files have additional Element line here since vasp.5.1
-!      call parse(line,' ',args,ntype)
-!      read(iunit,'(a)',end=20)line
-!      line=adjustl(line)
-!      call readl(line,xx,nn)
-!   ENDIF
-!   !       call elem(args(1),i_dummy2)
-!   !       IF (i_dummy2<1 .OR. i_dummy2>94) THEN
-!   !          args=args2
-!   !       ENDIF
-!   IF (nn.NE.ntype ) THEN
-!      call raise('E', 'Error reading number of atomtypes')
-!   ENDIF
-!   ncheck=0
-!   DO i=1,nn
-!      i_dummy1=INT(xx(i))
-!      call elem(args(i),i_dummy2)
-!      IF (i_dummy2<1 .OR. i_dummy2>94) call raise('E', 'Error: unknown element.')
-!      DO j=1,i_dummy1
-!         ncheck=ncheck+1
-!         iat(ncheck)=i_dummy2
-!      ENDDO
-!   ENDDO
-!   if (n.ne.ncheck) call raise('E','Error reading Number of Atoms')
-!
-!   read(iunit,'(a)',end=20)line
-!   line=adjustl(line)
-!   IF (line(:1).EQ.'s' .OR. line(:1).EQ.'S') THEN
-!      selective=.TRUE.
-!      read(iunit,'(a)',end=20)line
-!      line=adjustl(line)
-!   ENDIF
-!
-!   !c      write(*,*)line(:1)
-!   cartesian=(line(:1).EQ.'c' .OR. line(:1).EQ.'C' .OR. &
-!      &line(:1).EQ.'k' .OR. line(:1).EQ.'K')
-!   DO i=1,n
-!      read(iunit,'(a)',end=20)line
-!      call readl(line,xx,nn)
-!      IF (nn.NE.3) call raise('E', 'Error reading coordinates.')
-!
-!      IF (cartesian) THEN
-!         xyz(1,i)=xx(1)*scalar
-!         xyz(2,i)=xx(2)*scalar
-!         xyz(3,i)=xx(3)*scalar
-!      ELSE
-!         xyz(1,i)=lattice(1,1)*xx(1)+lattice(1,2)*&
-!            &    xx(2)+lattice(1,3)*xx(3)
-!         xyz(2,i)=lattice(2,1)*xx(1)+lattice(2,2)*xx(2)+lattice(2,3)*&
-!            &    xx(3)
-!         xyz(3,i)=lattice(3,1)*xx(1)+lattice(3,2)*xx(2)+lattice(3,3)*&
-!            &    xx(3)
-!      ENDIF
-!
-!      !c      write(*,'(3F20.10,1X,I3)')xyz(:,i),iat(i)   !debug printout
-!
-!   ENDDO
-!
-!
-!20 continue
-!
-!end subroutine get_coord
+!> read the coordinates from POSCAR
+subroutine get_coord(iunit,lattice,n,xyz,at)
+   use mctc_econv
+   use mctc_strings
+   use mctc_systools
+
+   implicit none
+
+   integer, intent(in)  :: n
+   real(wp),intent(out) :: xyz(3,n)
+   real(wp),intent(out) :: lattice(3,3)
+   integer, intent(out) :: at(n)
+   integer, intent(in)  :: iunit
+   logical              :: selective=.false. ! Selective dynamics
+   logical              :: cartesian=.true.  ! Cartesian or direct
+
+   real(wp) :: ddum,latvec(3)
+   real(wp) xx(10),scalar
+   real(wp) :: coord(3)
+   character(len=:),allocatable :: line
+   character(len=80) :: args(90),args2(90)
+
+   integer i,j,nn,ntype,ntype2,atnum,i_dummy1,i_dummy2,ncheck
+
+   integer :: iat, inum, idum, err
+
+   lattice=0
+
+   rewind(iunit)
+   ncheck=0
+   ntype=0
+   ! first line contains the symbols of different atom types
+   call getline(iunit,line,err)
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   if (debug) print'(">",a)',line
+   call parse(line,' ',args,ntype)
+
+   ! this line contains the global scaling factor,
+   call getline(iunit,line,err)
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   if (debug) print'(">",a)',line
+   read(line,*,iostat=err) ddum
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   ! the Ang->au conversion is included in the scaling factor
+   scalar = ddum*aatoau
+
+   ! reading the lattice constants
+   do i=1,3
+      call getline(iunit,line,err)
+      if (err.ne.0) call raise('E',"Could not read lattice from POSCAR")
+      if (debug) print'("->",a)',line
+      read(line,*,iostat=err) latvec
+      if (err.ne.0) call raise('E',"Could not read lattice from POSCAR")
+      lattice(:,i) = latvec * scalar
+   enddo
+   ! Either here are the numbers of each element,
+   ! or (>vasp.5.1) here are the element symbols
+   call getline(iunit,line,err)
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   if (debug) print'(">",a)',line
+   ! try to read first element
+   read(line,*,iostat=err) idum
+   ! CONTCAR files have additional Element line here since vasp.5.1
+   if (err.ne.0) then
+      call parse(line,' ',args,ntype)
+      call getline(iunit,line,err)
+      if (debug) print'("->",a)',line
+      if (err.ne.0) call raise('E',"Could not read POSCAR")
+   endif
+   call parse(line,' ',args2,nn)
+   if (nn.ne.ntype) call raise('E', 'Error reading number of atomtypes')
+   ncheck=0
+   do i=1,nn
+      read(args2(i),*,iostat=err) inum
+      iat = elem(args(i))
+      if (iat < 1 .or. inum < 1) call raise('E', 'Error: unknown element.')
+      do j=1,inum
+         ncheck=ncheck+1
+         at(ncheck)=iat
+      enddo
+   enddo
+   if (n.ne.ncheck) call raise('E','Error reading Number of Atoms')
+
+   call getline(iunit,line,err)
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   if (debug) print'(">",a)',line
+   line=adjustl(line)
+   if (line(:1).eq.'s' .or. line(:1).eq.'S') then
+      selective=.true.
+      call getline(iunit,line,err)
+      if (debug) print'("->",a)',line
+      if (err.ne.0) call raise('E',"Could not read POSCAR")
+      line=adjustl(line)
+   endif
+
+   cartesian=(line(:1).eq.'c' .or. line(:1).eq.'C' .or. &
+      &       line(:1).eq.'k' .or. line(:1).eq.'K')
+   do i=1,n
+      call getline(iunit,line,err)
+      if (err.ne.0) call raise('E',"Could not read geometry from POSCAR")
+      if (debug) print'("-->",a)',line
+      read(line,*,iostat=err) coord
+      if (err.ne.0) call raise('E',"Could not read geometry from POSCAR")
+
+      if (cartesian) then
+         xyz(:,i)=coord*scalar
+      else
+         xyz(:,i)=matmul(lattice,coord)
+      endif
+
+   enddo
+
+end subroutine get_coord
+
+!> read the coordinates from POSCAR
+subroutine get_atomnumber(iunit,n)
+   use mctc_econv
+   use mctc_strings
+   use mctc_systools
+
+   implicit none
+
+   integer, intent(out) :: n
+   integer, intent(in)  :: iunit
+   logical              :: selective=.false. ! Selective dynamics
+   logical              :: cartesian=.true.  ! Cartesian or direct
+
+   real(wp) :: ddum,latvec(3)
+   real(wp) xx(10),scalar
+   real(wp) :: coord(3)
+   character(len=:),allocatable :: line
+   character(len=80) :: args(90),args2(90)
+
+   integer i,j,nn,ntype,ntype2,atnum
+
+   integer :: iat, inum, idum, err
+
+   rewind(iunit)
+   ntype=0
+   ! first line contains the symbols of different atom types
+   call getline(iunit,line,err)
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   if (debug) print'(">",a)',line
+   call parse(line,' ',args,ntype)
+
+   ! this line contains the global scaling factor,
+   call getline(iunit,line,err)
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   if (debug) print'(">",a)',line
+   read(line,*,iostat=err) ddum
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   ! the Ang->au conversion is included in the scaling factor
+   scalar = ddum*aatoau
+
+   ! reading the lattice constants
+   do i=1,3
+      call getline(iunit,line,err)
+      if (err.ne.0) call raise('E',"Could not read lattice from POSCAR")
+      if (debug) print'("->",a)',line
+   enddo
+   ! Either here are the numbers of each element,
+   ! or (>vasp.5.1) here are the element symbols
+   call getline(iunit,line,err)
+   if (err.ne.0) call raise('E',"Could not read POSCAR")
+   if (debug) print'(">",a)',line
+   ! try to read first element
+   read(line,*,iostat=err) idum
+   ! CONTCAR files have additional Element line here since vasp.5.1
+   if (err.ne.0) then
+      call parse(line,' ',args,ntype)
+      call getline(iunit,line,err)
+      if (debug) print'("->",a)',line
+      if (err.ne.0) call raise('E',"Could not read POSCAR")
+   endif
+   call parse(line,' ',args2,nn)
+   if (nn.ne.ntype) call raise('E', 'Error reading number of atomtypes')
+   n=0
+   do i=1,nn
+      read(args2(i),*,iostat=err) inum
+      iat = elem(args(i))
+      if (iat < 1 .or. inum < 1) call raise('E', 'Error: unknown element.')
+      do j=1,inum
+         n=n+1
+      enddo
+   enddo
+
+end subroutine get_atomnumber
 
 
 

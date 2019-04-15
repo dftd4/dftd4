@@ -4,7 +4,7 @@ subroutine test_geometry_reader_file_poscar_sio2_3d
    use class_molecule
    use assertion
    use geometry_reader
-   real(wp),parameter :: thr = 1.0e-10_wp
+   real(wp),parameter :: thr = 1.0e-9_wp
    character(len=*),parameter :: file_poscar_sio2_3d = &
       & '("Si  O ",/,&
       & " 1.0000000000000000",/,&
@@ -22,12 +22,11 @@ subroutine test_geometry_reader_file_poscar_sio2_3d
    integer :: iunit
    type(molecule) :: mol
 
-   stop 77
 
    open(newunit=iunit,file='POSCAR')
    write(iunit,file_poscar_sio2_3d)
    rewind(iunit)
-   !call read_poscar(iunit,mol)
+   call read_poscar(iunit,mol)
 
    call assert_close(mol%volume,       667.92680030347_wp,thr)
    call assert_close(mol%cellpar(1),8.7413053236641_wp,thr)

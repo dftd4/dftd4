@@ -3264,7 +3264,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
    integer,dimension(3) :: repmin,repmax
 
    allocate(dc6dr(-rep(3):rep(3),-rep(2):rep(2), &
-      &           -rep(1):rep(1),nat*(nat+1)/2))
+      &           -rep(1):rep(1),1:nat*(nat+1)/2))
    dc6dr = 0.0_wp
 
 
