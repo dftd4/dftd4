@@ -79,6 +79,8 @@ DOI: [10.1063/1.4993215](https://doi.org/10.1063/1.4993215)
 
 Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, *ChemRxiv*, **2019**, preprint. DOI: [10.26434/chemrxiv.7430216](https://doi.org/10.26434/chemrxiv.7430216.v2)
 
+Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme,
+*J. Chem. Phys.*, **2019**, 150, 154122.
 
 
 Bugs
