@@ -1,5 +1,30 @@
-DFT-D4 standalone program [![Build Status](https://travis-ci.org/awvwgk/dftd4.svg?branch=master)](https://travis-ci.org/awvwgk/dftd4)
-=========================
+---
+project: DFT-D4
+symmary: DFT-D4 --- A Generally Applicable Atomic-Charge Dependent London Dispersion Correction
+author: Grimme group Bonn
+src_dir: ./source
+include: ./include
+output_dir: ./docs
+exclude_dir: ./tests
+project_github: https://github.com/awvwgk/dftd4
+github: https://github.com/awvwgk
+website: https://grimme.uni-bonn.de/software/dftd4
+docmark: <
+predocmark: >
+display: public
+         protected
+         private
+source: true
+graph: true
+sort: alpha
+print_creation_date: true
+creation_date: %Y-%m-%d %H:%M %z
+extra_mods: iso_fortran_env:https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html
+md_extensions: markdown.extensions.toc
+               markdown.extensions.smarty
+---
+
+[TOC]
 
 Copied from
 https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/dftd4
@@ -19,7 +44,8 @@ To compile this version of DFT-D4 the following programs are needed
 
 The program is build by
 
-    $ FC=ifort meson setup build && ninja -C build
+    $ FC=ifort meson setup build
+    $ ninja -C build
 
 The binary is found at build/dftd4 and is ready to use.
 
@@ -35,7 +61,7 @@ Usage
 
 DFT-D4 is invoked by
 
-    $ dftd4 [options] <file>
+    $ dftd4 [options] 'file'
 
 where file is a valid xyz-file (coordinates in Ångström) or a
 Turbomole coord file containing only the $coord data group with
@@ -73,8 +99,6 @@ For the D4(EEQ)-MBD method use
     
 Citation
 --------
-
-Always cite:
 
 Eike Caldeweyher, Christoph Bannwarth and Stefan Grimme, *J. Chem. Phys.*, **2017**, 147, 034112.
 DOI: [10.1063/1.4993215](https://doi.org/10.1063/1.4993215)
