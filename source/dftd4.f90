@@ -245,7 +245,7 @@ contains
 !! printed together with the used partial charge, coordination number
 !! atomic C6 and static polarizibilities.
 subroutine prmolc6(mol,molc6,molc8,molpol,  &
-           &       cn,covcn,q,qlmom,c6ab,alpha,rvdw,hvol)
+           &       cn,covcn,q,qlmom,c6ab,c8ab,alpha,rvdw,hvol)
    use iso_fortran_env, only : id => output_unit
    use class_molecule
    implicit none
@@ -258,6 +258,7 @@ subroutine prmolc6(mol,molc6,molc8,molpol,  &
    real(wp),intent(in),optional :: q(mol%nat)
    real(wp),intent(in),optional :: qlmom(3,mol%nat)
    real(wp),intent(in),optional :: c6ab(mol%nat,mol%nat)
+   real(wp),intent(in),optional :: c8ab(mol%nat,mol%nat)
    real(wp),intent(in),optional :: alpha(mol%nat)
    real(wp),intent(in),optional :: rvdw(mol%nat)
    real(wp),intent(in),optional :: hvol(mol%nat)
@@ -274,6 +275,7 @@ subroutine prmolc6(mol,molc6,molc8,molpol,  &
    if(present(qlmom))write(id,   '(''   n(p)'')',advance='no')
    if(present(qlmom))write(id,   '(''   n(d)'')',advance='no')
    if(present(c6ab)) write(id,'(''      C6AA'')',advance='no')
+   if(present(c8ab)) write(id,'(''      C8AA'')',advance='no')
    if(present(alpha))write(id,'(''      α(0)'')',advance='no')
    if(present(rvdw)) write(id,'(''    RvdW/Å'')',advance='no')
    if(present(hvol)) write(id,'(''    relVol'')',advance='no')
@@ -288,6 +290,7 @@ subroutine prmolc6(mol,molc6,molc8,molpol,  &
       if(present(qlmom))write(id, '(f7.3)',advance='no')qlmom(2,i)
       if(present(qlmom))write(id, '(f7.3)',advance='no')qlmom(3,i)
       if(present(c6ab)) write(id,'(f10.3)',advance='no')c6ab(i,i)
+      if(present(c8ab)) write(id,'(f10.1)',advance='no')c8ab(i,i)
       if(present(alpha))write(id,'(f10.3)',advance='no')alpha(i)
       if(present(rvdw)) write(id,'(f10.3)',advance='no')rvdw(i)*autoaa
       if(present(hvol)) write(id,'(f10.3)',advance='no')hvol(i)
@@ -308,7 +311,7 @@ end subroutine prmolc6
 !! radii derived from the polarizibilities and relative
 !! volumes relative to the atom
 subroutine mdisp(mol,ndim,q,g_a,g_c, &
-           &     gw,c6abns,molc6,molc8,molpol,aout,cout,rout,vout)
+           &     gw,c6abns,molc6,molc8,molpol,aout,cout,ccout,rout,vout)
 !  use dftd4, only : thopi,gam, &
 !  &  trapzd,zeta,r4r2, &
 !  &  refn,refq,refal
@@ -326,6 +329,7 @@ use class_molecule
    real(wp),intent(out) :: molpol !< molecular static dipole polarizibility
    real(wp),intent(out),optional :: aout(23,mol%nat)
    real(wp),intent(out),optional :: cout(mol%nat,mol%nat)
+   real(wp),intent(out),optional :: ccout(mol%nat,mol%nat)
    real(wp),intent(out),optional :: rout(mol%nat)
    real(wp),intent(out),optional :: vout(mol%nat)
 
@@ -336,11 +340,12 @@ use class_molecule
    real(wp),allocatable :: rvdw(:)
    real(wp),allocatable :: phv(:)
    real(wp),allocatable :: c6ab(:,:)
+   real(wp),allocatable :: c8ab(:,:)
    real(wp),allocatable :: aw(:,:)
    parameter (oth=1._wp/3._wp)
    
    allocate( zetvec(ndim),rvdw(mol%nat),phv(mol%nat),c6ab(mol%nat,mol%nat), &
-   &         aw(23,mol%nat),  source = 0.0_wp )
+   &         c8ab(mol%nat,mol%nat), aw(23,mol%nat),  source = 0.0_wp )
    allocate( itbl(7,mol%nat), source = 0 )
 
    molc6  = 0._wp
@@ -362,6 +367,7 @@ use class_molecule
 !     pseudo-hirshfeld volume
       phv(i) = aw(1,i)/refal(1,1,ia)
       c6ab(i,i) = thopi * trapzd(aw(:,i)**2)
+      c8ab(i,i) = 3*r4r2(ia)**2*c6ab(i,i)
       molpol = molpol + aw(1,i)
       molc6  = molc6  + c6ab(i,i)
       molc8 = molc8 + 3*r4r2(ia)**2*c6ab(i,i)
@@ -369,6 +375,8 @@ use class_molecule
          ja = mol%at(j)
          c6ab(j,i) = thopi * trapzd(aw(:,i)*aw(:,j))
          c6ab(i,j) = c6ab(j,i)
+         c8ab(j,i) = 3*r4r2(ia)*r4r2(ja)*c6ab(j,i)
+         c8ab(i,j) = c8ab(j,i)
          molc6 = molc6 + 2*c6ab(j,i)
          molc8 = molc8 + 6*r4r2(ia)*r4r2(ja)*c6ab(j,i)
       enddo
@@ -378,6 +386,7 @@ use class_molecule
    if (present(vout)) vout = phv
    if (present(rout)) rout = rvdw
    if (present(cout)) cout = c6ab
+   if (present(ccout)) ccout = c8ab
 
 end subroutine mdisp
 
