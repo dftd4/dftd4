@@ -59,6 +59,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,energy,gradient,hessian)
    real(wp),allocatable :: gweights(:)   ! gaussian weights
    real(wp),allocatable :: refc6(:,:)    ! reference C6 coeffients
    real(wp),allocatable :: c6ab(:,:)
+   real(wp),allocatable :: c8ab(:,:)
    real(wp),allocatable :: aw(:,:)
    real(wp),allocatable :: ges(:,:)
    real(wp),allocatable :: gr(:,:)
@@ -96,6 +97,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,energy,gradient,hessian)
 
    allocate( q(mol%nat),covcn(mol%nat),gweights(ndim),refc6(ndim,ndim),&
              c6ab(mol%nat,mol%nat),aw(23,mol%nat),cn(mol%nat),ges(3,mol%nat), &
+             c8ab(mol%nat,mol%nat), &
              dcndr(3,mol%nat,mol%nat),dqdr(3,mol%nat,mol%nat+1), &
              dcovcndr(3,mol%nat,mol%nat), stat = err )
    if (err /= 0) &
@@ -122,8 +124,8 @@ subroutine d4_calculation(iunit,opt,mol,dparam,energy,gradient,hessian)
 ! ------------------------------------------------------------------------
 dispersion_properties: if (opt%lmolpol) then
    call generic_header(iunit,'Molecular Properties',49,10)
-   call mdisp(mol,ndim,q,opt%g_a,opt%g_c,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
-   call prmolc6(mol,molc6,molc8,molpol,covcn=covcn,q=q,c6ab=c6ab,alpha=aw(1,:))
+   call mdisp(mol,ndim,q,opt%g_a,opt%g_c,gweights,refc6,molc6,molc8,molpol,aw,c6ab,c8ab)
+   call prmolc6(mol,molc6,molc8,molpol,covcn=covcn,q=q,c6ab=c6ab,c8ab=c8ab,alpha=aw(1,:))
 endif dispersion_properties
 
 if (.not.opt%silent.and.(opt%lenergy.or.opt%lgradient.or.opt%lhessian)) then
