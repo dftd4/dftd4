@@ -1,4 +1,4 @@
-DFT-D4 standalone program [![Build Status](https://travis-ci.org/awvwgk/dftd4.svg?branch=master)](https://travis-ci.org/awvwgk/dftd4)
+DFT-D4 standalone program [![Build Status](https://travis-ci.org/dftd4/dftd4.svg?branch=master)](https://travis-ci.org/dftd4/dftd4)
 =========================
 
 Copied from
