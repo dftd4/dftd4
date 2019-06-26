@@ -158,3 +158,88 @@ subroutine d4_pbc_calculation_c_api &
    deallocate(gradient)
 
 end subroutine d4_pbc_calculation_c_api
+
+subroutine d4_pbc_calculation_f_api &
+      &   (natoms,attyp,charge,coord,lattice,dparam_in,dopt_in,edisp,grad,glat)
+
+   use iso_fortran_env, wp => real64, istdout => output_unit
+
+   use class_param
+   use class_set
+   use class_molecule
+
+   use pbc_tools
+
+   implicit none
+
+   !> number of atoms (used to determine array dimensions)
+   integer,intent(in) :: natoms
+   !> atom types as ordinal numbers
+   integer,intent(in) :: attyp(natoms)
+   !> total molecular charge
+   real(wp),intent(in) :: charge
+   !> cartesian coordinates in bohr
+   real(wp),intent(in) :: coord(3,natoms)
+   !> lattice parameters
+   real(wp),intent(in) :: lattice(3,3)
+   !> damping parameters
+   type(dftd_parameter),intent(in) :: dparam_in
+   !> calculation options
+   type(dftd_options),  intent(in) :: dopt_in
+   !> final dispersion energy
+   real(wp),intent(out) :: edisp
+   !> molecular dispersion gradient
+   !  (not referenced of dopt_in.lgradient is false)
+   real(wp),intent(out) :: grad(3,natoms)
+   !> dispersion lattice gradient
+   !  (not referenced of dopt_in.lgradient is false)
+   real(wp),intent(out) :: glat(3,3)
+
+   type(molecule) :: mol
+   type(dftd_parameter) :: dparam
+   type(dftd_options)   :: dopt
+   real(wp) :: energy
+   real(wp) :: lattice_grad(3,3)
+   real(wp), allocatable :: gradient(:,:)
+   integer, parameter :: wsc_rep(3) = [1,1,1]
+
+   write(*,*) "You're entering the DFT-D4 API for periodic systems" 
+
+   call mol%allocate(natoms,.false.)
+   mol%at = attyp
+   mol%xyz = coord
+   mol%chrg = charge
+   mol%npbc = 3
+   mol%pbc = .true.
+   mol%lattice = lattice
+   mol%volume = dlat_to_dvol(mol%lattice)
+   call dlat_to_cell(mol%lattice,mol%cellpar)
+   call dlat_to_rlat(mol%lattice,mol%rec_lat)
+   call mol%wrap_back
+   call mol%calculate_distances
+
+   call generate_wsc(mol,mol%wsc,wsc_rep)
+
+   dparam = dparam_in
+   dopt   = dopt_in
+
+   allocate(gradient(3,mol%nat))
+   energy = 0.0_wp
+   gradient = 0.0_wp
+   lattice_grad = 0.0_wp
+
+   call d4_pbc_calculation(istdout,dopt,mol,dparam,energy,gradient,lattice_grad)
+
+   write(*,*)'Dispersion energy / au: ', energy
+
+   if (dopt%lenergy .or. dopt%lgradient) &
+   edisp = energy
+   if (dopt%lgradient) then
+      grad = gradient
+      glat = lattice_grad
+   endif
+
+   call mol%deallocate
+   deallocate(gradient)
+
+end subroutine d4_pbc_calculation_f_api

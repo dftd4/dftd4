@@ -181,12 +181,12 @@ module dftd4
    integer, dimension(7,max_elem)    :: refsys
    real(wp),dimension(23,7,max_elem) :: alphaiw
    real(wp),dimension(23,7,max_elem) :: refal
-   real(wp),dimension(8)       :: secq
-   real(wp),dimension(8)       :: dfts,pbcs,gffs,sols,clss
-   real(wp),dimension(8)       :: sscale
-   real(wp),dimension(8)       :: seccn
-   real(wp),dimension(8)       :: seccnd3
-   real(wp),dimension(23,8)    :: secaiw
+   real(wp),dimension(17)       :: secq
+   real(wp),dimension(17)       :: dfts,pbcs,gffs,sols,clss
+   real(wp),dimension(17)       :: sscale
+   real(wp),dimension(17)       :: seccn
+   real(wp),dimension(17)       :: seccnd3
+   real(wp),dimension(23,17)    :: secaiw
 
    include 'param_ref.f90'
 
@@ -627,7 +627,7 @@ subroutine d4init(mol,g_a,g_c,mode,ndim)
    integer, intent(out) :: ndim
 
    integer  :: i,ia,is,icn,j
-   integer  :: cncount(0:15)
+   integer  :: cncount(0:18)
    real(wp) :: sec_al(23),iz
 
    intrinsic :: nint
