@@ -357,98 +357,6 @@ pure subroutine dncoord_d4(mol,cn,dcndr,thr)
 
 end subroutine dncoord_d4
 
-!> gradients for sum of periodic error function coordination number
-!  using CNi's from the pbc_erfcoord subroutine
-subroutine derfsum(mol,cn,cnp,dcnpdr,dcnpdL,beta,thr)
-   use iso_fortran_env, wp => real64
-   use mctc_constants
-   use class_molecule
-   use pbc_tools, only : get_realspace_cutoff, outer_prod_3x3
-   implicit none
-
-   !> molecular structure information
-   type(molecule),intent(in) :: mol
-   !> coordination number
-   real(wp),intent(in)  :: cn(mol%nat)
-   !> modified coordination number
-   real(wp),intent(out) :: cnp(mol%nat)
-   !> derivative of the coordination number w.r.t. nuclear positions
-   real(wp),intent(out) :: dcnpdr(3,mol%nat,mol%nat)
-   !> derivative of the coordination number w.r.t. lattice parameters
-   real(wp),intent(out) :: dcnpdL(3,3,mol%nat)
-   !> smoothing parameter for damping the CN
-   real(wp),intent(in)  :: beta
-   !> cutoff threshold for neglecting CN count
-   real(wp),intent(in),optional :: thr
-
-   real(wp) :: cn_thr
-   real(wp) :: expterm
-   real(wp) :: gamma
-   real(wp) :: dtmp
-
-   integer  :: i,j,tx,ty,tz
-   real(wp) :: rij(3), r, rco, den, rr, r2, t(3)
-   integer  :: rep_cn(3)
-   real(wp) :: dcnpdcn
-   integer  :: cnmax(94)
-   data    cnmax   / & ! used for cnp in solid states
-      & 2,                                                             2, &
-      & 2, 3,                                           4, 5, 5, 3, 2, 2, &
-      & 2, 3,                                           4, 5, 5, 3, 2, 2, &
-      & 2, 3, 5,          7, 7, 7, 7, 7, 7, 5, 5,  3,   4, 5, 5, 3, 2, 2, &
-      & 2, 3, 5,          7, 7, 7, 7, 7, 7, 5, 5,  3,   4, 5, 5, 3, 2, 2, &
-      & 2, 3, 5,14*6,     7, 7, 7, 7, 7, 7, 5, 5,  3,   4, 5, 5, 3, 2, 2, &
-      & 8*0 /
-
-   if (present(thr)) then
-      cn_thr = thr
-   else
-      cn_thr = 1600.0_wp
-   endif
-
-   cnp     = 0.0_wp
-   gamma   = 0.0_wp
-   expterm = 0.0_wp
-   dcnpdcn = 0.0_wp
-   dcnpdr  = 0.0_wp
-
-   call get_realspace_cutoff(mol%lattice,cn_thr,rep_cn)
-
-   do i = 1, mol%nat
-      gamma=cnmax(mol%at(i))
-      cnp(i)=0.5_wp*(&
-         cn(i)*(1+erf(-beta*(cn(i)-gamma))) &
-         + gamma*(1+erf( beta*(cn(i)-gamma))) )
-      expterm=exp(-beta**2*(cn(i)-gamma)**2)
-      dcnpdcn=0.5_wp*(&
-         (2*beta*(gamma-cn(i))*expterm)/sqrtpi&
-         +erf(beta*(gamma-cn(i))) + 1 )
-      do j = 1, i-1 ! loop over j atoms
-         do concurrent(tx = -rep_cn(1):rep_cn(1),&
-               &       ty = -rep_cn(2):rep_cn(2),&
-               &       tz = -rep_cn(3):rep_cn(3))
-            ! avoid self interaction
-            if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
-            t = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)
-            rij = mol%xyz(:,j) - mol%xyz(:,i) + t
-            r2  = sum(rij**2)
-            if (r2.gt.cn_thr) cycle
-            r=sqrt(r2)
-            ! covalent distance in bohr
-            rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
-            dtmp=dcnpdcn*(-kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2))
-            dcnpdr(:,i,i)=-dtmp*rij/r + dcnpdr(:,i,i)
-            dcnpdr(:,j,j)= dtmp*rij/r + dcnpdr(:,j,j)
-            dcnpdr(:,i,j)= dtmp*rij/r + dcnpdr(:,i,j)
-            dcnpdr(:,j,i)=-dtmp*rij/r + dcnpdr(:,j,i)
-            dcnpdL(:,:,j)= dtmp*outer_prod_3x3(rij,rij)/r + dcnpdL(:,:,j)
-            dcnpdL(:,:,i)= dtmp*outer_prod_3x3(rij,rij)/r + dcnpdL(:,:,i)
-         enddo
-      enddo
-   enddo
-
-end subroutine derfsum
-
 !> gradients for pbc coordination number with error function
 subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
    use iso_fortran_env, wp => real64
@@ -490,8 +398,6 @@ subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
          do concurrent(tx = -rep_cn(1):rep_cn(1),&
                &       ty = -rep_cn(2):rep_cn(2),&
                &       tz = -rep_cn(3):rep_cn(3))
-            ! avoid self interaction
-            if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
             t = [tx,ty,tz]
             rij = mol%xyz(:,j) - mol%xyz(:,i) + matmul(mol%lattice,t)
             r2  = sum(rij**2)
@@ -510,6 +416,23 @@ subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
             dcndL(:,:,j)= dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,j)
             dcndL(:,:,i)= dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,i)
          enddo
+      enddo
+      do concurrent(tx = -rep_cn(1):rep_cn(1),&
+            &       ty = -rep_cn(2):rep_cn(2),&
+            &       tz = -rep_cn(3):rep_cn(3))
+         ! avoid self interaction
+         if ((tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+         t = [tx,ty,tz]
+         rij = matmul(mol%lattice,t)
+         r2  = sum(rij**2)
+         if (r2.gt.cn_thr) cycle
+         r=sqrt(r2)
+         ! covalent distance in bohr
+         rco=k2*2*covalent_radius(mol%at(i))
+         tmp=0.5_wp*(1.0_wp+erf(-kn*(r-rco)/rco))
+         dtmp = -kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+         cn(i) = cn(i) + tmp
+         dcndL(:,:,i) = dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,i)
       enddo
    enddo
 
@@ -555,8 +478,6 @@ pure subroutine pbc_dncoord_d4(mol,cn,dcndr,dcndL,rep,thr)
          do concurrent(tx = -rep(1):rep(1),&
                &       ty = -rep(2):rep(2),&
                &       tz = -rep(3):rep(3))
-            ! avoid self interaction
-            if ((j.eq.i).and.(tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
             t = [tx,ty,tz]
             rij = mol%xyz(:,j) - mol%xyz(:,i) + matmul(mol%lattice,t)
             r2  = sum(rij**2)
@@ -577,8 +498,123 @@ pure subroutine pbc_dncoord_d4(mol,cn,dcndr,dcndL,rep,thr)
             dcndL(:,:,i)= dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,i)
          enddo
       enddo
+      do concurrent(tx = -rep(1):rep(1),&
+            &       ty = -rep(2):rep(2),&
+            &       tz = -rep(3):rep(3))
+         ! avoid self interaction
+         if ((tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+         t = [tx,ty,tz]
+         rij = matmul(mol%lattice,t)
+         r2  = sum(rij**2)
+         if (r2.gt.cn_thr) cycle
+         r=sqrt(r2)
+         ! covalent distance in bohr
+         rco=k2*2*covalent_radius(mol%at(i))
+         den=k4*exp(-k5**2/k6)
+         tmp = den * 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
+         dtmp = -den*kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+         cn(i)=cn(i)+tmp
+         dcndL(:,:,i)= dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,i)
+      enddo
    enddo
 
 end subroutine pbc_dncoord_d4
+
+!> cutoff function for large coordination numbers
+subroutine dncoord_logcn(n,cn,dcndr,dcndL,cn_max)
+   implicit none
+   !> number of atoms
+   integer, intent(in) :: n
+   !> on input coordination number, on output modified CN
+   real(wp), intent(inout) :: cn(n)
+   !> on input derivative of CN w.r.t. cartesian coordinates,
+   !  on output derivative of modified CN
+   real(wp), intent(inout), optional :: dcndr(3,n,n)
+   !> on input derivative of CN w.r.t. strain deformation,
+   !  on output derivative of modified CN
+   real(wp), intent(inout), optional :: dcndL(3,3,n)
+   !> maximum CN (not strictly obeyed)
+   real(wp), intent(in), optional :: cn_max
+   !  local
+   real(wp) :: cnmax
+   real(wp) :: dcnpdcn
+   integer  :: i
+
+   if (present(cn_max)) then
+      cnmax = max(cn_max,0.0_wp)
+   else
+      cnmax = 4.5_wp
+   endif
+
+   if (present(dcndL)) then
+      do i = 1, n
+         dcnpdcn = dlog_cn_cut(cn(i),cnmax)
+         dcndL(:,:,i) = dcnpdcn*dcndL(:,:,i)
+      enddo
+   endif
+
+   if (present(dcndr)) then
+      do i = 1, n
+         dcnpdcn = dlog_cn_cut(cn(i),cnmax)
+         dcndr(:,:,i) = dcnpdcn*dcndr(:,:,i)
+      enddo
+   endif
+
+   do i = 1, n
+      cn(i) = log_cn_cut(cn(i),cnmax)
+   enddo
+
+end subroutine dncoord_logcn
+
+pure elemental function log_cn_cut(cn,cnmax) result(cnp)
+   real(wp), intent(in) :: cn
+   real(wp), intent(in) :: cnmax
+   real(wp) :: cnp
+   cnp = log(1.0_wp + exp(cnmax)) - log(1.0_wp + exp(cnmax - cn))
+end function log_cn_cut
+
+pure elemental function dlog_cn_cut(cn,cnmax) result(dcnpdcn)
+   real(wp), intent(in) :: cn
+   real(wp), intent(in) :: cnmax
+   real(wp) :: dcnpdcn
+   dcnpdcn = exp(cnmax)/(exp(cnmax) + exp(cn))
+end function dlog_cn_cut
+
+pure elemental function erf_count(k,r,r0) result(count)
+   real(wp), intent(in) :: k
+   real(wp), intent(in) :: r
+   real(wp), intent(in) :: r0
+   real(wp) :: count
+   count = 0.5_wp * (1.0_wp + erf(-k*(r-r0)/r0))
+end function erf_count
+
+pure elemental function derf_count(k,r,r0) result(count)
+   use mctc_constants
+   real(wp), intent(in) :: k
+   real(wp), intent(in) :: r
+   real(wp), intent(in) :: r0
+   real(wp) :: count
+   count = -k/sqrtpi/r0*exp(-k**2*(r-r0)**2/r0**2)
+end function derf_count
+
+pure elemental function exp_count(k,r,r0) result(count)
+   real(wp), intent(in) :: k
+   real(wp), intent(in) :: r
+   real(wp), intent(in) :: r0
+   real(wp) :: count
+   count =1.0_wp/(1.0_wp+exp(-k*(r0/r-1.0_wp)))
+end function exp_count
+
+pure elemental function dexp_count(k,r,r0) result(count)
+   real(wp), intent(in) :: k
+   real(wp), intent(in) :: r
+   real(wp), intent(in) :: r0
+   real(wp) :: count
+   real(wp) :: expterm
+   expterm=exp(-k*(r0/r-1._wp))
+   count = (-k*r0*expterm)/(r**2*((expterm+1._wp)**2))
+end function dexp_count
+
+
 
 end module coordination_number

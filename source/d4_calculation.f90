@@ -114,6 +114,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,energy,gradient,hessian)
    call d4(mol,ndim,opt%wf,opt%g_a,opt%g_c,covcn,gweights,refc6)
 
    call dncoord_erf(mol,cn,dcndr)
+   call dncoord_logcn(mol%nat,cn,dcndr,cn_max=8.0_wp)
 
 ! ------------------------------------------------------------------------
 !  get partial charges
@@ -204,6 +205,7 @@ dispersion_hessian: if (opt%lhessian) then
          mol%xyz(j,i) = mol%xyz(j,i) + step
          call dncoord_d4(mol,covcn,dcovcndr)
          call dncoord_erf(mol,cn,dcndr)
+         call dncoord_logcn(mol%nat,cn,dcndr,cn_max=8.0_wp)
          call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
                          .false.,.false.,.true.)
          call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
@@ -211,6 +213,7 @@ dispersion_hessian: if (opt%lhessian) then
          mol%xyz(j,i) = mol%xyz(j,i) - 2*step
          call dncoord_d4(mol,covcn,dcovcndr)
          call dncoord_erf(mol,cn,dcndr)
+         call dncoord_logcn(mol%nat,cn,dcndr,cn_max=8.0_wp)
          call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
                          .false.,.false.,.true.)
          call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
@@ -359,6 +362,7 @@ subroutine d4_pbc_calculation(iunit,opt,mol,dparam,energy,gradient,latgrad)
    call d4(mol,ndim,opt%wf,opt%g_a,opt%g_c,covcn,gweights,refc6)
 
    call pbc_derfcoord(mol,cn,dcndr,dcndL,rthr_cn)
+   call dncoord_logcn(mol%nat,cn,dcndr,dcndL,cn_max=8.0_wp)
 
 ! ------------------------------------------------------------------------
 !  get partial charges
@@ -410,8 +414,8 @@ dispersion_gradient: if (opt%lgradient) then
       &             rthr_vdw,rthr_mbd,dparam,opt%wf,opt%g_a,opt%g_c, &
       &             refc6,opt%lmbd,gradient,sigma,etmp,dqdr,dqdL)
    if (.not.opt%lenergy) energy = etmp
-   inv_lat = transpose(mat_inv_3x3(mol%lattice))
-   call coord_trafo(3,inv_lat,sigma,latgrad)
+   inv_lat = mat_inv_3x3(mol%lattice)
+   call sigma_to_latgrad(sigma,inv_lat,latgrad)
 endif dispersion_gradient
 
 end subroutine d4_pbc_calculation

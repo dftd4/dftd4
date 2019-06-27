@@ -44,7 +44,7 @@ subroutine test_geometry_reader_file_poscar_sio2_3d
    call mol%deallocate
    close(iunit,status='delete')
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_geometry_reader_file_poscar_sio2_3d
 
@@ -84,7 +84,7 @@ subroutine test_geometry_reader_file_xmol_water_0d
    call mol%deallocate
    close(iunit,status='delete')
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_geometry_reader_file_xmol_water_0d
 
@@ -174,7 +174,7 @@ subroutine test_geometry_reader_file_coord_general_0d
 
    call mol%deallocate; close(iunit,status='delete')
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_geometry_reader_file_coord_general_0d
 
@@ -226,7 +226,7 @@ subroutine test_geometry_reader_file_coord_CaF2_3d
 
    call mol%deallocate; close(iunit,status='delete')
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_geometry_reader_file_coord_CaF2_3d
 
@@ -272,7 +272,7 @@ subroutine test_geometry_reader_file_coord_CaMgCO_3d
 
    call mol%deallocate; close(iunit,status='delete')
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_geometry_reader_file_coord_CaMgCO_3d
 

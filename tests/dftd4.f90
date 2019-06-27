@@ -69,7 +69,7 @@ subroutine test_dftd4_properties
    call mol%deallocate
 
    ! done: everythings fine
-   call terminate(0)
+   call terminate(afail)
 end subroutine test_dftd4_properties
 
 !> @brief test calculation of dispersion energies
@@ -160,7 +160,7 @@ subroutine test_dftd4_energies
    call mol%deallocate
 
    ! done: everythings fine
-   call terminate(0)
+   call terminate(afail)
 end subroutine test_dftd4_energies
 
 !> @brief test the general wrapper for DFT-D4 calculations
@@ -209,26 +209,26 @@ subroutine test_dftd4_api
    mol%at  = at
    mol%xyz = xyz
    mol%chrg = 0.0_wp
-   
-   call d4_calculation(istdout,opt_1,mol,dparam_tpss,energy,gradient,hessian)
-   call assert_close(energy,-0.26682682254336E-03_wp,thr)
 
-   call assert_close(hessian(3,1), 7.9334628253105_wp,thr)
-   call assert_close(hessian(4,8),-3.2756224794964_wp,thr)
+   call d4_calculation(istdout,opt_1,mol,dparam_tpss,energy,gradient,hessian)
+   call assert_close(energy,-0.26678857789318E-03_wp,thr)
+
+   call assert_close(hessian(3,1), 7.9334646983949_wp,thr)
+   call assert_close(hessian(4,8),-3.2755759199530_wp,thr)
    call assert_close(hessian(5,3), 0.0000000000000_wp,thr)
 
    call d4_calculation(istdout,opt_2,mol,dparam_b2plyp,energy,gradient,hessian)
-   call assert_close(energy,-0.13368190339570E-03_wp,thr)
+   call assert_close(energy,-0.13366273625493E-03_wp,thr)
 
    call assert_close(gradient(1,1), 0.00000000000000E+00_wp,thr)
    call assert_close(gradient(3,1), 0.39778648945254E-04_wp,thr)
-   call assert_close(gradient(3,2),-0.19889324472627E-04_wp,thr)
+   call assert_close(gradient(3,2),-0.19888853125991E-04_wp,thr)
    call assert_close(gradient(1,2),-gradient(1,3),          thr)
 
    call mol%deallocate
 
    ! done: everythings fine
-   call terminate(0)
+   call terminate(afail)
 end subroutine test_dftd4_api
 
 !> @brief test the general wrapper for DFT-D4 calculations
@@ -295,20 +295,20 @@ subroutine test_dftd4_pbc_api
    lattice_grad = 0.0_wp
 
    call d4_pbc_calculation(istdout,opt,mol,dparam_pbe,energy,gradient,lattice_grad)
-   call assert_close(energy,-0.40714027910526E-01_wp,thr)
+   call assert_close(energy,-0.40714169760173E-01_wp,thr)
 
-   call assert_close(gradient(2,5),  0.39323973508111E-04_wp,thr)
-   call assert_close(gradient(1,1), -0.99274382274340E-05_wp,thr)
-   call assert_close(norm2(gradient),0.16753166250887E-02_wp,thr)
+   call assert_close(gradient(2,5),  0.38309103225009E-04_wp,thr)
+   call assert_close(gradient(1,1),  0.23321694378842E-04_wp,thr)
+   call assert_close(norm2(gradient),0.16518369520861E-02_wp,thr)
 
-   call assert_close(lattice_grad(2,1),  0.13258077458069E-03_wp,thr)
-   call assert_close(lattice_grad(3,3),  0.49734876304364E-02_wp,thr)
-   call assert_close(norm2(lattice_grad),0.85938071998117E-02_wp,thr)
+   call assert_close(lattice_grad(2,1),  0.13255836334515E-03_wp,thr)
+   call assert_close(lattice_grad(3,3),  0.49734633661665E-02_wp,thr)
+   call assert_close(norm2(lattice_grad),0.85938091770478E-02_wp,thr)
 
    call mol%deallocate
 
    ! done: everythings fine
-   call terminate(0)
+   call terminate(afail)
 end subroutine test_dftd4_pbc_api
 
 subroutine test_dftd4_pbc_energies
@@ -424,7 +424,7 @@ subroutine test_dftd4_pbc_energies
 
    call mol%deallocate
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_dftd4_pbc_energies
 
@@ -524,6 +524,7 @@ subroutine test_dftd4_pbc
    call print_pbcsum(istdout,mol)
 
    call pbc_derfcoord(mol,cn,dcndr,dcndL,900.0_wp)
+   call dncoord_logcn(mol%nat,cn,dcndr,dcndL,cn_max=8.0_wp)
 
    call new_charge_model_2019(chrgeq,mol)
 
@@ -707,6 +708,7 @@ subroutine test_dftd4_cell_gradient
    call print_pbcsum(istdout,mol)
 
    call pbc_derfcoord(mol,cn,dcndr,dcndL,900.0_wp)
+   call dncoord_logcn(mol%nat,cn,dcndr,dcndL,cn_max=8.0_wp)
 
    call new_charge_model_2019(chrgeq,mol)
 
@@ -725,18 +727,18 @@ subroutine test_dftd4_cell_gradient
       &             rthr_vdw,rthr_cn,dparam_pbe,wf,g_a,g_c,refc6,lmbd, &
       &             gradient,sigma,energy,dqdr,dqdL)
 
-   call assert_close(energy,-0.40714027910528E-01_wp,thr)
-   call assert_close(gradient(1,1),-0.99274382274332E-05_wp,thr)
-   call assert_close(gradient(2,3),-0.13713496197771E-03_wp,thr)
-   call assert_close(gradient(3,6),-0.24645103343381E-03_wp,thr)
+   call assert_close(energy,-0.40714169760167E-01_wp,thr)
+   call assert_close(gradient(1,1), 0.23321694421378E-04_wp,thr)
+   call assert_close(gradient(2,3),-0.13472783173062E-03_wp,thr)
+   call assert_close(gradient(3,6),-0.24437572036243E-03_wp,thr)
 
-   call assert_close(sigma(1,1), 0.43552159014448E-01_wp,thr)
-   call assert_close(sigma(2,3),-0.26923442064386E-03_wp,thr)
-   call assert_close(sigma(3,1),-0.75395807484337E-03_wp,thr)
+   call assert_close(sigma(1,1), 0.43552242424681E-01_wp,thr)
+   call assert_close(sigma(2,3),-0.26927086527981E-03_wp,thr)
+   call assert_close(sigma(3,1),-0.75390028066213E-03_wp,thr)
    call assert_close(sigma(2,1),sigma(1,2),thr)
 
    call mol%deallocate
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_dftd4_cell_gradient

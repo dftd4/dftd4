@@ -14,6 +14,8 @@ module assertion
       module procedure :: assert_close_real64
    end interface assert_close
 
+   integer, public :: afail = 0
+
 contains
 
 subroutine assert(bool)
@@ -22,7 +24,7 @@ subroutine assert(bool)
 
    if (.not.bool) then
       write(istderr,'("assertion FAILED")')
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert
 
@@ -33,7 +35,7 @@ subroutine assert_eq_int16(val1,val2)
    if (val1 /= val2) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_eq_int16
 
@@ -44,7 +46,7 @@ subroutine assert_eq_int32(val1,val2)
    if (val1 /= val2) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_eq_int32
 
@@ -55,7 +57,7 @@ subroutine assert_eq_int64(val1,val2)
    if (val1 /= val2) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_eq_int64
 
@@ -68,7 +70,7 @@ subroutine assert_close_real64(val1,val2,thr)
    if (abs(diff) > thr) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_close_real64
 
@@ -81,7 +83,7 @@ subroutine assert_close_real32(val1,val2,thr)
    if (abs(diff) > thr) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_close_real32
 
@@ -94,7 +96,7 @@ subroutine assert_close_int16(val1,val2,thr)
    if (abs(diff) > thr) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_close_int16
 
@@ -107,7 +109,7 @@ subroutine assert_close_int32(val1,val2,thr)
    if (abs(diff) > thr) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_close_int32
 
@@ -120,7 +122,7 @@ subroutine assert_close_int64(val1,val2,thr)
    if (abs(diff) > thr) then
       write(istderr,'("assertion:",1x,g21.14," == ",g21.14,1x,"FAILED")') &
          val1,val2
-      call terminate(1)
+      afail = afail+1
    endif
 end subroutine assert_close_int64
 

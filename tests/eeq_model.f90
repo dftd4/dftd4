@@ -67,7 +67,7 @@ subroutine test_eeq_model_water
    call mol%deallocate
 
    ! done: everythings fine
-   call terminate(0)
+   call terminate(afail)
 end subroutine test_eeq_model_water
 
 subroutine test_eeq_model_ewald
@@ -153,34 +153,25 @@ subroutine test_eeq_model_ewald
 
    call assert_close(energy,-0.90576568382295E-01_wp,thr)
 
-   print*
-   print'(3g21.14)',energy
-   print*
-   print'(3g21.14)',gradient
-   print*
-   print'(3g21.14)',q
-   print*
-   print'(3g21.14)',dqdr
-
-   call assert_close(gradient(2,1), 0.59224535834402E-02_wp,thr)
-   call assert_close(gradient(1,3),-0.17291053212403E-02_wp,thr)
-   call assert_close(gradient(3,5), 0.13109348427124E-02_wp,thr)
-   call assert_close(gradient(1,6), 0.10491055487509E-01_wp,thr)
+   call assert_close(gradient(2,1), 0.91930618913995E-03_wp,thr)
+   call assert_close(gradient(1,3),-0.74402915552075E-03_wp,thr)
+   call assert_close(gradient(3,5),-0.62990375312383E-03_wp,thr)
+   call assert_close(gradient(1,6), 0.48745476414615E-02_wp,thr)
 
    call assert_close(sum(q),0.0_wp,            thr)
    call assert_close(q(1), 0.39808668429315_wp,thr)
    call assert_close(q(3),-0.16133275860565_wp,thr)
    call assert_close(q(4),-0.19939812633388_wp,thr)
 
-   call assert_close(dqdr(1,4,2),-0.16619680140869E-01_wp,thr)
-   call assert_close(dqdr(2,5,7),-0.71528076609028E-04_wp,thr)
-   call assert_close(dqdr(1,2,2), 0.36177437391610E-01_wp,thr)
-   call assert_close(dqdr(3,1,4),-0.39909176876716E-01_wp,thr)
+   call assert_close(dqdr(1,4,2), 0.15400805612228E-01_wp,thr)
+   call assert_close(dqdr(2,5,7), 0.14771235997449E-02_wp,thr)
+   call assert_close(dqdr(1,2,2), 0.21715273501275E-01_wp,thr)
+   call assert_close(dqdr(3,1,4),-0.33298482841066E-01_wp,thr)
 
    call mol%deallocate
 
    ! done
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_eeq_model_ewald
 
@@ -267,7 +258,7 @@ subroutine test_eeq_model_cell_gradient
 
    call assert_close(energy,-0.90576568382295E-01_wp,thr)
 
-   call assert_close(gradient(2,1), 0.59224535834402E-02_wp,thr)
+   call assert_close(gradient(2,1), 0.91930618913995E-03_wp,thr)
 
    call assert_close(sigma(1,1),-0.69556402225023E-01_wp,thr)
    call assert_close(sigma(2,3),-0.11063392011917E-01_wp,thr)
@@ -276,7 +267,7 @@ subroutine test_eeq_model_cell_gradient
    call assert_close(sum(q),0.0_wp,            thr)
    call assert_close(q(1), 0.39808668429315_wp,thr)
 
-   call assert_close(dqdr(3,1,4),-0.39909176876716E-01_wp,thr)
+   call assert_close(dqdr(3,1,4),-0.33298482841066E-01_wp,thr)
 
    call assert_close(dqdL(2,3,2),-0.66131872796832E-02_wp,thr)
    call assert_close(dqdL(2,1,7), 0.66206886462644E-02_wp,thr)
@@ -286,6 +277,6 @@ subroutine test_eeq_model_cell_gradient
    call mol%deallocate
 
    ! done
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_eeq_model_cell_gradient

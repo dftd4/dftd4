@@ -43,7 +43,7 @@ subroutine test_pbc_tools_convert
    call assert_close(center(1),2.9799405783945_wp,thr)
    call assert_close(center(2),4.2142723810314_wp,thr)
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_pbc_tools_convert
 
@@ -93,6 +93,6 @@ subroutine test_pbc_tools_cutoff
    call assert_eq(rep(3),rep(2))
    call assert_eq(rep(1),17)
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_pbc_tools_cutoff

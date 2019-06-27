@@ -418,4 +418,42 @@ pure function outer_prod_3x3(a,b) result(c)
    c(1,3) = a(1)*b(3); c(2,3) = a(2)*b(3); c(3,3) = a(3)*b(3)
 end function outer_prod_3x3
 
+pure subroutine latgrad_to_sigma(latgrad,lattice,sigma)
+   implicit none
+   real(wp), intent(in) :: latgrad(3,3)
+   real(wp), intent(in) :: lattice(3,3)
+   real(wp), intent(out) :: sigma(3,3)
+
+   integer :: i,j,k
+
+   sigma = 0.0_wp
+
+   do i = 1, 3
+      do j = 1, 3
+         do k = 1,3
+            sigma(i,j) = sigma(i,j) + latgrad(i,k)*lattice(j,k)
+         enddo
+      enddo
+   enddo
+
+end subroutine latgrad_to_sigma
+pure subroutine sigma_to_latgrad(sigma,inv_lat,latgrad)
+   implicit none
+   real(wp), intent(in) :: sigma(3,3)
+   real(wp), intent(in) :: inv_lat(3,3)
+   real(wp), intent(out) :: latgrad(3,3)
+
+   integer :: i,j,k
+
+   latgrad = 0.0_wp
+
+   do i = 1, 3
+      do j = 1, 3
+         do k = 1,3
+            latgrad(i,j) = latgrad(i,j) + sigma(i,k)*inv_lat(j,k)
+         enddo
+      enddo
+   enddo
+end subroutine sigma_to_latgrad
+
 end module pbc_tools

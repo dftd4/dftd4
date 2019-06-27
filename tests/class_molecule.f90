@@ -48,7 +48,7 @@ subroutine test_class_molecule_mic_distances
 
    call mol%deallocate
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_class_molecule_mic_distances
 
@@ -117,6 +117,6 @@ subroutine test_class_molecule_axis_trafo
 
    call mol%deallocate
 
-   call terminate(0)
+   call terminate(afail)
 
 end subroutine test_class_molecule_axis_trafo

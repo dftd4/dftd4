@@ -270,9 +270,6 @@ subroutine eeq_chrgeq_core &
    real(wp),allocatable :: atmp(:,:)
    real(wp),allocatable :: Xfac(:)
    real(wp),allocatable :: Afac(:,:)
-   real(wp),allocatable :: cnp(:)
-   real(wp),allocatable :: dcnpdr(:,:,:)
-   real(wp),allocatable :: dcnpdL(:,:,:)
 
 ! ------------------------------------------------------------------------
 !  Lapack work variables
@@ -298,8 +295,7 @@ subroutine eeq_chrgeq_core &
    m    = mol%nat+1
    q    = 0.0_wp
    allocate( ipiv(m), source = 0 )
-   allocate( Amat(m,m), Xvec(m), Xfac(m), cnp(mol%nat), dcnpdr(3,mol%nat,mol%nat), &
-      &      dcnpdL(3,3,mol%nat), source = 0.0_wp )
+   allocate( Amat(m,m), Xvec(m), Xfac(m), source = 0.0_wp )
 
 ! ------------------------------------------------------------------------
 !  set up the A matrix and X vector
@@ -312,13 +308,6 @@ subroutine eeq_chrgeq_core &
 ! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "Setup of the A matrix and the RHS X vector"
-
-   if (mol%npbc > 0) then
-      call derfsum(mol,cn,cnp,dcnpdr,dcnpdL,7.5_wp,900.0_wp)
-   else
-      cnp = cn
-      dcnpdr = dcndr
-   endif
 
 !  prepare some arrays
 !$omp parallel default(none) &
@@ -458,17 +447,17 @@ do_molecular_gradient: if (lgrad .or. lcpq) then
    if (mol%npbc > 0) then
    allocate( dAmatdL(3,3,m), dXvecdL(3,3,m), source = 0.0_wp )
 !$omp parallel default(none) &
-!$omp shared(mol,chrgeq,dcnpdr,dcnpdL,Xfac,Xtmp,cf) &
+!$omp shared(mol,chrgeq,dcndr,dcndL,Xfac,Xtmp,cf) &
 !$omp private(i,j,wscAt,riw,gamij,dAtmp,stmp) &
 !$omp shared(dXvecdr,dXvecdL) &
 !$omp reduction(+:Afac,dAmatdr,dAmatdL)
 !$omp do schedule(dynamic)
    do i = 1, mol%nat
-      dXvecdr(:,i,i) = +dcnpdr(:,i,i)*Xfac(i)
-      dXvecdL(:,:,i) = +dcnpdL(:,:,i)*Xfac(i)
+      dXvecdr(:,i,i) = +dcndr(:,i,i)*Xfac(i)
+      dXvecdL(:,:,i) = +dcndL(:,:,i)*Xfac(i)
       do j = 1, i-1
-         dXvecdr(:,j,i) = +dcnpdr(:,i,j)*Xfac(i)
-         dXvecdr(:,i,j) = +dcnpdr(:,j,i)*Xfac(j)
+         dXvecdr(:,j,i) = +dcndr(:,i,j)*Xfac(i)
+         dXvecdr(:,i,j) = +dcndr(:,j,i)*Xfac(j)
          if(mol%wsc%at(j,i).eq.0) cycle
          ! over WSC partner
          gamij = 1.0_wp/sqrt(chrgeq%alpha(i) + chrgeq%alpha(j))
