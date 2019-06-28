@@ -30,6 +30,19 @@ The man-page can be build by
 By adding the directory to the `MANPATH` variable the documentation
 of DFT-D4 is accessable by `man`.
 
+`dftd4` as been successfully build using
+
+* `ifort` 19.0.3 with the MKL as linear algebra backend
+  on Manjaro Linux 18.0
+* `gfortran` 8.3.0 with the MKL (19.0.3.199) as linear algebra backend
+  on Manjaro Linux 18.0
+* `gfortran` 8.3.0 with LAPACK (3.8.0-2) and openBLAS (0.3.6-1)
+  as linear algebra backend on Manjaro Linux 18.0
+
+`dftd4` could not be compiled with
+
+* `gfortran` 4 or older (missing Fortran 2003 standard)
+
 Usage
 -----
 

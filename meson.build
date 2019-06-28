@@ -46,6 +46,9 @@ if cc.get_id() == 'intel'
 endif
 add_project_arguments(c_std, language : 'c')
 
+## ========================================== ##
+## SOURCE
+## ========================================== ##
 
 fsrcs  = []
 ftest  = []
@@ -111,13 +114,55 @@ c_srcs += 'tests/c_api_example.c'
 
 sources = fsrcs
 
-lapack_dep  = fc.find_library('lapack', required : true )
-blas_dep    = fc.find_library('blas',   required : true )
-pthread_dep = dependency('threads')
-
-dependencies = [lapack_dep, blas_dep, pthread_dep]
-
 incdir = include_directories('include')
+
+## ========================================== ##
+## LIBRARIES
+## ========================================== ##
+dependencies = []
+dependencies_exe = []
+dependencies_sha = []
+
+if get_option('la_backend') == 'mkl'
+  libmkl = [fc.find_library('pthread')]
+  libmkl += fc.find_library('m')
+  libmkl += fc.find_library('dl')
+  if fc.get_id() == 'intel'
+    libmkl_exe = [fc.find_library('mkl_intel_lp64')]
+    libmkl_exe += fc.find_library('mkl_intel_thread')
+  else
+    libmkl_exe = [fc.find_library('mkl_gf_lp64')]
+    libmkl_exe += fc.find_library('mkl_gnu_thread')
+  endif
+  libmkl_exe += fc.find_library('mkl_core')
+  libmkl_exe += fc.find_library('iomp5')
+  libmkl_sha = [fc.find_library('mkl_rt')]
+  dependencies += libmkl
+  dependencies_sha += libmkl_sha
+  dependencies_exe += libmkl_exe
+else
+  dependencies += fc.find_library('blas', required : true)
+  dependencies += fc.find_library('lapack', required : true)
+endif
+
+if fc.get_id() == 'intel'
+  add_project_arguments('-qopenmp', language : 'fortran')
+  add_project_link_arguments('-qopenmp', language : 'fortran')
+else
+  add_project_arguments('-fopenmp', language : 'fortran')
+  add_project_link_arguments('-fopenmp', language : 'fortran')
+endif
+
+pthread_dep = dependency('threads')
+dependencies += pthread_dep
+
+# distribute dependencies for shared object and static executable
+dependencies_sha += dependencies
+dependencies_exe += dependencies
+
+## ========================================== ##
+## TARGETS
+## ========================================== ##
 
 # create a static library from all sources
 d4lib_static = static_library(meson.project_name(), sources,
@@ -126,20 +171,30 @@ d4lib_static = static_library(meson.project_name(), sources,
 # create a shared library as well
 d4lib_shared = shared_library(meson.project_name(),
                  version : meson.project_version(),
-                 dependencies : dependencies,
+                 dependencies : dependencies_sha,
                  include_directories : incdir,
-                 link_whole : d4lib_static,
-                 link_args : '-fopenmp' )
+                 link_whole : d4lib_static)
 
 # and link it into an executable
+if fc.get_id() == 'intel'
 d4exe = executable(meson.project_name(), fmain,
-                 dependencies : dependencies,
+                 dependencies : dependencies_exe,
                  include_directories : incdir,
                  link_with : d4lib_static,
-                 link_args : '-fopenmp' )
+                 link_args : '-static')
+else
+d4exe = executable(meson.project_name(), fmain,
+                 dependencies : dependencies_exe,
+                 include_directories : incdir,
+                 link_with : d4lib_static)
+endif
+
+## ========================================== ##
+## TESTSUITE
+## ========================================== ##
 
 d4tester = executable('d4test', ftest,
-                 dependencies : dependencies,
+                 dependencies : dependencies_exe,
                  include_directories : incdir,
                  link_with : d4lib_static,
                  link_args : '-fopenmp' )
