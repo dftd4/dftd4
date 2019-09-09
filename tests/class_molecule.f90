@@ -73,7 +73,7 @@ subroutine test_class_molecule_axis_trafo
       &-3.405901173_wp,     0.355579335_wp,    -1.660010899_wp   &
       & ],shape(xyz))
 
-   type(molecule)       :: mol
+   type(molecule) :: mol
    real(wp) :: molmass
    real(wp) :: center(3)
    real(wp) :: moments(3)

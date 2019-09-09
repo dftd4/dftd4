@@ -39,17 +39,17 @@ main (int argc, char **argv)
          &energy, grad, hess);
    assert(fabs(-0.26678857789318E-03 - energy) < thr);
 
-   assert(fabs( 7.9334646983949 - hess[2]             ) < thr);
-   assert(fabs(-3.2755759199530 - hess[7*(3*natoms)+3]) < thr);
-   assert(fabs( 0.0000000000000 - hess[2*(3*natoms)+4]) < thr);
+   assert(fabs(-0.97182441530696E-05 - hess[3]             ) < thr);
+   assert(fabs(-0.66109938971051E-05 - hess[7*(3*natoms)+4]) < thr);
+   assert(fabs( 7.59401653431350E-06 - hess[3*3*3*3-1]) < thr);
 
    dftd::D4_calculation(&natoms, attyp, &charge, coord, &dparam_b2plyp, &opt_2,
          &energy, grad, hess);
    assert(fabs(-0.13366273625493E-03 - energy) < thr);
 
    assert(fabs( 0.00000000000000E+00 - grad[0]) < thr);
-   assert(fabs( 0.39778648945254E-04 - grad[2]) < thr);
-   assert(fabs(-0.19888853125991E-04 - grad[5]) < thr);
+   assert(fabs( 0.39779053826285E-04 - grad[2]) < thr);
+   assert(fabs(-0.19889526913143E-04 - grad[5]) < thr);
    assert(fabs(grad[3]+grad[6])                 < thr);
 
    return EXIT_SUCCESS;

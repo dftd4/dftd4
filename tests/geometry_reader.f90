@@ -74,7 +74,7 @@ subroutine test_geometry_reader_file_xmol_water_0d
    rewind(iunit)
    call read_xmol(iunit,mol)
 
-   call assert_eq(mol%nat,9)
+   call assert_eq(mol%n,9)
 
    call assert_close(mol%xyz(1,2), .93335227594625_wp,thr)
    call assert_close(mol%xyz(2,5),-.98873655304085_wp,thr)
@@ -170,7 +170,7 @@ subroutine test_geometry_reader_file_coord_general_0d
    call read_coord(iunit,mol)
 
    call assert(.not.any(mol%pbc))
-   call assert_eq(mol%nat, 59)
+   call assert_eq(mol%n, 59)
 
    call mol%deallocate; close(iunit,status='delete')
 
@@ -208,7 +208,7 @@ subroutine test_geometry_reader_file_coord_CaF2_3d
    call assert(all(mol%pbc))
    call assert_eq(mol%npbc,3)
 
-   call assert_eq(mol%nat, 3)
+   call assert_eq(mol%n, 3)
 
    call assert_close(mol%volume,       275.00126402469_wp,thr)
 
@@ -258,7 +258,7 @@ subroutine test_geometry_reader_file_coord_CaMgCO_3d
    call assert(all(mol%pbc))
    call assert_eq(mol%npbc,3)
 
-   call assert_eq(mol%nat, 4)
+   call assert_eq(mol%n, 4)
 
    call assert_close(mol%volume,       2184.02656187534_wp,thr)
    call assert_close(mol%lattice(1,2),-4.54951567002654_wp,thr)

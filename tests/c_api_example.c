@@ -36,17 +36,17 @@ main (int argc, char **argv)
          &energy, grad, hess);
    assert(abs(-0.26682682254336E-03 - energy) < thr);
 
-   assert(abs( 7.9334628241320 - hess[2]             ) < thr);
-   assert(abs(-3.2756224894310 - hess[7*(3*natoms)+3]) < thr);
-   assert(abs( 0.0000000000000 - hess[2*(3*natoms)+4]) < thr);
+   assert(abs(-0.97182441530696E-05 - hess[3]             ) < thr);
+   assert(abs(-0.66109938971051E-05 - hess[7*(3*natoms)+4]) < thr);
+   assert(abs( 7.59401653431350E-06 - hess[3*3*3*3-1]) < thr);
 
    D4_calculation(&natoms, attyp, &charge, coord, &dparam_b2plyp, &opt_2,
          &energy, grad, hess);
    assert(abs(-0.13368190339570E-03 - energy) < thr);
 
    assert(abs( 0.00000000000000E+00 - grad[0]) < thr);
-   assert(abs( 0.39778648945254E-04 - grad[2]) < thr);
-   assert(abs(-0.19889324472627E-04 - grad[5]) < thr);
+   assert(abs( 0.39779053826285E-04 - grad[2]) < thr);
+   assert(abs(-0.19889526913143E-04 - grad[5]) < thr);
    assert(abs(grad[3]+grad[6])                 < thr);
 
    return EXIT_SUCCESS;

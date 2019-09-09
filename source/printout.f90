@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! xtb is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! xtb is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+
 subroutine dftd4_header(verbose)
 use iso_fortran_env, istdout => output_unit
 logical,intent(in) :: verbose
@@ -34,11 +51,18 @@ write(istdout,'(a)') &
    "     |            E. Caldeweyher, S. Ehlert & S. Grimme          |     ",&
    "     |          Mulliken Center for Theoretical Chemistry        |     ",&
    "     |                    University of Bonn                     |     ",&
-   "     |                  Version 2.0 (SAW190211)                  |     ",&
-   !     |  Version number by <major>.<minor>.<rev> (<author><date>) |     !
    "      -----------------------------------------------------------      ",""
 !   < < < < < < < < < < < < < < < < < < > > > > > > > > > > > > > > > > > >!
+call dftd4_version(istdout)
 end subroutine dftd4_header
+
+subroutine dftd4_version(iunit)
+integer,intent(in) :: iunit
+include 'dftd4_version.fh'
+write(iunit,'(3x,"*",*(1x,a))') &
+   & "dftd4 version", version, "compiled by", author, "on", date
+write(iunit,'(a)')
+end subroutine dftd4_version
 
 subroutine eeq_header
 use iso_fortran_env, istdout => output_unit
@@ -191,10 +215,10 @@ subroutine print_pbcsum(iunit,mol)
    write(iunit,'(a)')
 
    ! atomic coordinates
-   write(iunit,'(1x,"*",1x,i0,1x,a)') mol%nat,"atoms in unit cell"
+   write(iunit,'(1x,"*",1x,i0,1x,a)') mol%n,"atoms in unit cell"
    write(iunit,'(a)')
    write(iunit,'(5x,"#",3x,"Z",3x,32x,"position/Å",8x,"charge")')
-   do i = 1, mol%nat
+   do i = 1, mol%n
       write(iunit,'(i6,1x,i3,1x,a2)',advance='no') i,mol%at(i),mol%sym(i)
       write(iunit,'(3f14.7)',advance='no') mol%xyz(:,i)*conv
       write(iunit,'(f14.7)') mol%z(i)
@@ -235,7 +259,7 @@ subroutine print_pbcsum(iunit,mol)
       write(iunit,'(1x,"*",1x,a)') "geometry in fractional coordinates"
       write(iunit,'(a)')
       write(iunit,'(5x,"#",3x,"Z",3x,20x,"fractional coordinates")')
-      do i = 1, mol%nat
+      do i = 1, mol%n
          write(iunit,'(i6,1x,i3,1x,a2)',advance='no') i,mol%at(i),mol%sym(i)
          write(iunit,'(3f14.7)',advance='no') mol%abc(:,i)
          write(iunit,'(a)')

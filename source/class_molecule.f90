@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! xtb is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! xtb is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+
 !> definition of the molecular structure class
 !
 !  Contains number of atoms, geometry, atomtypes and molecular charge.
@@ -14,7 +31,7 @@ module class_molecule
 
 !> molecule structure class
    type :: molecule
-      integer  :: nat = 0          !< number of atoms
+      integer  :: n = 0            !< number of atoms
       real(wp) :: chrg = 0.0_wp    !< molecular charge in e
       logical  :: pbc(3) = .false. !< periodic dimensions
       integer  :: npbc = 0         !< periodicity of system
@@ -38,6 +55,8 @@ module class_molecule
       procedure :: deallocate => deallocate_molecule
       !> debug information of internal data of the molecular structure
       procedure :: write => write_molecule
+      !> update molecular structure data from xyz and lattice
+      procedure :: update
       !> retrieves atomic masses from MCTC library and stores them in au
       procedure :: assign_atomic_mass
       !> calculates all interatomic distances for molecular case
@@ -100,7 +119,7 @@ subroutine allocate_molecule(self,nat,lpbc)
    integer,intent(in) :: nat !< number of atoms
    logical,optional,intent(in) :: lpbc !< periodic boundary conditions
    call self%deallocate
-   self%nat = nat
+   self%n = nat
    allocate( self%sym(nat),      source = '  ')
    allocate( self%at(nat),       source = 0 )
    allocate( self%xyz(3,nat),    source = 0.0_wp )
@@ -115,7 +134,7 @@ end subroutine allocate_molecule
 subroutine deallocate_molecule(self)
    implicit none
    class(molecule) :: self !< molecule structure information
-   self%nat = 0
+   self%n = 0
    self%pbc = .false.
    self%chrg = 0.0_wp
    self%lattice = 0.0_wp
@@ -142,7 +161,7 @@ subroutine write_molecule(self,iunit,comment)
    write(iunit,'(  "->",1x,a)') comment
    write(iunit,'(72("-"))')
    write(iunit,'(1x,"*",1x,a)') "status of the fields"
-   write(iunit,dfmt) "integer :: nat         ",self%nat
+   write(iunit,dfmt) "integer :: nat         ",self%n
    write(iunit,dfmt) "real    :: chrg        ",self%chrg
    write(iunit,dfmt) "integer :: npbc        ",self%npbc
    write(iunit,dfmt) "logical :: pbc(1)      ",self%pbc(1)
@@ -213,6 +232,24 @@ subroutine write_molecule(self,iunit,comment)
    write(iunit,'(72("<"))')
 end subroutine write_molecule
 
+subroutine update(self)
+   use iso_fortran_env, wp => real64
+   use pbc_tools
+   implicit none
+   class(molecule),intent(inout) :: self  !< molecular structure information
+
+   if (self%npbc > 0) then
+      call dlat_to_cell(self%lattice,self%cellpar)
+      call dlat_to_rlat(self%lattice,self%rec_lat)
+      self%volume = dlat_to_dvol(self%lattice)
+
+      call self%wrap_back
+   endif
+
+   call self%calculate_distances
+
+end subroutine update
+
 !> set masses for molecular structure
 subroutine assign_atomic_mass(self)
    use iso_fortran_env, wp => real64
@@ -233,7 +270,7 @@ subroutine calculate_distances(self)
    class(molecule),intent(inout) :: self !< molecular structure information
    integer :: i,j
    if (self%npbc > 0) then
-      do i = 1, self%nat
+      do i = 1, self%n
          do j = 1, i-1
             self%dist(j,i) = minimum_image_distance(.false.,self%abc(:,i), &
                &              self%abc(:,j),self%lattice,self%pbc)
@@ -243,7 +280,7 @@ subroutine calculate_distances(self)
             &              self%abc(:,i),self%lattice,self%pbc)
       enddo
    else
-      do i = 1, self%nat
+      do i = 1, self%n
          do j = 1, i-1
             self%dist(j,i) = norm2(self%xyz(:,j)-self%xyz(:,i))
             self%dist(i,j) = self%dist(j,i)
@@ -262,8 +299,8 @@ subroutine wrap_back(self)
    use pbc_tools
    implicit none
    class(molecule),intent(inout) :: self !< molecular structure information
-   call xyz_to_abc(self%nat,self%lattice,self%xyz,self%abc,self%pbc)
-   call abc_to_xyz(self%nat,self%lattice,self%abc,self%xyz)
+   call xyz_to_abc(self%n,self%lattice,self%xyz,self%abc,self%pbc)
+   call abc_to_xyz(self%n,self%lattice,self%abc,self%xyz)
 end subroutine wrap_back
 
 !> returns the center of geometry for the non-periodic directions of
@@ -280,7 +317,7 @@ pure function center_of_geometry(self) result(center)
       if (.not.self%pbc(idir)) &
          center(idir) = sum(self%xyz(idir,:))
    enddo
-   center = center/real(self%nat,wp)
+   center = center/real(self%n,wp)
 end function center_of_geometry
 
 !> shifts back the non-periodic directions to the center of geometry
@@ -291,7 +328,7 @@ pure subroutine shift_to_center_of_geometry(self)
    real(wp) :: center(3)
    integer  :: iat
    center = self%center_of_geometry()
-   do iat = 1, self%nat
+   do iat = 1, self%n
       self%xyz(:,iat) = self%xyz(:,iat) - center
    enddo
 end subroutine shift_to_center_of_geometry
@@ -328,7 +365,7 @@ pure subroutine shift_to_center_of_mass(self)
    real(wp) :: center(3)
    integer  :: iat
    center = self%center_of_mass()
-   do iat = 1, self%nat
+   do iat = 1, self%n
       self%xyz(:,iat) = self%xyz(:,iat) - center
    enddo
 end subroutine shift_to_center_of_mass
@@ -351,7 +388,7 @@ pure function moments_of_inertia(self) result(moments)
 
    t = 0.0_wp
 
-   do iat = 1, self%nat
+   do iat = 1, self%n
       atmass = self%atmass(iat)
       x = self%xyz(1,iat)-center(1); x2 = x**2
       y = self%xyz(2,iat)-center(2); y2 = y**2
@@ -390,7 +427,7 @@ pure subroutine align_to_principal_axes(self,break_symmetry)
       if (break_symmetry) t = [(real(i,wp)*1.0e-10_wp,i=1,6)]
    endif
 
-   do iat = 1, self%nat
+   do iat = 1, self%n
       atmass = self%atmass(iat)
       x = self%xyz(1,iat)-center(1); x2 = x**2
       y = self%xyz(2,iat)-center(2); y2 = y**2
@@ -409,7 +446,7 @@ pure subroutine align_to_principal_axes(self,break_symmetry)
    det = mat_det_3x3(axes)
    if (det < 0) axes(:,1) = -axes(:,1)
 
-   call coord_trafo(self%nat,axes,self%xyz)
+   call coord_trafo(self%n,axes,self%xyz)
 
 end subroutine align_to_principal_axes
 

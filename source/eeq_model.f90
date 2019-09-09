@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! xtb is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! xtb is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+
 !> @brief contains all functions needed for calculating partial charges
 module eeq_model
    use iso_fortran_env, wp => real64
@@ -7,15 +24,7 @@ module eeq_model
 ! ------------------------------------------------------------------------
    use class_param, only : chrg_parameter
 
-! ------------------------------------------------------------------------
-!  get interfaces
-! ------------------------------------------------------------------------
-   use coordination_number, only : ncoord =>  ncoord_erf, &
-                                  dncoord => dncoord_erf
-
    implicit none
-
-   private :: ncoord,dncoord
 
 !> @brief π itself
    real(wp),private,parameter :: pi = 3.1415926535897932384626433832795029_wp
@@ -134,9 +143,9 @@ subroutine new_charge_model_2019(chrgeq,mol)
 
    integer :: i
 
-   call chrgeq%allocate(mol%nat)
+   call chrgeq%allocate(mol%n)
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       chrgeq%xi   (i) = en   (mol%at(i))
       chrgeq%gam  (i) = gamm (mol%at(i))
       chrgeq%kappa(i) = cnfak(mol%at(i))
@@ -153,8 +162,8 @@ subroutine print_chrgeq(iunit,chrgeq,mol,q,cn)
    integer, intent(in) :: iunit
    type(molecule),intent(in) :: mol          !< structure information
    type(chrg_parameter),intent(in) :: chrgeq !< parametrisation
-   real(wp),intent(in)    :: q(mol%nat)      !< partial charges
-   real(wp),intent(in)    :: cn(mol%nat)     !< erf-CN
+   real(wp),intent(in)    :: q(mol%n)      !< partial charges
+   real(wp),intent(in)    :: cn(mol%n)     !< erf-CN
    real(wp) :: mmom(3)
    integer  :: i
    write(iunit,'(a)')
@@ -164,7 +173,7 @@ subroutine print_chrgeq(iunit,chrgeq,mol,q,cn)
    write(iunit,'("        EN")',advance='no')
    write(iunit,'("       Aii")',advance='no')
    write(iunit,'(a)')
-   do i=1,mol%nat
+   do i=1,mol%n
       write(iunit,'(i11,1x,i3,1x,a2)',advance='no') &
       &     i,mol%at(i),mol%sym(i)
       write(iunit,'(f10.3)',advance='no')q(i)
@@ -174,7 +183,7 @@ subroutine print_chrgeq(iunit,chrgeq,mol,q,cn)
       write(iunit,'(a)')
    enddo
    mmom = 0.0_wp
-   do i = 1, mol%nat
+   do i = 1, mol%n
       mmom = mmom + q(i)*mol%xyz(:,i)
    enddo
    write(iunit,'(a)')
@@ -214,21 +223,21 @@ subroutine eeq_chrgeq_core &
 ! ------------------------------------------------------------------------
    type(molecule),intent(in) :: mol                    !< structure information
    type(chrg_parameter),intent(in) :: chrgeq           !< parametrisation
-   real(wp),intent(in)    :: cn(mol%nat)               !< erf-CN
-   real(wp),intent(in)    :: dcndr(3,mol%nat,mol%nat)  !< derivative of erf-CN
-   real(wp),intent(in)    :: dcndL(3,3,mol%nat)        !< lattice derivative of erf-CN
+   real(wp),intent(in)    :: cn(mol%n)               !< erf-CN
+   real(wp),intent(in)    :: dcndr(3,mol%n,mol%n)  !< derivative of erf-CN
+   real(wp),intent(in)    :: dcndL(3,3,mol%n)        !< lattice derivative of erf-CN
    logical, intent(in)    :: lverbose                  !< toggles printout
    logical, intent(in)    :: lgrad                     !< flag for gradient calculation
    logical, intent(in)    :: lcpq                      !< do partial charge derivative
 ! ------------------------------------------------------------------------
 !  Output
 ! ------------------------------------------------------------------------
-   real(wp),intent(out)   :: q(mol%nat)                !< partial charges
-   real(wp),intent(out)   :: dqdr(3,mol%nat,mol%nat+1) !< derivative of partial charges
-   real(wp),intent(out)   :: dqdL(3,3,mol%nat+1)       !< lattice derivative of partial charges
+   real(wp),intent(out)   :: q(mol%n)                !< partial charges
+   real(wp),intent(out)   :: dqdr(3,mol%n,mol%n+1) !< derivative of partial charges
+   real(wp),intent(out)   :: dqdL(3,3,mol%n+1)       !< lattice derivative of partial charges
    real(wp),intent(inout) :: energy                    !< electrostatic energy
    real(wp),intent(inout) :: sigma(3,3)                !< sigma tensor of IES
-   real(wp),intent(inout) :: gradient(3,mol%nat)       !< molecular gradient of IES
+   real(wp),intent(inout) :: gradient(3,mol%n)       !< molecular gradient of IES
 !
 ! ------------------------------------------------------------------------
 !  charge model
@@ -256,7 +265,7 @@ subroutine eeq_chrgeq_core &
 !  for periodic case
 !! ------------------------------------------------------------------------
    integer  :: wscAt
-   real(wp) :: gamii,riw(3),dAtmp(3),stmp(3,3)
+   real(wp) :: gamii,riw(3),dAtmp(3),stmp(3,3),t(3)
    real(wp) :: cf ! convergence factor
    real(wp),parameter :: zero(3) = [0.0_wp,0.0_wp,0.0_wp]
    integer, parameter :: ewaldCutD(3) = [2,2,2]
@@ -280,9 +289,10 @@ subroutine eeq_chrgeq_core &
    integer  :: lwork
    integer  :: info
    real(wp) :: test(1)
+   real(wp),external :: ddot
 
    ! quick return if possible
-   if (mol%nat == 1) then
+   if (mol%n == 1) then
       q = mol%chrg
       ! should always hold, even for extendend systems
       es = 0.0_wp
@@ -292,7 +302,7 @@ subroutine eeq_chrgeq_core &
 ! ------------------------------------------------------------------------
 !  initizialization
 ! ------------------------------------------------------------------------
-   m    = mol%nat+1
+   m    = mol%n+1
    q    = 0.0_wp
    allocate( ipiv(m), source = 0 )
    allocate( Amat(m,m), Xvec(m), Xfac(m), source = 0.0_wp )
@@ -315,7 +325,7 @@ subroutine eeq_chrgeq_core &
 !$omp private(i,tmp) &
 !$omp shared(Xvec,Xfac)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       tmp = chrgeq%kappa(i)/(sqrt(cn(i))+1e-14_wp)
       Xvec(i) = -chrgeq%xi(i) + tmp*cn(i)
       Xfac(i) = 0.5_wp*tmp
@@ -327,11 +337,11 @@ subroutine eeq_chrgeq_core &
    cf = sqrtpi/mol%volume**(1.0_wp/3.0_wp)
    ! build Ewald matrix
 !$omp parallel default(none) &
-!$omp private(i,j,wscAt,riw,gamii,gamij) &
+!$omp private(i,j,wscAt,riw,gamii,gamij,t) &
 !$omp shared(mol,chrgeq,cf) &
 !$omp reduction(+:Amat)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       gamii = 1.0/sqrt(chrgeq%alpha(i)+chrgeq%alpha(i))
       Amat(i,i) = chrgeq%gam(i) + sqrt2pi/sqrt(chrgeq%alpha(i)) &
          ! reciprocal for 0th atom
@@ -340,11 +350,11 @@ subroutine eeq_chrgeq_core &
          + eeq_ewald_3d_dir(zero,ewaldCutD,mol%lattice,gamii,cf) &
          ! neutralizing background contribution
          - pi/mol%volume/cf**2
-      do j = 1, mol%nat
-         if(mol%wsc%at(j,i).eq.0) cycle
+      do j = 1, i-1
          gamij = 1.0_wp/sqrt(chrgeq%alpha(i)+chrgeq%alpha(j))
          do wscAt = 1, mol%wsc%itbl(j,i)
-            riw   = mol%xyz(:,i) - mol%wsc%xyz(:,wscAt,j,i)
+            t = mol%wsc%lattr(:,wscAt,j,i)
+            riw   = mol%xyz(:,i) - mol%xyz(:,j) - matmul(mol%lattice,t)
             Amat(i,j) = Amat(i,j) + mol%wsc%w(j,i) * ( &
                ! reciprocal lattice sums
                + eeq_ewald_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf) &
@@ -353,6 +363,7 @@ subroutine eeq_chrgeq_core &
                ! neutralizing background contribution
                - pi/mol%volume/cf**2 )
          end do
+         Amat(j,i) = Amat(i,j)
       end do
    end do
 !$omp enddo
@@ -364,7 +375,7 @@ subroutine eeq_chrgeq_core &
 !$omp shared(Xvec,Xfac,Amat)
 !$omp do schedule(dynamic)
    ! prepare A matrix
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ! EN of atom i
       do j = 1, i-1
          r = norm2(mol%xyz(:,j) - mol%xyz(:,i))
@@ -378,15 +389,53 @@ subroutine eeq_chrgeq_core &
 !$omp endparallel
    endif
 
+   Amat(m,1:m) = 1.0_wp
+   Amat(1:m,m) = 1.0_wp
+   Amat(m,m  ) = 0.0_wp
+   Xvec(m)     = mol%chrg
+
+! ------------------------------------------------------------------------
+!  invert the A matrix using a Bunch-Kaufman factorization
+!  A⁻¹ = (L·D·L^T)⁻¹ = L^T·D⁻¹·L
+! ------------------------------------------------------------------------
+if (lcpq) then
+   if (lverbose) write(istdout,'(72("="),/,1x,a)') &
+      "A matrix inversion by Bunch-Kaufman factorization"
+   allocate( Ainv(m,m), source = Amat )
+   allocate( Xtmp(m),   source = 0.0_wp )
+
+   ! assume work space query, set best value to test after first dsytrf call
+   call dsytrf('L',m,Ainv,m,ipiv,test,-1,info)
+   lwork=int(test(1))
+   allocate( work(lwork), source = 0.0_wp )
+
+   ! Bunch-Kaufman factorization A = L*D*L**T
+   call dsytrf('L',m,Ainv,m,ipiv,work,lwork,info)
+   if(info > 0)then
+      call raise('E', '(eeq_inversion) DSYTRF failed')
+   endif
+
+   ! A⁻¹ from factorized L matrix, save lower part of A⁻¹ in Ainv matrix
+   ! Ainv matrix is overwritten with lower triangular part of A⁻¹
+   call dsytri('L',m,Ainv,m,ipiv,work,info)
+   if (info > 0) then
+      call raise('E', '(eeq_inversion) DSYTRI failed')
+   endif
+
+   ! symmetrizes A⁻¹ matrix from lower triangular part of inverse matrix
+   do i = 1, m
+      do j = i+1, m
+         Ainv(i,j)=Ainv(j,i)
+      enddo
+   enddo
+
+   call dsymv('u',m,1.0_wp,Ainv,m,Xvec,1,0.0_wp,Xtmp,1)
+else
 ! ------------------------------------------------------------------------
 !  solve the linear equations to obtain partial charges
 ! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "Solve the linear equations to obtain partial charges"
-   Amat(m,1:m) = 1.0_wp
-   Amat(1:m,m) = 1.0_wp
-   Amat(m,m  ) = 0.0_wp
-   Xvec(m)     = mol%chrg
    ! generate temporary copy
    allocate( Atmp(m,m), source = Amat )
    allocate( Xtmp(m),   source = Xvec )
@@ -399,11 +448,12 @@ subroutine eeq_chrgeq_core &
    call dsysv('u',m,1,Atmp,m,ipiv,Xtmp,m,work,lwork,info)
    if(info > 0) call raise('E','(eeq_solve) DSYSV failed')
 
-   q = Xtmp(:mol%nat)
-   if(abs(sum(q)-mol%chrg) > 1.e-6_wp) &
-      call raise('E','(eeq_solve) charge constrain error')
    !print'(3f20.14)',Xtmp
 
+endif
+   q = Xtmp(:mol%n)
+   if(abs(sum(q)-mol%chrg) > 1.e-6_wp) &
+      call raise('E','(eeq_solve) charge constrain error')
    lambda = Xtmp(m)
    if (lverbose) then
       write(istdout,'(72("-"))')
@@ -421,9 +471,8 @@ subroutine eeq_chrgeq_core &
 ! ------------------------------------------------------------------------
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "Isotropic electrostatic (IES) energy calculation"
-   work(:m) = Xvec
-   call dsymv('u',m,0.5_wp,Amat,m,Xtmp,1,-1.0_wp,work,1)
-   es = dot_product(Xtmp,work(:m))
+   call dsymv('u',m,0.5_wp,Amat,m,Xtmp,1,-1.0_wp,Xvec,1)
+   es = ddot(m,Xtmp,1,Xvec,1)
    energy = es + energy
    if (lverbose) then
       write(istdout,'(72("-"))')
@@ -441,28 +490,26 @@ subroutine eeq_chrgeq_core &
 do_molecular_gradient: if (lgrad .or. lcpq) then
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "molecular gradient calculation"
-   allocate( dAmatdr(3,mol%nat,m), dXvecdr(3,mol%nat,m), Afac(3,mol%nat), &
+   allocate( dAmatdr(3,mol%n,m), dXvecdr(3,mol%n,m), Afac(3,mol%n), &
       &      source = 0.0_wp )
-   !allocate( dAmat(3,mol%nat,m), Afac(3,mol%nat), source = 0.0_wp )
+   !allocate( dAmat(3,mol%n,m), Afac(3,mol%n), source = 0.0_wp )
    if (mol%npbc > 0) then
    allocate( dAmatdL(3,3,m), dXvecdL(3,3,m), source = 0.0_wp )
 !$omp parallel default(none) &
 !$omp shared(mol,chrgeq,dcndr,dcndL,Xfac,Xtmp,cf) &
-!$omp private(i,j,wscAt,riw,gamij,dAtmp,stmp) &
+!$omp private(i,j,wscAt,riw,gamij,dAtmp,stmp,t) &
 !$omp shared(dXvecdr,dXvecdL) &
 !$omp reduction(+:Afac,dAmatdr,dAmatdL)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      dXvecdr(:,i,i) = +dcndr(:,i,i)*Xfac(i)
+   do i = 1, mol%n
+      dXvecdr(:,:,i) = +dcndr(:,:,i)*Xfac(i)
       dXvecdL(:,:,i) = +dcndL(:,:,i)*Xfac(i)
       do j = 1, i-1
-         dXvecdr(:,j,i) = +dcndr(:,i,j)*Xfac(i)
-         dXvecdr(:,i,j) = +dcndr(:,j,i)*Xfac(j)
-         if(mol%wsc%at(j,i).eq.0) cycle
          ! over WSC partner
          gamij = 1.0_wp/sqrt(chrgeq%alpha(i) + chrgeq%alpha(j))
          do wscAt = 1, mol%wsc%itbl(j,i)
-            riw = mol%xyz(:,i) - mol%wsc%xyz(:,wscAt,j,i)
+            t = mol%wsc%lattr(:,wscAt,j,i)
+            riw = mol%xyz(:,i) - mol%xyz(:,j) - matmul(mol%lattice,t)
             call eeq_ewald_dx_3d_rec(riw,ewaldCutR,mol%rec_lat,mol%volume,cf, &
                &                     dAtmp,stmp)
             dAtmp = dAtmp*mol%wsc%w(j,i)
@@ -506,11 +553,9 @@ do_molecular_gradient: if (lgrad .or. lcpq) then
 !$omp shared(dXvecdr,dAmatdr) &
 !$omp reduction(+:Afac)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      dXvecdr(:,i,i) = +dcndr(:,i,i)*Xfac(i) ! merge dX and dA for speedup
+   do i = 1, mol%n
+      dXvecdr(:,:,i) = +dcndr(:,:,i)*Xfac(i) ! merge dX and dA for speedup
       do j = 1, i-1
-         dXvecdr(:,j,i) = dcndr(:,i,j)*Xfac(i)
-         dXvecdr(:,i,j) = dcndr(:,j,i)*Xfac(j)
          rij = mol%xyz(:,i) - mol%xyz(:,j)
          r2 = sum(rij**2)
          gamij = 1.0_wp/sqrt(chrgeq%alpha(i) + chrgeq%alpha(j))
@@ -528,8 +573,8 @@ do_molecular_gradient: if (lgrad .or. lcpq) then
 endif do_molecular_gradient
 
    if (lgrad) then
-   call dgemv('n',3*mol%nat,m,+1.0_wp,dAmatdr,3*mol%nat,Xtmp,1,1.0_wp,gradient,1)
-   call dgemv('n',3*mol%nat,m,-1.0_wp,dXvecdr,3*mol%nat,Xtmp,1,1.0_wp,gradient,1)
+   call dgemv('n',3*mol%n,m,+1.0_wp,dAmatdr,3*mol%n,Xtmp,1,1.0_wp,gradient,1)
+   call dgemv('n',3*mol%n,m,+1.0_wp,dXvecdr,3*mol%n,Xtmp,1,1.0_wp,gradient,1)
    if (mol%npbc > 0) then
       call dgemv('n',3*3,m,+0.5_wp,dAmatdL,3*3,Xtmp,1,1.0_wp,sigma,1)
       call dgemv('n',3*3,m,-1.0_wp,dXvecdL,3*3,Xtmp,1,1.0_wp,sigma,1)
@@ -537,66 +582,30 @@ endif do_molecular_gradient
    endif
 
 ! ------------------------------------------------------------------------
-!  invert the A matrix using a Bunch-Kaufman factorization
-!  A⁻¹ = (L·D·L^T)⁻¹ = L^T·D⁻¹·L
-! ------------------------------------------------------------------------
-do_partial_charge_derivative: if (lcpq) then
-   if (lverbose) write(istdout,'(72("="),/,1x,a)') &
-      "A matrix inversion by Bunch-Kaufman factorization"
-   allocate( Ainv(m,m), source = Amat )
-
-   ! assume work space query, set best value to test after first dsytrf call
-   call dsytrf('L',m,Ainv,m,ipiv,test,-1,info)
-   if (int(test(1)) > lwork) then
-      deallocate(work)
-      lwork=int(test(1))
-      allocate( work(lwork), source = 0.0_wp )
-   endif
-
-   ! Bunch-Kaufman factorization A = L*D*L**T
-   call dsytrf('L',m,Ainv,m,ipiv,work,lwork,info)
-   if(info > 0)then
-      call raise('E', '(eeq_inversion) DSYTRF failed')
-   endif
-
-   ! A⁻¹ from factorized L matrix, save lower part of A⁻¹ in Ainv matrix
-   ! Ainv matrix is overwritten with lower triangular part of A⁻¹
-   call dsytri('L',m,Ainv,m,ipiv,work,info)
-   if (info > 0) then
-      call raise('E', '(eeq_inversion) DSYTRI failed')
-   endif
-
-   ! symmetrizes A⁻¹ matrix from lower triangular part of inverse matrix
-   do i = 1, m
-      do j = i+1, m
-         Ainv(i,j)=Ainv(j,i)
-      enddo
-   enddo
-
-! ------------------------------------------------------------------------
 !  calculate gradient of the partial charge w.r.t. the nuclear coordinates
 ! ------------------------------------------------------------------------
+do_partial_charge_derivative: if (lcpq) then
    if (lverbose) write(istdout,'(72("="),/,1x,a)') &
       "calculating the derivative of the partial charges"
    dqdr = 0.0_wp
    if (mol%npbc > 0) then
       dqdL = 0.0_wp
    endif
-   do i = 1, mol%nat
+   do i = 1, mol%n
       dAmatdr(:,i,i) = Afac(:,i) + dAmatdr(:,i,i)
    enddo
-   !call dsymm('r','l',3*mol%nat,m,-1.0_wp,Ainv,m,dAmatdr,3*mol%nat,1.0_wp,dqdr,3*mol%nat)
-   call dgemm('n','n',3*mol%nat,m,m,-1.0_wp,dAmatdr,3*mol%nat,Ainv,m,1.0_wp, &
-      &       dqdr,3*mol%nat)
-   call dgemm('n','n',3*mol%nat,m,m,+1.0_wp,dXvecdr,3*mol%nat,Ainv,m,1.0_wp, &
-      &       dqdr,3*mol%nat)
+   !call dsymm('r','l',3*mol%n,m,-1.0_wp,Ainv,m,dAmatdr,3*mol%n,1.0_wp,dqdr,3*mol%n)
+   call dgemm('n','n',3*mol%n,m,m,-1.0_wp,dAmatdr,3*mol%n,Ainv,m,1.0_wp, &
+      &       dqdr,3*mol%n)
+   call dgemm('n','n',3*mol%n,m,m,-1.0_wp,dXvecdr,3*mol%n,Ainv,m,1.0_wp, &
+      &       dqdr,3*mol%n)
 
    if (mol%npbc > 0) then
       call dgemm('n','n',3*3,m,m,-1.0_wp,dAmatdL,3*3,Ainv,m,1.0_wp,dqdL,3*3)
       call dgemm('n','n',3*3,m,m,+1.0_wp,dXvecdL,3*3,Ainv,m,1.0_wp,dqdL,3*3)
    endif
    !print'(/,"analytical gradient")'
-   !print'(3f20.14)',dqdr(:,:,:mol%nat)
+   !print'(3f20.14)',dqdr(:,:,:mol%n)
 
 endif do_partial_charge_derivative
 
@@ -762,7 +771,5 @@ pure subroutine eeq_ewald_dx_3d_rec(riw,rep,rlat,vol,cf,dAmat,sigma)
          & + (2.0_wp/rik2 + 0.5_wp/cf**2) * outer_prod_3x3(rik,rik))
    end do
 end subroutine eeq_ewald_dx_3d_rec
-
-
 
 end module eeq_model

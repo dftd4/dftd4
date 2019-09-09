@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! xtb is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! xtb is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+
 !> provides DFT-D4 dispersion
 module dftd4
    use iso_fortran_env, only : wp => real64
@@ -5,7 +22,7 @@ module dftd4
 !! ========================================================================
 !  mix in the covalent coordination number from the ncoord module
 !  also get the CN-Parameters to inline the CN-derivative in the gradient
-   use coordination_number, only : covncoord => ncoord_d4, kn,k1,k4,k5,k6
+   use coordination_number, only : kn,k1,k4,k5,k6
    use class_param, only : dftd_parameter
    implicit none
 
@@ -188,7 +205,7 @@ module dftd4
    real(wp),dimension(17)       :: seccnd3
    real(wp),dimension(23,17)    :: secaiw
 
-   include 'param_ref.f90'
+   include 'param_ref.inc'
 
 contains
 
@@ -207,14 +224,14 @@ subroutine prmolc6(mol,molc6,molc8,molpol,  &
    real(wp),intent(in)  :: molc6    !< molecular C6 coefficient in au
    real(wp),intent(in)  :: molc8    !< molecular C8 coefficient in au
    real(wp),intent(in)  :: molpol   !< molecular static dipole polarizibility
-   real(wp),intent(in),optional :: cn(mol%nat)
-   real(wp),intent(in),optional :: covcn(mol%nat)
-   real(wp),intent(in),optional :: q(mol%nat)
-   real(wp),intent(in),optional :: qlmom(3,mol%nat)
-   real(wp),intent(in),optional :: c6ab(mol%nat,mol%nat)
-   real(wp),intent(in),optional :: alpha(mol%nat)
-   real(wp),intent(in),optional :: rvdw(mol%nat)
-   real(wp),intent(in),optional :: hvol(mol%nat)
+   real(wp),intent(in),optional :: cn(mol%n)
+   real(wp),intent(in),optional :: covcn(mol%n)
+   real(wp),intent(in),optional :: q(mol%n)
+   real(wp),intent(in),optional :: qlmom(3,mol%n)
+   real(wp),intent(in),optional :: c6ab(mol%n,mol%n)
+   real(wp),intent(in),optional :: alpha(mol%n)
+   real(wp),intent(in),optional :: rvdw(mol%n)
+   real(wp),intent(in),optional :: hvol(mol%n)
    integer :: i
    if(present(cn).or.present(covcn).or.present(q).or.present(c6ab) &
    &   .or.present(alpha).or.present(rvdw).or.present(hvol)) then
@@ -231,7 +248,7 @@ subroutine prmolc6(mol,molc6,molc8,molpol,  &
    if(present(rvdw)) write(id,'(''    RvdW/Å'')',advance='no')
    if(present(hvol)) write(id,'(''    relVol'')',advance='no')
    write(*,'(a)')
-   do i=1,mol%nat
+   do i=1,mol%n
       write(*,'(i11,1x,i3,1x,a2)',advance='no') &
       &     i,mol%at(i),mol%sym(i)
       if(present(cn))   write(id,'(f10.3)',advance='no')cn(i)
@@ -266,7 +283,7 @@ subroutine mdisp(mol,ndim,q,g_a,g_c, &
    implicit none
    type(molecule),intent(in) :: mol   !< molecular structure information
    integer, intent(in)  :: ndim       !< dimension of reference systems
-   real(wp),intent(in)  :: q(mol%nat) !< partial charges
+   real(wp),intent(in)  :: q(mol%n) !< partial charges
    real(wp),intent(in)  :: g_a        !< charge scaling height
    real(wp),intent(in)  :: g_c        !< charge scaling steepness
    real(wp),intent(in)  :: gw(ndim)
@@ -274,10 +291,10 @@ subroutine mdisp(mol,ndim,q,g_a,g_c, &
    real(wp),intent(out) :: molc6  !< molecular C6 coefficient in au
    real(wp),intent(out) :: molc8  !< molecular C8 coefficient in au
    real(wp),intent(out) :: molpol !< molecular static dipole polarizibility
-   real(wp),intent(out),optional :: aout(23,mol%nat)
-   real(wp),intent(out),optional :: cout(mol%nat,mol%nat)
-   real(wp),intent(out),optional :: rout(mol%nat)
-   real(wp),intent(out),optional :: vout(mol%nat)
+   real(wp),intent(out),optional :: aout(23,mol%n)
+   real(wp),intent(out),optional :: cout(mol%n,mol%n)
+   real(wp),intent(out),optional :: rout(mol%n)
+   real(wp),intent(out),optional :: vout(mol%n)
 
    integer  :: i,ii,ia,j,ja,k
    integer, allocatable :: itbl(:,:)
@@ -289,16 +306,16 @@ subroutine mdisp(mol,ndim,q,g_a,g_c, &
    real(wp),allocatable :: aw(:,:)
    parameter (oth=1._wp/3._wp)
 
-   allocate( zetvec(ndim),rvdw(mol%nat),phv(mol%nat),c6ab(mol%nat,mol%nat), &
-   &         aw(23,mol%nat),  source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( zetvec(ndim),rvdw(mol%n),phv(mol%n),c6ab(mol%n,mol%n), &
+   &         aw(23,mol%n),  source = 0.0_wp )
+   allocate( itbl(7,mol%n), source = 0 )
 
    molc6  = 0._wp
    molc8  = 0._wp
    molpol = 0._wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       iz = zeff(ia)
       do ii = 1, refn(ia)
@@ -343,7 +360,7 @@ subroutine prd4ref(mol)
    printed = .false.
 
    write(istdout,'(a)')
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       if (printed(ia)) cycle
       write(istdout,'(a3,1x,a10,1x,a14,1x,a14,1x,a15)') mol%sym(i), &
@@ -662,7 +679,7 @@ subroutine d4init(mol,g_a,g_c,mode,ndim)
    refal = 0.0_wp
 
 !* set up refc und refal, also obtain the dimension of the dispmat
-   do i = 1, mol%nat
+   do i = 1, mol%n
       cncount = 0
       cncount(0) = 1
       ia = mol%at(i)
@@ -695,7 +712,7 @@ subroutine d4dim(mol,ndim)
 
    ndim = 0
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ndim = ndim + refn(mol%at(i))
    enddo
 
@@ -711,7 +728,7 @@ subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,refc6)
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim     !< calculation dimension
    real(wp),intent(in)  :: wf,g_a,g_c
-   real(wp),intent(in)  :: covcn(mol%nat)  !< covalent coordination number
+   real(wp),intent(in)  :: covcn(mol%n)  !< covalent coordination number
    real(wp),intent(out) :: gw(ndim)
    real(wp),intent(out) :: refc6(ndim,ndim)
 
@@ -721,20 +738,20 @@ subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,refc6)
 
    intrinsic :: maxval
 
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( itbl(7,mol%n), source = 0 )
 
    gw = 0._wp
    refc6 = 0._wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do ii = 1, refn(mol%at(i))
          k = k+1
          itbl(ii,i) = k
       enddo
    enddo
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       norm = 0.0_wp
       do ii = 1, refn(ia)
@@ -797,19 +814,19 @@ pure subroutine build_dispmat(mol,ndim,par,refc6,dispmat)
    real(wp) :: refc8,refc10,r,oor6,oor8,oor10,cutoff
    real(wp), parameter :: rthr = 72.0_wp ! slightly larger than in gradient
 
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( itbl(7,mol%n), source = 0 )
 
    dispmat = 0.0_wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do ii = 1, refn(mol%at(i))
          k = k + 1
          itbl(ii,i) = k
       enddo
    enddo
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -857,19 +874,19 @@ subroutine build_wdispmat(mol,ndim,par,refc6,gw,wdispmat)
    real(wp), parameter :: rthr = 72.0_wp ! slightly larger than in gradient
    real(wp), parameter :: gwcut = 1.0e-7_wp
 
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( itbl(7,mol%n), source = 0 )
 
    wdispmat = 0.0_wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do ii = 1, refn(mol%at(i))
          k = k + 1
          itbl(ii,i) = k
       enddo
    enddo
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -913,11 +930,11 @@ subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
    implicit none
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: q(mol%nat)
+   real(wp),intent(in)  :: q(mol%n)
    real(wp),intent(in)  :: g_a,g_c
    real(wp),intent(in)  :: wdispmat(ndim,ndim)
    real(wp),intent(in)  :: gw(ndim)
-   real(wp),intent(out) :: hdisp(mol%nat)
+   real(wp),intent(out) :: hdisp(mol%n)
 
    integer  :: i,ii,k,ia
    real(wp) :: iz
@@ -936,7 +953,7 @@ subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
    hdisp   = 0.0_wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
        ia = mol%at(i)
        iz = zeff(ia)
        do ii = 1, refn(ia)
@@ -952,7 +969,7 @@ subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
 !  &     1,0._wp,dumvec,1)
 !  get atomic reference contributions
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       hdisp(i) = sum(dumvec(k+1:k+refn(ia))*zerovec(k+1:k+refn(ia)))
       k = k + refn(ia)
@@ -968,7 +985,7 @@ function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
    implicit none
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: q(mol%nat)
+   real(wp),intent(in)  :: q(mol%n)
    real(wp),intent(in)  :: g_a,g_c
    real(wp),intent(in)  :: wdispmat(ndim,ndim)
    real(wp),intent(in)  :: gw(ndim)
@@ -987,7 +1004,7 @@ function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
    ed = 0.0_wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
        ia = mol%at(i)
        iz = zeff(ia)
        do ii = 1, refn(ia)
@@ -1006,133 +1023,6 @@ function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
 
 end function edisp_scc
 
-!> calculate D4 dispersion energy
-subroutine edisp(mol,ndim,q,par,g_a,g_c, &
-           &     gw,refc6,mbd,E,aout,etwo,emany)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   integer, intent(in)  :: ndim     !< calculation dimension
-   real(wp),intent(in)  :: q(mol%nat) !< partial charges
-   type(dftd_parameter),intent(in) :: par !< damping parameters
-   real(wp),intent(in)  :: g_a !< charge scale height
-   real(wp),intent(in)  :: g_c !< charge scale steepness
-   real(wp),intent(in)  :: gw(ndim) !< gaussian weights for references
-   real(wp),intent(in)  :: refc6(ndim,ndim) !< reference C6 coefficients
-   integer, intent(in)  :: mbd !< type of non-additivity correction
-   real(wp),intent(out) :: E !< energy from gradient calculation
-   real(wp),intent(out),optional :: aout(23,mol%nat) !< dipole polarizibilities
-   real(wp),intent(out),optional :: etwo
-   real(wp),intent(out),optional :: emany
-
-   integer  :: i,ii,ia,k,ij,l,j,jj,ja
-   integer, allocatable :: itbl(:,:)
-   real(wp) :: Embd,c6ij,c6ij_ns,oor6,oor8,oor10,cutoff,iz,r
-   real(wp),allocatable :: zetvec(:)
-   real(wp),allocatable :: zerovec(:)
-   real(wp),allocatable :: c6ab(:)
-   real(wp),allocatable :: aw(:,:)
-   real(wp),allocatable :: oor6ab(:,:)
-
-   intrinsic :: present,sqrt,sum
-
-   allocate( zetvec(ndim),aw(23,mol%nat),oor6ab(mol%nat,mol%nat), &
-   &         zerovec(ndim),c6ab(mol%nat*(mol%nat+1)/2), &
-   &         source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
-
-   e = 0.0_wp
-
-   k = 0
-   do i = 1, mol%nat
-      do ii = 1, refn(mol%at(i))
-         k = k + 1
-         itbl(ii,i) = k
-      enddo
-   enddo
-
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      iz = zeff(ia)
-      do ii = 1, refn(ia)
-         k = itbl(ii,i)
-         zetvec(k) = gw(k) * zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz)
-         zerovec(k) = gw(k) * zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz)
-         aw(:,i) = aw(:,i) + zerovec(k) * refal(:,ii,ia)
-      enddo
-   enddo
-
-!$OMP parallel private(i,j,ia,ja,ij,k,l,r,oor6,oor8,oor10,cutoff,c6ij,c6ij_ns) &
-!$omp&         shared(c6ab) reduction(-:E)
-!$omp do schedule(dynamic)
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-         r = norm2(mol%xyz(:,i)-mol%xyz(:,j))
-!        r2 = sum( (mol%xyz(:,i)-mol%xyz(:,j))**2 )
-         cutoff = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-!        oor6 = 1._wp/(r2**3 + cutoff**6)
-         oor6 = fdmpr_bj( 6,r,cutoff)
-         oor6ab(i,j) = oor6
-         oor6ab(j,i) = oor6
-!        oor8  = 1._wp/(r2**4 + cutoff**8)
-!        oor10 = 1._wp/(r2**5 + cutoff**10)
-         oor8  = fdmpr_bj( 8,r,cutoff)
-         oor10 = fdmpr_bj(10,r,cutoff)
-         c6ij_ns = 0.0_wp
-         c6ij = 0.0_wp
-         do ii = 1, refn(ia)
-            k = itbl(ii,i)
-            do jj = 1, refn(ja)
-               l = itbl(jj,j)
-               c6ij_ns = c6ij_ns + zerovec(k)*zerovec(l)*refc6(k,l)
-               c6ij = c6ij + zetvec(k)*zetvec(l)*refc6(k,l)
-            enddo
-         enddo
-         c6ab(ij) = c6ij_ns
-         E = E - c6ij*(par%s6*oor6 + par%s8*3._wp*r4r2(ia)*r4r2(ja)*oor8 &
-         &      + par%s10*49.0_wp/40._wp*(3.0_wp*r4r2(ia)*r4r2(ja))**2*oor10 )
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
-
-   if (present(Etwo)) Etwo = E
-
-   select case(mbd)
-   case(p_mbd_rpalike) ! full RPA-like MBD
-!     print'(1x,''* MBD effects calculated by RPA like scheme'')'
-      call dispmb(mol,Embd,aw,oor6ab)
-      Embd = par%s9*Embd
-      E = E + Embd
-   case(p_mbd_exact_atm) ! Axilrod-Teller-Muto three-body term
-!     print'(1x,''* MBD effects calculated by ATM formula'')'
-      call dispabc(mol,aw,par,Embd)
-      E = E + Embd
-   case(p_mbd_approx_atm) ! D3-like approximated ATM term
-!     print'(1x,''* MBD effects approximated by ATM formula'')'
-      call apprabc(mol,c6ab,par,Embd)
-      E = E + Embd
-   case default
-      Embd = 0.0_wp
-   end select
-
-   if (present(Emany)) Emany = Embd
-
-   if (present(aout)) then
-      aout = 0._wp
-      do i = 1, mol%nat
-         ia = mol%at(i)
-         do ii = 1, refn(ia)
-            aout(:,i) = aout(:,i) + zetvec(k) * refal(:,ii,ia)
-         enddo
-      enddo
-   endif
-
-end subroutine edisp
-
 !> compute D4 gradient
 subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
            &        par,wf,g_a,g_c, &
@@ -1145,13 +1035,13 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
    !> calculation dimension
    integer, intent(in)  :: ndim
    !> partial charges
-   real(wp),intent(in)  :: q(mol%nat)
+   real(wp),intent(in)  :: q(mol%n)
    !> derivative of partial charges w.r.t. nuclear coordinates
-   real(wp),intent(in)  :: dqdr(3,mol%nat,mol%nat)
+   real(wp),intent(in)  :: dqdr(3,mol%n,mol%n)
    !> coordination number
-   real(wp),intent(in)  :: cn(mol%nat)
+   real(wp),intent(in)  :: cn(mol%n)
    !> derivative of CNs w.r.t. nuclear coordinates
-   real(wp),intent(in)  :: dcndr(3,mol%nat,mol%nat)
+   real(wp),intent(in)  :: dcndr(3,mol%n,mol%n)
    !> damping parameters
    type(dftd_parameter),intent(in) :: par
    !> gaussian weighting factor
@@ -1166,11 +1056,11 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
    !> type of non-additivity correction
    integer, intent(in)  :: mbd
    !> molecular gradient
-   real(wp),intent(inout)        :: g(3,mol%nat)
+   real(wp),intent(inout)        :: g(3,mol%n)
    !> energy from gradient calculation
    real(wp),intent(out),optional :: eout
    !> dipole polarizibilities
-   real(wp),intent(out),optional :: aout(23,mol%nat)
+   real(wp),intent(out),optional :: aout(23,mol%n)
 
    integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
    integer, allocatable :: itbl(:,:)
@@ -1205,18 +1095,18 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
    intrinsic :: present,sqrt,sum,maxval,exp,abs
 
 !  print'(" * Allocating local memory")'
-   allocate( dc6dr(mol%nat*(mol%nat+1)/2),dc6dcn(mol%nat),  &
-   &         r2ab(mol%nat*(mol%nat+1)/2),zvec(ndim),dzvec(ndim),  &
-   &         gw(ndim),dgw(ndim),dc6dq(mol%nat),dzdq(ndim),  &
+   allocate( dc6dr(mol%n*(mol%n+1)/2),dc6dcn(mol%n),  &
+   &         r2ab(mol%n*(mol%n+1)/2),zvec(ndim),dzvec(ndim),  &
+   &         gw(ndim),dgw(ndim),dc6dq(mol%n),dzdq(ndim),  &
    &         source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( itbl(7,mol%n), source = 0 )
 
    ed = 0.0_wp
 
 !  precalc
 !  print'(" * Setting up index table")'
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do ii = 1, refn(mol%at(i))
          k = k+1
          itbl(ii,i) = k
@@ -1229,7 +1119,7 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 !$omp shared (mol,refn,refc,refcovcn,itbl,refq,wf,cn,g_a,g_c,q) &
 !$omp shared (gw,dgw,zvec,dzvec,dzdq)
 !$omp do
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       iz = zeff(ia)
       norm  = 0.0_wp
@@ -1287,7 +1177,7 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 !$omp shared(mol,refn,itbl,zvec,dzvec,refc6,par,dzdq) &
 !$omp shared(r2ab) reduction(+:dc6dr,dc6dcn,dc6dq,ed)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -1379,7 +1269,7 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 !$omp         expterm,dtmp) reduction(+:g) &
 !$omp shared(mol,dc6dr,dc6dcn,dcndr)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -1397,8 +1287,8 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 !$omp enddo
 !$omp end parallel
 
-   call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dqdr,3*mol%nat,dc6dq,1,1.0_wp,g,1)
-   call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dcndr,3*mol%nat,dc6dcn,1,1.0_wp,g,1)
+   call dgemv('n',3*mol%n,mol%n,-1.0_wp,dqdr,3*mol%n,dc6dq,1,1.0_wp,g,1)
+   call dgemv('n',3*mol%n,mol%n,-1.0_wp,dcndr,3*mol%n,dc6dcn,1,1.0_wp,g,1)
 
 !  print*,ed,eabc
 
@@ -1407,7 +1297,7 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 
    if (present(aout)) then
       aout = 0._wp
-      do i = 1, mol%nat
+      do i = 1, mol%n
          ia = mol%at(i)
          do ii = 1, refn(ia)
             aout(:,i) = aout(:,i) + zvec(k) * refal(:,ii,ia)
@@ -1423,7 +1313,7 @@ subroutine apprabc(mol,c6ab,par,E)
    use class_molecule
    implicit none
    type(molecule),intent(in) :: mol !< molecular structure information
-   real(wp),intent(in)  :: c6ab(mol%nat*(mol%nat+1)/2)
+   real(wp),intent(in)  :: c6ab(mol%n*(mol%n+1)/2)
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(out) :: E
 
@@ -1439,7 +1329,7 @@ subroutine apprabc(mol,c6ab,par,E)
 
    E = 0.0_wp
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -1478,7 +1368,7 @@ subroutine dispabc(mol,aw,par,E)
    use class_molecule
    implicit none
    type(molecule),intent(in) :: mol !< molecular structure information
-   real(wp),intent(in)  :: aw(23,mol%nat)
+   real(wp),intent(in)  :: aw(23,mol%n)
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(out) :: E
 
@@ -1494,7 +1384,7 @@ subroutine dispabc(mol,aw,par,E)
 
    E = 0.0_wp
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -1534,7 +1424,7 @@ subroutine abcappr(mol,ndim,g_a,g_c,par,gw,r2ab,refc6,eabc)
    real(wp),intent(in)  :: g_a,g_c
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(in)  :: gw(ndim)
-   real(wp),intent(in)  :: r2ab(mol%nat*(mol%nat+1)/2)
+   real(wp),intent(in)  :: r2ab(mol%n*(mol%n+1)/2)
    real(wp),intent(in)  :: refc6(ndim,ndim)
    real(wp),intent(out) :: eabc
 
@@ -1563,15 +1453,15 @@ subroutine abcappr(mol,ndim,g_a,g_c,par,gw,r2ab,refc6,eabc)
 
    intrinsic :: sqrt
 
-   allocate( c6ab(mol%nat*(mol%nat+1)/2),zvec(ndim),c(mol%nat*(mol%nat+1)/2),  &
+   allocate( c6ab(mol%n*(mol%n+1)/2),zvec(ndim),c(mol%n*(mol%n+1)/2),  &
    &         source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( itbl(7,mol%n), source = 0 )
 
    eabc = 0.0_wp
 
 !  precalc
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       iz = zeff(ia)
       do ii = 1, refn(ia)
@@ -1585,7 +1475,7 @@ subroutine abcappr(mol,ndim,g_a,g_c,par,gw,r2ab,refc6,eabc)
 !$OMP parallel private(i,ia,j,ja,ij,r2ij,c6ij)  &
 !$omp&         shared (c6ab,c)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
 !        if(i.eq.j) cycle
@@ -1619,7 +1509,7 @@ subroutine abcappr(mol,ndim,g_a,g_c,par,gw,r2ab,refc6,eabc)
 !$omp&                 c9ijk,oor9ijk) &
 !$omp&         reduction(+:eabc)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -1670,13 +1560,13 @@ subroutine dabcappr(mol,ndim,par,r2ab,zvec,dzvec,refc6,itbl,dc6dr,dc6dcn,eout)
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: r2ab(mol%nat*(mol%nat+1)/2)
+   real(wp),intent(in)  :: r2ab(mol%n*(mol%n+1)/2)
    real(wp),intent(in)  :: zvec(ndim)
    real(wp),intent(in)  :: dzvec(ndim)
    real(wp),intent(in)  :: refc6(ndim,ndim)
-   integer, intent(in)  :: itbl(7,mol%nat)
-   real(wp),intent(inout)        :: dc6dr(mol%nat*(mol%nat+1)/2)
-   real(wp),intent(inout)        :: dc6dcn(mol%nat)
+   integer, intent(in)  :: itbl(7,mol%n)
+   real(wp),intent(inout)        :: dc6dr(mol%n*(mol%n+1)/2)
+   real(wp),intent(inout)        :: dc6dcn(mol%n)
    real(wp),intent(out),optional :: eout
 
    integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
@@ -1704,7 +1594,7 @@ subroutine dabcappr(mol,ndim,par,r2ab,zvec,dzvec,refc6,itbl,dc6dr,dc6dcn,eout)
 
    intrinsic :: present,sqrt
 
-   allocate( c6ab(mol%nat*(mol%nat+1)/2),dc6ab(mol%nat,mol%nat),  &
+   allocate( c6ab(mol%n*(mol%n+1)/2),dc6ab(mol%n,mol%n),  &
    &         source = 0.0_wp )
 
    eabc = 0.0_wp
@@ -1714,7 +1604,7 @@ subroutine dabcappr(mol,ndim,par,r2ab,zvec,dzvec,refc6,itbl,dc6dr,dc6dcn,eout)
 !$omp shared (mol,r2ab,refn,itbl,refc6,zvec,dzvec) &
 !$omp shared (c6ab,dc6ab)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
 !        if(i.eq.j) cycle
@@ -1756,7 +1646,7 @@ subroutine dabcappr(mol,ndim,par,r2ab,zvec,dzvec,refc6,itbl,dc6dr,dc6dcn,eout)
 !$omp shared(mol,r2ab,par,c6ab,dc6ab) &
 !$omp reduction(+:eabc,dc6dr,dc6dcn)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
          ja = mol%at(j)
@@ -1868,11 +1758,11 @@ subroutine dabcgrad(mol,ndim,par,dcndr,zvec,dzvec,itbl,g,eout)
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: dcndr(mol%nat,mol%nat)
+   real(wp),intent(in)  :: dcndr(mol%n,mol%n)
    real(wp),intent(in)  :: zvec(ndim)
    real(wp),intent(in)  :: dzvec(ndim)
-   integer, intent(in)  :: itbl(7,mol%nat)
-   real(wp),intent(inout)        :: g(3,mol%nat)
+   integer, intent(in)  :: itbl(7,mol%n)
+   real(wp),intent(inout)        :: g(3,mol%n)
    real(wp),intent(out),optional :: eout
 
    integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
@@ -1912,7 +1802,7 @@ subroutine dabcgrad(mol,ndim,par,dcndr,zvec,dzvec,itbl,g,eout)
 !$omp&         x1,x2,x3,x4,x5,x6,x7,x8,x9) &
 !$omp&         reduction(+:g,eabc)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       do j = 1, i-1
 !        if(i.eq.j) cycle
@@ -2067,8 +1957,8 @@ subroutine dispmb(mol,E,aw,oor6ab)
    use class_molecule
    implicit none
    type(molecule),intent(in) :: mol !< molecular structure information
-   real(wp),intent(in)  :: aw(23,mol%nat)
-   real(wp),intent(in)  :: oor6ab(mol%nat,mol%nat)
+   real(wp),intent(in)  :: aw(23,mol%n)
+   real(wp),intent(in)  :: oor6ab(mol%n,mol%n)
    real(wp),intent(out) :: E
 
    integer  :: i,j,ii,jj,k
@@ -2085,18 +1975,18 @@ subroutine dispmb(mol,E,aw,oor6ab)
 
    intrinsic :: sum,sqrt,minval,log
 
-   allocate( T(3*mol%nat,3*mol%nat),  A(3*mol%nat,3*mol%nat), AT(3*mol%nat,3*mol%nat), &
-   &         F(3*mol%nat,3*mol%nat), F_(3*mol%nat,3*mol%nat),  d(3*mol%nat), &
-   &         w(12*mol%nat), &
+   allocate( T(3*mol%n,3*mol%n),  A(3*mol%n,3*mol%n), AT(3*mol%n,3*mol%n), &
+   &         F(3*mol%n,3*mol%n), F_(3*mol%n,3*mol%n),  d(3*mol%n), &
+   &         w(12*mol%n), &
    &         source = 0.0_wp )
 
    spur = 0.0_wp
 
-   do i = 1, 3*mol%nat
+   do i = 1, 3*mol%n
       F(i,i) = 1.0_wp
    enddo
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do j  = 1, i-1
          r  = mol%xyz(:,j) - mol%xyz(:,i)
          r2 = sum(r**2)
@@ -2113,11 +2003,11 @@ subroutine dispmb(mol,E,aw,oor6ab)
       enddo
    enddo
 
-   !call prmat(6,T,3*mol%nat,3*mol%nat,'T')
+   !call prmat(6,T,3*mol%n,3*mol%n,'T')
 
    do k = 1, 23
       A = 0.0_wp
-      do i =  1, mol%nat
+      do i =  1, mol%n
          alpha = sqrt(aw(k,i))
          A(3*i-2,3*i-2) = alpha
          A(3*i-1,3*i-1) = alpha
@@ -2125,15 +2015,15 @@ subroutine dispmb(mol,E,aw,oor6ab)
       enddo
 
       AT  = 0.0_wp
-      call dgemm('N','N',3*mol%nat,3*mol%nat,3*mol%nat,1.0_wp,A,3*mol%nat,T, &
-  &             3*mol%nat,0.0_wp,F_,3*mol%nat)
-      call dgemm('N','N',3*mol%nat,3*mol%nat,3*mol%nat,1.0_wp,F_,3*mol%nat,A, &
-  &             3*mol%nat,0.0_wp,AT,3*mol%nat)
+      call dgemm('N','N',3*mol%n,3*mol%n,3*mol%n,1.0_wp,A,3*mol%n,T, &
+  &             3*mol%n,0.0_wp,F_,3*mol%n)
+      call dgemm('N','N',3*mol%n,3*mol%n,3*mol%n,1.0_wp,F_,3*mol%n,A, &
+  &             3*mol%n,0.0_wp,AT,3*mol%n)
 
       F_ = F - AT
 
       d = 0.0_wp
-      call dsyev('N','U',3*mol%nat,F_,3*mol%nat,d,w,12*mol%nat,info)
+      call dsyev('N','U',3*mol%n,F_,3*mol%n,d,w,12*mol%n,info)
       if (info.ne.0) then
 !        call raise('W','MBD eigenvalue not solvable')
          print'(1x,''* MBD eigenvalue not solvable'')'
@@ -2147,13 +2037,13 @@ subroutine dispmb(mol,E,aw,oor6ab)
          return
       endif
 
-      call dgemm('N','N',3*mol%nat,3*mol%nat,3*mol%nat,1.0_wp,AT,3*mol%nat,AT, &
-  &             3*mol%nat,0.0_wp,F_,3*mol%nat)
-!     call dgemm('N','N',3*mol%nat,3*mol%nat,3*mol%nat,1.0_wp,F_,3*mol%nat,AT, &
-! &             3*mol%nat,0.0_wp,A,3*mol%nat)
+      call dgemm('N','N',3*mol%n,3*mol%n,3*mol%n,1.0_wp,AT,3*mol%n,AT, &
+  &             3*mol%n,0.0_wp,F_,3*mol%n)
+!     call dgemm('N','N',3*mol%n,3*mol%n,3*mol%n,1.0_wp,F_,3*mol%n,AT, &
+! &             3*mol%n,0.0_wp,A,3*mol%n)
 
       d_ = 1.0_wp; d2 = 0.0_wp!; d3 = 0.0_wp
-      do i = 1, 3*mol%nat
+      do i = 1, 3*mol%n
          d_ = d_ * d(i)
          d2 = d2 - F_(i,i)
 !        d3 = d3 - A(i,i)
@@ -2201,15 +2091,16 @@ function lmbd2string(lmbd) result(string)
 end function lmbd2string
 
 !> compute D4 energy under periodic boundary conditions
-subroutine edisp_3d(mol,ndim,q,rep,mbd_rep,r_thr,mbd_thr,par,g_a,g_c, &
+subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
       &             gw,refc6,mbd,ed,etwo,embd)
    use iso_fortran_env, only : wp => real64
    use class_molecule
+   use pbc_tools, only: get_realspace_cutoff
    implicit none
    type(molecule),intent(in) :: mol
    integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: q(mol%nat)
-   integer, intent(in)  :: rep(3),mbd_rep(3)
+   real(wp),intent(in)  :: q(mol%n)
+   integer              :: rep(3),mbd_rep(3)
    real(wp),intent(in)  :: r_thr,mbd_thr
    integer              :: tx,ty,tz
    real(wp)             :: t(3)
@@ -2248,15 +2139,22 @@ subroutine edisp_3d(mol,ndim,q,rep,mbd_rep,r_thr,mbd_thr,par,g_a,g_c, &
 
    intrinsic :: present,sqrt,sum,maxval,exp,abs
 
+   if (mol%npbc > 0) then
+      call get_realspace_cutoff(mol%lattice,r_thr,rep)
+      call get_realspace_cutoff(mol%lattice,mbd_thr,mbd_rep)
+   endif
+   where(.not.mol%pbc) rep = 0
+   where(.not.mol%pbc) mbd_rep = 0
+
    !  print'(" * Allocating local memory")'
    allocate( zetavec(ndim),zerovec(ndim), source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( itbl(7,mol%n), source = 0 )
 
    ed = 0.0_wp
    eabc = 0.0_wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do ii = 1, refn(mol%at(i))
          k = k+1
          itbl(ii,i) = k
@@ -2269,7 +2167,7 @@ subroutine edisp_3d(mol,ndim,q,rep,mbd_rep,r_thr,mbd_thr,par,g_a,g_c, &
 !$omp shared (mol,refn,refc,refcovcn,itbl,refq,g_a,g_c,q) &
 !$omp shared (gw,zetavec,zerovec,r_thr)
 !$omp do
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       iz = zeff(ia)
       do ii = 1, refn(ia)
@@ -2290,7 +2188,7 @@ subroutine edisp_3d(mol,ndim,q,rep,mbd_rep,r_thr,mbd_thr,par,g_a,g_c, &
 !$omp shared(mol,refn,itbl,zetavec,refc6,par,rep,r_Thr) &
 !$omp shared(r2ab) reduction(+:ed)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       ! temps
       c6ij   = 0.0_wp
@@ -2378,7 +2276,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
    type(dftd_parameter),intent(in) :: par
    real(wp),intent(in)  :: zvec(ndim)
    real(wp),intent(in)  :: refc6(ndim,ndim)
-   integer, intent(in)  :: itbl(7,mol%nat)
+   integer, intent(in)  :: itbl(7,mol%n)
    integer, intent(in)  :: rep(3)
    real(wp),intent(in)  :: r_thr
    real(wp),intent(out) :: eabc
@@ -2393,7 +2291,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
 
    intrinsic :: present,sqrt
 
-   allocate( c6ab(mol%nat*(mol%nat+1)/2), source = 0.0_wp )
+   allocate( c6ab(mol%n*(mol%n+1)/2), source = 0.0_wp )
 
    eabc = 0.0_wp
 
@@ -2402,7 +2300,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
 !$omp shared (mol,refn,itbl,refc6,zvec) &
 !$omp shared (c6ab)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       ij = i*(i-1)/2+i
 
@@ -2444,7 +2342,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
 !$omp enddo
 !$omp end parallel
 
-   call abcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,r_thr,rep, &
+   call abcappr_3d_dftd3_like_style(mol%n,mol%at,mol%xyz,par,r_thr,rep, &
       &                             mol%lattice,c6ab,eabc)
    !call abcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,eabc)
    !call abcappr_3d_bvk(mol,par,rep,r_thr,c6ab,eabc)
@@ -2821,22 +2719,20 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
 end subroutine abcappr_3d_dftd3_like_style
 
 !> compute D4 gradient under pbc
-subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
-      rep,mbd_rep,r_thr,mbd_thr,par,wf,g_a,g_c, &
-      refc6,mbd, &
-      g,sigma,eout,dqdr,dqdL,aout)
+subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+      &                refc6,mbd,g,sigma,eout,dqdr,dqdL,aout)
    use iso_fortran_env, only : wp => real64
    use class_molecule
    use pbc_tools
    implicit none
    type(molecule),intent(in) :: mol
    integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: q(mol%nat)
-   real(wp),intent(in)  :: cn(mol%nat)
-   real(wp),intent(in)  :: dcndr(3,mol%nat,mol%nat)
-   real(wp),intent(in)  :: dcndL(3,3,mol%nat)
-   integer, intent(in)  :: rep(3)
-   integer, intent(in)  :: mbd_rep(3)
+   real(wp),intent(in)  :: q(mol%n)
+   real(wp),intent(in)  :: cn(mol%n)
+   real(wp),intent(in)  :: dcndr(3,mol%n,mol%n)
+   real(wp),intent(in)  :: dcndL(3,3,mol%n)
+   integer  :: rep(3)
+   integer  :: mbd_rep(3)
    real(wp),intent(in)  :: r_thr
    real(wp),intent(in)  :: mbd_thr
    integer              :: tx,ty,tz
@@ -2846,12 +2742,12 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
    real(wp),intent(in)  :: wf,g_a,g_c
    real(wp),intent(in)  :: refc6(ndim,ndim)
    integer, intent(in)  :: mbd
-   real(wp),intent(inout)        :: g(3,mol%nat)
+   real(wp),intent(inout)        :: g(3,mol%n)
    real(wp),intent(inout)        :: sigma(3,3)
    real(wp),intent(out),optional :: eout
-   real(wp),intent(in), optional :: dqdr(3,mol%nat,mol%nat+1)
-   real(wp),intent(in), optional :: dqdL(3,3,mol%nat+1)
-   real(wp),intent(out),optional :: aout(23,mol%nat)
+   real(wp),intent(in), optional :: dqdr(3,mol%n,mol%n+1)
+   real(wp),intent(in), optional :: dqdL(3,3,mol%n+1)
+   real(wp),intent(out),optional :: aout(23,mol%n)
 
 
    integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
@@ -2883,19 +2779,26 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
 
    intrinsic :: present,sqrt,sum,maxval,exp,abs
 
+   if (mol%npbc > 0) then
+      call get_realspace_cutoff(mol%lattice,r_thr,rep)
+      call get_realspace_cutoff(mol%lattice,mbd_thr,mbd_rep)
+   endif
+   where(.not.mol%pbc) rep = 0
+   where(.not.mol%pbc) mbd_rep = 0
+
    !  print'(" * Allocating local memory")'
-   allocate( dc6dcn(mol%nat),                  &
-      &      r2ab(mol%nat*(mol%nat+1)/2),     &
+   allocate( dc6dcn(mol%n),                  &
+      &      r2ab(mol%n*(mol%n+1)/2),     &
       &      zvec(ndim),dzvec(ndim),  &
-      &      gw(ndim),dgw(ndim),dc6dq(mol%nat),dzdq(ndim),  &
+      &      gw(ndim),dgw(ndim),dc6dq(mol%n),dzdq(ndim),  &
       &         source = 0.0_wp )
-   allocate( itbl(7,mol%nat), source = 0 )
+   allocate( itbl(7,mol%n), source = 0 )
 
    ed = 0.0_wp
    eabc = 0.0_wp
 
    k = 0
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do ii = 1, refn(mol%at(i))
          k = k+1
          itbl(ii,i) = k
@@ -2908,7 +2811,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
 !$omp shared (mol,refn,refc,refcovcn,itbl,refq,wf,cn,g_a,g_c,q) &
 !$omp shared (gw,dgw,zvec,dzvec,dzdq,r_thr)
 !$omp do
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       iz = zeff(ia)
       norm  = 0.0_wp
@@ -2966,7 +2869,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
 !$omp shared(mol,refn,itbl,zvec,dzvec,refc6,par,dzdq,rep,r_Thr) &
 !$omp shared(r2ab) reduction(+:dc6dq,dc6dcn,ed,g,sigma)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       ! temps
       c6ij   = 0.0_wp
@@ -2991,9 +2894,9 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
       r0 = par%a1*sqrt(r4r2ij) + par%a2
       do concurrent(tx = -rep(1):rep(1), &
             &       ty = -rep(2):rep(2), &
-            &       tz = -rep(3):rep(3))
+            &       tz = -rep(3):rep(3), &
+            &       tx.ne.0.or.ty.ne.0.or.tz.ne.0)
          ! cycle i with i interaction in same cell
-         if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
          t = [tx,ty,tz]
          rij = matmul(mol%lattice,t)
          r2  = sum( rij**2 )
@@ -3085,19 +2988,19 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
 
    if(present(dqdr)) then
       ! handle dqdr  :: gradient is exact e-11
-      call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dqdr,3*mol%nat,dc6dq,1,1.0_wp,g,1)
+      call dgemv('n',3*mol%n,mol%n,-1.0_wp,dqdr,3*mol%n,dc6dq,1,1.0_wp,g,1)
    endif
    if (mol%npbc > 0) then
       if(present(dqdL)) then
          ! handle dqdL
-         call dgemv('n',3*3,mol%nat,-1.0_wp,dqdL,3*3,dc6dq,1,1.0_wp,sigma,1)
+         call dgemv('n',3*3,mol%n,-1.0_wp,dqdL,3*3,dc6dq,1,1.0_wp,sigma,1)
       endif
    endif
 
    ! always handle dcndr :: gradient is exact e-11
-   call dgemv('n',3*mol%nat,mol%nat,-1.0_wp,dcndr,3*mol%nat,dc6dcn,1,1.0_wp,g,1)
+   call dgemv('n',3*mol%n,mol%n,-1.0_wp,dcndr,3*mol%n,dc6dcn,1,1.0_wp,g,1)
    if (mol%npbc > 0) then
-      call dgemv('n',3*3,mol%nat,-1.0_wp,dcndL,3*3,dc6dcn,1,1.0_wp,sigma,1)
+      call dgemv('n',3*3,mol%n,-1.0_wp,dcndL,3*3,dc6dcn,1,1.0_wp,sigma,1)
    endif
 
    !  print'(" * Dispersion all done, saving variables")'
@@ -3105,7 +3008,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL, &
 
    if (present(aout)) then
       aout = 0._wp
-      do i = 1, mol%nat
+      do i = 1, mol%n
          ia = mol%at(i)
          do ii = 1, refn(ia)
             aout(:,i) = aout(:,i) + zvec(k) * refal(:,ii,ia)
@@ -3125,12 +3028,12 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6d
    real(wp),intent(in)  :: zvec(ndim)
    real(wp),intent(in)  :: dzvec(ndim)
    real(wp),intent(in)  :: refc6(ndim,ndim)
-   integer, intent(in)  :: itbl(7,mol%nat)
+   integer, intent(in)  :: itbl(7,mol%n)
    integer, intent(in)  :: rep(3)
    real(wp),intent(in)  :: r_thr
-   real(wp),intent(inout) :: g(3,mol%nat)
+   real(wp),intent(inout) :: g(3,mol%n)
    real(wp),intent(inout) :: sigma(3,3)
-   real(wp),intent(inout) :: dc6dcn(mol%nat)
+   real(wp),intent(inout) :: dc6dcn(mol%n)
    real(wp),intent(out)   :: eabc
 
    integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
@@ -3151,7 +3054,7 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6d
 
    intrinsic :: present,sqrt
 
-   allocate( c6ab(mol%nat*(mol%nat+1)/2),dc6ab(mol%nat,mol%nat), source = 0.0_wp )
+   allocate( c6ab(mol%n*(mol%n+1)/2),dc6ab(mol%n,mol%n), source = 0.0_wp )
 
    eabc = 0.0_wp
 
@@ -3160,7 +3063,7 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6d
 !$omp shared (mol,refn,itbl,refc6,zvec,dzvec) &
 !$omp shared (c6ab,dc6ab)
 !$omp do schedule(dynamic)
-   do i = 1, mol%nat
+   do i = 1, mol%n
       ia = mol%at(i)
       ij = i*(i-1)/2+i
 
@@ -3213,7 +3116,7 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6d
 !$omp enddo
 !$omp end parallel
 
-   call dabcappr_3d_dftd3_like_style(mol%nat,mol%at,mol%xyz,par,r_thr,rep,&
+   call dabcappr_3d_dftd3_like_style(mol%n,mol%at,mol%xyz,par,r_thr,rep,&
       &    mol%lattice,c6ab,dc6ab,eabc,dc6dcn,g,sigma)
    !call dabcappr_3d_wsc(mol,par,[2,2,2],r_thr,c6ab,dc6ab,g,dc6dcn,eabc)
    !call dabcappr_3d_bvk(mol,par,rep,r_thr,c6ab,dc6ab,g,dc6dcn,eabc)

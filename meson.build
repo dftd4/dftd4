@@ -1,31 +1,35 @@
 # 
 project('dftd4', 'fortran', 'cpp', 'c',
-        version : '2.0',
+        version : '2.1',
         license : 'GPL',
         meson_version : '>=0.49')
 
-doubles = ''
+conf = configuration_data()
+conf.set('version', meson.project_version())
+conf.set('commit', run_command(find_program('git'),'show','-s','--format=%h').stdout().strip())
+conf.set('date', run_command(find_program('date'),'-I').stdout().strip())
+conf.set('author', run_command(find_program('whoami')).stdout().strip())
+conf.set('origin', run_command(find_program('hostname')).stdout().strip())
+configure_file(input : 'source/version.f90.in', output : 'dftd4_version.fh',
+  configuration : conf)
+
 dialect = ''
 bounds = ''
 fc = meson.get_compiler('fortran')
 if fc.get_id() == 'gcc'
-  #doubles = '-fdefault-real-8'
   dialect = ['-std=f2008']
   bounds = '-fbounds-check'
-  omp = '-fopenmp'
 endif
 if fc.get_id() == 'intel'
-  #doubles = '-r8'
   dialect = ['-stand','f08']
   bounds = ['-check','bounds']
-  omp = ['-qopenmp','-axAVX']
+  add_project_arguments('-axAVX', language: 'fortran')
+  add_project_arguments('-traceback', language: 'fortran')
+  add_project_link_arguments('-static', language: 'fortran')
 endif
 
-#add_project_arguments(doubles, language : 'fortran')
-add_project_arguments(dialect, language : 'fortran')
-add_project_arguments(bounds,  language : 'fortran')
-add_project_arguments(omp,     language : 'fortran')
-
+add_project_arguments(dialect, language: 'fortran')
+add_project_arguments(bounds,  language: 'fortran')
 cpp_std = ''
 cxx = meson.get_compiler('cpp')
 if cxx.get_id() == 'gcc'
@@ -79,6 +83,7 @@ fsrcs += 'source/class_set.f90'
 fsrcs += 'source/class_molecule.f90'
 fsrcs += 'source/class_param.f90'
 fsrcs += 'source/class_wsc.f90'
+fsrcs += 'source/class_results.f90'
 
 # I/O
 fsrcs += 'source/argparser.f90'
@@ -87,7 +92,8 @@ fsrcs += 'source/disp_output.f90'
 
 # API and interfaces
 fsrcs += 'source/d4_calculation.f90'
-fsrcs += 'source/d4_api.f90'
+fsrcs += 'source/c_api.f90'
+fsrcs += 'source/f_api.f90'
 
 # periodic boundary conditions
 fsrcs += 'source/pbc_tools.f90'
@@ -101,7 +107,6 @@ fsrcs += 'source/coordination_number.f90'
 
 # dispersion
 fsrcs += 'source/dftd4.f90'
-#incfil += 'include/param_ref.f'
 fsrcs += 'source/dfuncpar.f90'
 
 # C++ API example
@@ -173,20 +178,25 @@ d4lib_shared = shared_library(meson.project_name(),
                  version : meson.project_version(),
                  dependencies : dependencies_sha,
                  include_directories : incdir,
-                 link_whole : d4lib_static)
+                 link_whole : d4lib_static,
+                 install : true)
 
 # and link it into an executable
-if fc.get_id() == 'intel'
 d4exe = executable(meson.project_name(), fmain,
                  dependencies : dependencies_exe,
                  include_directories : incdir,
                  link_with : d4lib_static,
-                 link_args : '-static')
-else
-d4exe = executable(meson.project_name(), fmain,
-                 dependencies : dependencies_exe,
-                 include_directories : incdir,
-                 link_with : d4lib_static)
+                 install : true)
+
+## ========================================== ##
+## INSTALL
+## ========================================== ##
+install_headers('include/dftd_api.h')
+
+asciidoc = find_program('a2x')
+if asciidoc.found()
+   run_command(asciidoc, 'man1/dftd4.1.txt', '--format=manpage')
+   install_man('man1/dftd4.1')
 endif
 
 ## ========================================== ##
@@ -231,13 +241,16 @@ test('PBC tools: cutoff',    d4tester,args: ['pbc_tools','cutoff'])
 
 test('EEQ model: water',        d4tester,args: ['eeq_model','water'])
 test('EEQ model: 3D Ewald',     d4tester,args: ['eeq_model','ewald'])
-test('EEQ model: cell gradient',d4tester,args: ['eeq_model','cell_gradient'])
+test('EEQ model: num. gradient',d4tester,args: ['eeq_model','numgrad'])
+test('EEQ model: num. gradient (PBC)',d4tester,args: ['eeq_model','numgrad_pbc'])
 
 test('Dispersion: properties',    d4tester,args: ['dftd4','properties'])
 test('Dispersion: energies',      d4tester,args: ['dftd4','energies'])
+test('Dispersion: num. gradient', d4tester,args: ['dftd4','numgrad'])
+test('Dispersion: energies (PBC)',d4tester,args: ['dftd4','pbc_disp'])
+test('Dispersion: num. stress',   d4tester,args: ['dftd4','numstress'])
 test('Dispersion: API',           d4tester,args: ['dftd4','api'])
 test('Dispersion: API (PBC)',     d4tester,args: ['dftd4','pbc_api'])
-test('Dispersion: energies (PBC)',d4tester,args: ['dftd4','pbc_disp'])
 test('Dispersion: cell gradient', d4tester,args: ['dftd4','cell_gradient'])
 #test('Dispersion: PBC test',      d4tester,args: ['dftd4','periodic'])
 

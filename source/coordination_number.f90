@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! xtb is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! xtb is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+
 !> provides different kinds of coordination numbers used in this program
 !
 !  Implemented is the original DFT-D3 coordination number, a modified version
@@ -59,101 +76,6 @@ module coordination_number
 contains
 
 ! ========================================================================
-!> modified D3 type coordination number from 2018
-pure subroutine ncoord_erf(mol,cn,thr)
-   use class_molecule
-
-   implicit none
-
-   !> molecular structure information
-   type(molecule),intent(in) :: mol
-   !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
-   !> cutoff threshold for neglecting CN count
-   real(wp),intent(in),optional :: thr
-   real(wp) :: cn_thr
-
-   integer  :: i,j
-   real(wp) :: rij(3), r, rco, den, rr, r2, tmp
-
-   if (present(thr)) then
-      cn_thr = thr
-   else
-      cn_thr = cnthr
-   endif
-
-   cn = 0.0_wp
-
-   do i = 1, mol%nat
-      do j = 1, i-1
-         rij = mol%xyz(:,j) - mol%xyz(:,i)
-         r2  = sum( rij**2 )
-         if (r2.gt.cn_thr) cycle
-         r=sqrt(r2)
-!        covalent distance in bohr
-         rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
-!        error function has an even better long range behavior
-         tmp = 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
-         cn(i)=cn(i)+tmp
-         cn(j)=cn(j)+tmp
-      enddo
-   enddo
-
-end subroutine ncoord_erf
-
-! ========================================================================
-!> modified D3 type coordination number from 2018
-pure subroutine dncoord_erf(mol,cn,dcndr,thr)
-   use class_molecule
-
-   implicit none
-
-   !> molecular structure information
-   type(molecule),intent(in) :: mol
-   !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
-   !> derivative of the coordination number w.r.t. nuclear positions
-   real(wp),intent(out) :: dcndr(3,mol%nat,mol%nat)
-   !> cutoff threshold for neglecting CN count
-   real(wp),intent(in),optional :: thr
-   real(wp) :: cn_thr
-
-   integer  :: i, j
-   real(wp) :: r, r2, rij(3)
-   real(wp) :: rcovij
-   real(wp) :: dtmp, tmp
-   real(wp),parameter :: hlfosqrtpi = 1.0_wp/1.77245385091_wp
-
-   if (present(thr)) then
-      cn_thr = thr
-   else
-      cn_thr = cnthr
-   endif
-
-   cn  = 0._wp
-   dcndr = 0._wp
-
-   do i = 2, mol%nat
-      do j = 1, i-1
-         rij = mol%xyz(:,j) - mol%xyz(:,i)
-         r2  = sum( rij**2 )
-         if (r2.gt.cn_thr) cycle
-         r = sqrt(r2)
-         rcovij=k2*(covalent_radius(mol%at(i))+covalent_radius(mol%at(j)))
-         tmp = 0.5_wp * (1.0_wp + erf(-kn*(r-rcovij)/rcovij))
-         dtmp =-hlfosqrtpi*kn*exp(-kn**2*(r-rcovij)**2/rcovij**2)/rcovij
-         cn(i) = cn(i) + tmp
-         cn(j) = cn(j) + tmp
-         dcndr(:,j,j)= dtmp*rij/r + dcndr(:,j,j)
-         dcndr(:,i,j)= dtmp*rij/r
-         dcndr(:,j,i)=-dtmp*rij/r
-         dcndr(:,i,i)=-dtmp*rij/r + dcndr(:,i,i)
-      enddo
-   enddo
-
-end subroutine dncoord_erf
-
-! ========================================================================
 !> original D3 type coordination number from 2010
 pure subroutine ncoord_d3(mol,cn,thr)
    use class_molecule
@@ -163,7 +85,7 @@ pure subroutine ncoord_d3(mol,cn,thr)
    !> molecular structure information
    type(molecule),intent(in) :: mol
    !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
+   real(wp),intent(out) :: cn(mol%n)
    !> cutoff threshold for neglecting CN count
    real(wp),intent(in),optional :: thr
    real(wp) :: cn_thr
@@ -179,7 +101,7 @@ pure subroutine ncoord_d3(mol,cn,thr)
 
    cn = 0.0_wp
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do j = 1, i-1
          rij = mol%xyz(:,j) - mol%xyz(:,i)
          r2  = sum( rij**2 )
@@ -207,9 +129,9 @@ pure subroutine dncoord_d3(mol,cn,dcndr,thr)
    !> molecular structure information
    type(molecule),intent(in) :: mol
    !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
+   real(wp),intent(out) :: cn(mol%n)
    !> derivative of the coordination number w.r.t. nuclear positions
-   real(wp),intent(out) :: dcndr(3,mol%nat,mol%nat)
+   real(wp),intent(out) :: dcndr(3,mol%n,mol%n)
    !> cutoff threshold for neglecting CN count
    real(wp),intent(in),optional :: thr
    real(wp) :: cn_thr
@@ -229,7 +151,7 @@ pure subroutine dncoord_d3(mol,cn,dcndr,thr)
    cn  = 0._wp
    dcndr = 0._wp
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do j = 1, i-1
          rij = mol%xyz(:,j) - mol%xyz(:,i)
          r2  = sum( rij**2 )
@@ -250,115 +172,8 @@ pure subroutine dncoord_d3(mol,cn,dcndr,thr)
 
 end subroutine dncoord_d3
 
-! ========================================================================
-!> covalent coordination number of the DFT-D4 method
-pure subroutine ncoord_d4(mol,cn,thr)
-   use class_molecule
-
-   implicit none
-
-   !> molecular structure information
-   type(molecule),intent(in) :: mol
-   !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
-   !> cutoff threshold for neglecting CN count
-   real(wp),intent(in),optional :: thr
-   real(wp) :: cn_thr
-
-   integer  :: i,j
-   real(wp) :: rij(3), r, rco, den, rr, r2, xn, tmp
-
-   if (present(thr)) then
-      cn_thr = thr
-   else
-      cn_thr = cnthr
-   endif
-
-   cn = 0._wp
-
-   do i=1,mol%nat
-      do j=1,i-1
-         rij = mol%xyz(:,j) - mol%xyz(:,i)
-         r2  = sum( rij**2 )
-         if (r2.gt.cn_thr) cycle
-         r=sqrt(r2)
-!        covalent distance in bohr
-         rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
-         rr=rco/r
-         den=k4*exp(-(abs((en(mol%at(i))-en(mol%at(j))))+ k5)**2/k6 )
-!        counting function exponential has a better long-range
-!        behavior than MHGs inverse damping
-         !tmp = den/(1.d0+exp(-k1*(rr-1.0d0)))
-!        error function has an even better long range behavior
-         tmp = den * 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
-         cn(i)=cn(i)+tmp
-         cn(j)=cn(j)+tmp
-      enddo
-   enddo
-
-end subroutine ncoord_d4
-
-! ========================================================================
-!> derivative of the covalent coordination number of the DFT-D4 method
-pure subroutine dncoord_d4(mol,cn,dcndr,thr)
-   use mctc_constants
-   use class_molecule
-
-   implicit none
-
-   !> molecular structure information
-   type(molecule),intent(in) :: mol
-   !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
-   !> derivative of the coordination number w.r.t. nuclear positions
-   real(wp),intent(out) :: dcndr(3,mol%nat,mol%nat)
-   !> cutoff threshold for neglecting CN count
-   real(wp),intent(in),optional :: thr
-   real(wp) :: cn_thr
-
-   integer  :: i, j, ia, ja
-   real(wp) :: r, r2, rij(3)
-   real(wp) :: rcovij,den
-   real(wp) :: expterm
-   real(wp) :: dtmp, tmp
-
-   if (present(thr)) then
-      cn_thr = thr
-   else
-      cn_thr = cnthr
-   endif
-
-   cn  = 0._wp
-   dcndr = 0._wp
-
-   do i = 1, mol%nat
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         rij = mol%xyz(:,j) - mol%xyz(:,i)
-         r2  = sum( rij**2 )
-         if (r2.gt.cn_thr) cycle
-         r = sqrt(r2)
-         rcovij=k2*(covalent_radius(ia)+covalent_radius(ja))
-         den=k4*exp(-(abs((en(ia)-en(ja)))+ k5)**2/k6 )
-         !expterm=exp(-k1*(rcovij/r-1._wp))
-         !tmp = den/(1._wp+expterm)
-         tmp = den * 0.5_wp * (1.0_wp + erf(-kn*(r-rcovij)/rcovij))
-         !dtmp = (-k1*rcovij*expterm*den)/(r2*((expterm+1._wp)**2))
-         dtmp = -den*kn/sqrtpi/rcovij*exp(-kn**2*(r-rcovij)**2/rcovij**2)
-         cn(i) = cn(i) + tmp
-         cn(j) = cn(j) + tmp
-         dcndr(:,i,i)=-dtmp*rij/r + dcndr(:,i,i)
-         dcndr(:,j,j)= dtmp*rij/r + dcndr(:,j,j)
-         dcndr(:,i,j)=-dtmp*rij/r
-         dcndr(:,j,i)= dtmp*rij/r
-      enddo
-   enddo
-
-end subroutine dncoord_d4
-
 !> gradients for pbc coordination number with error function
-subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
+subroutine pbc_ncoord_erf(mol,cn,thr)
    use iso_fortran_env, wp => real64
    use class_molecule
    use pbc_tools, only : get_realspace_cutoff, outer_prod_3x3
@@ -368,11 +183,7 @@ subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
    !> molecular structure information
    type(molecule),intent(in) :: mol
    !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
-   !> derivative of the coordination number w.r.t. nuclear positions
-   real(wp),intent(out) :: dcndr(3,mol%nat,mol%nat)
-   !> derivative of the coordination number w.r.t. lattice parameters
-   real(wp),intent(out) :: dcndL(3,3,mol%nat)
+   real(wp),intent(out) :: cn(mol%n)
    !> cutoff threshold for neglecting CN count
    real(wp),intent(in),optional :: thr
    real(wp) :: cn_thr
@@ -389,11 +200,13 @@ subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
       cn_thr = 1600.0_wp
    endif
 
+   if (mol%npbc > 0) &
    call get_realspace_cutoff(mol%lattice,cn_thr,rep_cn)
+   where(.not.mol%pbc) rep_cn = 0
 
    cn = 0.0_wp
 
-   do i = 1, mol%nat
+   do i = 1, mol%n
       do j = 1, i-1 ! loop over all atoms for PBC case
          do concurrent(tx = -rep_cn(1):rep_cn(1),&
                &       ty = -rep_cn(2):rep_cn(2),&
@@ -409,10 +222,88 @@ subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
             dtmp = -kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
             cn(i)=cn(i) + tmp
             cn(j)=cn(j) + tmp
-            dcndr(:,i,i)=-dtmp*rij/r + dcndr(:,i,i)
-            dcndr(:,j,j)= dtmp*rij/r + dcndr(:,j,j)
-            dcndr(:,i,j)=-dtmp*rij/r + dcndr(:,i,j)
-            dcndr(:,j,i)= dtmp*rij/r + dcndr(:,j,i)
+         enddo
+      enddo
+      do concurrent(tx = -rep_cn(1):rep_cn(1),&
+            &       ty = -rep_cn(2):rep_cn(2),&
+            &       tz = -rep_cn(3):rep_cn(3))
+         ! avoid self interaction
+         if ((tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+         t = [tx,ty,tz]
+         rij = matmul(mol%lattice,t)
+         r2  = sum(rij**2)
+         if (r2.gt.cn_thr) cycle
+         r=sqrt(r2)
+         ! covalent distance in bohr
+         rco=k2*2*covalent_radius(mol%at(i))
+         tmp=0.5_wp*(1.0_wp+erf(-kn*(r-rco)/rco))
+         dtmp = -kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+         cn(i) = cn(i) + tmp
+      enddo
+   enddo
+
+end subroutine pbc_ncoord_erf
+
+!> gradients for pbc coordination number with error function
+subroutine pbc_dncoord_erf(mol,cn,dcndr,dcndL,thr)
+   use iso_fortran_env, wp => real64
+   use class_molecule
+   use pbc_tools, only : get_realspace_cutoff, outer_prod_3x3
+
+   implicit none
+
+   !> molecular structure information
+   type(molecule),intent(in) :: mol
+   !> coordination number
+   real(wp),intent(out) :: cn(mol%n)
+   !> derivative of the coordination number w.r.t. nuclear positions
+   real(wp),intent(out) :: dcndr(3,mol%n,mol%n)
+   !> derivative of the coordination number w.r.t. lattice parameters
+   real(wp),intent(out) :: dcndL(3,3,mol%n)
+   !> cutoff threshold for neglecting CN count
+   real(wp),intent(in),optional :: thr
+   real(wp) :: cn_thr
+
+   integer  :: i,j,tx,ty,tz
+   real(wp) :: rij(3), r, rco, den, rr, r2, t(3)
+   integer  :: rep_cn(3)
+   real(wp) :: tmp,dtmp
+   real(wp),parameter :: sqrtpi = 1.77245385091_wp
+
+   if (present(thr)) then
+      cn_thr = thr
+   else
+      cn_thr = 1600.0_wp
+   endif
+
+   if (mol%npbc > 0) &
+   call get_realspace_cutoff(mol%lattice,cn_thr,rep_cn)
+   where(.not.mol%pbc) rep_cn = 0
+
+   cn = 0.0_wp
+   dcndr = 0.0_wp
+   dcndL = 0.0_wp
+
+   do i = 1, mol%n
+      do j = 1, i-1 ! loop over all atoms for PBC case
+         do concurrent(tx = -rep_cn(1):rep_cn(1),&
+               &       ty = -rep_cn(2):rep_cn(2),&
+               &       tz = -rep_cn(3):rep_cn(3))
+            t = [tx,ty,tz]
+            rij = mol%xyz(:,j) - mol%xyz(:,i) + matmul(mol%lattice,t)
+            r2  = sum(rij**2)
+            if (r2.gt.cn_thr) cycle
+            r=sqrt(r2)
+!           covalent distance in bohr
+            rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
+            tmp=0.5_wp*(1.0_wp+erf(-kn*(r-rco)/rco))
+            dtmp = -kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+            cn(i)=cn(i) + tmp
+            cn(j)=cn(j) + tmp
+            dcndr(:,i,i)= dtmp*rij/r + dcndr(:,i,i)
+            dcndr(:,j,j)=-dtmp*rij/r + dcndr(:,j,j)
+            dcndr(:,i,j)= dtmp*rij/r + dcndr(:,i,j)
+            dcndr(:,j,i)=-dtmp*rij/r + dcndr(:,j,i)
             dcndL(:,:,j)= dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,j)
             dcndL(:,:,i)= dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,i)
          enddo
@@ -436,27 +327,23 @@ subroutine pbc_derfcoord(mol,cn,dcndr,dcndL,thr)
       enddo
    enddo
 
-end subroutine pbc_derfcoord
+end subroutine pbc_dncoord_erf
 
 !> gradients for periodic covalent coordination number
-pure subroutine pbc_dncoord_d4(mol,cn,dcndr,dcndL,rep,thr)
+pure subroutine pbc_ncoord_d4(mol,cn,thr)
    use mctc_constants
    use class_molecule
-   use pbc_tools, only : outer_prod_3x3
+   use pbc_tools, only : outer_prod_3x3, get_realspace_cutoff
    implicit none
 
    !> molecular structure information
    type(molecule),intent(in) :: mol
    !> number of images to consider for lattice translations
-   integer, intent(in)  :: rep(3)
-   integer              :: tx,ty,tz
-   real(wp)             :: t(3)
+   integer  :: rep_cn(3)
+   integer  :: tx,ty,tz
+   real(wp) :: t(3)
    !> coordination number
-   real(wp),intent(out) :: cn(mol%nat)
-   !> derivative of the coordination number w.r.t. nuclear positions
-   real(wp),intent(out) :: dcndr(3,mol%nat,mol%nat)
-   !> derivative of the coordination number w.r.t. lattice parameters
-   real(wp),intent(out) :: dcndL(3,3,mol%nat)
+   real(wp),intent(out) :: cn(mol%n)
    !> cutoff threshold for neglecting CN count
    real(wp),intent(in),optional :: thr
    real(wp) :: cn_thr
@@ -470,14 +357,97 @@ pure subroutine pbc_dncoord_d4(mol,cn,dcndr,dcndL,rep,thr)
       cn_thr = cnthr
    endif
 
+   if (mol%npbc > 0) &
+   call get_realspace_cutoff(mol%lattice,cn_thr,rep_cn)
+   where(.not.mol%pbc) rep_cn = 0
+
+   cn  = 0.0_wp
+
+   do i=1,mol%n
+      do j=1,i-1
+         do concurrent(tx = -rep_cn(1):rep_cn(1),&
+               &       ty = -rep_cn(2):rep_cn(2),&
+               &       tz = -rep_cn(3):rep_cn(3))
+            t = [tx,ty,tz]
+            rij = mol%xyz(:,j) - mol%xyz(:,i) + matmul(mol%lattice,t)
+            r2  = sum(rij**2)
+            if (r2.gt.cn_thr) cycle
+            r=sqrt(r2)
+            ! covalent distance in bohr
+            rco=k2*(covalent_radius(mol%at(j)) + covalent_radius(mol%at(i)))
+            den=k4*exp(-(abs((en(mol%at(i))-en(mol%at(j))))+ k5)**2/k6 )
+            tmp = den * 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
+            dtmp = -den*kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+            cn(i)=cn(i)+tmp
+            cn(j)=cn(j)+tmp
+         enddo
+      enddo
+      do concurrent(tx = -rep_cn(1):rep_cn(1),&
+            &       ty = -rep_cn(2):rep_cn(2),&
+            &       tz = -rep_cn(3):rep_cn(3))
+         ! avoid self interaction
+         if ((tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
+         t = [tx,ty,tz]
+         rij = matmul(mol%lattice,t)
+         r2  = sum(rij**2)
+         if (r2.gt.cn_thr) cycle
+         r=sqrt(r2)
+         ! covalent distance in bohr
+         rco=k2*2*covalent_radius(mol%at(i))
+         den=k4*exp(-k5**2/k6)
+         tmp = den * 0.5_wp * (1.0_wp + erf(-kn*(r-rco)/rco))
+         dtmp = -den*kn/sqrtpi/rco*exp(-kn**2*(r-rco)**2/rco**2)
+         cn(i)=cn(i)+tmp
+      enddo
+   enddo
+
+end subroutine pbc_ncoord_d4
+
+!> gradients for periodic covalent coordination number
+pure subroutine pbc_dncoord_d4(mol,cn,dcndr,dcndL,thr)
+   use mctc_constants
+   use class_molecule
+   use pbc_tools, only : outer_prod_3x3, get_realspace_cutoff
+   implicit none
+
+   !> molecular structure information
+   type(molecule),intent(in) :: mol
+   !> number of images to consider for lattice translations
+   integer  :: rep_cn(3)
+   integer  :: tx,ty,tz
+   real(wp) :: t(3)
+   !> coordination number
+   real(wp),intent(out) :: cn(mol%n)
+   !> derivative of the coordination number w.r.t. nuclear positions
+   real(wp),intent(out) :: dcndr(3,mol%n,mol%n)
+   !> derivative of the coordination number w.r.t. lattice parameters
+   real(wp),intent(out) :: dcndL(3,3,mol%n)
+   !> cutoff threshold for neglecting CN count
+   real(wp),intent(in),optional :: thr
+   real(wp) :: cn_thr
+
+   integer  :: i,j
+   real(wp) :: rij(3), r, rco, den, r2, xn, tmp, dtmp
+
+   if (present(thr)) then
+      cn_thr = thr
+   else
+      cn_thr = cnthr
+   endif
+
+   if (mol%npbc > 0) &
+   call get_realspace_cutoff(mol%lattice,cn_thr,rep_cn)
+   where(.not.mol%pbc) rep_cn = 0
+
    cn  = 0.0_wp
    dcndr = 0.0_wp
+   dcndL = 0.0_wp
 
-   do i=1,mol%nat
+   do i=1,mol%n
       do j=1,i-1
-         do concurrent(tx = -rep(1):rep(1),&
-               &       ty = -rep(2):rep(2),&
-               &       tz = -rep(3):rep(3))
+         do concurrent(tx = -rep_cn(1):rep_cn(1),&
+               &       ty = -rep_cn(2):rep_cn(2),&
+               &       tz = -rep_cn(3):rep_cn(3))
             t = [tx,ty,tz]
             rij = mol%xyz(:,j) - mol%xyz(:,i) + matmul(mol%lattice,t)
             r2  = sum(rij**2)
@@ -498,9 +468,9 @@ pure subroutine pbc_dncoord_d4(mol,cn,dcndr,dcndL,rep,thr)
             dcndL(:,:,i)= dtmp*outer_prod_3x3(rij,rij)/r + dcndL(:,:,i)
          enddo
       enddo
-      do concurrent(tx = -rep(1):rep(1),&
-            &       ty = -rep(2):rep(2),&
-            &       tz = -rep(3):rep(3))
+      do concurrent(tx = -rep_cn(1):rep_cn(1),&
+            &       ty = -rep_cn(2):rep_cn(2),&
+            &       tz = -rep_cn(3):rep_cn(3))
          ! avoid self interaction
          if ((tx.eq.0).and.(ty.eq.0).and.(tz.eq.0)) cycle
          t = [tx,ty,tz]
@@ -614,7 +584,5 @@ pure elemental function dexp_count(k,r,r0) result(count)
    expterm=exp(-k*(r0/r-1._wp))
    count = (-k*r0*expterm)/(r**2*((expterm+1._wp)**2))
 end function dexp_count
-
-
 
 end module coordination_number

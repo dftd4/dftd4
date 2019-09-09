@@ -64,17 +64,19 @@ program dftd_tester
       select case(sec)
       case('water');         call test_eeq_model_water
       case('ewald');         call test_eeq_model_ewald
-      case('cell_gradient'); call test_eeq_model_cell_gradient
+      case('numgrad');       call test_eeq_numgrad
+      case('numgrad_pbc');   call test_peeq_numgrad
       end select
    case('dftd4')
       select case(sec)
       case('properties');    call test_dftd4_properties
       case('energies');      call test_dftd4_energies
+      case('numgrad');       call test_dftd4_numgrad
       case('api');           call test_dftd4_api
       case('pbc_api');       call test_dftd4_pbc_api
-      case('periodic');      call test_dftd4_pbc
       case('pbc_disp');      call test_dftd4_pbc_energies
       case('cell_gradient'); call test_dftd4_cell_gradient
+      case('numstress');     call test_dftd4_numstress
       end select
    case('geometry_reader')
       select case(sec)

@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! xtb is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! xtb is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+
 !! ------------------------------------------------------------------------
 !  Purpose:
 !  read in a geometry from a provided file, can read XMOL and Turbomole
@@ -100,7 +117,7 @@ subroutine get_geometry(mol,fname)
       iat = elem(strings(1))
       if(iat.le.0) cycle read_lines
       nat=nat+1
-      if (nat.gt.mol%nat) &
+      if (nat.gt.mol%n) &
          call raise('E','Number of atoms does match provided geometry')
       mol%xyz(:,nat)=floats(1:3)*scalfactor
       mol%sym(nat)=trim(strings(1))
@@ -397,14 +414,14 @@ subroutine read_xmol(iunit,mol)
       if (debug) print'("->",g0)',iat
       if (iat > 0) then
          n = n+1
-         if (n > mol%nat) call raise('E',"Atom number missmatch in Xmol file")
+         if (n > mol%n) call raise('E',"Atom number missmatch in Xmol file")
          mol%at(n) = iat
          mol%sym(n) = line(1:2)
          mol%xyz(:,n) = xyz*conv
       endif
    enddo
 
-   if (n.ne.mol%nat) call raise('E',"Atom number missmatch in Xmol file")
+   if (n.ne.mol%n) call raise('E',"Atom number missmatch in Xmol file")
 
 end subroutine read_xmol
 
@@ -428,12 +445,12 @@ subroutine read_poscar(iunit,mol)
    mol%npbc = 3 ! VASP is always 3D
    mol%pbc = .true.
 
-   call get_coord(iunit,mol%lattice,mol%nat,mol%xyz,mol%at,mol%sym)
+   call get_coord(iunit,mol%lattice,mol%n,mol%xyz,mol%at,mol%sym)
    call dlat_to_cell(mol%lattice,mol%cellpar)
    call dlat_to_rlat(mol%lattice,mol%rec_lat)
    mol%volume = dlat_to_dvol(mol%lattice)
 
-   call xyz_to_abc(mol%nat,mol%lattice,mol%xyz,mol%abc,mol%pbc)
+   call xyz_to_abc(mol%n,mol%lattice,mol%xyz,mol%abc,mol%pbc)
 
 contains
 
@@ -963,7 +980,7 @@ subroutine get_coord(iunit,line,err,mol)
 
       if (line.eq.'') cycle ! skip empty lines
       ncount = ncount + 1   ! but count non-empty lines first
-      if (ncount.gt.mol%nat) &
+      if (ncount.gt.mol%n) &
          call raise('E',"Internal error while reading coord data group")
       call parse(line,' ',argv,narg)
       if (narg.lt.4) &
@@ -1032,7 +1049,7 @@ end subroutine read_coord
 !
 !      if (line.eq.'') cycle ! skip empty lines
 !      ncount = ncount + 1   ! but count non-empty lines first
-!      if (ncount.gt.mol%nat) &
+!      if (ncount.gt.mol%n) &
 !         call raise('E',"Internal error while reading coord data group")
 !      call parse(line,' ',argv,narg)
 !      if (narg.lt.4) &

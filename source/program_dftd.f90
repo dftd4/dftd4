@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! xtb is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! xtb is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+
 program dftd
    use iso_fortran_env, istdout => output_unit, kdp => real64
 !$ use omp_lib
@@ -13,6 +30,7 @@ program dftd
 ! ------------------------------------------------------------------------
    use class_molecule
    use class_set
+   use class_results
 
 ! ------------------------------------------------------------------------
 !  interfaces
@@ -22,6 +40,7 @@ program dftd
    use eeq_model
    use dftd4
    use dfuncpar
+   use dispersion_calculator
 
    implicit none
 
@@ -33,6 +52,7 @@ program dftd
    type(dftd_options)   :: dopt
    type(dftd_parameter) :: dparam
    type(chrg_parameter) :: chrgeq
+   type(dftd_results)   :: dresults
 
 ! ------------------------------------------------------------------------
 !  local variables
@@ -41,12 +61,9 @@ program dftd
    integer  :: i,j,k,l,ii,jj
    integer  :: err
    real(wp) :: memory
-   real(wp) :: energy                    ! dispersion energy
    real(wp) :: etmp,etwo,emany,er,el,es
    real(wp) :: molpol,molc6,molc8        ! molecular Polarizibility
    real(wp) :: lattice_grad(3,3)
-   real(wp),allocatable :: gradient(:,:) ! nuclear gradient
-   real(wp),allocatable :: hessian(:,:)  ! nuclear hessian
    real(wp),allocatable :: q(:)          ! partial charges
    real(wp),allocatable :: dqdr(:,:,:)   ! partial charges
    real(wp),allocatable :: covcn(:)      ! covalent coordination number
@@ -99,10 +116,10 @@ program dftd
 ! ------------------------------------------------------------------------
    if (set%lperiodic) then
       call read_geometry(set%fname,mol)
-      call generate_wsc(mol,mol%wsc,rep_wsc)
    else
       call get_geometry(mol,set%fname)
    endif
+   call generate_wsc(mol,mol%wsc)
    if (set%inchrg) mol%chrg = set%chrg
 
 ! ------------------------------------------------------------------------
@@ -145,14 +162,7 @@ program dftd
 
    dopt = set%export()
 
-   if (dopt%lgradient) allocate( gradient(3,mol%nat) )
-   if (dopt%lhessian)  allocate( hessian(3*mol%nat,3*mol%nat) )
-
-   if (set%lperiodic) then
-      call d4_pbc_calculation(istdout,dopt,mol,dparam,energy,gradient,lattice_grad)
-   else
-      call d4_calculation(istdout,dopt,mol,dparam,energy,gradient,hessian)
-   endif
+   call d4_calculation(istdout,dopt,mol,dparam,dresults)
 
 ! ------------------------------------------------------------------------
 !  Output:
@@ -162,43 +172,35 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
    if (set%lenergy) then
       write(istdout,'('// &
       &      '1x,"Edisp  /kcal,au:",f11.4,1x,f12.8)') &
-      &       energy*autokcal,energy
-      if(set%verbose) &
-      write(istdout,'('// &
-      &      '1x,"E(2)   /kcal,au:",f11.4,1x,f12.8,'// &
-      &      '/,1x,"Emany  /kcal,au:",f11.4,1x,f12.8)') &
-      &       Etwo*autokcal,Etwo, &
-      &       Emany*autokcal,Emany
+      &       dresults%energy*autokcal,dresults%energy
       write(istdout,'(a)')
    endif
    if (set%ltmer.or.(.not.set%lorca.and.set%lenergy)) &
-      call out_tmer('.EDISP',energy)
+      call out_tmer('.EDISP',dresults%energy)
 
    if (set%lgradient) then
       if (set%verbose) then
          write(istdout,'(1x,a)') &
             "Dispersion gradient"
-         call write_gradient(mol,istdout,gradient)
+         call write_gradient(mol,istdout,dresults%gradient)
          write(istdout,'(a)')
       endif
-      write(istdout,'(1x,"E(opt) /kcal,au:",f11.4,1x,f12.8)') &
-      &       Etmp*autokcal,Etmp
       write(istdout,'(1x,"|G| =",1x,f34.10)') &
-      &       norm2(gradient)
+      &       norm2(dresults%gradient)
       write(istdout,'(a)')
 
       if (set%lorca) then
-         call orca_gradient(mol,istdout,gradient)
+         call orca_gradient(mol,istdout,dresults%gradient)
       else
-         call out_gradient(mol,'gradient',energy,gradient)
+         call out_gradient(mol,'gradient',dresults%energy,dresults%gradient)
          if (mol%npbc > 0) then
-            call out_gradlatt(mol,'gradlatt',energy,lattice_grad)
+            call out_gradlatt(mol,'gradlatt',dresults%energy,dresults%lattice_gradient)
          endif
       endif
    endif
 
    if (set%lhessian) then
-      call orca_hessian(mol,istdout,hessian)
+      call orca_hessian(mol,istdout,dresults%hessian)
    endif
 
    call raise('F','Some non-fatal runtime exceptions occurred, please check:')
