@@ -216,9 +216,9 @@ subroutine prmolc6(id,mol,molc6,molc8,molpol,  &
    if(present(alpha))write(id,'(''      α(0)'')',advance='no')
    if(present(rvdw)) write(id,'(''    RvdW/Å'')',advance='no')
    if(present(hvol)) write(id,'(''    relVol'')',advance='no')
-   write(*,'(a)')
+   write(id,'(a)')
    do i=1,mol%n
-      write(*,'(i11,1x,i3,1x,a2)',advance='no') &
+      write(id,'(i11,1x,i3,1x,a2)',advance='no') &
       &     i,mol%at(i),mol%sym(i)
       if(present(cn))   write(id,'(f10.3)',advance='no')cn(i)
       if(present(covcn))write(id,'(f10.3)',advance='no')covcn(i)
@@ -230,7 +230,7 @@ subroutine prmolc6(id,mol,molc6,molc8,molpol,  &
       if(present(alpha))write(id,'(f10.3)',advance='no')alpha(i)
       if(present(rvdw)) write(id,'(f10.3)',advance='no')rvdw(i)*autoaa
       if(present(hvol)) write(id,'(f10.3)',advance='no')hvol(i)
-      write(*,'(a)')
+      write(id,'(a)')
    enddo
    endif
    write(id,'(/,12x,''Mol. C6AA /au·bohr⁶  :'',f18.6,'// &
