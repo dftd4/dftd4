@@ -1,25 +1,25 @@
 ! This file is part of dftd4.
 !
-! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
 !
-! xtb is free software: you can redistribute it and/or modify it under
+! dftd4 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! xtb is distributed in the hope that it will be useful,
+! dftd4 is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-subroutine dftd4_header(verbose)
-use iso_fortran_env, istdout => output_unit
+subroutine dftd4_header(iunit,verbose)
+integer,intent(in) :: iunit
 logical,intent(in) :: verbose
 if (verbose) then
-write(istdout,'(a)') &
+write(iunit,'(a)') &
 !   < < < < < < < < < < < < < < < < < < > > > > > > > > > > > > > > > > > >!
 !    okay... this is ridiculous...
 !  "         _______   _________ _________     _______     /\              ",&
@@ -38,7 +38,7 @@ write(istdout,'(a)') &
    "     |             ===================================           |     "
 !   < < < < < < < < < < < < < < < < < < > > > > > > > > > > > > > > > > > >!
 else
-write(istdout,'(a)') &
+write(iunit,'(a)') &
 !   < < < < < < < < < < < < < < < < < < > > > > > > > > > > > > > > > > > >!
    "      -----------------------------------------------------------      ",&
    "     |                   =====================                   |     ",&
@@ -46,14 +46,14 @@ write(istdout,'(a)') &
    "     |                   =====================                   |     "
    !< < < < < < < < < < < < < < < < < < > > > > > > > > > > > > > > > > > >!
 endif
-write(istdout,'(a)') &
+write(iunit,'(a)') &
 !   < < < < < < < < < < < < < < < < < < > > > > > > > > > > > > > > > > > >!
    "     |            E. Caldeweyher, S. Ehlert & S. Grimme          |     ",&
    "     |          Mulliken Center for Theoretical Chemistry        |     ",&
    "     |                    University of Bonn                     |     ",&
    "      -----------------------------------------------------------      ",""
 !   < < < < < < < < < < < < < < < < < < > > > > > > > > > > > > > > > > > >!
-call dftd4_version(istdout)
+call dftd4_version(iunit)
 end subroutine dftd4_header
 
 subroutine dftd4_version(iunit)
@@ -64,9 +64,9 @@ write(iunit,'(3x,"*",*(1x,a))') &
 write(iunit,'(a)')
 end subroutine dftd4_version
 
-subroutine eeq_header
-use iso_fortran_env, istdout => output_unit
-write(istdout,'(10x,a)') &
+subroutine eeq_header(iunit)
+integer,intent(in) :: iunit
+write(iunit,'(10x,a)') &
 !   < < < < < < < < < < < < < > > > > > > > > > > > > >!
    " ------------------------------------------------- ",&
    "|                      E E Q                      |",&
@@ -75,9 +75,9 @@ write(istdout,'(10x,a)') &
 !   < < < < < < < < < < < < < > > > > > > > > > > > > >!
 end subroutine eeq_header
 
-subroutine dftd4_citation
-use iso_fortran_env, istdout => output_unit
-write(istdout,'(3x,a)') &
+subroutine dftd4_citation(iunit)
+integer,intent(in) :: iunit
+write(iunit,'(3x,a)') &
    "Please cite:", &
    "E. Caldeweyher, C. Bannwarth and S. Grimme, J. Chem. Phys., 2017,", &
    "147, 034112.", &
@@ -100,9 +100,9 @@ write(istdout,'(3x,a)') &
    ""
 end subroutine dftd4_citation
 
-subroutine gpl_license
-   use iso_fortran_env, istdout => output_unit
-   write(istdout,'(3x,a)') &
+subroutine gpl_license(iunit)
+   integer,intent(in) :: iunit
+   write(iunit,'(3x,a)') &
       "Copyright (C) 2017-2019 S. Grimme",&
       "",&
       "This program is free software: you can redistribute it and/or ",&
@@ -121,9 +121,9 @@ subroutine gpl_license
       ""
 end subroutine gpl_license
 
-subroutine help
-   use iso_fortran_env, istdout => output_unit
-   write(istdout,'(a)') &
+subroutine help(iunit)
+   integer,intent(in) :: iunit
+   write(iunit,'(a)') &
       "Usage:",&
       "dftd4 [options] <file>",&
       "",&

@@ -1,7 +1,20 @@
-!  extern void D4_calculation(const int& natoms, const int* attyp,
-!        const double& charge, const double* coord,
-!        const DFTD_parameter& dparam, const DFTD_options& dopt,
-!        double& energy, double* grad, double* hess);
+! This file is part of dftd4.
+!
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! dftd4 is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! dftd4 is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
+
 !> external iso-c compatible interface to the DFT-D4 program
 subroutine d4_calculation_c_api &
       &   (natoms,attyp,charge,coord,file_in,dparam_in,dopt_in,edisp,grad,hess) &
@@ -102,7 +115,8 @@ end subroutine d4_calculation_c_api
 !        double& energy, double* grad, double* hess);
 !> external iso-c compatible interface to the DFT-D4 program
 subroutine d4_pbc_calculation_c_api &
-      &   (natoms,attyp,charge,coord,lattice,file_in,dparam_in,dopt_in,edisp,grad,glat) &
+      &   (natoms,attyp,charge,coord,lattice,pbc,file_in,dparam_in,dopt_in, &
+      &    edisp,grad,glat) &
       &    bind(C,name="D4_PBC_calculation")
 
    use iso_fortran_env, wp => real64, istdout => output_unit
@@ -128,6 +142,8 @@ subroutine d4_pbc_calculation_c_api &
    real(c_double),intent(in) :: coord(3,natoms)
    !> lattice parameters
    real(c_double),intent(in) :: lattice(3,3)
+   !> periodic dimensions
+   logical(c_bool),intent(in) :: pbc(3)
    !> input file name
    character(kind=c_char),intent(in) :: file_in(*)
    !> damping parameters
@@ -154,8 +170,8 @@ subroutine d4_pbc_calculation_c_api &
    mol%at = attyp
    mol%xyz = coord
    mol%chrg = charge
-   mol%npbc = 3
-   mol%pbc = .true.
+   mol%npbc = count(pbc)
+   mol%pbc = pbc
    mol%lattice = lattice
    call mol%update
 

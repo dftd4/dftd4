@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "dftd_api.h"
+#include "dftd4.h"
 
 int
 main (int argc, char **argv)

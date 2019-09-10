@@ -1,19 +1,19 @@
 ! This file is part of dftd4.
 !
-! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
 !
-! xtb is free software: you can redistribute it and/or modify it under
+! dftd4 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! xtb is distributed in the hope that it will be useful,
+! dftd4 is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 !> interface to the DFT-D4 module
 module dispersion_calculator
@@ -131,7 +131,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
 
    write(iunit,'(a)')
 
-   call prd4ref(mol)
+   call prd4ref(iunit,mol)
    endif
 
 
@@ -156,7 +156,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
 !  get partial charges
 ! ------------------------------------------------------------------------
    if (verb) &
-   call eeq_header
+   call eeq_header(iunit)
    call new_charge_model(chrgeq,mol)
    call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
                    .false.,.false.,.true.)
@@ -170,11 +170,13 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
 !  calculate properties
 ! ------------------------------------------------------------------------
 dispersion_properties: if (opt%lmolpol) then
+   if (minpr) &
    call generic_header(iunit,'Molecular Properties',49,10)
    call mdisp(mol,ndim,q,opt%g_a,opt%g_c,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
    dresults%polarizibilities = aw(1,:)
    dresults%c6_coefficients = c6ab
-   call prmolc6(mol,molc6,molc8,molpol,covcn=covcn,q=q,c6ab=c6ab,alpha=aw(1,:))
+   if (minpr) &
+   call prmolc6(iunit,mol,molc6,molc8,molpol,covcn=covcn,q=q,c6ab=c6ab,alpha=aw(1,:))
 endif dispersion_properties
 
 if (minpr.and.(opt%lenergy.or.opt%lgradient.or.opt%lhessian)) then

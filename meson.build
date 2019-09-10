@@ -193,7 +193,7 @@ d4exe = executable(meson.project_name(), fmain,
 ## ========================================== ##
 install_headers('include/dftd_api.h')
 
-asciidoc = find_program('a2x')
+asciidoc = find_program('a2x', required: false)
 if asciidoc.found()
    run_command(asciidoc, 'man1/dftd4.1.txt', '--format=manpage')
    install_man('man1/dftd4.1')
@@ -202,6 +202,9 @@ endif
 ## ========================================== ##
 ## TESTSUITE
 ## ========================================== ##
+mypy = find_program('mypy', required: false)
+pytest = find_program('pytest', required: false)
+pylint = find_program('pylint', required: false)
 
 d4tester = executable('d4test', ftest,
                  dependencies : dependencies_exe,
@@ -218,6 +221,11 @@ d4c = executable('dftd4_c', c_srcs,
                  dependencies : dependencies,
                  include_directories : incdir,
                  link_with : d4lib_shared)
+
+py_dftd4 = meson.current_source_dir() / 'python' / 'dftd4'
+pypath = environment()
+pypath.prepend('LD_LIBRARY_PATH', meson.current_build_dir())
+pypath.prepend('PYTHONPATH', meson.current_source_dir() / 'python')
 
 # some very basic checks to see if the executable reacts at all
 test('Argparser: print version',d4exe,args : '--version')
@@ -256,3 +264,17 @@ test('Dispersion: cell gradient', d4tester,args: ['dftd4','cell_gradient'])
 
 test('API: C++', d4cpp)
 test('API: C', d4c)
+
+if pytest.found()
+  test('pytest: xtb.py', pytest, args: ['--pyargs', 'dftd4'], env: pypath)
+endif
+
+if mypy.found()
+  test('mypy: xtb.py', mypy, args: [py_dftd4, '--ignore-missing-imports'],
+       env: pypath)
+endif
+
+if pylint.found()
+  test('pylint: xtb.py', pylint, args: [py_dftd4, '--disable=invalid-names'],
+       env: pypath)
+endif

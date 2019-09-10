@@ -1,19 +1,19 @@
 ! This file is part of dftd4.
 !
-! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
 !
-! xtb is free software: you can redistribute it and/or modify it under
+! dftd4 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! xtb is distributed in the hope that it will be useful,
+! dftd4 is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 !> provides DFT-D4 dispersion
 module dftd4
@@ -183,12 +183,12 @@ end subroutine initialize_dftd4_model
 !  molecular polarizibilities and molecular C6/C8 coefficients are
 !  printed together with the used partial charge, coordination number
 !  atomic C6 and static polarizibilities.
-subroutine prmolc6(mol,molc6,molc8,molpol,  &
+subroutine prmolc6(id,mol,molc6,molc8,molpol,  &
            &       cn,covcn,q,qlmom,c6ab,alpha,rvdw,hvol)
-   use iso_fortran_env, only : id => output_unit
    use mctc_econv
    use class_molecule
    implicit none
+   integer, intent(in)  :: id
    type(molecule),intent(in) :: mol !< molecular structure information
    real(wp),intent(in)  :: molc6    !< molecular C6 coefficient in au
    real(wp),intent(in)  :: molc8    !< molecular C8 coefficient in au
@@ -317,10 +317,10 @@ subroutine mdisp(mol,ndim,q,g_a,g_c, &
 
 end subroutine mdisp
 
-subroutine prd4ref(mol)
-   use iso_fortran_env, only : istdout => output_unit
+subroutine prd4ref(iunit,mol)
    use class_molecule
    implicit none
+   integer, intent(in) :: iunit
    type(molecule),intent(in) :: mol
 
    integer :: i,ii,ia
@@ -328,19 +328,19 @@ subroutine prd4ref(mol)
 
    printed = .false.
 
-   write(istdout,'(a)')
+   write(iunit,'(a)')
    do i = 1, mol%n
       ia = mol%at(i)
       if (printed(ia)) cycle
-      write(istdout,'(a3,1x,a10,1x,a14,1x,a14,1x,a15)') mol%sym(i), &
+      write(iunit,'(a3,1x,a10,1x,a14,1x,a14,1x,a15)') mol%sym(i), &
          &   'q(ref)','CN(ref)','cov. CN(ref)','α(AIM,ref)'
       do ii = 1, refn(ia)
-         write(istdout,'(4x,f10.7,5x,f10.7,5x,f10.7,5x,f10.7)') &
+         write(iunit,'(4x,f10.7,5x,f10.7,5x,f10.7,5x,f10.7)') &
             &      refq(ii,ia),refcn(ii,ia),refcovcn(ii,ia),refal(1,ii,ia)
       enddo
       printed(ia) = .true.
    enddo
-   write(istdout,'(a)')
+   write(iunit,'(a)')
 end subroutine prd4ref
 
 !> charge scaling function

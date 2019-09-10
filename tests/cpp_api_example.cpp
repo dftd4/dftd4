@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cassert>
 
-#include "dftd_api.h"
+#include "dftd4.h"
 
 using namespace std;
 

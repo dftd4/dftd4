@@ -1,3 +1,20 @@
+/* This file is part of dftd4.
+ *
+ * Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+ *
+ * xtb is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * xtb is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+ */
 #pragma once
 
 #ifdef __cplusplus
@@ -46,8 +63,8 @@ D4_calculation(const int* natoms, const int* attyp, const double* charge,
 
 extern void
 D4_PBC_calculation(const int* natoms, const int* attyp, const double* charge,
-      const double* coord, const double* lattice, const char* outfile,
-      const DFTD_parameter* dparam, const DFTD_options* dopt,
+      const double* coord, const double* lattice, const bool* pbc,
+      const char* outfile, const DFTD_parameter* dparam, const DFTD_options* dopt,
       double* energy, double* grad, double* latgrad);
 
 #ifdef __cplusplus

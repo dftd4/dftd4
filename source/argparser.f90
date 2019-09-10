@@ -1,23 +1,23 @@
 ! This file is part of dftd4.
 !
-! Copyright (C) 2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
 !
-! xtb is free software: you can redistribute it and/or modify it under
+! dftd4 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! xtb is distributed in the hope that it will be useful,
+! dftd4 is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with xtb.  If not, see <https://www.gnu.org/licenses/>.
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 !> reads in command line arguments and parses them into options type
 subroutine read_commandline_arguments(set)
-   use iso_fortran_env, only : wp => real64
+   use iso_fortran_env, only : wp => real64, istdout => output_unit
 !$ use omp_lib
 
 ! ------------------------------------------------------------------------
@@ -54,7 +54,7 @@ subroutine read_commandline_arguments(set)
 
    nargs = command_argument_count()
    if (nargs.eq.0) then
-      call help
+      call help(istdout)
       call terminate(1)
    endif
 
@@ -84,16 +84,16 @@ subroutine read_commandline_arguments(set)
 !  check the help, version and citation flag, exit if found
 ! ------------------------------------------------------------------------
          case('-h','--help')
-            call help
+            call help(istdout)
             call terminate(0)
          case(     '--citation')
-            call dftd4_citation
+            call dftd4_citation(istdout)
             call terminate(0)
          case(     '--license')
-            call gpl_license
+            call gpl_license(istdout)
             call terminate(0)
          case(     '--version')
-            call dftd4_header(.true.)
+            call dftd4_header(istdout,.true.)
             call terminate(0)
 
 ! ------------------------------------------------------------------------
