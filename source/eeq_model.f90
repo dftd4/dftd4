@@ -427,9 +427,9 @@ if (lcpq) then
 
    call dsymv('u',m,1.0_wp,Ainv,m,Xvec,1,0.0_wp,Xtmp,1)
 else
-if (mol%n == 1) then
-   allocate( Xtmp(m), source = [mol%chrg, 0.0_wp] )
-else
+   if (mol%n == 1) then
+      allocate( Xtmp(m)); Xtmp = [mol%chrg, 0.0_wp]
+   else
 ! ------------------------------------------------------------------------
 !  solve the linear equations to obtain partial charges
 ! ------------------------------------------------------------------------

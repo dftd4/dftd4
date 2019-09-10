@@ -19,6 +19,7 @@ fc = meson.get_compiler('fortran')
 if fc.get_id() == 'gcc'
   dialect = ['-std=f2008']
   bounds = '-fbounds-check'
+  add_project_arguments('-fbacktrace', language: 'fortran')
 endif
 if fc.get_id() == 'intel'
   dialect = ['-stand','f08']

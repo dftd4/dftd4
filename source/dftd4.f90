@@ -50,8 +50,6 @@ module dftd4
    integer, parameter :: max_elem = 118
 
    integer, dimension(max_elem)      :: refn ! for D4
-   integer, dimension(max_elem)      :: refs ! for D3 (generated on-the-fly)
-   integer, dimension(7,max_elem)    :: refc
    real(wp),dimension(7,max_elem)    :: refq
    real(wp),dimension(7,max_elem)    :: refh
    real(wp),dimension(7,max_elem)    :: dftq,pbcq,gffq,solq,clsq
@@ -62,9 +60,7 @@ module dftd4
    real(wp),dimension(7,max_elem)    :: refcn
    integer, dimension(7,max_elem)    :: refsys
    real(wp),dimension(23,7,max_elem) :: alphaiw
-   real(wp),dimension(23,7,max_elem) :: refal
    real(wp),dimension(17)       :: secq
-   real(wp),dimension(17)       :: dfts,pbcs,gffs,sols,clss
    real(wp),dimension(17)       :: sscale
    real(wp),dimension(17)       :: seccn
    real(wp),dimension(17)       :: seccnd3
@@ -73,6 +69,8 @@ module dftd4
    include 'param_ref.inc'
 
    type :: dispersion_model
+      real(wp) :: g_a = 0.0_wp
+      real(wp) :: g_c = 0.0_wp
       integer, dimension(max_elem) :: atoms = 0
       integer, dimension(max_elem) :: nref = 0
       integer, dimension(7,max_elem) :: ncount = 0
@@ -83,8 +81,9 @@ module dftd4
    contains
       procedure :: allocate => allocate_dispersion_model
       procedure :: deallocate => deallocate_dispersion_model
-      generic :: new => new_d4_model
-      procedure :: new_d4_model => initialize_dftd4_model
+      generic :: new => new_d4_model!, new_d3_model
+      procedure, private :: new_d4_model => initialize_d4_model
+      procedure, private :: new_d3_model => initialize_d3_model
    end type dispersion_model
 
 contains
@@ -98,7 +97,7 @@ subroutine deallocate_dispersion_model(self)
    class(dispersion_model), intent(out) :: self
 end subroutine deallocate_dispersion_model
 
-subroutine initialize_dftd4_model(self,atoms,mode,g_a,g_c)
+subroutine initialize_d4_model(self,atoms,mode,g_a,g_c)
    class(dispersion_model), intent(inout) :: self
    integer, intent(in)  :: atoms(:)
    real(wp),intent(in)  :: g_a,g_c
@@ -112,6 +111,9 @@ subroutine initialize_dftd4_model(self,atoms,mode,g_a,g_c)
    intrinsic :: nint
 
    call self%allocate
+
+   self%g_a = g_a
+   self%g_c = g_c
 
    select case(mode)
    case(p_refq_hirshfeld,p_refq_periodic)
@@ -131,7 +133,10 @@ subroutine initialize_dftd4_model(self,atoms,mode,g_a,g_c)
       tmp_hq = refh
    end select
 
-   !> set up refc und refal, also obtain the dimension of the dispmat
+   self%atoms = 0
+   self%nref = 0
+
+   !> set up ncount und alpha, also obtain the dimension of the dispmat
    do i = 1, size(atoms,1)
       cncount = 0
       cncount(0) = 1
@@ -142,9 +147,9 @@ subroutine initialize_dftd4_model(self,atoms,mode,g_a,g_c)
             is = refsys(j,ia)
             iz = zeff(is)
             alpha = sscale(is)*secaiw(:,is) &
-               &    * zeta(g_a,gam(is)*g_c,iz,tmp_hq(j,ia)+iz)
+               &    * zeta(self%g_a,gam(is)*self%g_c,iz,tmp_hq(j,ia)+iz)
             icn = nint(refcn(j,ia))
-            self%cn = refcovcn(j,ia)
+            self%cn(j,ia) = refcovcn(j,ia)
             cncount(icn) = cncount(icn) + 1
             self%alpha(:,j,ia) = max(ascale(j,ia)*(alphaiw(:,j,ia) &
                &                     - hcount(j,ia)*alpha), 0.0_wp)
@@ -176,7 +181,76 @@ subroutine initialize_dftd4_model(self,atoms,mode,g_a,g_c)
    enddo
    !$omp end do
    !$omp end parallel
-end subroutine initialize_dftd4_model
+end subroutine initialize_d4_model
+
+!> This routine is initializing a D3-like dispersion model (notice the absence
+!  of DFT- in D3-like) using the polarizibilities from the D4 model
+!  we published in JCP2019 and PCCP2019. So if you want to use this
+!  D3-like model in the framework of the `dftd4`-program, you have to
+!  cite those papers AND the D3(BJ) paper. Also you have to explain that
+!  you are evalulating the D4 energy expression with your D3-like model
+!  and cite the JCP2019 paper for this (citing it once is okay).
+!
+!  Note that, it is easier to use the D4 standard model directly and
+!  just cite the JCP2019 and PCCP2019 paper.
+!
+!  Oh, and the D3-like model is still not as good the D4 standard model,
+!  I already pushed it to the limit.                                 --- SAW
+subroutine initialize_d3_model(self,atoms)
+   class(dispersion_model), intent(inout) :: self
+   integer, intent(in)  :: atoms(:)
+
+   integer  :: i,ia,is,j,ii,jj
+   real(wp) :: alpha(23),c6
+
+   intrinsic :: nint
+
+   call self%allocate
+
+   self%g_a = 0.0_wp
+   self%g_c = 0.0_wp
+   self%q = 0.0_wp
+   self%ncount = 1
+
+   self%atoms = 0
+   self%nref = 0
+
+   !> set up ncount und alpha, also obtain the dimension of the dispmat
+   do i = 1, size(atoms,1)
+      ia = atoms(i)
+      if (self%atoms(ia).eq.0) then
+         self%nref(ia) = refn(ia)
+         do j = 1, refn(ia)
+            is = refsys(j,ia)
+            alpha = sscale(is)*secaiw(:,is)
+            self%cn(j,ia) = refcn(j,ia)
+            self%alpha(:,j,ia) = max(ascale(j,ia)*(alphaiw(:,j,ia) &
+               &                     - hcount(j,ia)*alpha), 0.0_wp)
+         enddo
+      endif
+      self%atoms(ia) = self%atoms(ia)+1
+   enddo
+
+   ! integrate C6 coefficients
+   !$omp parallel default(none) private(i,j,ii,jj,alpha,c6) shared(self)
+   !$omp do schedule(runtime)
+   do i = 1, max_elem
+      do j = 1, i
+         if (self%atoms(i) > 0 .and. self%atoms(j) > 0) then
+            do ii = 1, self%nref(i)
+               do jj = 1, self%nref(j)
+                  alpha = self%alpha(:,ii,i)*self%alpha(:,jj,j)
+                  c6 = thopi * trapzd(alpha)
+                  self%c6(jj,ii,j,i) = c6
+                  self%c6(ii,jj,i,j) = c6
+               enddo
+            enddo
+         endif
+      enddo
+   enddo
+   !$omp end do
+   !$omp end parallel
+end subroutine initialize_d3_model
 
 !> prints molecular properties in a human readable format
 !
@@ -246,15 +320,14 @@ end subroutine prmolc6
 !  partitioned to atoms, C6AA coefficients for each atom,
 !  radii derived from the polarizibilities and relative
 !  volumes relative to the atom
-subroutine mdisp(mol,ndim,q,g_a,g_c, &
+subroutine mdisp(mol,dispm,ndim,q, &
            &     gw,refc6,molc6,molc8,molpol,aout,cout,rout,vout)
    use class_molecule
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol   !< molecular structure information
    integer, intent(in)  :: ndim       !< dimension of reference systems
    real(wp),intent(in)  :: q(mol%n) !< partial charges
-   real(wp),intent(in)  :: g_a        !< charge scaling height
-   real(wp),intent(in)  :: g_c        !< charge scaling steepness
    real(wp),intent(in)  :: gw(ndim)
    real(wp),intent(in)  :: refc6(ndim,ndim)
    real(wp),intent(out) :: molc6  !< molecular C6 coefficient in au
@@ -287,16 +360,16 @@ subroutine mdisp(mol,ndim,q,g_a,g_c, &
    do i = 1, mol%n
       ia = mol%at(i)
       iz = zeff(ia)
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = k+1
          itbl(ii,i) = k
-         zetvec(k) = gw(k) * zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz)
-         aw(:,i) = aw(:,i) + zetvec(k) * refal(:,ii,ia)
+         zetvec(k) = gw(k) * zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz)
+         aw(:,i) = aw(:,i) + zetvec(k) * dispm%alpha(:,ii,ia)
       enddo
 !     van-der-Waals radius, alpha = 4/3 pi r**3 <=> r = (3/(4pi) alpha)**(1/3)
       rvdw(i) = (0.25_wp*thopi*aw(1,i))**oth
 !     pseudo-hirshfeld volume
-      phv(i) = aw(1,i)/refal(1,1,ia)
+      phv(i) = aw(1,i)/dispm%alpha(1,1,ia)
       c6ab(i,i) = thopi * trapzd(aw(:,i)**2)
       molpol = molpol + aw(1,i)
       molc6  = molc6  + c6ab(i,i)
@@ -317,9 +390,10 @@ subroutine mdisp(mol,ndim,q,g_a,g_c, &
 
 end subroutine mdisp
 
-subroutine prd4ref(iunit,mol)
+subroutine prd4ref(iunit,mol,dispm)
    use class_molecule
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    integer, intent(in) :: iunit
    type(molecule),intent(in) :: mol
 
@@ -332,11 +406,11 @@ subroutine prd4ref(iunit,mol)
    do i = 1, mol%n
       ia = mol%at(i)
       if (printed(ia)) cycle
-      write(iunit,'(a3,1x,a10,1x,a14,1x,a14,1x,a15)') mol%sym(i), &
-         &   'q(ref)','CN(ref)','cov. CN(ref)','α(AIM,ref)'
-      do ii = 1, refn(ia)
-         write(iunit,'(4x,f10.7,5x,f10.7,5x,f10.7,5x,f10.7)') &
-            &      refq(ii,ia),refcn(ii,ia),refcovcn(ii,ia),refal(1,ii,ia)
+      write(iunit,'(a3,1x,a10,1x,a14,1x,a15)') mol%sym(i), &
+         &   'q(ref)','cov. CN(ref)','α(AIM,ref)'
+      do ii = 1, dispm%nref(ia)
+         write(iunit,'(4x,f10.7,5x,f10.7,5x,f10.7)') &
+            &      dispm%q(ii,ia),dispm%cn(ii,ia),dispm%alpha(1,ii,ia)
       enddo
       printed(ia) = .true.
    enddo
@@ -603,100 +677,17 @@ pure elemental function fdmprdr_zerom(n,r,c,rsn,alp) result(dfdmp)
            * fdmpr_zerom(n,r,c,rsn,alp)**2
 end function fdmprdr_zerom
 
-!> initialize the dftd4 module
-subroutine d4init(mol,g_a,g_c,mode,ndim)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   real(wp),intent(in)  :: g_a,g_c
-   integer, intent(in)  :: mode
-   integer, intent(out) :: ndim
-
-   integer  :: i,ia,is,icn,j
-   integer  :: cncount(0:18)
-   real(wp) :: sec_al(23),iz
-
-   intrinsic :: nint
-
-   select case(mode)
-   case(p_refq_hirshfeld,p_refq_periodic)
-!     print'(1x,''* using PBE0/def2-TZVP Hirshfeld charges'')'
-      refq = dftq
-      refh = dfth
-      secq = dfts
-!  case(2)
-!     refq = pbcq
-!     refh = pbch
-!     secq = pbcs
-   case(p_refq_gasteiger)
-!     print'(1x,''* using classical Gasteiger charges'')'
-      refq = gffq
-      refh = gffh
-      secq = gffs
-   case(p_refq_goedecker)
-      refq = clsq
-      refh = clsh
-      secq = clss
-   case(p_refq_gfn2xtb_gbsa_h2o)
-!     print'(1x,''* using GFN2-xTB//GBSA(H2O) charges'')'
-      refq = solq
-      refh = solh
-      secq = sols
-   end select
-
-   ndim = 0
-   refal = 0.0_wp
-
-!* set up refc und refal, also obtain the dimension of the dispmat
-   do i = 1, mol%n
-      cncount = 0
-      cncount(0) = 1
-      ia = mol%at(i)
-      do j = 1, refn(ia)
-         is = refsys(j,ia)
-         iz = zeff(is)
-         sec_al = sscale(is)*secaiw(:,is) &
-         &  * zeta(g_a,gam(is)*g_c,iz,refh(j,ia)+iz)
-         icn =nint(refcn(j,ia))
-         cncount(icn) = cncount(icn) + 1
-         refal(:,j,ia) = max(ascale(j,ia)*(alphaiw(:,j,ia)-hcount(j,ia)*sec_al),0.0_wp)
-      enddo
-      do j = 1, refn(ia)
-         icn = cncount(nint(refcn(j,ia)))
-         refc(j,ia) = icn*(icn+1)/2
-      enddo
-      ndim = ndim + refn(ia)
-   enddo
-
-end subroutine d4init
-
-!> get calculation dimension for DFT-D4 reference systems
-subroutine d4dim(mol,ndim)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   integer, intent(out) :: ndim     !< total number of reference systems
-
-   integer :: i
-
-   ndim = 0
-
-   do i = 1, mol%n
-      ndim = ndim + refn(mol%at(i))
-   enddo
-
-end subroutine d4dim
-
 !> basic D4 calculation
 !
 !  obtain gaussian weights for the references systems based on
 !  input CN and integrate reference C6 coefficients
-subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,refc6)
+subroutine d4(mol,dispm,ndim,wf,covcn,gw,refc6)
    use class_molecule
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim     !< calculation dimension
-   real(wp),intent(in)  :: wf,g_a,g_c
+   real(wp),intent(in)  :: wf
    real(wp),intent(in)  :: covcn(mol%n)  !< covalent coordination number
    real(wp),intent(out) :: gw(ndim)
    real(wp),intent(out) :: refc6(ndim,ndim)
@@ -714,7 +705,7 @@ subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,refc6)
 
    k = 0
    do i = 1, mol%n
-      do ii = 1, refn(mol%at(i))
+      do ii = 1, dispm%nref(mol%at(i))
          k = k+1
          itbl(ii,i) = k
       enddo
@@ -723,24 +714,24 @@ subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,refc6)
    do i = 1, mol%n
       ia = mol%at(i)
       norm = 0.0_wp
-      do ii = 1, refn(ia)
-         do iii = 1, refc(ii,ia)
+      do ii = 1, dispm%nref(ia)
+         do iii = 1, dispm%ncount(ii,ia)
             twf = iii*wf
-            norm = norm + cngw(twf,covcn(i),refcovcn(ii,ia))
+            norm = norm + cngw(twf,covcn(i),dispm%cn(ii,ia))
          enddo
       enddo
       norm = 1._wp / norm
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = itbl(ii,i)
-         do iii = 1, refc(ii,ia)
+         do iii = 1, dispm%ncount(ii,ia)
             twf = iii*wf
-            gw(k) = gw(k) + cngw(twf,covcn(i),refcovcn(ii,ia)) * norm
+            gw(k) = gw(k) + cngw(twf,covcn(i),dispm%cn(ii,ia)) * norm
          enddo
 !    --- okay, if we run out of numerical precision, gw(k) will be NaN.
 !        In case it is NaN, it will not match itself! So we can rescue
 !        this exception. This can only happen for very high CNs.
          if (gw(k).ne.gw(k)) then
-            if (maxval(refcovcn(:refn(ia),ia)).eq.refcovcn(ii,ia)) then
+            if (maxval(dispm%cn(:dispm%nref(ia),ia)).eq.dispm%cn(ii,ia)) then
                gw(k) = 1.0_wp
             else
                gw(k) = 0.0_wp
@@ -749,17 +740,17 @@ subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,refc6)
          ! diagonal terms for image-cell interaction under PBC
          do jj = 1, ii
             l = itbl(jj,i)
-            aiw = refal(:,ii,ia)*refal(:,jj,ia)
-            refc6(l,k) = thopi * trapzd(aiw)
+            aiw = dispm%alpha(:,ii,ia)*dispm%alpha(:,jj,ia)
+            refc6(l,k) = dispm%c6(jj,ii,ia,ia)
             refc6(k,l) = refc6(l,k)
          enddo
          ! off-diagonal terms
          do j = 1, i-1
             ja = mol%at(j)
-            do jj = 1, refn(ja)
+            do jj = 1, dispm%nref(ja)
                l = itbl(jj,j)
-               aiw = refal(:,ii,ia)*refal(:,jj,ja)
-               refc6(l,k) = thopi * trapzd(aiw)
+               aiw = dispm%alpha(:,ii,ia)*dispm%alpha(:,jj,ja)
+               refc6(l,k) = dispm%c6(jj,ii,ja,ia)
                refc6(k,l) = refc6(l,k)
             enddo
          enddo
@@ -769,9 +760,10 @@ subroutine d4(mol,ndim,wf,g_a,g_c,covcn,gw,refc6)
 end subroutine d4
 
 !> build a dispersion matrix (mainly for SCC calculations)
-pure subroutine build_dispmat(mol,ndim,par,refc6,dispmat)
+pure subroutine build_dispmat(mol,dispm,ndim,par,refc6,dispmat)
    use class_molecule
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in)  :: par
@@ -789,7 +781,7 @@ pure subroutine build_dispmat(mol,ndim,par,refc6,dispmat)
 
    k = 0
    do i = 1, mol%n
-      do ii = 1, refn(mol%at(i))
+      do ii = 1, dispm%nref(mol%at(i))
          k = k + 1
          itbl(ii,i) = k
       enddo
@@ -808,9 +800,9 @@ pure subroutine build_dispmat(mol,ndim,par,refc6,dispmat)
          oor6  = fdmpr_bj( 6,r,cutoff)
          oor8  = fdmpr_bj( 8,r,cutoff)
          oor10 = fdmpr_bj(10,r,cutoff)
-         do ii = 1, refn(ia)
+         do ii = 1, dispm%nref(ia)
             k = itbl(ii,i)
-            do jj = 1, refn(ja)
+            do jj = 1, dispm%nref(ja)
                l = itbl(jj,j)
                refc8 = 3.0_wp * r4r2(ia)*r4r2(ja) * refc6(k,l)
                refc10 = 49.0_wp/40.0_wp * refc8**2/refc6(k,l)
@@ -827,9 +819,10 @@ pure subroutine build_dispmat(mol,ndim,par,refc6,dispmat)
 end subroutine build_dispmat
 
 !> build a weighted dispersion matrix (mainly for SCC calculations)
-subroutine build_wdispmat(mol,ndim,par,refc6,gw,wdispmat)
+subroutine build_wdispmat(mol,dispm,ndim,par,refc6,gw,wdispmat)
    use class_molecule
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in)  :: par
@@ -849,7 +842,7 @@ subroutine build_wdispmat(mol,ndim,par,refc6,gw,wdispmat)
 
    k = 0
    do i = 1, mol%n
-      do ii = 1, refn(mol%at(i))
+      do ii = 1, dispm%nref(mol%at(i))
          k = k + 1
          itbl(ii,i) = k
       enddo
@@ -870,9 +863,9 @@ subroutine build_wdispmat(mol,ndim,par,refc6,gw,wdispmat)
          oor6  = fdmpr_bj( 6,r,cutoff)
          oor8  = fdmpr_bj( 8,r,cutoff)
          oor10 = fdmpr_bj(10,r,cutoff)
-         do ii = 1, refn(ia)
+         do ii = 1, dispm%nref(ia)
             k = itbl(ii,i)
-            do jj = 1, refn(ja)
+            do jj = 1, dispm%nref(ja)
                l = itbl(jj,j)
                gwgw = gw(k)*gw(l)
                if (gwgw.lt.gwcut) cycle
@@ -894,13 +887,13 @@ subroutine build_wdispmat(mol,ndim,par,refc6,gw,wdispmat)
 end subroutine build_wdispmat
 
 !> calculate contribution to the Fockian
-subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
+subroutine disppot(mol,dispm,ndim,q,wdispmat,gw,hdisp)
    use class_molecule
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    real(wp),intent(in)  :: q(mol%n)
-   real(wp),intent(in)  :: g_a,g_c
    real(wp),intent(in)  :: wdispmat(ndim,ndim)
    real(wp),intent(in)  :: gw(ndim)
    real(wp),intent(out) :: hdisp(mol%n)
@@ -925,11 +918,11 @@ subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
    do i = 1, mol%n
        ia = mol%at(i)
        iz = zeff(ia)
-       do ii = 1, refn(ia)
+       do ii = 1, dispm%nref(ia)
           k = k + 1
           if (gw(k).lt.gw_cut) cycle
-          zerovec(k) = dzeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz)
-          zetavec(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz)
+          zerovec(k) = dzeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz)
+          zetavec(k) =  zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz)
       enddo
    enddo
 !  create vector -> dispmat(ndim,dnim) * zetavec(ndim) = dumvec(ndim)
@@ -940,8 +933,8 @@ subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
    k = 0
    do i = 1, mol%n
       ia = mol%at(i)
-      hdisp(i) = sum(dumvec(k+1:k+refn(ia))*zerovec(k+1:k+refn(ia)))
-      k = k + refn(ia)
+      hdisp(i) = sum(dumvec(k+1:k+dispm%nref(ia))*zerovec(k+1:k+dispm%nref(ia)))
+      k = k + dispm%nref(ia)
    enddo
 
    deallocate(zetavec,zerovec,dumvec)
@@ -949,13 +942,13 @@ subroutine disppot(mol,ndim,q,g_a,g_c,wdispmat,gw,hdisp)
 end subroutine disppot
 
 !> calculate dispersion energy in SCC
-function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
+function edisp_scc(mol,dispm,ndim,q,wdispmat,gw) result(ed)
    use class_molecule
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    real(wp),intent(in)  :: q(mol%n)
-   real(wp),intent(in)  :: g_a,g_c
    real(wp),intent(in)  :: wdispmat(ndim,ndim)
    real(wp),intent(in)  :: gw(ndim)
    real(wp) :: ed
@@ -976,10 +969,10 @@ function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
    do i = 1, mol%n
        ia = mol%at(i)
        iz = zeff(ia)
-       do ii = 1, refn(ia)
+       do ii = 1, dispm%nref(ia)
           k = k + 1
           if (gw(k).lt.gw_cut) cycle
-          zetavec(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz)
+          zetavec(k) =  zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz)
       enddo
    enddo
 !  create vector -> dispmat(ndim,dnim) * zetavec(ndim) = dumvec(ndim)
@@ -991,917 +984,6 @@ function edisp_scc(mol,ndim,q,g_a,g_c,wdispmat,gw) result(ed)
    deallocate(zetavec,dumvec)
 
 end function edisp_scc
-
-!> compute D4 gradient
-subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
-           &        par,wf,g_a,g_c, &
-           &        refc6,mbd, &
-           &        g,eout,aout)
-   use class_molecule
-   implicit none
-   !> molecular structure information
-   type(molecule),intent(in) :: mol
-   !> calculation dimension
-   integer, intent(in)  :: ndim
-   !> partial charges
-   real(wp),intent(in)  :: q(mol%n)
-   !> derivative of partial charges w.r.t. nuclear coordinates
-   real(wp),intent(in)  :: dqdr(3,mol%n,mol%n)
-   !> coordination number
-   real(wp),intent(in)  :: cn(mol%n)
-   !> derivative of CNs w.r.t. nuclear coordinates
-   real(wp),intent(in)  :: dcndr(3,mol%n,mol%n)
-   !> damping parameters
-   type(dftd_parameter),intent(in) :: par
-   !> gaussian weighting factor
-   real(wp),intent(in)  :: wf
-   !> charge scale height
-   real(wp),intent(in)  :: g_a
-   !> charge scale steepness
-   real(wp),intent(in)  :: g_c
-!  real(wp),intent(in)  :: gw(ndim) ! calculate on-the-fly
-   !> reference C6 coefficients
-   real(wp),intent(in)  :: refc6(ndim,ndim)
-   !> type of non-additivity correction
-   integer, intent(in)  :: mbd
-   !> molecular gradient
-   real(wp),intent(inout)        :: g(3,mol%n)
-   !> energy from gradient calculation
-   real(wp),intent(out),optional :: eout
-   !> dipole polarizibilities
-   real(wp),intent(out),optional :: aout(23,mol%n)
-
-   integer  :: i,ii,iii,j,jj,k,l,ia,ja,ij
-   integer, allocatable :: itbl(:,:)
-   real(wp) :: iz
-   real(wp) :: eabc,ed
-   real(wp) :: norm,dnorm
-   real(wp) :: dexpw,expw
-   real(wp) :: twf,tgw,r4r2ij
-   real(wp) :: rij(3),r,r2,R0
-   real(wp) :: oor6,oor8,oor10,door6,door8,door10
-   real(wp) :: disp
-   real(wp) :: c6ij,dic6ij,djc6ij,dizij,djzij
-   real(wp) :: rcovij,expterm,den
-   real(wp) :: drdx(3),dtmp,gwk,dgwk
-   real(wp),allocatable :: r2ab(:)
-   real(wp),allocatable :: dc6dr(:)
-   real(wp),allocatable :: dc6dcn(:)
-   real(wp),allocatable :: zvec(:)
-   real(wp),allocatable :: dzvec(:)
-   real(wp),allocatable :: gw(:)
-   real(wp),allocatable :: dgw(:)
-   real(wp),allocatable :: dc6dq(:)
-   real(wp),allocatable :: dzdq(:)
-   real(wp) :: cn_thr,r_thr,gw_thr
-   parameter(cn_thr = 1600.0_wp)
-   parameter( r_thr=5000._wp)
-   parameter(gw_thr=0.000001_wp)
-!  timing
-!  real(wp) :: time0,time1
-!  real(wp) :: wall0,wall1
-
-   intrinsic :: present,sqrt,sum,maxval,exp,abs
-
-!  print'(" * Allocating local memory")'
-   allocate( dc6dr(mol%n*(mol%n+1)/2),dc6dcn(mol%n),  &
-   &         r2ab(mol%n*(mol%n+1)/2),zvec(ndim),dzvec(ndim),  &
-   &         gw(ndim),dgw(ndim),dc6dq(mol%n),dzdq(ndim),  &
-   &         source = 0.0_wp )
-   allocate( itbl(7,mol%n), source = 0 )
-
-   ed = 0.0_wp
-
-!  precalc
-!  print'(" * Setting up index table")'
-   k = 0
-   do i = 1, mol%n
-      do ii = 1, refn(mol%at(i))
-         k = k+1
-         itbl(ii,i) = k
-      enddo
-   enddo
-
-!  print'(" * Entering first OMP section")'
-!$OMP parallel default(none) &
-!$omp private(i,ii,iii,ia,iz,k,norm,dnorm,twf,tgw,dexpw,expw,gwk,dgwk)  &
-!$omp shared (mol,refn,refc,refcovcn,itbl,refq,wf,cn,g_a,g_c,q) &
-!$omp shared (gw,dgw,zvec,dzvec,dzdq)
-!$omp do
-   do i = 1, mol%n
-      ia = mol%at(i)
-      iz = zeff(ia)
-      norm  = 0.0_wp
-      dnorm = 0.0_wp
-      do ii=1,refn(ia)
-         do iii = 1, refc(ii,ia)
-            twf = iii*wf
-            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
-            norm  =  norm + tgw
-            dnorm = dnorm + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
-         enddo
-      enddo
-      norm = 1._wp/norm
-      do ii = 1, refn(ia)
-         k = itbl(ii,i)
-         dexpw=0.0_wp
-         expw=0.0_wp
-         do iii = 1, refc(ii,ia)
-            twf = wf*iii
-            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
-            expw  =  expw + tgw
-            dexpw = dexpw + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
-         enddo
-
-         ! save
-         gwk = expw*norm
-         if (gwk.ne.gwk) then
-            if (maxval(refcovcn(:refn(ia),ia)).eq.refcovcn(ii,ia)) then
-               gwk = 1.0_wp
-            else
-               gwk = 0.0_wp
-            endif
-         endif
-         zvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
-         ! NEW: q=0 for ATM
-         gw(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gwk
-
-         dgwk = dexpw*norm-expw*dnorm*norm**2
-         if (dgw(k).ne.dgw(k)) then
-            dgw(k) = 0.0_wp
-         endif
-         dzvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * dgwk
-         dzdq(k) = dzeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
-         ! NEW: q=0 for ATM
-         dgw(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * dgwk
-      enddo
-   enddo
-!$omp end do
-!$omp end parallel
-
-!  print'(" * Entering second OMP section")'
-!$OMP parallel default(none) &
-!$omp private(i,j,ia,ja,ij,k,l,c6ij,dic6ij,djc6ij,disp,dizij,djzij,  &
-!$omp         rij,r2,r,r4r2ij,r0,oor6,oor8,oor10,door6,door8,door10)  &
-!$omp shared(mol,refn,itbl,zvec,dzvec,refc6,par,dzdq) &
-!$omp shared(r2ab) reduction(+:dc6dr,dc6dcn,dc6dq,ed)
-!$omp do schedule(dynamic)
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-         rij = mol%xyz(:,j) - mol%xyz(:,i)
-         r2 = sum( rij**2 )
-         r2ab(ij) = r2
-         if (r2.gt.r_thr) cycle
-         ! temps
-         c6ij = 0.0_wp
-         dic6ij = 0.0_wp
-         djc6ij = 0.0_wp
-         dizij = 0.0_wp
-         djzij = 0.0_wp
-         ! all refs
-         do ii = 1, refn(ia)
-            k = itbl(ii,i)
-            do jj = 1, refn(ja)
-               l = itbl(jj,j)
-               c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
-               dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)
-               djc6ij = djc6ij + zvec(k)*dzvec(l)*refc6(k,l)
-               dizij = dizij + dzdq(k)*zvec(l)*refc6(k,l)
-               djzij = djzij + zvec(k)*dzdq(l)*refc6(k,l)
-            enddo
-         enddo
-
-         r = sqrt(r2)
-
-         r4r2ij = 3*r4r2(ia)*r4r2(ja)
-         r0 = par%a1*sqrt(r4r2ij) + par%a2
-
-         oor6 = 1._wp/(r2**3+r0**6)
-         oor8 = 1._wp/(r2**4+r0**8)
-         oor10 = 1._wp/(r2**5+r0**10)
-         door6 = -6*r2**2*r*oor6**2
-         door8 = -8*r2**3*r*oor8**2
-         door10 = -10*r2**4*r*oor10**2
-!        oor6   = fdmpr_bj( 6,r,r0)
-!        oor8   = fdmpr_bj( 8,r,r0)
-!        oor10  = fdmpr_bj(10,r,r0)
-!        door6  = fdmprdr_bj( 6,r,r0)
-!        door8  = fdmprdr_bj( 8,r,r0)
-!        door10 = fdmprdr_bj(10,r,r0)
-
-         disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
-         &    + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-
-         ! save
-         dc6dq(i) = dc6dq(i) + dizij*disp
-         dc6dq(j) = dc6dq(j) + djzij*disp
-         dc6dcn(i) = dc6dcn(i) + dic6ij*disp
-         dc6dcn(j) = dc6dcn(j) + djc6ij*disp
-         dc6dr(ij) = dc6dr(ij) + c6ij*(par%s6*door6 + par%s8*r4r2ij*door8 &
-         &                       + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10 )
-
-         ed = ed - c6ij*disp
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
-
-   if (mbd.ne.p_mbd_none) &
-   &   call dabcappr(mol,ndim,par,  &
-           &        r2ab,gw,dgw,refc6,itbl,dc6dr,dc6dcn,eabc)
-
-
-!  print'(" * Entering third OMP section")'
-!$OMP parallel default(none) &
-!$omp private(i,j,ia,ja,ij,rij,r2,r,drdx,den,rcovij,  &
-!$omp         expterm,dtmp) reduction(+:g) &
-!$omp shared(mol,dc6dr,dc6dcn,dcndr)
-!$omp do schedule(dynamic)
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-
-         rij = mol%xyz(:,j) - mol%xyz(:,i)
-         r2 = sum( rij**2 )
-         r = sqrt(r2)
-         drdx = rij/r
-
-         g(:,i) = g(:,i) + dc6dr(ij) * drdx! - dc6dcn(i) * dcndr(:,j,i)
-         g(:,j) = g(:,j) - dc6dr(ij) * drdx! - dc6dcn(j) * dcndr(:,i,j)
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
-
-   call dgemv('n',3*mol%n,mol%n,-1.0_wp,dqdr,3*mol%n,dc6dq,1,1.0_wp,g,1)
-   call dgemv('n',3*mol%n,mol%n,-1.0_wp,dcndr,3*mol%n,dc6dcn,1,1.0_wp,g,1)
-
-!  print*,ed,eabc
-
-!  print'(" * Dispersion all done, saving variables")'
-   if (present(eout)) eout = ed + eabc
-
-   if (present(aout)) then
-      aout = 0._wp
-      do i = 1, mol%n
-         ia = mol%at(i)
-         do ii = 1, refn(ia)
-            aout(:,i) = aout(:,i) + zvec(k) * refal(:,ii,ia)
-         enddo
-      enddo
-   endif
-
-
-end subroutine dispgrad
-
-!> calculates threebody dispersion energy from C6 coefficients
-subroutine apprabc(mol,c6ab,par,E)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   real(wp),intent(in)  :: c6ab(mol%n*(mol%n+1)/2)
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(out) :: E
-
-   integer  :: i,j,k,ia,ja,ka,ij,ik,jk
-   real(wp) :: rij(3),rjk(3),rik(3),r2ij,r2jk,r2ik,cij,cjk,cik,cijk
-   real(wp) :: atm,r2ijk,c9ijk,oor9ijk,rijk,fdmp
-   real(wp) :: one,oth,six
-   parameter(one = 1._wp)
-   parameter(oth = 1._wp/3._wp)
-   parameter(six = 6._wp)
-
-   intrinsic :: sum,sqrt
-
-   E = 0.0_wp
-
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-         rij  = mol%xyz(:,j) - mol%xyz(:,i)
-         r2ij = sum(rij**2)
-         cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         do k = 1, j-1
-            ka = mol%at(k)
-            ik = i*(i-1)/2 + k
-            jk = j*(j-1)/2 + k
-            rik   = mol%xyz(:,i) - mol%xyz(:,k)
-            r2ik  = sum(rik**2)
-            cik   = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2
-            rjk   = mol%xyz(:,k) - mol%xyz(:,j)
-            r2jk  = sum(rjk**2)
-            cjk   = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
-            r2ijk = r2ij*r2ik*r2jk
-            rijk  = sqrt(r2ijk)
-            cijk  = cij*cjk*cik
-            c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
-            atm = ( 0.375_wp * (r2ij+r2jk-r2ik) &
-            &                * (r2ij+r2ik-r2jk) &
-            &                * (r2ik+r2jk-r2ij) / r2ijk ) + 1._wp
-            fdmp = one/(one+six*((cijk/rijk)**oth)**par%alp)
-            oor9ijk = atm/rijk**3*fdmp
-            E = E + c9ijk * oor9ijk
-         enddo
-      enddo
-   enddo
-
-end subroutine apprabc
-
-!> calculates threebody dispersion energy from dipole polarizibilities
-subroutine dispabc(mol,aw,par,E)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   real(wp),intent(in)  :: aw(23,mol%n)
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(out) :: E
-
-   integer  :: i,j,k,ia,ja,ka
-   real(wp) :: rij(3),rjk(3),rik(3),r2ij,r2jk,r2ik,cij,cjk,cik,cijk
-   real(wp) :: atm,r2ijk,c9ijk,oor9ijk,rijk,fdmp
-   real(wp) :: one,oth,six
-   parameter(one = 1._wp)
-   parameter(oth = 1._wp/3._wp)
-   parameter(six = 6._wp)
-
-   intrinsic :: sum,sqrt
-
-   E = 0.0_wp
-
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         rij  = mol%xyz(:,j) - mol%xyz(:,i)
-         r2ij = sum(rij**2)
-         cij  = (par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2)
-         do k = 1, j-1
-            ka = mol%at(k)
-            rik   = mol%xyz(:,i) - mol%xyz(:,k)
-            r2ik  = sum(rik**2)
-            cik   = (par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2)
-            rjk   = mol%xyz(:,k) - mol%xyz(:,j)
-            r2jk  = sum(rjk**2)
-            cjk   = (par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2)
-            r2ijk = r2ij*r2ik*r2jk
-            rijk  = sqrt(r2ijk)
-            cijk  = cij*cjk*cik
-            c9ijk = par%s9*thopi*trapzd( aw(:,i)*aw(:,j)*aw(:,k) )
-            atm = ( 0.375_wp * (r2ij+r2jk-r2ik) &
-            &                * (r2ij+r2ik-r2jk) &
-            &                * (r2ik+r2jk-r2ij) / r2ijk ) + 1._wp
-            fdmp = one/(one+six*((cijk/rijk)**oth)**par%alp)
-            oor9ijk = atm/rijk**3*fdmp
-            E = E + c9ijk * oor9ijk
-         enddo
-      enddo
-   enddo
-
-end subroutine dispabc
-
-!> calculates threebody dispersion energy from C6 coefficients
-subroutine abcappr(mol,ndim,g_a,g_c,par,gw,r2ab,refc6,eabc)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   integer, intent(in)  :: ndim
-   real(wp),intent(in)  :: g_a,g_c
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: gw(ndim)
-   real(wp),intent(in)  :: r2ab(mol%n*(mol%n+1)/2)
-   real(wp),intent(in)  :: refc6(ndim,ndim)
-   real(wp),intent(out) :: eabc
-
-   integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
-   integer  :: ij,jk,ik
-   integer, allocatable :: itbl(:,:)
-   real(wp),allocatable :: c6ab(:),zvec(:),c(:)
-   real(wp) :: r2ij,r2jk,r2ik,iz
-   real(wp) :: cij,cjk,cik,cijk
-   real(wp) :: fdmp,dtmp,c9tmp
-   real(wp) :: atm,r2ijk,c9ijk,oor9ijk,rijk
-   real(wp) :: drij(3),drjk(3),drik(3)
-   real(wp) :: oorij,oorjk,oorik
-   real(wp) :: dijfdmp,dikfdmp,djkfdmp
-   real(wp) :: dijatm,dikatm,djkatm
-   real(wp) :: dijoor9ijk,djkoor9ijk,dikoor9ijk
-   real(wp) :: c6ij,dic6ij,djc6ij
-   real(wp) :: dic9ijk,djc9ijk,dkc9ijk
-   real(wp) :: one,oth,six
-   parameter(one = 1._wp)
-   parameter(oth = 1._wp/3._wp)
-   parameter(six = 6._wp)
-   real(wp) :: r_thr,gw_thr
-   parameter( r_thr=1600._wp)
-   parameter(gw_thr=0.0001_wp)
-
-   intrinsic :: sqrt
-
-   allocate( c6ab(mol%n*(mol%n+1)/2),zvec(ndim),c(mol%n*(mol%n+1)/2),  &
-   &         source = 0.0_wp )
-   allocate( itbl(7,mol%n), source = 0 )
-
-   eabc = 0.0_wp
-
-!  precalc
-   k = 0
-   do i = 1, mol%n
-      ia = mol%at(i)
-      iz = zeff(ia)
-      do ii = 1, refn(ia)
-         k = k+1
-         itbl(ii,i) = k
-         ! NEW: q=0 for ATM
-         zvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gw(k)
-      enddo
-   enddo
-
-!$OMP parallel private(i,ia,j,ja,ij,r2ij,c6ij)  &
-!$omp&         shared (c6ab,c)
-!$omp do schedule(dynamic)
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-!        if(i.eq.j) cycle
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = r2ab(ij)
-         c(ij) = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         if(r2ij.gt.r_thr) cycle
-
-         ! temps
-         c6ij = 0.0_wp
-         ! all refs
-         do ii = 1, refn(ia)
-            k = itbl(ii,i)
-            do jj = 1, refn(ja)
-               l = itbl(jj,j)
-               c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
-            enddo
-         enddo
-         ! save
-         c6ab(ij) = c6ij
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
-
-!$OMP parallel private(i,j,ij,ia,ja,k,ka,ik,jk,atm,fdmp,  &
-!$omp&                 r2ij,cij,r2ik,r2jk,cik,cjk,r2ijk,rijk,cijk, &
-!$omp&                 c9ijk,oor9ijk) &
-!$omp&         reduction(+:eabc)
-!$omp do schedule(dynamic)
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = r2ab(ij)
-         if(r2ij.gt.r_thr) cycle
-         cij  = c(ij)
-         do k = 1, j-1
-            ka = mol%at(k)
-            ik = i*(i-1)/2 + k
-            jk = j*(j-1)/2 + k
-            r2ik  = r2ab(ik)
-            r2jk  = r2ab(jk)
-            if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
-            cik   = c(ik)
-            cjk   = c(jk)
-            r2ijk = r2ij*r2ik*r2jk
-            rijk  = sqrt(r2ijk)
-            cijk  = cij*cjk*cik
-
-            atm = ((0.375_wp * (r2ij+r2jk-r2ik) &
-            &                * (r2ij+r2ik-r2jk) &
-            &                * (r2ik+r2jk-r2ij) / r2ijk ) + 1._wp)/(rijk**3)
-
-            fdmp = one/(one+six*((cijk/rijk)**oth)**par%alp)
-
-            c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
-
-            oor9ijk = atm*fdmp
-            eabc = eabc + c9ijk*oor9ijk
-
-         enddo ! k/C
-      enddo ! j/B
-   enddo ! i/A
-!$omp enddo
-!$omp end parallel
-
-   deallocate( c6ab,c,zvec )
-
-end subroutine abcappr
-
-!> calculates threebody dispersion gradient from C6 coefficients
-subroutine dabcappr(mol,ndim,par,r2ab,zvec,dzvec,refc6,itbl,dc6dr,dc6dcn,eout)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   integer, intent(in)  :: ndim
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: r2ab(mol%n*(mol%n+1)/2)
-   real(wp),intent(in)  :: zvec(ndim)
-   real(wp),intent(in)  :: dzvec(ndim)
-   real(wp),intent(in)  :: refc6(ndim,ndim)
-   integer, intent(in)  :: itbl(7,mol%n)
-   real(wp),intent(inout)        :: dc6dr(mol%n*(mol%n+1)/2)
-   real(wp),intent(inout)        :: dc6dcn(mol%n)
-   real(wp),intent(out),optional :: eout
-
-   integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
-   integer  :: ij,jk,ik
-   real(wp),allocatable :: c6ab(:),dc6ab(:,:)
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cij,cjk,cik,cijk
-   real(wp) :: fdmp,dtmp,c9tmp
-   real(wp) :: atm,r2ijk,c9ijk,oor9ijk,rijk
-   real(wp) :: drij(3),drjk(3),drik(3)
-   real(wp) :: oorij,oorjk,oorik
-   real(wp) :: dijfdmp,dikfdmp,djkfdmp
-   real(wp) :: dijatm,dikatm,djkatm
-   real(wp) :: dijoor9ijk,djkoor9ijk,dikoor9ijk
-   real(wp) :: c6ij,dic6ij,djc6ij
-   real(wp) :: dic9ijk,djc9ijk,dkc9ijk
-   real(wp) :: eabc
-   real(wp) :: one,oth,six
-   parameter(one = 1._wp)
-   parameter(oth = 1._wp/3._wp)
-   parameter(six = 6._wp)
-   real(wp) :: r_thr,gw_thr
-   parameter( r_thr=1600._wp)
-   parameter(gw_thr=0.0001_wp)
-
-   intrinsic :: present,sqrt
-
-   allocate( c6ab(mol%n*(mol%n+1)/2),dc6ab(mol%n,mol%n),  &
-   &         source = 0.0_wp )
-
-   eabc = 0.0_wp
-
-!$OMP parallel default(none) &
-!$omp private(i,ia,j,ja,ij,r2ij,c6ij,dic6ij,djc6ij,k,l)  &
-!$omp shared (mol,r2ab,refn,itbl,refc6,zvec,dzvec) &
-!$omp shared (c6ab,dc6ab)
-!$omp do schedule(dynamic)
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-!        if(i.eq.j) cycle
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = r2ab(ij)
-         if(r2ij.gt.r_thr) cycle
-
-         ! temps
-         c6ij = 0.0_wp
-         dic6ij = 0.0_wp
-         djc6ij = 0.0_wp
-         ! all refs
-         do ii = 1, refn(ia)
-            k = itbl(ii,i)
-            do jj = 1, refn(ja)
-               l = itbl(jj,j)
-               c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
-               dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)
-               djc6ij = djc6ij + zvec(k)*dzvec(l)*refc6(k,l)
-            enddo
-         enddo
-         ! save
-         c6ab(ij) = c6ij
-         dc6ab(i,j) = dic6ij
-         dc6ab(j,i) = djc6ij
-      enddo
-   enddo
-!$omp enddo
-!$omp end parallel
-
-!$OMP parallel default(none) &
-!$omp private(i,j,ij,ia,ja,k,ka,ik,jk,oorjk,oorik,atm,fdmp,  &
-!$omp         r2ij,cij,oorij,r2ik,r2jk,cik,cjk,r2ijk,rijk,cijk, &
-!$omp         dijatm,djkatm,dikatm,dtmp,dijfdmp,djkfdmp,dikfdmp,  &
-!$omp         c9ijk,oor9ijk,dic9ijk,djc9ijk,dkc9ijk) &
-!$omp shared(mol,r2ab,par,c6ab,dc6ab) &
-!$omp reduction(+:eabc,dc6dr,dc6dcn)
-!$omp do schedule(dynamic)
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-         ja = mol%at(j)
-         ij = i*(i-1)/2 + j
-
-!        first check if we want this contribution
-         r2ij = r2ab(ij)
-         if(r2ij.gt.r_thr) cycle
-         cij  = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2
-         oorij = 1._wp/sqrt(r2ij)
-         do k = 1, j-1
-            ka = mol%at(k)
-            ik = i*(i-1)/2 + k
-            jk = j*(j-1)/2 + k
-            r2ik  = r2ab(ik)
-            r2jk  = r2ab(jk)
-            if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
-            cik   = par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2
-            cjk   = par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2
-            r2ijk = r2ij*r2ik*r2jk
-            rijk  = sqrt(r2ijk)
-            cijk  = cij*cjk*cik
-            oorjk = 1._wp/sqrt(r2jk)
-            oorik = 1._wp/sqrt(r2ik)
-
-            atm = ((0.375_wp * (r2ij+r2jk-r2ik) &
-            &                * (r2ij+r2ik-r2jk) &
-            &                * (r2ik+r2jk-r2ij) / r2ijk ) + 1._wp)/(rijk**3)
-            dijatm=-0.375_wp*(r2ij**3+r2ij**2*(r2jk+r2ik) &
-            &      +r2ij*(3._wp*r2jk**2+2._wp*r2jk*r2ik+3._wp*r2ik**2) &
-            &      -5._wp*(r2jk-r2ik)**2*(r2jk+r2ik)) &
-            &      /(r2ijk*rijk**3)*oorij
-            djkatm=-0.375_wp*(r2jk**3+r2jk**2*(r2ik+r2ij) &
-            &      +r2jk*(3._wp*r2ik**2+2._wp*r2ik*r2ij+3._wp*r2ij**2) &
-            &      -5._wp*(r2ik-r2ij)**2*(r2ik+r2ij)) &
-            &      /(r2ijk*rijk**3)*oorjk
-            dikatm=-0.375_wp*(r2ik**3+r2ik**2*(r2jk+r2ij) &
-            &      +r2ik*(3._wp*r2jk**2+2._wp*r2jk*r2ij+3._wp*r2ij**2) &
-            &      -5._wp*(r2jk-r2ij)**2*(r2jk+r2ij)) &
-            &      /(r2ijk*rijk**3)*oorik
-
-            fdmp = one/(one+six*((cijk/rijk)**oth)**par%alp)
-            dtmp = -(oth*six*par%alp*((cijk/rijk)**oth)**par%alp)*fdmp**2
-            dijfdmp = dtmp*oorij
-            djkfdmp = dtmp*oorjk
-            dikfdmp = dtmp*oorik
-
-            c9ijk = par%s9*sqrt(c6ab(ij)*c6ab(jk)*c6ab(ik))
-
-            oor9ijk = atm*fdmp
-            eabc = eabc + c9ijk*oor9ijk
-
-            dc6dr(ij) = dc6dr(ij) + (atm*dijfdmp - dijatm*fdmp)*c9ijk
-            dc6dr(ik) = dc6dr(ik) + (atm*dikfdmp - dikatm*fdmp)*c9ijk
-            dc6dr(jk) = dc6dr(jk) + (atm*djkfdmp - djkatm*fdmp)*c9ijk
-            dic9ijk = dc6ab(i,j)/c6ab(ij) + dc6ab(i,k)/c6ab(ik)
-            djc9ijk = dc6ab(j,i)/c6ab(ij) + dc6ab(j,k)/c6ab(jk)
-            dkc9ijk = dc6ab(k,j)/c6ab(jk) + dc6ab(k,i)/c6ab(ik)
-            dc6dcn(i) = dc6dcn(i) - 0.5_wp*c9ijk*oor9ijk*dic9ijk
-            dc6dcn(j) = dc6dcn(j) - 0.5_wp*c9ijk*oor9ijk*djc9ijk
-            dc6dcn(k) = dc6dcn(k) - 0.5_wp*c9ijk*oor9ijk*dkc9ijk
-
-         enddo ! k/C
-      enddo ! j/B
-   enddo ! i/A
-!$omp enddo
-!$omp end parallel
-
-   if (present(eout)) eout=eabc
-
-end subroutine dabcappr
-
-
-!> calculates threebody dispersion gradient from polarizibilities
-!  here is the theory for the ATM-gradient (SAW, 180224)
-! EABC = WA·WB·WC·DABC
-! ∂EABC/∂X = ∂/∂X(WA·WB·WC·DABC)
-!          = ∂WA/∂X·WB·WC·DABC + WA·∂WB/∂X·WC·DABC + WA·WB·∂WC/∂X·WC·DABC
-!            + WA·WB·WC·∂DABC/∂X
-! ∂/∂X =  ∂rAB/∂X·∂/∂rAB +  ∂rBC/∂X·∂/∂rBC +  ∂rCA/∂X·∂/∂rCA
-!      = (δAX-δBX)∂/∂rAB + (δBX-δCX)∂/∂rBC + (δCX-δAX)∂/∂rCA
-! ∂EABC/∂A = ∑A,ref ∑B,ref ∑C,ref
-!            + (∂WA/∂rAB-∂WA/∂rCA)·WB·WC·DABC
-!            + WA·∂WB/∂rAB·WC·DABC
-!            - WA·WB·∂WC/∂rCA·DABC
-!            + WA·WB·WC·(∂DABC/∂rAB-∂DABC/∂rCA)
-! ∂EABC/∂B = ∑A,ref ∑B,ref ∑C,ref
-!            - ∂WA/∂rAB·WB·WC·DABC
-!            + WA·(∂WB/∂rBC-∂WB/∂rAB)·WC·DABC
-!            + WA·WB·∂WC/∂rBC·DABC
-!            + WA·WB·WC·(∂DABC/∂rBC-∂DABC/∂rAB)
-! ∂EABC/∂C = ∑A,ref ∑B,ref ∑C,ref
-!            + ∂WA/∂rCA·WB·WC·DABC
-!            - WA·∂WB/∂rBC·WC·DABC
-!            + WA·WB·(∂WC/∂rCA-∂WC/∂rBC)·DABC
-!            + WA·WB·WC·(∂DABC/∂rCA-∂DABC/∂rBC)
-! ∂WA/∂rAB = ∂CNA/∂rAB·∂WA/∂CNA w/ ζ=1 and WA=wA
-! ATM = 3·cos(α)cos(β)cos(γ)+1
-!     = 3/8(r²AB+r²BC-r²CA)(r²AB+r²CA-r²BC)(r²BC+r²CA-r²AB)/(r²BC·r²CA·r²AB)+1
-! ∂ATM/∂rAB = 3/4(2r⁶AB-r⁶BC-r⁶CA-r⁴AB·r²BC-r⁴AB·r²CA+r⁴BC·r²CA+r²BC·r⁴CA)
-!             /(r³AB·r²BC·r²CA)
-! DABC = C9ABCns·f·ATM/(rAB·rBC·rCA)³
-! f = 1/(1+6(¾·∛[RAB·RBC·RCA/(rAB·rBC·rCA)])¹⁶)
-! ∂(f/(r³AB·r³BC·r³CA)/∂rAB =
-!   ⅓·((6·(16-9)·(¾·∛[RAB·RBC·RCA/(rAB·rBC·rCA)])¹⁶-9)·f²/(r⁴AB·r³BC·r³CA)
-subroutine dabcgrad(mol,ndim,par,dcndr,zvec,dzvec,itbl,g,eout)
-   use class_molecule
-   implicit none
-   type(molecule),intent(in) :: mol !< molecular structure information
-   integer, intent(in)  :: ndim
-   type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: dcndr(mol%n,mol%n)
-   real(wp),intent(in)  :: zvec(ndim)
-   real(wp),intent(in)  :: dzvec(ndim)
-   integer, intent(in)  :: itbl(7,mol%n)
-   real(wp),intent(inout)        :: g(3,mol%n)
-   real(wp),intent(out),optional :: eout
-
-   integer  :: i,ii,ia,j,jj,ja,k,kk,ka,l,m,n
-   real(wp) :: rij(3),rjk(3),rik(3)
-   real(wp) :: r2ij,r2jk,r2ik
-   real(wp) :: cij,cjk,cik,cijk
-   real(wp) :: fdmp,dtmp,c9tmp
-   real(wp) :: atm,r2ijk,c9ijk,oor9ijk,rijk
-   real(wp) :: drij(3),drjk(3),drik(3)
-   real(wp) :: oorij,oorjk,oorik
-   real(wp) :: dijfdmp,dikfdmp,djkfdmp
-   real(wp) :: dijatm,dikatm,djkatm
-   real(wp) :: dijoor9ijk,djkoor9ijk,dikoor9ijk
-   real(wp) :: x1,x2,x3,x4,x5,x6,x7,x8,x9
-   real(wp) :: eabc
-   real(wp) :: one,oth,six
-   parameter(one = 1._wp)
-   parameter(oth = 1._wp/3._wp)
-   parameter(six = 6._wp)
-   real(wp) :: r_thr,gw_thr
-   parameter( r_thr=1600._wp)
-   parameter(gw_thr=0.0001_wp)
-
-   intrinsic :: present,sqrt,sum
-
-   eabc = 0._wp
-
-!$omp parallel private(ia,ja,ka,l,m,n, &
-!$omp&         rij,rjk,rik,r2ij,r2jk,r2ik, &
-!$omp&         cij,cjk,cik,cijk, &
-!$omp&         fdmp,dtmp,c9tmp, &
-!$omp&         atm,r2ijk,c9ijk,oor9ijk,rijk, &
-!$omp&         drij,drjk,drik,oorij,oorjk,oorik, &
-!$omp&         dijfdmp,dikfdmp,djkfdmp, &
-!$omp&         dijatm,dikatm,djkatm, &
-!$omp&         dijoor9ijk,djkoor9ijk,dikoor9ijk, &
-!$omp&         x1,x2,x3,x4,x5,x6,x7,x8,x9) &
-!$omp&         reduction(+:g,eabc)
-!$omp do schedule(dynamic)
-   do i = 1, mol%n
-      ia = mol%at(i)
-      do j = 1, i-1
-!        if(i.eq.j) cycle
-         ja = mol%at(j)
-!    --- all distances, cutoff radii ---
-         rij  = mol%xyz(:,j) - mol%xyz(:,i)
-         r2ij = sum(rij**2)
-         if(r2ij.gt.r_thr) cycle
-         cij  = (par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ja))+par%a2)
-         oorij = 1._wp/sqrt(r2ij)
-         do k = 1, j-1
-!           if(k.eq.j) cycle
-!           if(i.eq.k) cycle
-            ka = mol%at(k)
-            rik   = mol%xyz(:,i) - mol%xyz(:,k)
-            rjk   = mol%xyz(:,k) - mol%xyz(:,j)
-            r2ik  = sum(rik**2)
-            r2jk  = sum(rjk**2)
-            if((r2ik.gt.r_thr).or.(r2jk.gt.r_thr)) cycle
-            cik   = (par%a1*sqrt(3._wp*r4r2(ia)*r4r2(ka))+par%a2)
-            cjk   = (par%a1*sqrt(3._wp*r4r2(ja)*r4r2(ka))+par%a2)
-            r2ijk = r2ij*r2ik*r2jk
-            rijk  = sqrt(r2ijk)
-            cijk  = cij*cjk*cik
-            oorjk = 1._wp/sqrt(r2jk)
-            oorik = 1._wp/sqrt(r2ik)
-
-            x2 = 0._wp
-            x4 = 0._wp
-            x6 = 0._wp
-            c9ijk = 0._wp
-
-!       --- sum up all references ---
-            do ii = 1, refn(ia) ! refs of A
-               l = itbl(ii,i)
-               do jj = 1, refn(ja) ! refs of B
-                  m = itbl(jj,j)
-                  do kk = 1, refn(ka) ! refs of C
-                     n = itbl(kk,k)
-                     if ((zvec(l)*zvec(m)*zvec(n)).lt.gw_thr) cycle
-                     c9tmp = par%s9*thopi*trapzd(refal(:,ii,ia)*refal(:,jj,ja) &
-                     &                      *refal(:,kk,ka))
-
-                     c9ijk = c9ijk + c9tmp*zvec(n)*zvec(m)*zvec(l)
-!                --- intermediates ---
-!                    ∂WA/∂CNA·WB·WC
-                     x2 = x2 - dzvec(l)*zvec(m)*zvec(n)*c9tmp
-!                    WA·∂WB/∂CNB·WC
-                     x4 = x4 - dzvec(m)*zvec(l)*zvec(n)*c9tmp
-!                    WA·WB·∂WC/∂CNC
-                     x6 = x6 - dzvec(n)*zvec(m)*zvec(l)*c9tmp
-
-                  enddo ! refs of k/C
-               enddo ! refs of j/B
-            enddo ! refs of i/A
-
-!       --- geometrical term and r⁻³AB·r⁻³BC·r⁻³CA ---
-!           ATM = 3·cos(α)cos(β)cos(γ)+1
-!               = 3/8(r²AB+r²BC-r²CA)(r²AB+r²CA-r²BC)(r²BC+r²CA-r²AB)
-!                 /(r²BC·r²CA·r²AB)+1
-            atm = ((0.375_wp * (r2ij+r2jk-r2ik) &
-            &                * (r2ij+r2ik-r2jk) &
-            &                * (r2ik+r2jk-r2ij) / r2ijk ) + 1._wp)/(rijk**3)
-            dijatm=-0.375_wp*(r2ij**3+r2ij**2*(r2jk+r2ik) &
-            &      +r2ij*(3._wp*r2jk**2+2._wp*r2jk*r2ik+3._wp*r2ik**2) &
-            &      -5._wp*(r2jk-r2ik)**2*(r2jk+r2ik)) &
-            &      /(r2ijk*rijk**3)*oorij
-            djkatm=-0.375_wp*(r2jk**3+r2jk**2*(r2ik+r2ij) &
-            &      +r2jk*(3._wp*r2ik**2+2._wp*r2ik*r2ij+3._wp*r2ij**2) &
-            &      -5._wp*(r2ik-r2ij)**2*(r2ik+r2ij)) &
-            &      /(r2ijk*rijk**3)*oorjk
-            dikatm=-0.375_wp*(r2ik**3+r2ik**2*(r2jk+r2ij) &
-            &      +r2ik*(3._wp*r2jk**2+2._wp*r2jk*r2ij+3._wp*r2ij**2) &
-            &      -5._wp*(r2jk-r2ij)**2*(r2jk+r2ij)) &
-            &      /(r2ijk*rijk**3)*oorik
-
-!       --- damping function ---
-!           1/(1+6(¾·∛[RAB·RBC·RCA/(rAB·rBC·rCA)])¹⁶)
-            fdmp = one/(one+six*((cijk/rijk)**oth)**par%alp)
-            dtmp = -(oth*six*par%alp*((cijk/rijk)**oth)**par%alp)*fdmp**2
-            dijfdmp = dtmp*oorij
-            djkfdmp = dtmp*oorjk
-            dikfdmp = dtmp*oorik
-
-!       --- intermediates ---
-!           ∂WA/∂rAB·WB·WC·DABC = ∂CNA/∂rAB·(∂WA/∂CNA·WB·WC)·DABC
-            x1 = x2*dcndr(i,j)*( atm*fdmp )
-!           ∂WA/∂rCA·WB·WC·DABC = ∂CNA/∂rCA·(∂WA/∂CNA·WB·WC)·DABC
-            x2 = x2*dcndr(i,k)*( atm*fdmp )
-!           WA·∂WB/∂rBC·WC·DABC = ∂CNB/∂rBC·(WA·∂WB/∂rBC·WC)·DABC
-            x3 = x4*dcndr(j,k)*( atm*fdmp )
-!           WA·∂WB/∂rAB·WC·DABC = ∂CNB/∂rAB·(WA·∂WB/∂rAB·WC)·DABC
-            x4 = x4*dcndr(i,j)*( atm*fdmp )
-!           WA·WB·∂WC/∂rCA·DABC = ∂CNC/∂rCA·(WA·WB·∂WC/∂rCA)·DABC
-            x5 = x6*dcndr(i,k)*( atm*fdmp )
-!           WA·WB·∂WC/∂rBC·DABC = ∂CNC/∂rBC·(WA·WB·∂WC/∂rBC)·DABC
-            x6 = x6*dcndr(j,k)*( atm*fdmp )
-!           WA·WB·WC·∂DABC/∂rAB
-            x7 = c9ijk*( atm*dijfdmp-dijatm*fdmp )
-!           WA·WB·WC·∂DABC/∂rBC
-            x8 = c9ijk*( atm*djkfdmp-djkatm*fdmp )
-!           WA·WB·WC·∂DABC/∂rCA
-            x9 = c9ijk*( atm*dikfdmp-dikatm*fdmp )
-
-!       --- build everything together ---
-            eabc = eabc + c9ijk*atm*fdmp
-
-!           ∂rAB/∂A = -∂rAB/∂B
-            drij = rij*oorij
-!           ∂rBC/∂B = -∂rBC/∂C
-            drjk = rjk*oorjk
-!           ∂rCA/∂C = -∂rCA/∂A
-            drik = rik*oorik
-
-!           ∂EABC/∂A =
-!           + (∂WA/∂rAB-∂WA/∂rCA)·WB·WC·DABC
-!           + WA·∂WB/∂rAB·WC·DABC
-!           - WA·WB·∂WC/∂rCA·DABC
-!           + WA·WB·WC·(∂DABC/∂rAB-∂DABC/∂rCA)
-            g(:,i) = g(:,i) + ( &
-            &        + (x1+x4+x7)*drij &
-            &        - (x2+x5+x9)*drik )
-!           ∂EABC/∂B =
-!           - ∂WA/∂rAB·WB·WC·DABC
-!           + WA·(∂WB/∂rBC-∂WB/∂rAB)·WC·DABC
-!           + WA·WB·∂WC/∂rBC·DABC
-!           + WA·WB·WC·(∂DABC/∂rBC-∂DABC/∂rAB)
-            g(:,j) = g(:,j) + ( &
-            &        - (x1+x4+x7)*drij &
-            &        + (x3+x6+x8)*drjk )
-!           ∂EABC/∂C =
-!           + ∂WA/∂rCA·WB·WC·DABC
-!           - WA·∂WB/∂rBC·WC·DABC
-!           + WA·WB·(∂WC/∂rCA-∂WC/∂rBC)·DABC
-!           + WA·WB·WC·(∂DABC/∂rCA-∂DABC/∂rBC)
-            g(:,k) = g(:,k) + ( &
-            &        + (x2+x5+x9)*drik &
-            &        - (x3+x6+x8)*drjk )
-
-         enddo ! k/C
-      enddo ! j/B
-   enddo ! i/A
-!$omp enddo
-!$omp endparallel
-
-   if (present(eout)) eout=eabc
-
-end subroutine dabcgrad
 
 !> calculate non additivity by RPA-like scheme
 subroutine dispmb(mol,E,aw,oor6ab)
@@ -2009,11 +1091,11 @@ subroutine dispmb(mol,E,aw,oor6ab)
    deallocate(T,A,AT,F,F_,d)
 end subroutine dispmb
 
-function refq2string(refq) result(string)
+function refq2string(ref) result(string)
    implicit none
-   integer,intent(in) :: refq
+   integer,intent(in) :: ref
    character(len=:),allocatable :: string
-   select case(refq)
+   select case(ref)
    case default;                  string = 'unknown'
    case(p_refq_gfn2xtb);          string = 'GFN2'
    case(p_refq_gasteiger);        string = 'EEQ'
@@ -2038,12 +1120,13 @@ function lmbd2string(lmbd) result(string)
 end function lmbd2string
 
 !> compute D4 energy under periodic boundary conditions
-subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
+subroutine edisp_3d(mol,dispm,ndim,q,r_thr,mbd_thr,par, &
       &             gw,refc6,mbd,ed,etwo,embd)
    use iso_fortran_env, only : wp => real64
    use class_molecule
    use pbc_tools, only: get_realspace_cutoff
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol
    integer, intent(in)  :: ndim
    real(wp),intent(in)  :: q(mol%n)
@@ -2053,7 +1136,6 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
    real(wp)             :: t(3)
    real(wp)             :: aiw(23)
    type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: g_a,g_c
    real(wp),intent(in)  :: gw(ndim)
    real(wp),intent(in)  :: refc6(ndim,ndim)
    integer, intent(in)  :: mbd
@@ -2102,7 +1184,7 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
 
    k = 0
    do i = 1, mol%n
-      do ii = 1, refn(mol%at(i))
+      do ii = 1, dispm%nref(mol%at(i))
          k = k+1
          itbl(ii,i) = k
       enddo
@@ -2111,17 +1193,17 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
 !  print'(" * Entering first OMP section")'
 !$OMP parallel default(none) &
 !$omp private(i,ii,iii,ia,iz,k)  &
-!$omp shared (mol,refn,refc,refcovcn,itbl,refq,g_a,g_c,q) &
+!$omp shared (dispm,mol,itbl,q) &
 !$omp shared (gw,zetavec,zerovec,r_thr)
 !$omp do
    do i = 1, mol%n
       ia = mol%at(i)
       iz = zeff(ia)
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = itbl(ii,i)
-         zetavec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gw(k)
+         zetavec(k) = zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz) * gw(k)
          ! NEW: q=0 for ATM
-         zerovec(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gw(k)
+         zerovec(k) =  zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,iz) * gw(k)
 
       enddo
    enddo
@@ -2132,7 +1214,7 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
 !$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ij,disp,  &
 !$omp         rij,r2,r,r4r2ij,r0,oor6,oor8,oor10, &
 !$omp         t,tx,ty,tz)  &
-!$omp shared(mol,refn,itbl,zetavec,refc6,par,rep,r_Thr) &
+!$omp shared(mol,dispm,itbl,zetavec,refc6,par,rep,r_Thr) &
 !$omp shared(r2ab) reduction(+:ed)
 !$omp do schedule(dynamic)
    do i = 1, mol%n
@@ -2140,9 +1222,9 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
       ! temps
       c6ij   = 0.0_wp
       ! all refs
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = itbl(ii,i)
-         do jj = 1, refn(ia)
+         do jj = 1, dispm%nref(ia)
             l = itbl(jj,i)
             c6ij   = c6ij   +  zetavec(k) *  zetavec(l) * refc6(k,l)
          enddo
@@ -2172,9 +1254,9 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
          ! temps
          c6ij   = 0.0_wp
          ! all refs
-         do ii = 1, refn(ia)
+         do ii = 1, dispm%nref(ia)
             k = itbl(ii,i)
-            do jj = 1, refn(ja)
+            do jj = 1, dispm%nref(ja)
                l = itbl(jj,j)
                c6ij   = c6ij   +  zetavec(k) *  zetavec(l) * refc6(k,l)
             enddo
@@ -2203,7 +1285,7 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
 
    eabc = 0.0_wp
    if (mbd > 0) then
-      call abcappr_3d(mol,ndim,par,zerovec,refc6,itbl,mbd_rep,mbd_thr,eabc)
+      call abcappr_3d(mol,dispm,ndim,par,zerovec,refc6,itbl,mbd_rep,mbd_thr,eabc)
    endif
 
    !  print'(" * Dispersion all done, saving variables")'
@@ -2214,10 +1296,11 @@ subroutine edisp_3d(mol,ndim,q,r_thr,mbd_thr,par,g_a,g_c, &
 end subroutine edisp_3d
 
 !> calculates threebody dispersion gradient from C6 coefficients
-subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
+subroutine abcappr_3d(mol,dispm,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
    use class_molecule
    use pbc_tools
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in) :: par
@@ -2244,7 +1327,7 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
 
 !$OMP parallel default(none) &
 !$omp private(i,ia,j,ja,ij,r2ij,c6ij,k,l,r)  &
-!$omp shared (mol,refn,itbl,refc6,zvec) &
+!$omp shared (mol,dispm,itbl,refc6,zvec) &
 !$omp shared (c6ab)
 !$omp do schedule(dynamic)
    do i = 1, mol%n
@@ -2254,9 +1337,9 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
       ! temps
       c6ij = 0.0_wp
       ! all refs
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = itbl(ii,i)
-         do jj = 1, refn(ia)
+         do jj = 1, dispm%nref(ia)
             l = itbl(jj,i)
             c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
          enddo
@@ -2275,9 +1358,9 @@ subroutine abcappr_3d(mol,ndim,par,zvec,refc6,itbl,rep,r_thr,eabc)
          ! temps
          c6ij = 0.0_wp
          ! all refs
-         do ii = 1, refn(ia)
+         do ii = 1, dispm%nref(ia)
             k = itbl(ii,i)
-            do jj = 1, refn(ja)
+            do jj = 1, dispm%nref(ja)
                l = itbl(jj,j)
                c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
             enddo
@@ -2666,12 +1749,13 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
 end subroutine abcappr_3d_dftd3_like_style
 
 !> compute D4 gradient under pbc
-subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+subroutine dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
       &                refc6,mbd,g,sigma,eout,dqdr,dqdL,aout)
    use iso_fortran_env, only : wp => real64
    use class_molecule
    use pbc_tools
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol
    integer, intent(in)  :: ndim
    real(wp),intent(in)  :: q(mol%n)
@@ -2686,7 +1770,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
    real(wp)             :: t(3)
    real(wp)             :: aiw(23)
    type(dftd_parameter),intent(in) :: par
-   real(wp),intent(in)  :: wf,g_a,g_c
+   real(wp),intent(in)  :: wf
    real(wp),intent(in)  :: refc6(ndim,ndim)
    integer, intent(in)  :: mbd
    real(wp),intent(inout)        :: g(3,mol%n)
@@ -2746,7 +1830,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
 
    k = 0
    do i = 1, mol%n
-      do ii = 1, refn(mol%at(i))
+      do ii = 1, dispm%nref(mol%at(i))
          k = k+1
          itbl(ii,i) = k
       enddo
@@ -2755,7 +1839,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
 !  print'(" * Entering first OMP section")'
 !$OMP parallel default(none) &
 !$omp private(i,ii,iii,ia,iz,k,norm,dnorm,twf,tgw,dexpw,expw,gwk,dgwk)  &
-!$omp shared (mol,refn,refc,refcovcn,itbl,refq,wf,cn,g_a,g_c,q) &
+!$omp shared (mol,dispm,itbl,wf,cn,q) &
 !$omp shared (gw,dgw,zvec,dzvec,dzdq,r_thr)
 !$omp do
    do i = 1, mol%n
@@ -2763,47 +1847,47 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
       iz = zeff(ia)
       norm  = 0.0_wp
       dnorm = 0.0_wp
-      do ii=1,refn(ia)
-         do iii = 1, refc(ii,ia)
+      do ii=1,dispm%nref(ia)
+         do iii = 1, dispm%ncount(ii,ia)
             twf = iii*wf
-            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
+            tgw = cngw(twf,cn(i),dispm%cn(ii,ia))
             norm  =  norm + tgw
-            dnorm = dnorm + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
+            dnorm = dnorm + 2*twf*(dispm%cn(ii,ia)-cn(i))*tgw
          enddo
       enddo
       norm = 1._wp/norm
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = itbl(ii,i)
          dexpw=0.0_wp
          expw=0.0_wp
-         do iii = 1, refc(ii,ia)
+         do iii = 1, dispm%ncount(ii,ia)
             twf = wf*iii
-            tgw = cngw(twf,cn(i),refcovcn(ii,ia))
+            tgw = cngw(twf,cn(i),dispm%cn(ii,ia))
             expw  =  expw + tgw
-            dexpw = dexpw + 2*twf*(refcovcn(ii,ia)-cn(i))*tgw
+            dexpw = dexpw + 2*twf*(dispm%cn(ii,ia)-cn(i))*tgw
          enddo
 
          ! save
          gwk = expw*norm
          if (gwk.ne.gwk) then
-            if (maxval(refcovcn(:refn(ia),ia)).eq.refcovcn(ii,ia)) then
+            if (maxval(dispm%cn(:dispm%nref(ia),ia)).eq.dispm%cn(ii,ia)) then
                gwk = 1.0_wp
             else
                gwk = 0.0_wp
             endif
          endif
-         zvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
+         zvec(k) = zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz) * gwk
          ! NEW: q=0 for ATM
-         gw(k) =  zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * gwk
+         gw(k) =  zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,iz) * gwk
 
          dgwk = dexpw*norm-expw*dnorm*norm**2
          if (dgwk.ne.dgwk) then
             dgwk = 0.0_wp
          endif
-         dzvec(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * dgwk
-         dzdq(k) = dzeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,q(i)+iz) * gwk
+         dzvec(k) = zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz) * dgwk
+         dzdq(k) = dzeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,q(i)+iz) * gwk
          ! NEW: q=0 for ATM
-         dgw(k) = zeta(g_a,gam(ia)*g_c,refq(ii,ia)+iz,iz) * dgwk
+         dgw(k) = zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,iz) * dgwk
       enddo
    enddo
 !$omp end do
@@ -2813,7 +1897,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
 !$omp private(i,j,ia,ja,ij,k,l,c6ii,c6ij,dic6ii,dic6ij,djc6ij,disp,ddisp, &
 !$omp         rij,r2,r,r4r2ij,r0,oor6,oor8,oor10,door6,door8,door10, &
 !$omp         t,tx,ty,tz,dtmp,drdx,dizii,dizij,djzij)  &
-!$omp shared(mol,refn,itbl,zvec,dzvec,refc6,par,dzdq,rep,r_Thr) &
+!$omp shared(mol,dispm,itbl,zvec,dzvec,refc6,par,dzdq,rep,r_Thr) &
 !$omp shared(r2ab) reduction(+:dc6dq,dc6dcn,ed,g,sigma)
 !$omp do schedule(dynamic)
    do i = 1, mol%n
@@ -2825,9 +1909,9 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
       dizij  = 0.0_wp
       djzij  = 0.0_wp
       ! all refs
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = itbl(ii,i)
-         do jj = 1, refn(ia)
+         do jj = 1, dispm%nref(ia)
             l = itbl(jj,i)
             c6ij   = c6ij   +  zvec(k) *  zvec(l) * refc6(k,l)
             dic6ij = dic6ij + dzvec(k) *  zvec(l) * refc6(k,l)
@@ -2877,9 +1961,9 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
          dizij  = 0.0_wp
          djzij  = 0.0_wp
          ! all refs
-         do ii = 1, refn(ia)
+         do ii = 1, dispm%nref(ia)
             k = itbl(ii,i)
-            do jj = 1, refn(ja)
+            do jj = 1, dispm%nref(ja)
                l = itbl(jj,j)
                c6ij   = c6ij   +  zvec(k) *  zvec(l) * refc6(k,l)
                dic6ij = dic6ij + dzvec(k) *  zvec(l) * refc6(k,l)
@@ -2928,7 +2012,7 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
 
    eabc = 0.0_wp
    if (mbd > 0) then
-      call dabcappr_3d(mol,ndim,par,gw,dgw,refc6,itbl,mbd_rep,mbd_thr, &
+      call dabcappr_3d(mol,dispm,ndim,par,gw,dgw,refc6,itbl,mbd_rep,mbd_thr, &
          &             g,sigma,dc6dcn,eabc)
       !dc6dcn = 0.0_wp
    endif
@@ -2957,18 +2041,19 @@ subroutine dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
       aout = 0._wp
       do i = 1, mol%n
          ia = mol%at(i)
-         do ii = 1, refn(ia)
-            aout(:,i) = aout(:,i) + zvec(k) * refal(:,ii,ia)
+         do ii = 1, dispm%nref(ia)
+            aout(:,i) = aout(:,i) + zvec(k) * dispm%alpha(:,ii,ia)
          enddo
       enddo
    endif
 end subroutine dispgrad_3d
 
 !> calculates threebody dispersion gradient from C6 coefficients
-subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6dcn,eabc)
+subroutine dabcappr_3d(mol,dispm,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6dcn,eabc)
    use class_molecule
    use pbc_tools
    implicit none
+   type(dispersion_model),intent(in) :: dispm
    type(molecule),intent(in) :: mol !< molecular structure information
    integer, intent(in)  :: ndim
    type(dftd_parameter),intent(in) :: par
@@ -3007,7 +2092,7 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6d
 
 !$OMP parallel default(none) &
 !$omp private(i,ia,j,ja,ij,r2ij,c6ij,dic6ij,djc6ij,k,l,r)  &
-!$omp shared (mol,refn,itbl,refc6,zvec,dzvec) &
+!$omp shared (mol,dispm,itbl,refc6,zvec,dzvec) &
 !$omp shared (c6ab,dc6ab)
 !$omp do schedule(dynamic)
    do i = 1, mol%n
@@ -3019,9 +2104,9 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6d
       dic6ij = 0.0_wp
       djc6ij = 0.0_wp
       ! all refs
-      do ii = 1, refn(ia)
+      do ii = 1, dispm%nref(ia)
          k = itbl(ii,i)
-         do jj = 1, refn(ia)
+         do jj = 1, dispm%nref(ia)
             l = itbl(jj,i)
             c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
             dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)
@@ -3045,9 +2130,9 @@ subroutine dabcappr_3d(mol,ndim,par,zvec,dzvec,refc6,itbl,rep,r_thr,g,sigma,dc6d
          dic6ij = 0.0_wp
          djc6ij = 0.0_wp
          ! all refs
-         do ii = 1, refn(ia)
+         do ii = 1, dispm%nref(ia)
             k = itbl(ii,i)
-            do jj = 1, refn(ja)
+            do jj = 1, dispm%nref(ja)
                l = itbl(jj,j)
                c6ij = c6ij + zvec(k)*zvec(l)*refc6(k,l)
                dic6ij = dic6ij + dzvec(k)*zvec(l)*refc6(k,l)

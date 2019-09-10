@@ -58,6 +58,7 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
    !> damping parameter for the DFT-D4 method
    type(dftd_parameter),intent(in) :: dparam
    type(chrg_parameter)            :: chrgeq
+   type(dispersion_model),allocatable :: dispm
 ! ------------------------------------------------------------------------
 !  output variables
 ! ------------------------------------------------------------------------
@@ -104,6 +105,8 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
    integer :: stat
    logical :: minpr, verb, debug
 
+   allocate(dispm)
+
    minpr = opt%print_level > 0
    verb  = opt%print_level > 1
    debug = opt%print_level > 2
@@ -116,7 +119,8 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
 ! ------------------------------------------------------------------------
 !  Output: Initialization and Parameter setup
 ! ------------------------------------------------------------------------
-   call d4init(mol,opt%g_a,opt%g_c,p_refq_goedecker,ndim)
+   call dispm%new(mol%at,p_refq_goedecker,opt%g_a,opt%g_c)
+   ndim = sum(dispm%atoms*dispm%nref)
    memory = ((mol%n)+(mol%n)+(ndim)+(ndim*ndim) &
       &     +(mol%n*mol%n)+(23*mol%n)+(mol%n)+(3*mol%n) &
       &     +(3*mol%n*mol%n)+(3*mol%n*(mol%n+1)) &
@@ -140,7 +144,7 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
 
    write(iunit,'(a)')
 
-   call prd4ref(iunit,mol)
+   call prd4ref(iunit,mol,dispm)
    endif
 
 
@@ -156,7 +160,7 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
    energy = 0.0_wp
 
    call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
-   call d4(mol,ndim,opt%wf,opt%g_a,opt%g_c,covcn,gweights,refc6)
+   call d4(mol,dispm,ndim,opt%wf,covcn,gweights,refc6)
 
    call pbc_dncoord_erf(mol,cn,dcndr,dcndL)
    call dncoord_logcn(mol%n,cn,dcndr,cn_max=8.0_wp)
@@ -185,7 +189,7 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
 dispersion_properties: if (opt%lmolpol) then
    if (minpr) &
    call generic_header(iunit,'Molecular Properties',49,10)
-   call mdisp(mol,ndim,q,opt%g_a,opt%g_c,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
+   call mdisp(mol,dispm,ndim,q,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
    dresults%polarizibilities = aw(1,:)
    dresults%c6_coefficients = c6ab
    if (minpr) &
@@ -209,7 +213,7 @@ endif
 !  calculate energy
 ! ------------------------------------------------------------------------
 dispersion_energy: if (.not.opt%lgradient .and. opt%lenergy) then
-   call edisp_3d(mol,ndim,q,rthr_vdw,rthr_mbd,dparam,opt%g_a,opt%g_c, &
+   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_mbd,dparam, &
                  gweights,refc6,opt%lmbd,energy,etwo=etwo,embd=emany)
    dresults%energy = energy
 endif dispersion_energy
@@ -219,8 +223,8 @@ endif dispersion_energy
 ! ------------------------------------------------------------------------
 dispersion_gradient: if (opt%lgradient) then
    allocate( gradient(3,mol%n), source = 0.0_wp )
-   call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd,dparam, &
-      &             opt%wf,opt%g_a,opt%g_c,refc6,opt%lmbd,gradient,sigma,energy, &
+   call dispgrad_3d(mol,dispm,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd, &
+      &             dparam,opt%wf,refc6,opt%lmbd,gradient,sigma,energy, &
       &             dqdr,dqdL)
    if (mol%npbc > 0) then
       inv_lat = mat_inv_3x3(mol%lattice)
@@ -233,31 +237,6 @@ dispersion_gradient: if (opt%lgradient) then
       dresults%stress = pack(sigma,mask=voigt_mask)/mol%volume
       dresults%lattice_gradient = latgrad
    endif
-!   allocate(gr(3,mol%n),gl(3,mol%n))
-!   call generic_header(iunit,'numerical gradient',49,10)
-!   do i = 1, mol%n
-!      do j = 1, 3
-!         ii = 3*(i-1)+j
-!         er = 0.0_wp
-!         el = 0.0_wp
-!         mol%xyz(j,i) = mol%xyz(j,i) + step
-!         call dncoord_d4(mol,covcn,dcovcndr)
-!         call dncoord_erf(mol,cn,dcndr)
-!         call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges, &
-!                               .false.,.false.,.true.)
-!         call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
-!                       opt%wf,opt%g_a,opt%g_c,refc6,opt%lmbd,gr,er)
-!         mol%xyz(j,i) = mol%xyz(j,i) - 2*step
-!         call dncoord_d4(mol,covcn,dcovcndr)
-!         call dncoord_erf(mol,cn,dcndr)
-!         call eeq_chrgeq(chrgeq,mol,cn,dcndr,q,dqdr,es,ges, &
-!                               .false.,.false.,.true.)
-!         call dispgrad(mol,ndim,q,dqdr,covcn,dcovcndr,dparam, &
-!                       opt%wf,opt%g_a,opt%g_c,refc6,opt%lmbd,gr,el)
-!         mol%xyz(j,i) = mol%xyz(j,i) + step
-!         gl (j,i) = (er-el)*step2
-!      enddo
-!   enddo
 
 endif dispersion_gradient
 
@@ -278,8 +257,8 @@ dispersion_hessian: if (opt%lhessian) then
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
             &            .false.,.false.,.true.)
          call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
-         call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd, &
-            &             dparam,opt%wf,opt%g_a,opt%g_c,refc6,opt%lmbd, &
+         call dispgrad_3d(mol,dispm,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd, &
+            &             dparam,opt%wf,refc6,opt%lmbd, &
             &             gr,stmp,er,dqdr,dqdL)
 
          mol%xyz(j,i) = mol%xyz(j,i) - 2*step
@@ -288,8 +267,8 @@ dispersion_hessian: if (opt%lhessian) then
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
                          .false.,.false.,.true.)
          call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
-         call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd, &
-            &             dparam,opt%wf,opt%g_a,opt%g_c,refc6,opt%lmbd, &
+         call dispgrad_3d(mol,dispm,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd, &
+            &             dparam,opt%wf,refc6,opt%lmbd, &
             &             gl,stmp,el,dqdr,dqdL)
 
          mol%xyz(j,i) = mol%xyz(j,i) + step

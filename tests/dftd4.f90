@@ -30,21 +30,24 @@ subroutine test_dftd4_properties
    real(wp),parameter :: wf  = 6.0_wp
    integer, parameter :: lmbd = p_mbd_approx_atm
    integer, parameter :: refqmode = p_refq_goedecker
+   type(dispersion_model),allocatable :: dispm
+   allocate(dispm)
 
    call mol%allocate(nat,.false.)
    mol%at  = at
    mol%xyz = xyz
    mol%chrg = 0.0_wp
 
-   call d4init(mol,g_a,g_c,refqmode,ndim)
+   call dispm%new(mol%at,refqmode,g_a,g_c)
+   ndim = sum(dispm%atoms*dispm%nref)
 
    call assert_eq(ndim,8)
 
    allocate( gweights(ndim),refc6(ndim,ndim),&
              c6ab(mol%n,mol%n),aw(23,mol%n) )
 
-   call d4(mol,ndim,wf,g_a,g_c,covcn,gweights,refc6)
-   call mdisp(mol,ndim,q,g_a,g_c,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
+   call d4(mol,dispm,ndim,wf,covcn,gweights,refc6)
+   call mdisp(mol,dispm,ndim,q,gweights,refc6,molc6,molc8,molpol,aw,c6ab)
 
    call assert_close(molpol,9.4271529762816_wp,thr)
    call assert_close(molc6, 44.521546516541_wp,thr)
@@ -137,29 +140,32 @@ subroutine test_dftd4_energies
       &  s6=0.95_wp, s8=0.45_wp, s10=0.65_wp, s9=1.10_wp, a1=0.43_wp, a2=5.10_wp )
    real(wp),parameter :: rthr_atm = 1600.0_wp
    real(wp),parameter :: rthr_vdw = 4000.0_wp
+   type(dispersion_model),allocatable :: dispm
+   allocate(dispm)
 
    call mol%allocate(nat,.false.)
    mol%at  = at
    mol%xyz = xyz
    mol%chrg = 0.0_wp
 
-   call d4init(mol,g_a,g_c,refqmode,idum)
+   call dispm%new(mol%at,refqmode,g_a,g_c)
+   idum = sum(dispm%atoms*dispm%nref)
 
    call assert_eq(idum,ndim)
 
    energy = +1.0_wp ! energy is intent(out)
 
-   call edisp_3d(mol,ndim,q,rthr_vdw,rthr_atm,dparam_pwpb95, &
-      &          g_a,g_c,gweights,refc6,lmbd,energy)
+   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_pwpb95, &
+      &          gweights,refc6,lmbd,energy)
    call assert_close(energy,-0.22526819184723E-03_wp,thr)
 
-   call edisp_3d(mol,ndim,q,rthr_vdw,rthr_atm,dparam_pbe, &
-      &          g_a,g_c,gweights,refc6,lmbd,energy)
+   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_pbe, &
+      &          gweights,refc6,lmbd,energy)
    call assert_close(energy,-0.19788865790096E-03_wp,thr)
    !-0.19558245089408E-03
 
-   call edisp_3d(mol,ndim,q,rthr_vdw,rthr_atm,dparam_random, &
-      &          g_a,g_c,gweights,refc6,lmbd,energy)
+   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_random, &
+      &          gweights,refc6,lmbd,energy)
    call assert_close(energy,-0.11213581758666E-03_wp,thr)
 
    call mol%deallocate
@@ -368,6 +374,8 @@ subroutine test_dftd4_pbc_energies
    real(wp),allocatable :: gweights(:)   ! gaussian weights
    real(wp),allocatable :: refc6(:,:)    ! reference C6 coeffients
    real(wp)             :: energy,e2,e3
+   type(dispersion_model),allocatable :: dispm
+   allocate(dispm)
 
    call mol%allocate(nat,.true.)
    mol%at   = at
@@ -383,12 +391,13 @@ subroutine test_dftd4_pbc_energies
    call mol%calculate_distances
 
    call generate_wsc(mol,mol%wsc,wsc_rep)
-   call d4init(mol,g_a,g_c,refqmode,ndim)
+   call dispm%new(mol%at,refqmode,g_a,g_c)
+   ndim = sum(dispm%atoms*dispm%nref)
    call assert_eq(ndim,26)
 
    allocate( gweights(ndim),refc6(ndim,ndim) )
 
-   call d4(mol,ndim,wf,g_a,g_c,covcn,gweights,refc6)
+   call d4(mol,dispm,ndim,wf,covcn,gweights,refc6)
    call assert_close(gweights( 4),0.78386266917391E-03_wp,thr)
    call assert_close(gweights(13),0.74644931926423E+00_wp,thr)
    call assert_close(gweights(22),0.41525004702946E+00_wp,thr)
@@ -402,22 +411,22 @@ subroutine test_dftd4_pbc_energies
    e2     = 1.0_wp
    e3     = 1.0_wp
 
-   call edisp_3d(mol,ndim,q,rthr_vdw,rthr_atm,dparam_pbe, &
-      &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
+   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_pbe, &
+      &          gweights,refc6,lmbd,energy,e2,e3)
 
    call assert_close(e2,    -0.42709214619586E-01_wp,thr)
    call assert_close(e3,     0.19951867090604E-02_wp,thr)
    call assert_close(energy,-0.40714027910526E-01_wp,thr)
 
-!   call edisp_3d(mol,ndim,q,rthr_vdw,rthr_atm,dparam_tpss, &
-!      &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
+!   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_tpss, &
+!      &          gweights,refc6,lmbd,energy,e2,e3)
 !
 !   call assert_close(e2,    -0.55857575773063E-01_wp,thr)
 !   call assert_close(e3,     0.19786934360753E-02_wp,thr)
 !   call assert_close(energy,-0.53878882336988E-01_wp,thr)
 !
-!   call edisp_3d(mol,ndim,q,rthr_vdw,rthr_atm,dparam_random, &
-!      &          g_a,g_c,gweights,refc6,lmbd,energy,e2,e3)
+!   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_random, &
+!      &          gweights,refc6,lmbd,energy,e2,e3)
 !
 !   call assert_close(e2,    -0.32587667412892E-01_wp,thr)
 !   call assert_close(e3,     0.16050327438669E-02_wp,thr)
@@ -498,6 +507,8 @@ subroutine test_dftd4_cell_gradient
    real(wp),allocatable :: numg(:,:)
    real(wp),allocatable :: numq(:,:,:)
    integer :: stat
+   type(dispersion_model),allocatable :: dispm
+   allocate(dispm)
 
    allocate( cn(nat), dcndr(3,nat,nat), q(nat), dqdr(3,nat,nat+1), &
       &      dcndL(3,3,nat), dqdL(3,3,nat+1), dcovcndL(3,3,nat), &
@@ -518,7 +529,8 @@ subroutine test_dftd4_cell_gradient
    call mol%calculate_distances
 
    call generate_wsc(mol,mol%wsc,wsc_rep)
-   call d4init(mol,g_a,g_c,refqmode,ndim)
+   call dispm%new(mol%at,refqmode,g_a,g_c)
+   ndim = sum(dispm%atoms*dispm%nref)
 
    allocate( gweights(ndim),refc6(ndim,ndim) )
 
@@ -534,14 +546,14 @@ subroutine test_dftd4_cell_gradient
 
    call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL,rthr_cn)
 
-   call d4(mol,ndim,wf,g_a,g_c,cn,gweights,refc6)
+   call d4(mol,dispm,ndim,wf,cn,gweights,refc6)
 
    energy = 0.0_wp
    gradient = 0.0_wp
    sigma = 0.0_wp
 
-   call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,dcovcndL, &
-      &             rthr_vdw,rthr_cn,dparam_pbe,wf,g_a,g_c,refc6,lmbd, &
+   call dispgrad_3d(mol,dispm,ndim,q,covcn,dcovcndr,dcovcndL, &
+      &             rthr_vdw,rthr_cn,dparam_pbe,wf,refc6,lmbd, &
       &             gradient,sigma,energy,dqdr,dqdL)
 
    call assert_close(energy,-0.40714169760167E-01_wp,thr)
@@ -607,6 +619,8 @@ subroutine test_dftd4_numgrad
    real(wp), allocatable :: gweights(:), refc6(:,:)
    real(wp), parameter :: r_thr = 40.0_wp**2, mbd_thr = 25.0_wp**2
    integer :: stat
+   type(dispersion_model),allocatable :: dispm
+   allocate(dispm)
 
    call mol%allocate(nat)
    mol%at  = at
@@ -615,7 +629,8 @@ subroutine test_dftd4_numgrad
    call mol%update
    call generate_wsc(mol,mol%wsc)
 
-   call d4init(mol,g_a,g_c,p_refq_goedecker,ndim)
+   call dispm%new(mol%at,p_refq_goedecker,g_a,g_c)
+   ndim = sum(dispm%atoms*dispm%nref)
 
    allocate( cn(nat),q(nat), grd(3,nat), dcndr(3,nat,nat), &
       &      dqdr(3,nat,nat+1), dcndL(3,3,nat), ges(3,nat), &
@@ -631,9 +646,9 @@ subroutine test_dftd4_numgrad
    call assert_eq(stat,0)
 
    call pbc_dncoord_d4(mol,cn,dcndr,dcndL)
-   call d4(mol,ndim,wf,g_a,g_c,cn,gweights,refc6)
+   call d4(mol,dispm,ndim,wf,cn,gweights,refc6)
 
-   call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+   call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
       &             refc6,p_mbd_approx_atm,grd,sigma,ed,dqdr,dqdL)
 
    write(*,*) matmul(xyz,q)
@@ -652,7 +667,7 @@ subroutine test_dftd4_numgrad
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,sigma,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
-         call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+         call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             &             refc6,p_mbd_approx_atm,ges,sigma,er,dqdr,dqdL)
 
          mol%xyz(j,i) = mol%xyz(j,i) - 2*step
@@ -662,7 +677,7 @@ subroutine test_dftd4_numgrad
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,sigma,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
-         call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+         call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             &             refc6,p_mbd_approx_atm,ges,sigma,el,dqdr,dqdL)
 
          mol%xyz(j,i) = mol%xyz(j,i) + step
@@ -731,6 +746,8 @@ subroutine test_dftd4_numstress
    real(wp), allocatable :: gweights(:), refc6(:,:)
    real(wp), parameter :: r_thr = 20.0_wp**2, mbd_thr = 8.0_wp**2
    integer :: stat
+   type(dispersion_model),allocatable :: dispm
+   allocate(dispm)
 
    call mol%allocate(nat)
    mol%at  = at
@@ -743,7 +760,8 @@ subroutine test_dftd4_numstress
    call mol%update
    call generate_wsc(mol,mol%wsc)
 
-   call d4init(mol,g_a,g_c,p_refq_goedecker,ndim)
+   call dispm%new(mol%at,p_refq_goedecker,g_a,g_c)
+   ndim = sum(dispm%atoms*dispm%nref)
 
    allocate( cn(nat),q(nat), grd(3,nat), dcndr(3,nat,nat), &
       &      dqdr(3,nat,nat+1), dqdL(3,3,nat+1), dcndL(3,3,nat), ges(3,nat), &
@@ -759,9 +777,9 @@ subroutine test_dftd4_numstress
    call assert_eq(stat,0)
 
    call pbc_dncoord_d4(mol,cn,dcndr,dcndL)
-   call d4(mol,ndim,wf,g_a,g_c,cn,gweights,refc6)
+   call d4(mol,dispm,ndim,wf,cn,gweights,refc6)
 
-   call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+   call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
       &             refc6,p_mbd_approx_atm,grd,sigma,ed,dqdr,dqdL)
 
    allocate( numg(3,nat), source = 0.0_wp )
@@ -778,7 +796,7 @@ subroutine test_dftd4_numstress
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
-         call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+         call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             &             refc6,p_mbd_approx_atm,ges,stmp,er,dqdr,dqdL)
 
          mol%xyz(j,i) = mol%xyz(j,i) - 2*step
@@ -788,7 +806,7 @@ subroutine test_dftd4_numstress
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
-         call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+         call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             &             refc6,p_mbd_approx_atm,ges,stmp,el,dqdr,dqdL)
 
          mol%xyz(j,i) = mol%xyz(j,i) + step
@@ -819,7 +837,7 @@ subroutine test_dftd4_numstress
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
-         call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+         call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             &             refc6,p_mbd_approx_atm,ges,stmp,er,dqdr,dqdL)
          mol%lattice(j,i) = mol%lattice(j,i) - 2*step
          call abc_to_xyz(mol%n,mol%lattice,abc,mol%xyz)
@@ -829,7 +847,7 @@ subroutine test_dftd4_numstress
          stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
-         call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
+         call dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             &             refc6,p_mbd_approx_atm,ges,stmp,el,dqdr,dqdL)
          mol%lattice(j,i) = mol%lattice(j,i) + step
          call abc_to_xyz(mol%n,mol%lattice,abc,mol%xyz)
