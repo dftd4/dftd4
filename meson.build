@@ -191,7 +191,7 @@ d4exe = executable(meson.project_name(), fmain,
 ## ========================================== ##
 ## INSTALL
 ## ========================================== ##
-install_headers('include/dftd_api.h')
+install_headers('include/dftd4.h')
 
 asciidoc = find_program('a2x', required: false)
 if asciidoc.found()

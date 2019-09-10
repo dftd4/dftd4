@@ -104,6 +104,11 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
    verb  = opt%print_level > 1
    debug = opt%print_level > 2
 
+   if (verb) then
+      call dftd4_header(iunit,debug)
+      call dftd4_citation(iunit)
+   endif
+
 ! ------------------------------------------------------------------------
 !  Output: Initialization and Parameter setup
 ! ------------------------------------------------------------------------
