@@ -35,15 +35,20 @@ typedef struct {
    bool lenergy;
    bool lgradient;
    bool lhessian;
-   bool verbose;
-   bool veryverbose;
-   bool silent;
+   bool print_level;
 } DFTD_options;
 
-extern void D4_calculation(const int* natoms, const int* attyp,
-      const double* charge, const double* coord,
+extern void
+D4_calculation(const int* natoms, const int* attyp, const double* charge,
+      const double* coord, const char* outfile,
       const DFTD_parameter* dparam, const DFTD_options* dopt,
       double* energy, double* grad, double* hess);
+
+extern void
+D4_PBC_calculation(const int* natoms, const int* attyp, const double* charge,
+      const double* coord, const double* lattice, const char* outfile,
+      const DFTD_parameter* dparam, const DFTD_options* dopt,
+      double* energy, double* grad, double* latgrad);
 
 #ifdef __cplusplus
 }

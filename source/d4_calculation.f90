@@ -98,15 +98,22 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
       & [.true.,.true.,.true.,.false.,.true.,.true.,.false.,.false.,.true.],&
       & shape(voigt_mask))
 
+   logical :: minpr, verb, debug
+
+   minpr = opt%print_level > 0
+   verb  = opt%print_level > 1
+   debug = opt%print_level > 2
+
 ! ------------------------------------------------------------------------
 !  Output: Initialization and Parameter setup
 ! ------------------------------------------------------------------------
    call d4init(mol,opt%g_a,opt%g_c,p_refq_goedecker,ndim)
    memory = ((mol%n)+(mol%n)+(ndim)+(ndim*ndim) &
-            +(mol%n*mol%n)+(23*mol%n)+(mol%n)+(3*mol%n) &
-            +(3*mol%n*mol%n)+(3*mol%n*(mol%n+1)) &
-            +(3*mol%n*mol%n)) * wp / (1024.0_wp**2)
+      &     +(mol%n*mol%n)+(23*mol%n)+(mol%n)+(3*mol%n) &
+      &     +(3*mol%n*mol%n)+(3*mol%n*(mol%n+1)) &
+      &     +(3*mol%n*mol%n)) * wp / (1024.0_wp**2)
 
+   if (minpr) then
    call generic_header(iunit,'Calculation Setup',49,10)
    write(iunit,'(3x,a," : ",i6)')   'number of atoms     ', mol%n
    write(iunit,'(3x,a," : ",i6)')   'charge              ', nint(mol%chrg)
@@ -115,17 +122,18 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
 !$ write(iunit,'(3x,a," : ",i6)')   'omp threads         ',omp_get_num_threads()
    write(iunit,'(3x,a," : ",f6.1,1x,a)') &
       "memory needed (est.)",memory,"Mb"
-   if (opt%wf  /= 6.0_wp .or. opt%verbose) &
+   if (opt%wf  /= 6.0_wp .or. verb) &
    write(iunit,'(3x,a," : ",f6.1)')   'weighting factor    ', opt%wf
-   if (opt%g_a /= 3.0_wp .or. opt%verbose) &
+   if (opt%g_a /= 3.0_wp .or. verb) &
    write(iunit,'(3x,a," : ",f6.1)')   'q-scale height      ', opt%g_a
-   if (opt%g_c /= 2.0_wp .or. opt%verbose) &
+   if (opt%g_c /= 2.0_wp .or. verb) &
    write(iunit,'(3x,a," : ",f6.1)')   'q-scale steepness   ', opt%g_c
 
    write(iunit,'(a)')
 
-   if (.not.opt%silent) &
    call prd4ref(mol)
+   endif
+
 
    allocate( q(mol%n),covcn(mol%n),gweights(ndim),refc6(ndim,ndim),&
       &      c6ab(mol%n,mol%n),aw(23,mol%n),cn(mol%n),dqdL(3,3,mol%n+1), &
@@ -147,12 +155,12 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
 ! ------------------------------------------------------------------------
 !  get partial charges
 ! ------------------------------------------------------------------------
-   if (opt%verbose) &
+   if (verb) &
    call eeq_header
    call new_charge_model(chrgeq,mol)
    call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
                    .false.,.false.,.true.)
-   if (opt%verbose) &
+   if (verb) &
    call print_chrgeq(iunit,chrgeq,mol,q,cn)
 
    dresults%charges = q
@@ -169,13 +177,13 @@ dispersion_properties: if (opt%lmolpol) then
    call prmolc6(mol,molc6,molc8,molpol,covcn=covcn,q=q,c6ab=c6ab,alpha=aw(1,:))
 endif dispersion_properties
 
-if (.not.opt%silent.and.(opt%lenergy.or.opt%lgradient.or.opt%lhessian)) then
+if (minpr.and.(opt%lenergy.or.opt%lgradient.or.opt%lhessian)) then
    call generic_header(iunit,'Damping Parameters',49,10)
    write(iunit,'(3x,a," : ",f10.4)')   's6                  ', dparam%s6
    write(iunit,'(3x,a," : ",f10.4)')   's8                  ', dparam%s8
-   if (dparam%s10 /= 0.0_wp .or. opt%verbose) &
+   if (dparam%s10 /= 0.0_wp .or. verb) &
    write(iunit,'(3x,a," : ",f10.4)')   's10                 ', dparam%s10
-   if (dparam%s9  /= 1.0_wp .or. opt%verbose) &
+   if (dparam%s9  /= 1.0_wp .or. verb) &
    write(iunit,'(3x,a," : ",f10.4)')   's9                  ', dparam%s9
    write(iunit,'(3x,a," : ",f10.4)')   'a1                  ', dparam%a1
    write(iunit,'(3x,a," : ",f10.4)')   'a2                  ', dparam%a2

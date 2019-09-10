@@ -24,6 +24,11 @@ module dftd4
 !  also get the CN-Parameters to inline the CN-derivative in the gradient
    use coordination_number, only : kn,k1,k4,k5,k6
    use class_param, only : dftd_parameter
+   use mctc_param, only : rcov => covalent_radius_d3, &
+      &                   en => pauling_en, &
+      &                   r4r2 => sqrt_z_r4_over_r2, &
+      &                   gam => chemical_hardness, &
+      &                   zeff => def2ecp_nuclear_charges
    implicit none
 
    real(wp) :: thopi,ootpi
@@ -42,147 +47,7 @@ module dftd4
    integer,parameter :: p_mbd_exact_atm  = 2 !< integrate C9 from polarizibilities
    integer,parameter :: p_mbd_approx_atm = 3 !< approximate C9 from C6
 
-   integer,private,parameter :: max_elem = 118
-   !> effective nuclear charge used in calculation of polarizibilities
-   real(wp),parameter :: zeff(max_elem) = (/ &
-   &   1,                                                 2,  & ! H-He
-   &   3, 4,                               5, 6, 7, 8, 9,10,  & ! Li-Ne
-   &  11,12,                              13,14,15,16,17,18,  & ! Na-Ar
-   &  19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,  & ! K-Kr
-   &   9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,  & ! Rb-Xe
-   &   9,10,11,30,31,32,33,34,35,36,37,38,39,40,41,42,43,  & ! Cs-Lu
-   &  12,13,14,15,16,17,18,19,20,21,22,23,24,25,26, & ! Hf-Rn
-   !  just copy & paste from above
-   &   9,10,11,30,31,32,33,34,35,36,37,38,39,40,41,42,43,  & ! Fr-Lr
-   &  12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 /) ! Rf-Og
-
-!> chemical hardness
-!
-!  Semiempirical Evaluation of the GlobalHardness of the Atoms of 103
-!  Elements of the Periodic Table Using the Most Probable Radii as
-!  their Size Descriptors DULAL C. GHOSH, NAZMUL ISLAM 2009 in
-!  Wiley InterScience (www.interscience.wiley.com).
-!  DOI 10.1002/qua.22202
-!  values in the paper multiplied by two because
-!  (ii:ii)=(IP-EA)=d^2 E/dN^2 but the hardness
-!  definition they use is 1/2d^2 E/dN^2 (in Eh)
-   real(wp),parameter :: gam(1:max_elem) = (/ &
-  &0.47259288_wp,0.92203391_wp,0.17452888_wp,0.25700733_wp,0.33949086_wp,0.42195412_wp, & ! H-C
-  &0.50438193_wp,0.58691863_wp,0.66931351_wp,0.75191607_wp,0.17964105_wp,0.22157276_wp, & ! N-Mg
-  &0.26348578_wp,0.30539645_wp,0.34734014_wp,0.38924725_wp,0.43115670_wp,0.47308269_wp, & ! Al-Ar
-  &0.17105469_wp,0.20276244_wp,0.21007322_wp,0.21739647_wp,0.22471039_wp,0.23201501_wp, & ! Ca-Cr
-  &0.23933969_wp,0.24665638_wp,0.25398255_wp,0.26128863_wp,0.26859476_wp,0.27592565_wp, & ! Mn-Zn
-  &0.30762999_wp,0.33931580_wp,0.37235985_wp,0.40273549_wp,0.43445776_wp,0.46611708_wp, & ! Ga-Kr
-  &0.15585079_wp,0.18649324_wp,0.19356210_wp,0.20063311_wp,0.20770522_wp,0.21477254_wp, & ! Rb-Mo
-  &0.22184614_wp,0.22891872_wp,0.23598621_wp,0.24305612_wp,0.25013018_wp,0.25719937_wp, & ! Tc-Cd
-  &0.28784780_wp,0.31848673_wp,0.34912431_wp,0.37976593_wp,0.41040808_wp,0.44105777_wp, & ! In-Xe
-  &0.05019332_wp,0.06762570_wp,0.08504445_wp,0.10247736_wp,0.11991105_wp,0.13732772_wp, & ! Cs-Nd
-  &0.15476297_wp,0.17218265_wp,0.18961288_wp,0.20704760_wp,0.22446752_wp,0.24189645_wp, & ! Pm-Dy
-  &0.25932503_wp,0.27676094_wp,0.29418231_wp,0.31159587_wp,0.32902274_wp,0.34592298_wp, & ! Ho-Hf
-  &0.36388048_wp,0.38130586_wp,0.39877476_wp,0.41614298_wp,0.43364510_wp,0.45104014_wp, & ! Ta-Pt
-  &0.46848986_wp,0.48584550_wp,0.12526730_wp,0.14268677_wp,0.16011615_wp,0.17755889_wp, & ! Au-Po
-  &0.19497557_wp,0.21240778_wp,0.07263525_wp,0.09422158_wp,0.09920295_wp,0.10418621_wp, & ! At-Th
-  &0.14235633_wp,0.16394294_wp,0.18551941_wp,0.22370139_wp,0.00000000_wp,0.00000000_wp, & ! Pa-Cm
-  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp, & ! Bk-No
-  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp, & ! Rf-Mt
-  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp, & ! Ds-Mc
-  &0.00000000_wp,0.00000000_wp,0.00000000_wp,0.00000000_wp /) ! Lv-Og
-
-!> pauling EN's
-   real(wp),parameter :: en(max_elem) = (/ &
-   & 2.20_wp,3.00_wp, & ! H,He
-   & 0.98_wp,1.57_wp,2.04_wp,2.55_wp,3.04_wp,3.44_wp,3.98_wp,4.50_wp, & ! Li-Ne
-   & 0.93_wp,1.31_wp,1.61_wp,1.90_wp,2.19_wp,2.58_wp,3.16_wp,3.50_wp, & ! Na-Ar
-   & 0.82_wp,1.00_wp, & ! K,Ca
-   &           1.36_wp,1.54_wp,1.63_wp,1.66_wp,1.55_wp,1.83_wp,1.88_wp,1.91_wp,1.90_wp,1.65_wp, & ! Sc-Zn
-   &           1.81_wp,2.01_wp,2.18_wp,2.55_wp,2.96_wp,3.00_wp, & ! Ga-Kr
-   & 0.82_wp,0.95_wp, & ! Rb,Sr
-   &           1.22_wp,1.33_wp,1.60_wp,2.16_wp,1.90_wp,2.20_wp,2.28_wp,2.20_wp,1.93_wp,1.69_wp, & ! Y-Cd
-   &           1.78_wp,1.96_wp,2.05_wp,2.10_wp,2.66_wp,2.60_wp, & ! In-Xe
-   & 0.79_wp,0.89_wp, & ! Cs,Ba
-   &      1.10_wp,1.12_wp,1.13_wp,1.14_wp,1.15_wp,1.17_wp,1.18_wp, & ! La-Eu
-   &      1.20_wp,1.21_wp,1.22_wp,1.23_wp,1.24_wp,1.25_wp,1.26_wp, & ! Gd-Yb
-   &           1.27_wp,1.30_wp,1.50_wp,2.36_wp,1.90_wp,2.20_wp,2.20_wp,2.28_wp,2.54_wp,2.00_wp, & ! Lu-Hg
-   &           1.62_wp,2.33_wp,2.02_wp,2.00_wp,2.20_wp,2.20_wp, & ! Tl-Rn
-   ! only dummies below
-   & 1.50_wp,1.50_wp, & ! Fr,Ra
-   &      1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Ac-Am
-   &      1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Cm-No
-   &           1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Rf-Cn
-   &           1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp /) ! Nh-Og
-! same values in old arrangement
-! &         2.200,3.000,0.980,1.570,2.040,2.550,3.040,3.440,3.980 &
-! &        ,4.500,0.930,1.310,1.610,1.900,2.190,2.580,3.160,3.500 &
-! &        ,0.820,1.000,1.360,1.540,1.630,1.660,1.550,1.830,1.880 &
-! &        ,1.910,1.900,1.650,1.810,2.010,2.180,2.550,2.960,3.000 &
-! &        ,0.820,0.950,1.220,1.330,1.600,2.160,1.900,2.200,2.280 &
-! &        ,2.200,1.930,1.690,1.780,1.960,2.050,2.100,2.660,2.600 &
-! &,0.79,0.89,1.10,1.12,1.13,1.14,1.15,1.17,1.18,1.20,1.21,1.22 &
-! &,1.23,1.24,1.25,1.26,1.27,1.3,1.5,2.36,1.9,2.2,2.20,2.28,2.54 &
-! &,2.00,1.62,2.33,2.02,2.0,2.2,2.2,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5/)
-
-!  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
-!  the large number of digits is just to keep the results consistent
-!  with older versions. They should not imply any higher accuracy
-!  than the old values
-!   real(wp),parameter :: r4r2(max_elem) = (/ &
-!   &   2.00734898,  1.56637132,  5.01986934,  3.85379032,  3.64446594, &
-!   &   3.10492822,  2.71175247,  2.59361680,  2.38825250,  2.21522516, &
-!   &   6.58585536,  5.46295967,  5.65216669,  4.88284902,  4.29727576, &
-!   &   4.04108902,  3.72932356,  3.44677275,  7.97762753,  7.07623947, &
-!   &   6.60844053,  6.28791364,  6.07728703,  5.54643096,  5.80491167, &
-!   &   5.58415602,  5.41374528,  5.28497229,  5.22592821,  5.09817141, &
-!   &   6.12149689,  5.54083734,  5.06696878,  4.87005108,  4.59089647, &
-!   &   4.31176304,  9.55461698,  8.67396077,  7.97210197,  7.43439917, &
-!   &   6.58711862,  6.19536215,  6.01517290,  5.81623410,  5.65710424, &
-!   &   5.52640661,  5.44263305,  5.58285373,  7.02081898,  6.46815523, &
-!   &   5.98089120,  5.81686657,  5.53321815,  5.25477007, 11.02204549, &
-!   &  10.15679528,  9.35167836,  9.06926079,  8.97241155,  8.90092807, &
-!   &   8.85984840,  8.81736827,  8.79317710,  7.89969626,  8.80588454, &
-!   &   8.42439218,  8.54289262,  8.47583370,  8.45090888,  8.47339339, &
-!   &   7.83525634,  8.20702843,  7.70559063,  7.32755997,  7.03887381, &
-!   &   6.68978720,  6.05450052,  5.88752022,  5.70661499,  5.78450695, &
-!   &   7.79780729,  7.26443867,  6.78151984,  6.67883169,  6.39024318, &
-!   &   6.09527958, 11.79156076, 11.10997644,  9.51377795,  8.67197068, &
-!   &   8.77140725,  8.65402716,  8.53923501,  8.85024712 /)
-
-!> <r4>/<r2> expectation values for atoms
-!
-!  PBE0/def2-QZVP atomic values calculated by S. Grimme in Gaussian (2010)
-!  rare gases recalculated by J. Mewes with PBE0/aug-cc-pVQZ in Dirac (2018)
-!  He: 3.4698 -> 3.5544, Ne: 3.1036 -> 3.7943, Ar: 5.6004 -> 5.6638,
-!  Kr: 6.1971 -> 6.2312, Xe: 7.5152 -> 8.8367
-!  not replaced but recalculated (PBE0/cc-pVQZ) were
-!   H: 8.0589 ->10.9359, Li:29.0974 ->39.7226, Be:14.8517 ->17.7460
-!  also new super heavies Cn,Nh,Fl,Lv,Og
-   real(wp),private,parameter :: r2r4(max_elem) = (/  &
-   &  8.0589_wp, 3.4698_wp, & ! H,He
-   & 29.0974_wp,14.8517_wp,11.8799_wp, 7.8715_wp, 5.5588_wp, 4.7566_wp, 3.8025_wp, 3.1036_wp, & ! Li-Ne
-   & 26.1552_wp,17.2304_wp,17.7210_wp,12.7442_wp, 9.5361_wp, 8.1652_wp, 6.7463_wp, 5.6004_wp, & ! Na-Ar
-   & 29.2012_wp,22.3934_wp, & ! K,Ca
-   &         19.0598_wp,16.8590_wp,15.4023_wp,12.5589_wp,13.4788_wp, & ! Sc-
-   &         12.2309_wp,11.2809_wp,10.5569_wp,10.1428_wp, 9.4907_wp, & ! -Zn
-   &                 13.4606_wp,10.8544_wp, 8.9386_wp, 8.1350_wp, 7.1251_wp, 6.1971_wp, & ! Ga-Kr
-   & 30.0162_wp,24.4103_wp, & ! Rb,Sr
-   &         20.3537_wp,17.4780_wp,13.5528_wp,11.8451_wp,11.0355_wp, & ! Y-
-   &         10.1997_wp, 9.5414_wp, 9.0061_wp, 8.6417_wp, 8.9975_wp, & ! -Cd
-   &                 14.0834_wp,11.8333_wp,10.0179_wp, 9.3844_wp, 8.4110_wp, 7.5152_wp, & ! In-Xe
-   & 32.7622_wp,27.5708_wp, & ! Cs,Ba
-   &         23.1671_wp,21.6003_wp,20.9615_wp,20.4562_wp,20.1010_wp,19.7475_wp,19.4828_wp, & ! La-Eu
-   &         15.6013_wp,19.2362_wp,17.4717_wp,17.8321_wp,17.4237_wp,17.1954_wp,17.1631_wp, & ! Gd-Yb
-   &         14.5716_wp,15.8758_wp,13.8989_wp,12.4834_wp,11.4421_wp, & ! Lu-
-   &         10.2671_wp, 8.3549_wp, 7.8496_wp, 7.3278_wp, 7.4820_wp, & ! -Hg
-   &                 13.5124_wp,11.6554_wp,10.0959_wp, 9.7340_wp, 8.8584_wp, 8.0125_wp, & ! Tl-Rn
-   & 29.8135_wp,26.3157_wp, & ! Fr,Ra
-   &         19.1885_wp,15.8542_wp,16.1305_wp,15.6161_wp,15.1226_wp,16.1576_wp, 0.0000_wp, & ! Ac-Am
-   &          0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, & ! Cm-No
-   &          0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, & ! Lr-
-   &          0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 5.4929_wp, & ! -Cn
-   &                  6.7286_wp, 6.5144_wp, 0.0000_wp,10.3600_wp, 0.0000_wp, 8.6641_wp /) ! Nh-Og
-   integer,private :: idum
-   !> weighted <r4>/<r2> expectation values used for C6 -> C8 extrapolation
-   real(wp),parameter :: r4r2(max_elem) = &
-   &  sqrt(0.5_wp*(r2r4*(/(sqrt(real(idum,wp)),idum=1,max_elem)/)))
+   integer, parameter :: max_elem = 118
 
    integer, dimension(max_elem)      :: refn ! for D4
    integer, dimension(max_elem)      :: refs ! for D3 (generated on-the-fly)
@@ -207,7 +72,111 @@ module dftd4
 
    include 'param_ref.inc'
 
+   type :: dispersion_model
+      integer, dimension(max_elem) :: atoms = 0
+      integer, dimension(max_elem) :: nref = 0
+      integer, dimension(7,max_elem) :: ncount = 0
+      real(wp),dimension(7,max_elem) :: cn = 0.0_wp
+      real(wp),dimension(7,max_elem) :: q = 0.0_wp
+      real(wp),dimension(23,7,max_elem) :: alpha = 0.0_wp
+      real(wp),dimension(7,7,max_elem,max_elem) :: c6 = 0.0_wp
+   contains
+      procedure :: allocate => allocate_dispersion_model
+      procedure :: deallocate => deallocate_dispersion_model
+      generic :: new => new_d4_model
+      procedure :: new_d4_model => initialize_dftd4_model
+   end type dispersion_model
+
 contains
+
+subroutine allocate_dispersion_model(self)
+   class(dispersion_model), intent(inout) :: self
+   call self%deallocate
+end subroutine allocate_dispersion_model
+
+subroutine deallocate_dispersion_model(self)
+   class(dispersion_model), intent(out) :: self
+end subroutine deallocate_dispersion_model
+
+subroutine initialize_dftd4_model(self,atoms,mode,g_a,g_c)
+   class(dispersion_model), intent(inout) :: self
+   integer, intent(in)  :: atoms(:)
+   real(wp),intent(in)  :: g_a,g_c
+   integer, intent(in)  :: mode
+
+   integer  :: i,ia,is,icn,j,ii,jj
+   integer  :: cncount(0:18)
+   real(wp) :: alpha(23),iz,c6
+   real(wp) :: tmp_hq(7,max_elem)
+
+   intrinsic :: nint
+
+   call self%allocate
+
+   select case(mode)
+   case(p_refq_hirshfeld,p_refq_periodic)
+      self%q = dftq
+      tmp_hq = dfth
+   case(p_refq_gasteiger)
+      self%q = gffq
+      tmp_hq = gffh
+   case(p_refq_goedecker)
+      self%q = clsq
+      tmp_hq = clsh
+   case(p_refq_gfn2xtb_gbsa_h2o)
+      self%q = solq
+      tmp_hq = solh
+   case default
+      self%q = refq
+      tmp_hq = refh
+   end select
+
+   !> set up refc und refal, also obtain the dimension of the dispmat
+   do i = 1, size(atoms,1)
+      cncount = 0
+      cncount(0) = 1
+      ia = atoms(i)
+      if (self%atoms(ia).eq.0) then
+         self%nref(ia) = refn(ia)
+         do j = 1, refn(ia)
+            is = refsys(j,ia)
+            iz = zeff(is)
+            alpha = sscale(is)*secaiw(:,is) &
+               &    * zeta(g_a,gam(is)*g_c,iz,tmp_hq(j,ia)+iz)
+            icn = nint(refcn(j,ia))
+            self%cn = refcovcn(j,ia)
+            cncount(icn) = cncount(icn) + 1
+            self%alpha(:,j,ia) = max(ascale(j,ia)*(alphaiw(:,j,ia) &
+               &                     - hcount(j,ia)*alpha), 0.0_wp)
+         enddo
+         do j = 1, refn(ia)
+            icn = cncount(nint(refcn(j,ia)))
+            self%ncount(j,ia) = icn*(icn+1)/2
+         enddo
+      endif
+      self%atoms(ia) = self%atoms(ia)+1
+   enddo
+
+   ! integrate C6 coefficients
+   !$omp parallel default(none) private(i,j,ii,jj,alpha,c6) shared(self)
+   !$omp do schedule(runtime)
+   do i = 1, max_elem
+      do j = 1, i
+         if (self%atoms(i) > 0 .and. self%atoms(j) > 0) then
+            do ii = 1, self%nref(i)
+               do jj = 1, self%nref(j)
+                  alpha = self%alpha(:,ii,i)*self%alpha(:,jj,j)
+                  c6 = thopi * trapzd(alpha)
+                  self%c6(jj,ii,j,i) = c6
+                  self%c6(ii,jj,i,j) = c6
+               enddo
+            enddo
+         endif
+      enddo
+   enddo
+   !$omp end do
+   !$omp end parallel
+end subroutine initialize_dftd4_model
 
 !> prints molecular properties in a human readable format
 !
@@ -687,7 +656,7 @@ subroutine d4init(mol,g_a,g_c,mode,ndim)
          is = refsys(j,ia)
          iz = zeff(is)
          sec_al = sscale(is)*secaiw(:,is) &
-         &  * zeta(g_a,gam(is)*g_c,secq(is)+iz,refh(j,ia)+iz)
+         &  * zeta(g_a,gam(is)*g_c,iz,refh(j,ia)+iz)
          icn =nint(refcn(j,ia))
          cncount(icn) = cncount(icn) + 1
          refal(:,j,ia) = max(ascale(j,ia)*(alphaiw(:,j,ia)-hcount(j,ia)*sec_al),0.0_wp)

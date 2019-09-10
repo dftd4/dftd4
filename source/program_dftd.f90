@@ -126,8 +126,8 @@ program dftd
 !  Output:
 !  Header, Citation and Licence
 ! ------------------------------------------------------------------------
-   call dftd4_header(set%verbose)
-   if (.not.set%silent) then
+   call dftd4_header(set%print_level > 1)
+   if (set%print_level > 0) then
    call dftd4_citation
    call prdate('S')
    write(istdout,'(a)')
@@ -179,7 +179,7 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
       call out_tmer('.EDISP',dresults%energy)
 
    if (set%lgradient) then
-      if (set%verbose) then
+      if (set%print_level > 1) then
          write(istdout,'(1x,a)') &
             "Dispersion gradient"
          call write_gradient(mol,istdout,dresults%gradient)
@@ -208,7 +208,7 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
 ! ------------------------------------------------------------------------
 !  Print timings
 ! ------------------------------------------------------------------------
-   if (.not.set%silent) then
+   if (set%print_level > 0) then
    write(istdout,'(a)')
    call stop_timing_run
    call stop_timing(1)

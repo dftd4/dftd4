@@ -92,6 +92,7 @@ subroutine generate_wsc(mol,wsc)
          end do
          ! get first image with same dist
          ! find minimum in dist-array and assign it to minpos = minimum position
+         if (c == 0) cycle
          trans=.true.
          minpos=minloc(dist(:c),dim=1)
          ! minimum distance saved in mindist

@@ -4,7 +4,7 @@
 !        double& energy, double* grad, double* hess);
 !> external iso-c compatible interface to the DFT-D4 program
 subroutine d4_calculation_c_api &
-      &   (natoms,attyp,charge,coord,dparam_in,dopt_in,edisp,grad,hess) &
+      &   (natoms,attyp,charge,coord,file_in,dparam_in,dopt_in,edisp,grad,hess) &
       &    bind(C,name="D4_calculation")
 
    use iso_fortran_env, wp => real64, istdout => output_unit
@@ -27,6 +27,8 @@ subroutine d4_calculation_c_api &
    real(c_double),intent(in) :: charge
    !> cartesian coordinates in bohr
    real(c_double),intent(in) :: coord(3,natoms)
+   !> input file name
+   character(kind=c_char),intent(in) :: file_in(*)
    !> damping parameters
    type(c_dftd_parameter),intent(in) :: dparam_in
    !> calculation options
@@ -44,6 +46,8 @@ subroutine d4_calculation_c_api &
    type(dftd_parameter) :: dparam
    type(dftd_options)   :: dopt
    type(dftd_results)   :: dresults
+   integer :: i,iunit
+   character(len=:),allocatable :: outfile
 
    call mol%allocate(natoms,.false.)
    mol%at = attyp
@@ -56,7 +60,24 @@ subroutine d4_calculation_c_api &
    dparam = dparam_in
    dopt   = dopt_in
 
-   call d4_calculation(istdout,dopt,mol,dparam,dresults)
+   i = 0
+   outfile = ''
+   do
+      i = i+1
+      if (file_in(i).eq.c_null_char) exit
+      outfile = outfile//file_in(i)
+   enddo
+
+   if (outfile.ne.'-'.and.dopt%print_level > 0) then
+      open(newunit=iunit,file=outfile)
+      if (iunit.eq.-1) then
+         iunit = istdout
+      endif
+   else
+      iunit = istdout
+   endif
+
+   call d4_calculation(iunit,dopt,mol,dparam,dresults)
 
    if (allocated(dresults%energy)) &
       edisp = dresults%energy
@@ -65,9 +86,14 @@ subroutine d4_calculation_c_api &
    if (allocated(dresults%hessian)) &
       hess = dresults%hessian
 
+   call finalize
+
+contains
+subroutine finalize
    call mol%deallocate
    call dresults%deallocate
-
+   if (iunit.ne.istdout) close(iunit)
+end subroutine finalize
 end subroutine d4_calculation_c_api
 
 !  extern void D4_PBC_calculation(const int& natoms, const int* attyp,
@@ -76,7 +102,7 @@ end subroutine d4_calculation_c_api
 !        double& energy, double* grad, double* hess);
 !> external iso-c compatible interface to the DFT-D4 program
 subroutine d4_pbc_calculation_c_api &
-      &   (natoms,attyp,charge,coord,lattice,dparam_in,dopt_in,edisp,grad,glat) &
+      &   (natoms,attyp,charge,coord,lattice,file_in,dparam_in,dopt_in,edisp,grad,glat) &
       &    bind(C,name="D4_PBC_calculation")
 
    use iso_fortran_env, wp => real64, istdout => output_unit
@@ -102,6 +128,8 @@ subroutine d4_pbc_calculation_c_api &
    real(c_double),intent(in) :: coord(3,natoms)
    !> lattice parameters
    real(c_double),intent(in) :: lattice(3,3)
+   !> input file name
+   character(kind=c_char),intent(in) :: file_in(*)
    !> damping parameters
    type(c_dftd_parameter),intent(in) :: dparam_in
    !> calculation options
@@ -119,6 +147,8 @@ subroutine d4_pbc_calculation_c_api &
    type(dftd_parameter) :: dparam
    type(dftd_results)   :: dresults
    type(dftd_options)   :: dopt
+   integer :: i,iunit
+   character(len=:),allocatable :: outfile
 
    call mol%allocate(natoms,.false.)
    mol%at = attyp
@@ -134,7 +164,24 @@ subroutine d4_pbc_calculation_c_api &
    dparam = dparam_in
    dopt   = dopt_in
 
-   call d4_calculation(istdout,dopt,mol,dparam,dresults)
+   i = 0
+   outfile = ''
+   do
+      i = i+1
+      if (file_in(i).eq.c_null_char) exit
+      outfile = outfile//file_in(i)
+   enddo
+
+   if (outfile.ne.'-'.and.dopt%print_level > 0) then
+      open(newunit=iunit,file=outfile)
+      if (iunit.eq.-1) then
+         iunit = istdout
+      endif
+   else
+      iunit = istdout
+   endif
+
+   call d4_calculation(iunit,dopt,mol,dparam,dresults)
 
    if (allocated(dresults%energy)) &
       edisp = dresults%energy
@@ -143,7 +190,12 @@ subroutine d4_pbc_calculation_c_api &
    if (allocated(dresults%lattice_gradient)) &
       glat = dresults%lattice_gradient
 
+   call finalize
+
+contains
+subroutine finalize
    call mol%deallocate
    call dresults%deallocate
-
+   if (iunit.ne.istdout) close(iunit)
+end subroutine finalize
 end subroutine d4_pbc_calculation_c_api

@@ -197,12 +197,12 @@ subroutine test_dftd4_api
       &  lmbd = p_mbd_approx_atm, refq = p_refq_goedecker, &
       &  wf = 6.0_wp, g_a = 3.0_wp, g_c = 2.0_wp, &
       &  lmolpol=.false., lenergy=.true., lgradient=.false., lhessian=.true., &
-      &  verbose = .false., veryverbose = .false., silent = .false. )
+      &  print_level = 0)
    type(dftd_options),  parameter :: opt_2 = dftd_options ( &
       &  lmbd = p_mbd_approx_atm, refq = p_refq_goedecker, &
       &  wf = 6.0_wp, g_a = 3.0_wp, g_c = 2.0_wp, &
       &  lmolpol=.false., lenergy=.false., lgradient=.true., lhessian=.false., &
-      &  verbose = .false., veryverbose = .false., silent = .true. )
+      &  print_level = 0)
 
    type(dftd_results) :: dresults
 
@@ -269,7 +269,7 @@ subroutine test_dftd4_pbc_api
       &  lmbd = p_mbd_approx_atm, refq = p_refq_goedecker, &
       &  wf = 6.0_wp, g_a = 3.0_wp, g_c = 2.0_wp, &
       &  lmolpol=.false., lenergy=.true., lgradient=.true., lhessian=.false., &
-      &  verbose = .false., veryverbose = .false., silent = .true. )
+      &  print_level = 0)
    type(dftd_results) :: dresults
 
    integer              :: i,j

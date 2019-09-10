@@ -40,9 +40,7 @@ module class_set
       logical  :: lenergy = .false.         !< calculate dispersion energy?
       logical  :: lgradient = .false.       !< calculate dispersion gradient?
       logical  :: lhessian = .false.        !< calculate dispersion hessian?
-      logical  :: verbose = .false.         !< print more information
-      logical  :: veryverbose = .false.     !< clutter the screen more
-      logical  :: silent = .false.          !< clutter the screen less
+      integer  :: print_level = 0           !< print more information
    end type dftd_options
 
 !> calculation setup
@@ -56,9 +54,7 @@ module class_set
       logical(c_bool) :: lenergy = .false.     !< calculate dispersion energy?
       logical(c_bool) :: lgradient = .false.   !< calculate dispersion gradient?
       logical(c_bool) :: lhessian = .false.    !< calculate dispersion hessian?
-      logical(c_bool) :: verbose = .false.     !< print more information
-      logical(c_bool) :: veryverbose = .false. !< clutter the screen more
-      logical(c_bool) :: silent = .false.      !< clutter the screen less
+      integer(c_int)  :: print_level = 0_c_int !< print more information
    end type c_dftd_options
 
    interface assignment(=)
@@ -87,9 +83,7 @@ module class_set
       logical  :: lenergy = .false.         !< calculate dispersion energy?
       logical  :: lgradient = .false.       !< calculate dispersion gradient?
       logical  :: lhessian = .false.        !< calculate dispersion hessian?
-      logical  :: verbose = .false.         !< print more information
-      logical  :: veryverbose = .false.     !< clutter the screen more
-      logical  :: silent = .false.          !< clutter the screen less
+      integer  :: print_level = 1           !< print more information
    contains
       procedure :: default_options
       procedure :: export => export_dftd_options
@@ -99,23 +93,7 @@ contains
 
 subroutine default_options(self)
    implicit none
-   class(options),intent(inout) :: self
-   self%inparam     = .false.
-   self%chrg        = 0
-   self%inchrg      = .false.
-   self%lmbd        = 3
-   self%wf          = 6.0_wp
-   self%g_a         = 3.0_wp
-   self%g_c         = 2.0_wp
-   self%lorca       = .false.
-   self%ltmer       = .false.
-   self%lmolpol     = .false.
-   self%lenergy     = .false.
-   self%lgradient   = .false.
-   self%lhessian    = .false.
-   self%verbose     = .false.
-   self%veryverbose = .false.
-   self%silent      = .false.
+   class(options),intent(out) :: self
 end subroutine default_options
 
 pure function export_dftd_options(self) result(opt)
@@ -132,9 +110,7 @@ pure function export_dftd_options(self) result(opt)
    opt%lenergy     = self%lenergy
    opt%lgradient   = self%lgradient
    opt%lhessian    = self%lhessian
-   opt%verbose     = self%verbose
-   opt%veryverbose = self%veryverbose
-   opt%silent      = self%silent
+   opt%print_level = self%print_level
 
 end function export_dftd_options
 
@@ -152,9 +128,7 @@ pure elemental subroutine convert_dftd_options_c_to_f &
    f_dopt%lenergy     = c_dopt%lenergy
    f_dopt%lgradient   = c_dopt%lgradient
    f_dopt%lhessian    = c_dopt%lhessian
-   f_dopt%verbose     = c_dopt%verbose
-   f_dopt%veryverbose = c_dopt%veryverbose
-   f_dopt%silent      = c_dopt%silent
+   f_dopt%print_level = c_dopt%print_level
 end subroutine convert_dftd_options_c_to_f
 
 pure elemental subroutine convert_dftd_options_f_to_c &
@@ -171,9 +145,7 @@ pure elemental subroutine convert_dftd_options_f_to_c &
    c_dopt%lenergy     = f_dopt%lenergy
    c_dopt%lgradient   = f_dopt%lgradient
    c_dopt%lhessian    = f_dopt%lhessian
-   c_dopt%verbose     = f_dopt%verbose
-   c_dopt%veryverbose = f_dopt%veryverbose
-   c_dopt%silent      = f_dopt%silent
+   c_dopt%print_level = f_dopt%print_level
 end subroutine convert_dftd_options_f_to_c
 
 end module class_set

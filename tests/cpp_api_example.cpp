@@ -26,16 +26,16 @@ main (int argc, char **argv)
       1.0000, 1.76596355, 0.0, 0.42822303, 4.54257102, 1.0, 16, 1.0};
    dftd::DFTD_options opt_1 = {
       dftd::p_mbd_approx_atm, dftd::p_refq_goedecker,
-      6.0, 3.0, 2.0, false, true, false, true, false, false, false };
+      6.0, 3.0, 2.0, false, true, false, true, 0 };
    dftd::DFTD_options opt_2 = {
       dftd::p_mbd_approx_atm, dftd::p_refq_goedecker,
-      6.0, 3.0, 2.0, false, false, true, false, false, false, true };
+      6.0, 3.0, 2.0, false, false, true, false, 0 };
 
    double energy {0.0};
    double grad[3*natoms] {0.0};
    double hess[3*natoms*3*natoms] {0.0};
 
-   dftd::D4_calculation(&natoms, attyp, &charge, coord, &dparam_tpss, &opt_1,
+   dftd::D4_calculation(&natoms, attyp, &charge, coord, "-", &dparam_tpss, &opt_1,
          &energy, grad, hess);
    assert(fabs(-0.26678857789318E-03 - energy) < thr);
 
@@ -43,7 +43,7 @@ main (int argc, char **argv)
    assert(fabs(-0.66109938971051E-05 - hess[7*(3*natoms)+4]) < thr);
    assert(fabs( 7.59401653431350E-06 - hess[3*3*3*3-1]) < thr);
 
-   dftd::D4_calculation(&natoms, attyp, &charge, coord, &dparam_b2plyp, &opt_2,
+   dftd::D4_calculation(&natoms, attyp, &charge, coord, "-", &dparam_b2plyp, &opt_2,
          &energy, grad, hess);
    assert(fabs(-0.13366273625493E-03 - energy) < thr);
 

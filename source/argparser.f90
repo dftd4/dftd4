@@ -100,12 +100,11 @@ subroutine read_commandline_arguments(set)
 !  now for true options, like verbosity or printouts
 ! ------------------------------------------------------------------------
          case('-v','--verbose')
-            set%verbose = .true.
+            set%print_level = 2
          case('-V','--very-verbose')
-            set%verbose = .true.
-            set%veryverbose = .true.
+            set%print_level = 3
          case('-s','--silent')
-            set%silent = .true.
+            set%print_level = 0
       !  OMP option
       !$ case('-P','--parallel')
       !$    skip = 1
