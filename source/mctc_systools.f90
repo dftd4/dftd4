@@ -104,8 +104,6 @@ subroutine rdarg(i,arg,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','Command argument corrupted')
       endif
    endif
    allocate( character(len=l) :: arg, stat=err )
@@ -113,8 +111,6 @@ subroutine rdarg(i,arg,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','could not be allocated')
       endif
    endif
    call get_command_argument(i,arg,status=err)
@@ -122,8 +118,6 @@ subroutine rdarg(i,arg,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','Command argument corrupted')
       endif
    endif
    if (present(iostat)) iostat=0
@@ -141,8 +135,6 @@ subroutine rdvar(name,var,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','System variable unassigned')
       endif
    endif
    allocate( character(len=l) :: var, stat=err )
@@ -150,8 +142,6 @@ subroutine rdvar(name,var,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','could not be allocated')
       endif
    endif
    call get_environment_variable(name,var,status=err)
@@ -159,8 +149,6 @@ subroutine rdvar(name,var,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','System variable corrupted')
       endif
    endif
    if (present(iostat)) iostat=0

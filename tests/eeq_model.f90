@@ -22,6 +22,7 @@ subroutine test_eeq_model_water
    real(wp) :: es,sigma(3,3)
    real(wp),allocatable :: cn(:),dcndr(:,:,:),dcndL(:,:,:)
    real(wp),allocatable :: q(:),dqdr(:,:,:),dqdL(:,:,:),ges(:,:)
+   integer :: stat
 
    allocate( cn(nat),dcndr(3,nat,nat),dcndL(3,3,nat),q(nat),dqdr(3,nat,nat+1),ges(3,nat) )
    es  = 0.0_wp
@@ -47,7 +48,8 @@ subroutine test_eeq_model_water
    call assert_close(dcndr(3,1,3),-0.40486599284501E-01_wp,thr)
 
    call new_charge_model_2019(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma,.false.,.true.,.true.)
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma,.false.,.true.,.true.)
+   call assert_eq(stat,0)
 
    ! test electrostatic energy
    call assert_close(es,-0.64308088326667E-01_wp,thr)
@@ -111,6 +113,7 @@ subroutine test_eeq_model_ewald
    real(wp),allocatable :: dqdr(:,:,:)
    real(wp),allocatable :: dqdL(:,:,:)
    real(wp),allocatable :: gradient(:,:)
+   integer :: stat
 
    call mol%allocate(nat,.true.)
    mol%at   = at
@@ -155,8 +158,9 @@ subroutine test_eeq_model_ewald
 
    call new_charge_model_2019(chrgeq,mol)
 
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,energy,gradient,sigma,&
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,energy,gradient,sigma,&
       &            .false.,.true.,.true.)
+   call assert_eq(stat,0)
 
    call assert_close(energy,-0.90576568382295E-01_wp,thr)
 
@@ -229,6 +233,7 @@ subroutine test_eeq_numgrad
    real(wp),allocatable :: dqdr(:,:,:)
    real(wp),allocatable :: dqdL(:,:,:)
    real(wp),allocatable :: numq(:,:,:),ql(:),qr(:)
+   integer :: stat
 
    allocate( cn(nat),q(nat), grd(3,nat), dcndr(3,nat,nat), &
       &      dqdr(3,nat,nat),dcndL(3,3,nat), source = 0.0_wp )
@@ -244,8 +249,9 @@ subroutine test_eeq_numgrad
    call dncoord_logcn(mol%n,cn,dcndr,cn_max=8.0_wp)
 
    call new_charge_model_2019(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
       &            es,grd,sigma,.false.,.true.,.true.)
+   call assert_eq(stat,0)
 
    write(*,*) matmul(xyz,q)
 
@@ -260,13 +266,13 @@ subroutine test_eeq_numgrad
          mol%xyz(j,i) = mol%xyz(j,i) + step
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,qr,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,qr,dqdr,dqdL, &
             &            er,grd,sigma,.false.,.false.,.false.)
 
          mol%xyz(j,i) = mol%xyz(j,i) - 2*step
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,ql,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,ql,dqdr,dqdL, &
             &            el,grd,sigma,.false.,.false.,.false.)
 
          mol%xyz(j,i) = mol%xyz(j,i) + step
@@ -324,6 +330,7 @@ subroutine test_peeq_numgrad
    real(wp),allocatable :: dqdr(:,:,:)
    real(wp),allocatable :: dqdL(:,:,:)
    real(wp),allocatable :: numq(:,:,:),ql(:),qr(:)
+   integer :: stat
 
    call mol%allocate(nat)
    mol%at   = at
@@ -338,13 +345,15 @@ subroutine test_peeq_numgrad
    allocate( cn(nat),q(nat), grd(3,nat), dcndr(3,nat,nat), dcndL(3,3,nat), &
       &      dqdr(3,nat,nat), dqdL(3,3,nat), source = 0.0_wp )
    es  = 0.0_wp
+   sigma = 0.0_wp
 
    call pbc_dncoord_erf(mol,cn,dcndr,dcndL)
    call dncoord_logcn(mol%n,cn,dcndr,cn_max=8.0_wp)
 
    call new_charge_model_2019(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
       &            es,grd,sigma,.false.,.true.,.true.)
+   call assert_eq(stat,0)
    print*,es
 
    allocate( numg(3,nat), source = 0.0_wp )
@@ -358,13 +367,13 @@ subroutine test_peeq_numgrad
          mol%xyz(j,i) = mol%xyz(j,i) + step
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,qr,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,qr,dqdr,dqdL, &
             &            er,grd,sigma,.false.,.false.,.false.)
 
          mol%xyz(j,i) = mol%xyz(j,i) - 2*step
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,ql,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,ql,dqdr,dqdL, &
             &            el,grd,sigma,.false.,.false.,.false.)
 
          mol%xyz(j,i) = mol%xyz(j,i) + step

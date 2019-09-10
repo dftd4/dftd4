@@ -16,12 +16,14 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 !> external iso-c compatible interface to the DFT-D4 program
-subroutine d4_calculation_c_api &
+function d4_calculation_c_api &
       &   (natoms,attyp,charge,coord,file_in,dparam_in,dopt_in,edisp,grad,hess) &
-      &    bind(C,name="D4_calculation")
+      &    bind(C,name="D4_calculation") result(status)
 
    use iso_fortran_env, wp => real64, istdout => output_unit
    use iso_c_binding
+
+   use mctc_environment
 
    use class_param
    use class_set
@@ -54,6 +56,10 @@ subroutine d4_calculation_c_api &
    !> molecular dispersion hessian
    !  (not referenced of dopt_in.lhessian is false)
    real(c_double),intent(out) :: hess(3*natoms,3*natoms)
+   !> success status of calculation
+   integer(c_int) :: status
+
+   type(mctc_logger) :: env
 
    type(molecule) :: mol
    type(dftd_parameter) :: dparam
@@ -90,7 +96,12 @@ subroutine d4_calculation_c_api &
       iunit = istdout
    endif
 
-   call d4_calculation(iunit,dopt,mol,dparam,dresults)
+   call d4_calculation(iunit,env,dopt,mol,dparam,dresults)
+   if (.not.env%sane) then
+      call finalize
+      status = 1
+      return
+   endif
 
    if (allocated(dresults%energy)) &
       edisp = dresults%energy
@@ -100,6 +111,7 @@ subroutine d4_calculation_c_api &
       hess = dresults%hessian
 
    call finalize
+   status = 0
 
 contains
 subroutine finalize
@@ -107,20 +119,22 @@ subroutine finalize
    call dresults%deallocate
    if (iunit.ne.istdout) close(iunit)
 end subroutine finalize
-end subroutine d4_calculation_c_api
+end function d4_calculation_c_api
 
 !  extern void D4_PBC_calculation(const int& natoms, const int* attyp,
 !        const double& charge, const double* coord, const double* lattice,
 !        const DFTD_parameter& dparam, const DFTD_options& dopt,
 !        double& energy, double* grad, double* hess);
 !> external iso-c compatible interface to the DFT-D4 program
-subroutine d4_pbc_calculation_c_api &
+function d4_pbc_calculation_c_api &
       &   (natoms,attyp,charge,coord,lattice,pbc,file_in,dparam_in,dopt_in, &
       &    edisp,grad,glat) &
-      &    bind(C,name="D4_PBC_calculation")
+      &    bind(C,name="D4_PBC_calculation") result(status)
 
    use iso_fortran_env, wp => real64, istdout => output_unit
    use iso_c_binding
+
+   use mctc_environment
 
    use class_param
    use class_set
@@ -158,7 +172,10 @@ subroutine d4_pbc_calculation_c_api &
    !> dispersion lattice gradient
    !  (not referenced of dopt_in.lgradient is false)
    real(c_double),intent(out) :: glat(3,3)
+   !> success status of calculation
+   integer(c_int) :: status
 
+   type(mctc_logger) :: env
    type(molecule) :: mol
    type(dftd_parameter) :: dparam
    type(dftd_results)   :: dresults
@@ -197,7 +214,12 @@ subroutine d4_pbc_calculation_c_api &
       iunit = istdout
    endif
 
-   call d4_calculation(iunit,dopt,mol,dparam,dresults)
+   call d4_calculation(iunit,env,dopt,mol,dparam,dresults)
+   if (.not.env%sane) then
+      call finalize
+      status = 1
+      return
+   endif
 
    if (allocated(dresults%energy)) &
       edisp = dresults%energy
@@ -207,6 +229,7 @@ subroutine d4_pbc_calculation_c_api &
       glat = dresults%lattice_gradient
 
    call finalize
+   status = 0
 
 contains
 subroutine finalize
@@ -214,4 +237,54 @@ subroutine finalize
    call dresults%deallocate
    if (iunit.ne.istdout) close(iunit)
 end subroutine finalize
-end subroutine d4_pbc_calculation_c_api
+end function d4_pbc_calculation_c_api
+
+function d4_damping_parameters_c_api(name_in,dparam_out,lmbd) &
+      &  bind(C,name="D4_damping_parameters") result(status)
+   use iso_c_binding
+   use class_param
+   use mctc_environment
+   use dfuncpar
+   implicit none
+   !> functional name
+   character(kind=c_char),intent(in) :: name_in(*)
+   !> non-additive dispersion mode
+   integer(c_int),intent(in) :: lmbd
+   !> damping parameters
+   type(c_dftd_parameter),intent(out) :: dparam_out
+   !> success status of calculation
+   integer(c_int) :: status
+
+   type(mctc_logger) :: env
+   type(dftd_parameter) :: dparam
+   integer :: mbd_mode,i
+   character(len=:),allocatable :: name
+
+   mbd_mode = lmbd
+
+   i = 0
+   name = ''
+   do
+      i = i+1
+      if (name_in(i).eq.c_null_char) exit
+      name = name//name_in(i)
+   enddo
+
+   if (get_dfnum(name) > 0) then
+      call d4par(name,dparam,mbd_mode,env)
+      if (.not.env%sane) then
+         status = 2
+         return
+      endif
+
+      dparam_out = dparam
+      if (lmbd == 0) then
+         status = -2 ! not parametrized, but D4-ATM parameters returned
+      else
+         status = 0
+      endif
+   else
+      status = -1 ! not found
+   endif
+
+end function d4_damping_parameters_c_api

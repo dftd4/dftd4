@@ -172,6 +172,7 @@ end subroutine test_dftd4_energies
 subroutine test_dftd4_api
    use iso_fortran_env, wp => real64, istdout => output_unit
    use assertion
+   use mctc_environment
    use class_molecule
    use class_set
    use class_param
@@ -204,6 +205,7 @@ subroutine test_dftd4_api
       &  lmolpol=.false., lenergy=.false., lgradient=.true., lhessian=.false., &
       &  print_level = 0)
 
+   type(mctc_logger)  :: env
    type(dftd_results) :: dresults
 
    call mol%allocate(nat,.false.)
@@ -211,14 +213,16 @@ subroutine test_dftd4_api
    mol%xyz = xyz
    mol%chrg = 0.0_wp
 
-   call d4_calculation(istdout,opt_1,mol,dparam_tpss,dresults)
+   call d4_calculation(istdout,env,opt_1,mol,dparam_tpss,dresults)
+   call assert(env%sane)
    call assert_close(dresults%energy,-0.26678857789318E-03_wp,thr)
    call assert_close(dresults%hessian(4,1),-0.97182441530696E-05_wp,thr)
    call assert_close(dresults%hessian(5,8),-0.66109938971051E-05_wp,thr)
    call assert_close(dresults%hessian(9,9), 7.59401653431350E-06_wp,thr)
    call dresults%deallocate
 
-   call d4_calculation(istdout,opt_2,mol,dparam_b2plyp,dresults)
+   call d4_calculation(istdout,env,opt_2,mol,dparam_b2plyp,dresults)
+   call assert(env%sane)
    call assert_close(dresults%energy,-0.13366273625493E-03_wp,thr)
 
    call assert_close(dresults%gradient(1,1), 0.00000000000000E+00_wp,thr)
@@ -237,6 +241,7 @@ end subroutine test_dftd4_api
 subroutine test_dftd4_pbc_api
    use iso_fortran_env, wp => real64, istdout => output_unit
    use assertion
+   use mctc_environment
    use class_molecule
    use class_set
    use class_param
@@ -270,6 +275,7 @@ subroutine test_dftd4_pbc_api
       &  wf = 6.0_wp, g_a = 3.0_wp, g_c = 2.0_wp, &
       &  lmolpol=.false., lenergy=.true., lgradient=.true., lhessian=.false., &
       &  print_level = 0)
+   type(mctc_logger)  :: env
    type(dftd_results) :: dresults
 
    integer              :: i,j
@@ -287,7 +293,8 @@ subroutine test_dftd4_pbc_api
 
    call generate_wsc(mol,mol%wsc)
 
-   call d4_calculation(istdout,opt,mol,dparam_pbe,dresults)
+   call d4_calculation(istdout,env,opt,mol,dparam_pbe,dresults)
+   call assert(env%sane)
    call assert_close(dresults%energy,-0.40714169760173E-01_wp,thr)
 
    call assert_close(dresults%gradient(2,5),  0.39323270625490E-04_wp,thr)
@@ -490,7 +497,7 @@ subroutine test_dftd4_cell_gradient
    real(wp),allocatable :: ges(:,:)
    real(wp),allocatable :: numg(:,:)
    real(wp),allocatable :: numq(:,:,:)
-
+   integer :: stat
 
    allocate( cn(nat), dcndr(3,nat,nat), q(nat), dqdr(3,nat,nat+1), &
       &      dcndL(3,3,nat), dqdL(3,3,nat+1), dcovcndL(3,3,nat), &
@@ -522,7 +529,7 @@ subroutine test_dftd4_cell_gradient
 
    call new_charge_model_2019(chrgeq,mol)
 
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,energy,gradient,sigma,&
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,energy,gradient,sigma,&
       &            .false.,.false.,.true.)
 
    call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL,rthr_cn)
@@ -599,6 +606,7 @@ subroutine test_dftd4_numgrad
       &  s6=0.95_wp, s8=0.45_wp, s10=0.65_wp, s9=1.10_wp, a1=0.43_wp, a2=5.10_wp )
    real(wp), allocatable :: gweights(:), refc6(:,:)
    real(wp), parameter :: r_thr = 40.0_wp**2, mbd_thr = 25.0_wp**2
+   integer :: stat
 
    call mol%allocate(nat)
    mol%at  = at
@@ -618,8 +626,9 @@ subroutine test_dftd4_numgrad
    call dncoord_logcn(mol%n,cn,dcndr,cn_max=8.0_wp)
 
    call new_charge_model_2019(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
       &            es,ges,sigma,.false.,.false.,.true.)
+   call assert_eq(stat,0)
 
    call pbc_dncoord_d4(mol,cn,dcndr,dcndL)
    call d4(mol,ndim,wf,g_a,g_c,cn,gweights,refc6)
@@ -640,7 +649,7 @@ subroutine test_dftd4_numgrad
          call mol%update
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,sigma,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
          call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
@@ -650,7 +659,7 @@ subroutine test_dftd4_numgrad
          call mol%update
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,sigma,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
          call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
@@ -721,6 +730,7 @@ subroutine test_dftd4_numstress
       &  s6=0.95_wp, s8=0.45_wp, s10=0.65_wp, s9=1.10_wp, a1=0.43_wp, a2=5.10_wp )
    real(wp), allocatable :: gweights(:), refc6(:,:)
    real(wp), parameter :: r_thr = 20.0_wp**2, mbd_thr = 8.0_wp**2
+   integer :: stat
 
    call mol%allocate(nat)
    mol%at  = at
@@ -744,8 +754,9 @@ subroutine test_dftd4_numstress
    call dncoord_logcn(mol%n,cn,dcndr,cn_max=8.0_wp)
 
    call new_charge_model_2019(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
       &            es,ges,stmp,.false.,.false.,.true.)
+   call assert_eq(stat,0)
 
    call pbc_dncoord_d4(mol,cn,dcndr,dcndL)
    call d4(mol,ndim,wf,g_a,g_c,cn,gweights,refc6)
@@ -764,7 +775,7 @@ subroutine test_dftd4_numstress
          call mol%update
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
          call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
@@ -774,7 +785,7 @@ subroutine test_dftd4_numstress
          call mol%update
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
          call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
@@ -805,7 +816,7 @@ subroutine test_dftd4_numstress
          call mol%update
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
          call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &
@@ -815,7 +826,7 @@ subroutine test_dftd4_numstress
          call mol%update
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL, &
             &            es,ges,stmp,.false.,.false.,.false.)
          call pbc_ncoord_d4(mol,cn)
          call dispgrad_3d(mol,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf,g_a,g_c, &

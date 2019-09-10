@@ -24,6 +24,7 @@ program dftd
    use mctc_global
    use mctc_timings
    use mctc_econv
+   use mctc_environment
 
 ! ------------------------------------------------------------------------
 !  class definitions
@@ -53,6 +54,7 @@ program dftd
    type(dftd_parameter) :: dparam
    type(chrg_parameter) :: chrgeq
    type(dftd_results)   :: dresults
+   type(mctc_logger)    :: env
 
 ! ------------------------------------------------------------------------
 !  local variables
@@ -109,16 +111,14 @@ program dftd
 ! ------------------------------------------------------------------------
 !  command line arguments
 ! ------------------------------------------------------------------------
-   call read_commandline_arguments(set)
+   call read_commandline_arguments(env,set)
+   call env%checkpoint
 
 ! ------------------------------------------------------------------------
 !  get molecular geometry
 ! ------------------------------------------------------------------------
-   if (set%lperiodic) then
-      call read_geometry(set%fname,mol)
-   else
-      call get_geometry(mol,set%fname)
-   endif
+   call read_geometry(set%fname,mol,env)
+   call env%checkpoint
    call generate_wsc(mol,mol%wsc)
    if (set%inchrg) mol%chrg = set%chrg
 
@@ -140,29 +140,31 @@ program dftd
       dparam = set%dparam
       if (.not.(set%lgradient.or.set%lhessian)) set%lenergy = .true.
    else if (allocated(set%func)) then
-      call d4par(set%func,dparam,set%lmbd)
+      call d4par(set%func,dparam,set%lmbd,env)
       if (.not.(set%lgradient.or.set%lhessian)) set%lenergy = .true.
    else
       if (set%lenergy) &
-         call raise('E','Dispersion energy requested but no parameters given')
+         call env%error(1,'Dispersion energy requested but no parameters given')
       if (set%lgradient) &
-         call raise('E','Dispersion gradient requested but no parameters given')
+         call env%error(1,'Dispersion gradient requested but no parameters given')
       if (set%lhessian) &
-         call raise('E','Dispersion Hessian requested but no parameters given')
+         call env%error(1,'Dispersion Hessian requested but no parameters given')
    endif
    if (.not.(set%lenergy.or.set%lgradient.or.set%lhessian)) set%lmolpol = .true.
    if (set%lhessian .and. set%lperiodic) then
-      call raise('W',"Cannot calculate Hessian under periodic boundary conditions")
+      call env%warning(1,"Cannot calculate Hessian under periodic boundary conditions")
       set%lhessian = .false.
    endif
    if (set%lorca .and. set%lperiodic) then
-      call raise('W',"To my knowledge there are no PBC in ORCA!")
+      call env%warning(1,"To my knowledge there are no PBC in ORCA!")
       set%lorca = .false.
    endif
+   call env%checkpoint
 
    dopt = set%export()
 
-   call d4_calculation(istdout,dopt,mol,dparam,dresults)
+   call d4_calculation(istdout,env,dopt,mol,dparam,dresults)
+   call env%checkpoint
 
 ! ------------------------------------------------------------------------
 !  Output:
@@ -192,9 +194,9 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
       if (set%lorca) then
          call orca_gradient(mol,istdout,dresults%gradient)
       else
-         call out_gradient(mol,'gradient',dresults%energy,dresults%gradient)
+         call out_gradient(mol,'gradient',dresults%energy,dresults%gradient,env)
          if (mol%npbc > 0) then
-            call out_gradlatt(mol,'gradlatt',dresults%energy,dresults%lattice_gradient)
+            call out_gradlatt(mol,'gradlatt',dresults%energy,dresults%lattice_gradient,env)
          endif
       endif
    endif
@@ -203,7 +205,8 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
       call orca_hessian(mol,istdout,dresults%hessian)
    endif
 
-   call raise('F','Some non-fatal runtime exceptions occurred, please check:')
+   call env%checkpoint
+   call env%write('Some non-fatal runtime exceptions occurred, please check:')
 
 ! ------------------------------------------------------------------------
 !  Print timings

@@ -55,17 +55,21 @@ typedef struct {
    bool print_level;
 } DFTD_options;
 
-extern void
+extern int
 D4_calculation(const int* natoms, const int* attyp, const double* charge,
       const double* coord, const char* outfile,
       const DFTD_parameter* dparam, const DFTD_options* dopt,
       double* energy, double* grad, double* hess);
 
-extern void
+extern int
 D4_PBC_calculation(const int* natoms, const int* attyp, const double* charge,
       const double* coord, const double* lattice, const bool* pbc,
       const char* outfile, const DFTD_parameter* dparam, const DFTD_options* dopt,
       double* energy, double* grad, double* latgrad);
+
+extern int
+D4_damping_parameters(
+      const char* name, const DFTD_parameter* dparam, const int* lmbd);
 
 #ifdef __cplusplus
 }

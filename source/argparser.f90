@@ -16,15 +16,14 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 !> reads in command line arguments and parses them into options type
-subroutine read_commandline_arguments(set)
+subroutine read_commandline_arguments(env,set)
    use iso_fortran_env, only : wp => real64, istdout => output_unit
 !$ use omp_lib
 
 ! ------------------------------------------------------------------------
 !  general purpose library
 ! ------------------------------------------------------------------------
-   use mctc_systools
-   use mctc_readin
+   use mctc_environment
 
 ! ------------------------------------------------------------------------
 !  Class definition
@@ -37,7 +36,9 @@ subroutine read_commandline_arguments(set)
    use dftd4
 
    implicit none
-   type(options) :: set !< options for calculation
+   type(mctc_logger),intent(inout) :: env
+   type(options),intent(inout) :: set !< options for calculation
+   type(mctc_argparser) :: args
 
    character(len=:),allocatable :: arg
    character(len=:),allocatable :: sec
@@ -52,20 +53,21 @@ subroutine read_commandline_arguments(set)
    logical  :: ldum
    real(wp) :: ddum
 
-   nargs = command_argument_count()
-   if (nargs.eq.0) then
+   call args%new
+   if (args%n.eq.0) then
       call help(istdout)
-      call terminate(1)
+      call env%error(2,"No command line arguments given")
+      return
    endif
 
    getopts = .true.
    skip = 0
-   do iarg = 1, nargs
+   do iarg = 1, args%n
       if (skip.gt.0) then
          skip = skip-1
          cycle
       endif
-      call rdarg(iarg,arg)
+      ldum = args%get(iarg,arg)
       if (arg.eq.'--') then
          getopts=.false.
          cycle
@@ -75,7 +77,7 @@ subroutine read_commandline_arguments(set)
 
          if ((len(arg).gt.2).and. &
          &  (index(arg,'--').eq.0).and.(index(arg,'-').eq.1)) then
-            call raise('S',"the use of '"//arg//"' is discouraged, "// &
+            call env%warning(2,"the use of '"//arg//"' is discouraged, "// &
             &              "please use '-"//arg//"' next time")
             arg = '-'//arg
          endif
@@ -108,11 +110,10 @@ subroutine read_commandline_arguments(set)
       !  OMP option
       !$ case('-P','--parallel')
       !$    skip = 1
-      !$    call rdarg(iarg+1,sec)
-      !$    if (get_value(sec,idum)) then
+      !$    if (args%get(iarg+1,idum)) then
       !$       nproc = omp_get_num_threads()
       !$       if (idum.gt.nproc) &
-      !$       & call raise('S','Process number higher than OMP_NUM_THREADS, '//&
+      !$       & call env%warning(2,'Process number higher than OMP_NUM_THREADS, '//&
       !$       &                'I hope you know what you are doing.')
       !$       call omp_set_num_threads(idum)
       !$    endif
@@ -120,54 +121,61 @@ subroutine read_commandline_arguments(set)
             set%lperiodic = .true.
          case('-c','--chrg')
             skip = 1
-            call rdarg(iarg+1,sec)
-            if (get_value(sec,idum)) then
+            if (args%get(iarg+1,idum)) then
                set%chrg = idum
             else
-               call raise('E',"Could not read charge from '"//sec//"'")
+               call env%error(2,"Could not read charge from '"//sec//"'")
+               return
             endif
             set%inchrg = .true.
          case('-f','--func')
             skip = 1
-            call rdarg(iarg+1,sec)
-            set%func = sec
+            if (args%get(iarg+1,sec)) then
+               set%func = sec
+            else
+               call env%warning(2,"Could find functional name after '--func'")
+            endif
          case(     '--molc6')
             set%lmolpol = .true.
          case(     '--param'); skip = 4
-            call rdarg(iarg+1,arg); if (get_value(arg,ddum)) set%dparam%s6 = ddum
-            call rdarg(iarg+2,arg); if (get_value(arg,ddum)) set%dparam%s8 = ddum
-            call rdarg(iarg+3,arg); if (get_value(arg,ddum)) set%dparam%a1 = ddum
-            call rdarg(iarg+4,arg); if (get_value(arg,ddum)) set%dparam%a2 = ddum
+            if (args%get(iarg+1,ddum)) set%dparam%s6 = ddum
+            if (args%get(iarg+2,ddum)) set%dparam%s8 = ddum
+            if (args%get(iarg+3,ddum)) set%dparam%a1 = ddum
+            if (args%get(iarg+4,ddum)) set%dparam%a2 = ddum
             ! sanity check
             if (set%dparam%s6.lt.0.0_wp.or.set%dparam%s6.gt.1.0_wp) then
-               call raise('S','unphysical s6 chosen, use on your own risk')
+               call env%warning(2,'unphysical s6 chosen, use on your own risk')
             endif
             if (set%dparam%s8.lt.0.0_wp.or.set%dparam%s8.gt.3.0_wp) then
-               call raise('S','unphysical s8 chosen, use on your own risk')
+               call env%warning(2,'unphysical s8 chosen, use on your own risk')
             endif
             if (set%dparam%a1.lt.0.0_wp.or.set%dparam%a1.gt.1.0_wp) then
-               call raise('S','unphysical a1 chosen, use on your own risk')
+               call env%warning(2,'unphysical a1 chosen, use on your own risk')
             endif
             if (set%dparam%a2.lt.0.0_wp.or.set%dparam%a2.gt.7.0_wp) then
-               call raise('S','unphysical a2 chosen, use on your own risk')
+               call env%warning(2,'unphysical a2 chosen, use on your own risk')
             endif
             set%inparam = .true.
          case(     '--s10'); skip = 1
-            call rdarg(iarg+1,arg); if (get_value(arg,ddum)) set%dparam%s10 = ddum
+            if (args%get(iarg+1,ddum)) then
+               set%dparam%s10 = ddum
+            else
+               call env%warning(2,"could not read value of s10 from commandline")
+            endif
          case(     '--zeta'); skip = 2
-            call rdarg(iarg+1,arg); if (get_value(arg,ddum)) set%g_a = ddum
-            call rdarg(iarg+2,arg); if (get_value(arg,ddum)) set%g_c = ddum
+            if (args%get(iarg+1,ddum)) set%g_a = ddum
+            if (args%get(iarg+2,ddum)) set%g_c = ddum
          case(     '--mbdscale'); skip = 1
-            call rdarg(iarg+1,arg); if (get_value(arg,ddum)) set%dparam%s9 = ddum
+            if (args%get(iarg+1,ddum)) set%dparam%s9 = ddum
          case(     '--wfactor'); skip = 1
-            call rdarg(iarg+1,arg); if (get_value(arg,ddum)) set%wf = ddum
+            if (args%get(iarg+1,ddum)) set%wf = ddum
          case(     '--tmer'); set%ltmer = .true.
-         case('-m','--mbd');            set%lmbd = p_mbd_rpalike
-         case('-2','--nomb');           set%lmbd = p_mbd_none
-         case('-3','--abc');            set%lmbd = p_mbd_approx_atm
-         case('-g','--grad');          set%lgradient = .true.
-         case(     '--hess');           set%lhessian = .true.
-         case(     '--orca');            set%lorca = .true.
+         case('-m','--mbd');   set%lmbd = p_mbd_rpalike
+         case('-2','--nomb');  set%lmbd = p_mbd_none
+         case('-3','--abc');   set%lmbd = p_mbd_approx_atm
+         case('-g','--grad'); set%lgradient = .true.
+         case(     '--hess');  set%lhessian = .true.
+         case(     '--orca');   set%lorca = .true.
 
 ! ------------------------------------------------------------------------
 !  no match => take as file name
@@ -175,16 +183,17 @@ subroutine read_commandline_arguments(set)
          case default
             inquire(file=arg,exist=exist)
             if (exist) then
-               if (allocated(set%fname)) call raise('S',  &
+               if (allocated(set%fname)) call env%warning(2,  &
                &  "There are multiple files provided. '"//set%fname//  &
                &  "' will be ignored in this run.")
                set%fname = arg
             else
                if (index(arg,'-').eq.1) then
-                  call raise('S',"Unfortunately, '"//arg// &
+                  call env%warning(2,"Unfortunately, '"//arg// &
                   &    "' is not supported in this program. Check with --help.")
                else
-                  call raise('E',"You don't have a file named '"//arg//"' here")
+                  call env%error(2,"You don't have a file named '"//arg//"' here")
+                  return
                endif
             endif
 
@@ -193,18 +202,19 @@ subroutine read_commandline_arguments(set)
       else ! getopts?
          inquire(file=arg,exist=exist)
          if (exist) then
-            if (allocated(set%fname)) call raise('S',  &
+            if (allocated(set%fname)) call env%warning(2,  &
             &  "There are multiple files provided. '"//set%fname//  &
             &  "' will be ignored in this run.")
             set%fname = arg
          else
-            call raise('E',"You don't have a file named '"//arg//"' here.")
+            call env%error(2,"You don't have a file named '"//arg//"' here.")
+            return
          endif
       endif ! getopts?
    enddo
 
    if (.not.allocated(set%fname)) then
-      call raise('E','No geometry given, so there is nothing to do.')
+      call env%error(2,'No geometry given, so there is nothing to do.')
    endif
 
 end subroutine read_commandline_arguments

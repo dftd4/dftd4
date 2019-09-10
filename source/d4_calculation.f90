@@ -18,9 +18,11 @@
 !> interface to the DFT-D4 module
 module dispersion_calculator
 contains
-subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
+subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
    use iso_fortran_env, wp => real64
 !$ use omp_lib
+
+   use mctc_environment
 
 ! ------------------------------------------------------------------------
 !  class definitions
@@ -48,6 +50,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
 ! ------------------------------------------------------------------------
 !  class declarations
 ! ------------------------------------------------------------------------
+   type(mctc_logger), intent(inout) :: env
    !> molecule structure information
    type(molecule), intent(inout) :: mol
    !> calculation options for DFT-D4 method
@@ -98,6 +101,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
       & [.true.,.true.,.true.,.false.,.true.,.true.,.false.,.false.,.true.],&
       & shape(voigt_mask))
 
+   integer :: stat
    logical :: minpr, verb, debug
 
    minpr = opt%print_level > 0
@@ -146,7 +150,7 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
       &      dcovcndr(3,mol%n,mol%n),dcovcndL(3,3,mol%n), &
       &      source = 0.0_wp, stat = err )
    if (err /= 0) then
-      call raise('E','Memory allocation failed')
+      call env%error(3,'Memory allocation failed')
       return
    endif
    energy = 0.0_wp
@@ -163,8 +167,12 @@ subroutine d4_calculation(iunit,opt,mol,dparam,dresults)
    if (verb) &
    call eeq_header(iunit)
    call new_charge_model(chrgeq,mol)
-   call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
                    .false.,.false.,.true.)
+   if (stat.ne.0) then
+      call env%error(3,"EEQ model could not be solved")
+      return
+   endif
    if (verb) &
    call print_chrgeq(iunit,chrgeq,mol,q,cn)
 
@@ -267,7 +275,7 @@ dispersion_hessian: if (opt%lhessian) then
          mol%xyz(j,i) = mol%xyz(j,i) + step
          call pbc_dncoord_erf(mol,cn,dcndr,dcndL)
          call dncoord_logcn(mol%n,cn,dcndr,dcndL,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
             &            .false.,.false.,.true.)
          call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
          call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd, &
@@ -277,7 +285,7 @@ dispersion_hessian: if (opt%lhessian) then
          mol%xyz(j,i) = mol%xyz(j,i) - 2*step
          call pbc_dncoord_erf(mol,cn,dcndr,dcndL)
          call dncoord_logcn(mol%n,cn,dcndr,dcndL,cn_max=8.0_wp)
-         call eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
+         stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
                          .false.,.false.,.true.)
          call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
          call dispgrad_3d(mol,ndim,q,covcn,dcovcndr,dcovcndL,rthr_vdw,rthr_mbd, &

@@ -159,7 +159,6 @@ function get_int_value(val,dum) result(status)
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 end function get_int_value
@@ -176,7 +175,6 @@ function get_real_value(val,dum) result(status)
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 end function get_real_value
@@ -195,7 +193,6 @@ function get_bool_value(val,dum) result(status)
       status = .true.
       dum = .false.
    case default
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    end select
 
@@ -213,7 +210,6 @@ function get_int_array_value(val,dum) result(status)
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 
@@ -231,7 +227,6 @@ function get_real_array_value(val,dum) result(status)
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 
@@ -269,7 +264,6 @@ function get_list_value(val,dum,n) result(status)
    if (i.eq.0) then
       read(val,*,iostat=err) dum(1)
       if (err.ne.0) then
-         call raise('S','could not parse '''//val//'''')
          status = .false.
          return
       endif
@@ -278,23 +272,19 @@ function get_list_value(val,dum,n) result(status)
    else
       read(val(:i-1),*,iostat=err) j
       if (err.ne.0) then
-         call raise('S','could not parse '''//val(:i-1)//''' in '''//val//'''')
          status = .false.
          return
       endif
       read(val(i+1:),*,iostat=err) k
       if (err.ne.0) then
-         call raise('S','could not parse '''//val(i+1:)//''' in '''//val//'''')
          status = .false.
          return
       endif
       if (k.lt.j) then
-         call raise('S','end is lower than start in list '''//val//'''')
          status = .false.
          return
       endif
       if ((k-j).gt.size(dum,1)) then
-         call raise('S','too many list items in '''//val//'''')
          status = .false.
          return
       endif

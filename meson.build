@@ -67,6 +67,7 @@ ftest += 'tests/pbc_tools.f90'
 fsrcs += 'source/printout.f90'
 
 # MCTC library
+fsrcs += 'source/mctc_environment.f90'
 fsrcs += 'source/mctc_global.f90'
 fsrcs += 'source/mctc_systools.f90'
 fsrcs += 'source/mctc_readin.f90'
@@ -266,15 +267,15 @@ test('API: C++', d4cpp)
 test('API: C', d4c)
 
 if pytest.found()
-  test('pytest: xtb.py', pytest, args: ['--pyargs', 'dftd4'], env: pypath)
+  test('pytest: dftd4.py', pytest, args: ['--pyargs', 'dftd4'], env: pypath)
 endif
 
 if mypy.found()
-  test('mypy: xtb.py', mypy, args: [py_dftd4, '--ignore-missing-imports'],
+  test('mypy: dftd4.py', mypy, args: [py_dftd4, '--ignore-missing-imports'],
        env: pypath)
 endif
 
 if pylint.found()
-  test('pylint: xtb.py', pylint, args: [py_dftd4, '--disable=invalid-names'],
+  test('pylint: dftd4.py', pylint, args: [py_dftd4, '--disable=invalid-names'],
        env: pypath)
 endif

@@ -20,6 +20,8 @@ subroutine d4_pbc_calculation_f_api &
 
    use iso_fortran_env, wp => real64, istdout => output_unit
 
+   use mctc_environment
+
    use class_param
    use class_set
    use class_molecule
@@ -53,6 +55,7 @@ subroutine d4_pbc_calculation_f_api &
    !  (not referenced of dopt_in.lgradient is false)
    real(wp),intent(out) :: glat(3,3)
 
+   type(mctc_logger) :: env
    type(molecule) :: mol
    type(dftd_parameter) :: dparam
    type(dftd_options)   :: dopt
@@ -78,7 +81,7 @@ subroutine d4_pbc_calculation_f_api &
    dparam = dparam_in
    dopt   = dopt_in
 
-   call d4_calculation(istdout,dopt,mol,dparam,dresults)
+   call d4_calculation(istdout,env,dopt,mol,dparam,dresults)
 
    write(*,*)'Dispersion energy / au: ', dresults%energy
 

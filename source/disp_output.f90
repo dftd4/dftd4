@@ -24,6 +24,7 @@ subroutine out_tmer(fname,energy)
    write(istdout,'(a)') "dispersion energy written to file "//fname
    open(newunit=ich,file=fname)
    write(ich,'(f30.20)') energy
+   close(ich)
 end subroutine out_tmer
 
 subroutine write_gradient(mol,iunit,gradient)
@@ -39,11 +40,13 @@ subroutine write_gradient(mol,iunit,gradient)
    enddo
 end subroutine write_gradient
 
-subroutine out_gradlatt(mol,fname,energy,gradlatt)
+subroutine out_gradlatt(mol,fname,energy,gradlatt,env)
    use iso_fortran_env, wp => real64
    use mctc_systools
+   use mctc_environment
    use class_molecule
    implicit none
+   type(mctc_logger),intent(inout) :: env
    type(molecule),intent(in)    :: mol
    character(len=*),intent(in)  :: fname
    real(wp),intent(in)          :: energy
@@ -70,7 +73,7 @@ subroutine out_gradlatt(mol,fname,energy,gradlatt)
          if (index(line,'cycle') > 0) line_number = i
       enddo read_file
       if (line_number < 2) then
-         call raise('S','Illegal gradient file to add dispersion gradient')
+         call env%warning(9,'Illegal gradient file to add dispersion gradient')
          return
       endif
 
@@ -87,7 +90,7 @@ subroutine out_gradlatt(mol,fname,energy,gradlatt)
          read(line,*,iostat=err) dlat(1,i),dlat(2,i),dlat(3,i)
       enddo
       if (any(abs(dlat-mol%lattice) > 1.0e-8_wp)) then
-         call raise('E','Lattice in gradlatt does not match actual lattice')
+         call env%error(9,'Lattice in gradlatt does not match actual lattice')
       endif
       do i = 1, 3
          call getline(igrad,line)
@@ -118,11 +121,13 @@ subroutine out_gradlatt(mol,fname,energy,gradlatt)
 end subroutine out_gradlatt
 
 
-subroutine out_gradient(mol,fname,energy,gradient)
+subroutine out_gradient(mol,fname,energy,gradient,env)
    use iso_fortran_env, wp => real64
+   use mctc_environment
    use mctc_systools
    use class_molecule
    implicit none
+   type(mctc_logger),intent(inout) :: env
    type(molecule),intent(in)    :: mol
    character(len=*),intent(in)  :: fname
    real(wp),intent(in)          :: energy
@@ -150,7 +155,7 @@ subroutine out_gradient(mol,fname,energy,gradient)
          if (index(line,'cycle') > 0) line_number = i
       enddo read_file
       if (line_number < 2) then
-         call raise('S','Illegal gradient file to add dispersion gradient')
+         call env%warning(9,'Illegal gradient file to add dispersion gradient')
          return
       endif
 
@@ -168,7 +173,7 @@ subroutine out_gradient(mol,fname,energy,gradient)
          read(line,*,iostat=err) xyz(1,i),xyz(2,i),xyz(3,i)
       enddo
       if (any(abs(xyz-mol%xyz) > 1.0e-8_wp)) then
-         call raise('E','Geometry in gradient does not match actual geometry')
+         call env%error(9,'Geometry in gradient does not match actual geometry')
       endif
       do i = 1, mol%n
          call getline(igrad,line)

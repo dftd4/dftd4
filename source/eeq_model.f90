@@ -210,9 +210,10 @@ end subroutine print_chrgeq
 !        therefore, all intermediates live in the space of the Lagrangian.
 !
 !  Implemented by SAW in 2018, see focusing lab course report for details.
-subroutine eeq_chrgeq_core &
+function eeq_chrgeq_core &
       & (chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,energy,gradient,sigma,&
-      &  lverbose,lgrad,lcpq)
+      &  lverbose,lgrad,lcpq) &
+      &  result(status)
    use iso_fortran_env, wp => real64, istdout => output_unit
    use class_molecule
    use coordination_number
@@ -238,6 +239,7 @@ subroutine eeq_chrgeq_core &
    real(wp),intent(inout) :: energy                    !< electrostatic energy
    real(wp),intent(inout) :: sigma(3,3)                !< sigma tensor of IES
    real(wp),intent(inout) :: gradient(3,mol%n)       !< molecular gradient of IES
+   integer :: status
 !
 ! ------------------------------------------------------------------------
 !  charge model
@@ -290,14 +292,6 @@ subroutine eeq_chrgeq_core &
    integer  :: info
    real(wp) :: test(1)
    real(wp),external :: ddot
-
-   ! quick return if possible
-   if (mol%n == 1) then
-      q = mol%chrg
-      ! should always hold, even for extendend systems
-      es = 0.0_wp
-      return
-   endif
 
 ! ------------------------------------------------------------------------
 !  initizialization
@@ -412,14 +406,16 @@ if (lcpq) then
    ! Bunch-Kaufman factorization A = L*D*L**T
    call dsytrf('L',m,Ainv,m,ipiv,work,lwork,info)
    if(info > 0)then
-      call raise('E', '(eeq_inversion) DSYTRF failed')
+      status = 1
+      return
    endif
 
    ! A⁻¹ from factorized L matrix, save lower part of A⁻¹ in Ainv matrix
    ! Ainv matrix is overwritten with lower triangular part of A⁻¹
    call dsytri('L',m,Ainv,m,ipiv,work,info)
    if (info > 0) then
-      call raise('E', '(eeq_inversion) DSYTRI failed')
+      status = 1
+      return
    endif
 
    ! symmetrizes A⁻¹ matrix from lower triangular part of inverse matrix
@@ -430,6 +426,9 @@ if (lcpq) then
    enddo
 
    call dsymv('u',m,1.0_wp,Ainv,m,Xvec,1,0.0_wp,Xtmp,1)
+else
+if (mol%n == 1) then
+   allocate( Xtmp(m), source = [mol%chrg, 0.0_wp] )
 else
 ! ------------------------------------------------------------------------
 !  solve the linear equations to obtain partial charges
@@ -446,14 +445,20 @@ else
    allocate( work(lwork), source = 0.0_wp )
 
    call dsysv('u',m,1,Atmp,m,ipiv,Xtmp,m,work,lwork,info)
-   if(info > 0) call raise('E','(eeq_solve) DSYSV failed')
+   if(info > 0) then
+      status = 1
+      return
+   endif
 
    !print'(3f20.14)',Xtmp
 
 endif
+endif
    q = Xtmp(:mol%n)
-   if(abs(sum(q)-mol%chrg) > 1.e-6_wp) &
-      call raise('E','(eeq_solve) charge constrain error')
+   if(abs(sum(q)-mol%chrg) > 1.e-6_wp) then
+      status = 1
+      return
+   endif
    lambda = Xtmp(m)
    if (lverbose) then
       write(istdout,'(72("-"))')
@@ -626,7 +631,9 @@ endif do_partial_charge_derivative
    if (allocated(work))    deallocate(work)
    if (allocated(ipiv))    deallocate(ipiv)
 
-end subroutine eeq_chrgeq_core
+   status = 0
+
+end function eeq_chrgeq_core
 
 !> direct space contribution to the Ewald matrix
 pure function eeq_ewald_3d_dir(riw,rep,dlat,gamij,cf) result(Amat)

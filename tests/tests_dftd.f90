@@ -53,7 +53,7 @@ program dftd_tester
 
    nargs = command_argument_count()
    if (nargs.lt.2) then
-      call raise('E',"Please give the tester a test to run!")
+      error stop "Please give the tester a test to run!"
    endif
 
    call rdarg(1,arg)
@@ -100,6 +100,6 @@ program dftd_tester
    end select
 
    ! falling through the tester is always an error
-   call terminate(1)
+   error stop "Please give the tester a valid test to run!"
 
 end program dftd_tester

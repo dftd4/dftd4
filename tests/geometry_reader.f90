@@ -4,6 +4,8 @@ subroutine test_geometry_reader_file_poscar_sio2_3d
    use class_molecule
    use assertion
    use geometry_reader
+   use mctc_environment
+   type(mctc_logger) :: env
    real(wp),parameter :: thr = 1.0e-9_wp
    character(len=*),parameter :: file_poscar_sio2_3d = &
       & '("Si  O ",/,&
@@ -26,7 +28,8 @@ subroutine test_geometry_reader_file_poscar_sio2_3d
    open(newunit=iunit,file='POSCAR')
    write(iunit,file_poscar_sio2_3d)
    rewind(iunit)
-   call read_poscar(iunit,mol)
+   call read_poscar(iunit,mol,env)
+   call assert(env%sane)
 
    call assert_close(mol%volume,       667.92680030347_wp,thr)
    call assert_close(mol%cellpar(1),8.7413053236641_wp,thr)
@@ -53,6 +56,8 @@ subroutine test_geometry_reader_file_xmol_water_0d
    use class_molecule
    use assertion
    use geometry_reader
+   use mctc_environment
+   type(mctc_logger) :: env
    real(wp),parameter :: thr = 1.0e-10_wp
    character(len=*),parameter :: file_xmol_water_0d = &
       & '("9",/,&
@@ -72,7 +77,8 @@ subroutine test_geometry_reader_file_xmol_water_0d
    open(newunit=iunit,status='scratch')
    write(iunit,file_xmol_water_0d)
    rewind(iunit)
-   call read_xmol(iunit,mol)
+   call read_xmol(iunit,mol,env)
+   call assert(env%sane)
 
    call assert_eq(mol%n,9)
 
@@ -93,6 +99,8 @@ subroutine test_geometry_reader_file_coord_general_0d
    use class_molecule
    use assertion
    use geometry_reader
+   use mctc_environment
+   type(mctc_logger) :: env
    real(wp),parameter :: thr = 1.0e-10_wp
    character(len=*),parameter :: file_coord_general_0d_p1 = &
       & '("$coord",/,&
@@ -167,7 +175,8 @@ subroutine test_geometry_reader_file_coord_general_0d
    write(iunit,file_coord_general_0d_p3)
    rewind(iunit)
 
-   call read_coord(iunit,mol)
+   call read_coord(iunit,mol,env)
+   call assert(env%sane)
 
    call assert(.not.any(mol%pbc))
    call assert_eq(mol%n, 59)
@@ -183,6 +192,8 @@ subroutine test_geometry_reader_file_coord_CaF2_3d
    use class_molecule
    use assertion
    use geometry_reader
+   use mctc_environment
+   type(mctc_logger) :: env
    real(wp),parameter :: thr = 1.0e-10_wp
    character(len=*),parameter :: file_coord_CaF2_3d = &
       & '("$coord frac",/,&
@@ -203,7 +214,8 @@ subroutine test_geometry_reader_file_coord_CaF2_3d
 
    write(iunit,file_coord_CaF2_3d); rewind(iunit)
    ! reads in from cell parameters in bohr and coordinates in bohr
-   call read_coord(iunit,mol)
+   call read_coord(iunit,mol,env)
+   call assert(env%sane)
 
    call assert(all(mol%pbc))
    call assert_eq(mol%npbc,3)
@@ -235,6 +247,8 @@ subroutine test_geometry_reader_file_coord_CaMgCO_3d
    use class_molecule
    use assertion
    use geometry_reader
+   use mctc_environment
+   type(mctc_logger) :: env
    real(wp),parameter :: thr = 1.0e-10_wp
    character(len=*),parameter :: file_coord_CaMgCO_3d = &
       & '("$cell",/,&
@@ -253,7 +267,8 @@ subroutine test_geometry_reader_file_coord_CaMgCO_3d
 
    write(iunit,file_coord_CaMgCO_3d); rewind(iunit)
    ! reads in from cell parameters in bohr and coordinates in bohr
-   call read_coord(iunit,mol)
+   call read_coord(iunit,mol,env)
+   call assert(env%sane)
 
    call assert(all(mol%pbc))
    call assert_eq(mol%npbc,3)
@@ -281,6 +296,8 @@ subroutine test_geometry_reader_file_coord_C_2d
    use class_molecule
    use assertion
    use geometry_reader
+   use mctc_environment
+   type(mctc_logger) :: env
    real(wp),parameter :: thr = 1.0e-10_wp
 
    character(len=*),parameter :: file_coord_C_2d = &
@@ -306,6 +323,8 @@ subroutine test_geometry_reader_file_coord_C_1d
    use class_molecule
    use assertion
    use geometry_reader
+   use mctc_environment
+   type(mctc_logger) :: env
    real(wp),parameter :: thr = 1.0e-10_wp
 
    character(len=*),parameter :: file_coord_C_1d = &

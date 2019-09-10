@@ -1209,27 +1209,9 @@ subroutine dispgrad(mol,ndim,q,dqdr,cn,dcndr, &
 !$omp enddo
 !$omp end parallel
 
-!  select case(mbd)
-!  case(1) ! full RPA-like MBD
-!     print'(1x,''* MBD effects calculated by RPA like scheme'')'
-!     call raise('W','MBD gradient not fully implemented yet')
-!     call mbdgrad(mol,aw,daw,oor6ab,g,embd)
-!  case(1,2) ! Axilrod-Teller-Muto three-body term
-!     if(mbd.eq.1) then
-!        call raise('W','MBD gradient not fully implemented yet')
-!        print'(''MBD gradient not fully implemented yet'')'
-!        print'(1x,''* calculate MBD effects with ATM formula instead'')'
-!     else
-!        print'(1x,''* MBD effects calculated by ATM formula'')'
-!     endif
-!     call dabcgrad(mol,ndim,par,dcn,gw,dgw,itbl,g,embd)
-!  case(3) ! D3-like approximated ATM term
-!     print'(1x,''* MBD effects approximated by ATM formula'')'
-!  print'(" * Starting MBD gradient calculation")'
    if (mbd.ne.p_mbd_none) &
    &   call dabcappr(mol,ndim,par,  &
            &        r2ab,gw,dgw,refc6,itbl,dc6dr,dc6dcn,eabc)
-!  end select
 
 
 !  print'(" * Entering third OMP section")'
@@ -1994,14 +1976,10 @@ subroutine dispmb(mol,E,aw,oor6ab)
       d = 0.0_wp
       call dsyev('N','U',3*mol%n,F_,3*mol%n,d,w,12*mol%n,info)
       if (info.ne.0) then
-!        call raise('W','MBD eigenvalue not solvable')
-         print'(1x,''* MBD eigenvalue not solvable'')'
          E = 0.0_wp
          return
       endif
       if (minval(d).le.0.0_wp) then
-!        call raise('W','Negative MBD eigenvalue occurred')
-         print'(1x,''* Negative MBD eigenvalue occurred'')'
          E = 0.0_wp
          return
       endif

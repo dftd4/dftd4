@@ -15,51 +15,6 @@
 ! You should have received a copy of the GNU Lesser General Public License
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-!> error handler for MCTC library
-subroutine raise(mode,message)
-   use iso_fortran_env
-   use mctc_global
-   character,       intent(in) :: mode    !< kind of operation
-   character(len=*),intent(in) :: message !< string containing error description
-   select case(mode)
-   case('S','s') ! save to message buffer
-      if (allocated(errorbuffer)) then
-         call save_warning
-      else
-         call warning
-      endif
-   case('F','f') ! flush message buffer
-      if (msgid.gt.0) then
-         write(output_unit,'(72(''#''))')
-         write(output_unit,'(''# WARNING!'',1x,a)') message
-         do i = 1, msgid
-            write(output_unit,'(''#  -'',1x,a)')  &
-            &  errorbuffer(i) % msg
-         enddo
-         write(output_unit,'(72(''#''))')
-         ! after we are done with printing, clear the buffer
-         call init_errorbuffer
-      endif
-   case('W','w') ! print warning directly
-      call warning
-   case('E','e')
-      call error
-   end select
-contains
-subroutine save_warning
-   msgid = msgid + 1
-   errorbuffer(msgid) % msg = message
-   errorbuffer(msgid) % len = len(message)
-end subroutine save_warning
-subroutine warning
-   write(output_unit,'(''#WARNING!'',1x,a)') message
-end subroutine warning
-subroutine error
-   write(output_unit,'(''#ERROR!'',1x,a)')   message
-   call terminate(1)
-end subroutine error
-end subroutine raise
-
 subroutine terminate(signal)
    use iso_fortran_env, only : error_unit
    use mctc_global, only : name
