@@ -81,7 +81,7 @@ module dftd4
    contains
       procedure :: allocate => allocate_dispersion_model
       procedure :: deallocate => deallocate_dispersion_model
-      generic :: new => new_d4_model!, new_d3_model
+      generic :: new => new_d4_model, new_d3_model
       procedure, private :: new_d4_model => initialize_d4_model
       procedure, private :: new_d3_model => initialize_d3_model
    end type dispersion_model

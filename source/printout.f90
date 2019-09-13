@@ -83,8 +83,8 @@ write(iunit,'(3x,a)') &
    "147, 034112.", &
    "and",&
    "E. Caldeweyher, S. Ehlert, A. Hansen, H. Neugebauer, S. Spicher,", &
-   "C. Bannwarth and S. Grimme, ChemRxiv, 2018, preprint.",&
-   "http://doi.org/10.26434/chemrxiv.7430216.v2",&
+   "C. Bannwarth and S. Grimme, J. Chem. Phys., 2019, 150, 154122.", &
+   "DOI: 10.1063/1.5090222 (ChemRxiv: 10.26434/chemrxiv.7430216.v2)", &
    "",&
    "For GFN2-xTB:", &
    "C. Bannwarth, S. Ehlert and S. Grimme., ChemRxiv, 2018, preprint.",&
@@ -99,6 +99,17 @@ write(iunit,'(3x,a)') &
    "C. Bannwarth, P. Shushkov, and S. Spicher.",&
    ""
 end subroutine dftd4_citation
+
+subroutine d3_model_warning(iunit)
+integer,intent(in) :: iunit
+write(iunit,'(3x,a)') &
+   "WARNING!", &
+   "This calculation employs a D3-like model (not to be confused with DFT-D3)", &
+   "using the polarizibilities and C6 integration published with the D4 model", &
+   "and the energy expression published with the D4 model.", &
+   "", &
+   "Do not confuse this results as D4 results or D3 results.",""
+end subroutine d3_model_warning
 
 subroutine gpl_license(iunit)
    integer,intent(in) :: iunit

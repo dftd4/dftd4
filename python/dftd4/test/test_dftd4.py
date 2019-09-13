@@ -48,3 +48,31 @@ def test_d4_molecular():
         atoms.set_calculator(calc)
         assert atoms.get_potential_energy() == approx(energy, thr)
         assert abs(atoms.get_forces().flatten()).mean() == approx(gnorm, thr)
+
+def test_d3_molecular():
+    """Short test for DFT-D4 on a subset of the G2."""
+    from pytest import approx
+    from ase.collections import g2
+    from dftd4.calculators import D3_model
+    thr = 1.0e-7
+    subset = {'cyclobutene': (-0.1458649601010507, 0.0038664473279371447),
+              'CH3ONO': (-0.07478103530920273, 0.0013917101416313475),
+              'SiH3': (-0.03286579996845799, 0.0005983134328171301),
+              'C3H6_D3h': (-0.09950955015994396, 0.0013365866217120727),
+              'CO2': (-0.021752475167461482, 0.00019725833839493446),
+              'ClF3': (-0.035917624197226, 0.0005044951380930323),
+              'C3H4_D2d': (-0.078068075574534, 0.0013471319373085805),
+              'COF2': (-0.029919370204709785, 0.00027306557116953074),
+              '2-butyne': (-0.12279742624908908, 0.0019018023476061548),
+              'C2H5': (-0.0583205245708783, 0.0008123602763700175),
+              'BF3': (-0.02553364750247437, 0.00026111693285554887),
+              'SiH2_s3B1d': (-0.021066607316984308, 0.0003363117490443568),
+              'N2O': (-0.022068066394571734, 0.0002284681148899124)}
+
+    calc = D3_model(s6=1.0, s8=1.44956635, a1=0.32704579, a2=5.36988013, s9=1.0)
+    for name, data in subset.items():
+        atoms = g2[name]
+        energy, gnorm = data
+        atoms.set_calculator(calc)
+        assert atoms.get_potential_energy() == approx(energy, thr)
+        assert abs(atoms.get_forces().flatten()).mean() == approx(gnorm, thr)
