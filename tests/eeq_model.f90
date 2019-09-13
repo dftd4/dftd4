@@ -236,7 +236,7 @@ subroutine test_eeq_numgrad
    integer :: stat
 
    allocate( cn(nat),q(nat), grd(3,nat), dcndr(3,nat,nat), &
-      &      dqdr(3,nat,nat),dcndL(3,3,nat), source = 0.0_wp )
+      &      dqdr(3,nat,nat+1),dcndL(3,3,nat), source = 0.0_wp )
    es  = 0.0_wp
 
    call mol%allocate(nat)
@@ -289,7 +289,7 @@ subroutine test_eeq_numgrad
    print*,dqdr(:,1,1)-numq(:,1,1)
 
    call assert_close(norm2(grd-numg),0.0_wp,1.0e-8_wp)
-   call assert_close(norm2(dqdr-numq),0.0_wp,1.0e-8_wp)
+   call assert_close(norm2(dqdr(:,:,:nat)-numq),0.0_wp,1.0e-8_wp)
 
    call terminate(afail)
 end subroutine test_eeq_numgrad
@@ -343,7 +343,7 @@ subroutine test_peeq_numgrad
    call generate_wsc(mol,mol%wsc)
 
    allocate( cn(nat),q(nat), grd(3,nat), dcndr(3,nat,nat), dcndL(3,3,nat), &
-      &      dqdr(3,nat,nat), dqdL(3,3,nat), source = 0.0_wp )
+      &      dqdr(3,nat,nat+1), dqdL(3,3,nat+1), source = 0.0_wp )
    es  = 0.0_wp
    sigma = 0.0_wp
 
@@ -364,6 +364,8 @@ subroutine test_peeq_numgrad
       do j = 1, 3
          er = 0.0_wp
          el = 0.0_wp
+         qr = 0.0_wp
+         ql = 0.0_wp
          mol%xyz(j,i) = mol%xyz(j,i) + step
          call pbc_ncoord_erf(mol,cn)
          call dncoord_logcn(mol%n,cn,cn_max=8.0_wp)
@@ -378,7 +380,7 @@ subroutine test_peeq_numgrad
 
          mol%xyz(j,i) = mol%xyz(j,i) + step
          numg(j,i) = step2 * (er-el)
-         numq(j,i,:) = step2 * (qr-ql)
+         numq(j,i,:nat) = step2 * (qr-ql)
       enddo
    enddo
 
@@ -392,7 +394,7 @@ subroutine test_peeq_numgrad
    print*,dqdr(:,nat,nat/2)-numq(:,nat,nat/2)
 
    call assert_close(norm2(grd-numg),0.0_wp,1.0e-9_wp)
-   call assert_close(norm2(dqdr-numq),0.0_wp,1.0e-8_wp)
+   call assert_close(norm2(dqdr(:,:,:nat)-numq),0.0_wp,1.0e-8_wp)
 
    call terminate(afail)
 end subroutine test_peeq_numgrad
