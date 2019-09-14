@@ -83,7 +83,42 @@ augment an already present `gradient` file with the dispersion gradient.
 For the D4(EEQ)-MBD method use
 
     $ dftd4 --func pbe0 --mbd coord
-    
+
+Using in Python
+---------------
+
+This `dftd4` version is python-powered if you can provide a version of `ase`.
+To run a PBE0-D4 calculation use
+
+    >>> from ase.collections import s22
+    >>> from dftd4 import D4_model
+    >>> atoms = s22['Uracil_dimer_h-bonded']
+    >>> dispersion_correction = D4_model()
+    >>> dispersion_correction.load_damping_parameters('pbe0')
+    >>> atoms.set_calculator(dispersion_correction)
+    >>> atoms.get_potential_energy() # returns dispersion energy in eV
+    -0.6293912201778475
+    >>> atoms.get_forces() # returns dispersion forces in eV/Å
+    array([[ 0.01733278, -0.00404559, -0.        ],
+           [ 0.00799319, -0.00669631, -0.        ],
+           ...
+
+The shared library offers also access to serval other related properties
+(currently not available from the atoms object),
+which can be requested when creating the calculator.
+
+    >>> from ase.collections import s22
+    >>> from dftd4 import D4_model
+    >>> atoms = s22['Water_dimer']
+    >>> dispersion_correction = D4_model(c6_coefficients=True,
+    ...                                  polarizibilities=True)
+    >>> dispersion_correction.get_property('polarizibilities', atoms=atoms)
+    array([1.00166447, 0.19537086, 0.18334599, 1.02660689, 0.19592143,
+           0.19592143]) # dipole polarizibilities in Å³
+
+By the same means force-calculations can be disabled with `forces=False`,
+if one is only interested in properties and dispersion energies.
+
 Citation
 --------
 

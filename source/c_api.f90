@@ -15,9 +15,34 @@
 ! You should have received a copy of the GNU Lesser General Public License
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
+!> official dftd4 ISO-C-API.
+!
+!  Every other API (Python/C++/..., except Fortran) should use this layer
+!  at some point, this API gives enough flexibility downstream such that
+!  the user/developer can wrap the ISO-C layer without much overhead.
+!
+!  We are not using C-reserved memory except for reading into Fortran-reserved
+!  memory and the other way round, the only requirement is that the memory on
+!  the C side has to be continous.
+module c_api
+   use iso_c_binding
+   use iso_fortran_env, only: wp => real64
+
+   implicit none
+
+   !> some overloading for convience
+   interface c_return
+      module procedure :: c_return_double_0d
+      module procedure :: c_return_double_1d
+      module procedure :: c_return_double_2d
+   end interface c_return
+
+contains
+
 !> external iso-c compatible interface to the DFT-D4 program
 function d4_calculation_c_api &
-      &   (natoms,attyp,charge,coord,file_in,dparam_in,dopt_in,edisp,grad,hess) &
+      &   (natoms,attyp,charge,coord,file_in,dparam_in,dopt_in, &
+      &    edisp,grad,hess,polarizibilities,c6_coefficients,charges) &
       &    bind(C,name="D4_calculation") result(status)
 
    use iso_fortran_env, wp => real64, istdout => output_unit
@@ -51,11 +76,15 @@ function d4_calculation_c_api &
    !> final dispersion energy
    real(c_double),intent(out) :: edisp
    !> molecular dispersion gradient
-   !  (not referenced of dopt_in.lgradient is false)
    real(c_double),intent(out) :: grad(3,natoms)
    !> molecular dispersion hessian
-   !  (not referenced of dopt_in.lhessian is false)
    real(c_double),intent(out) :: hess(3*natoms,3*natoms)
+   !> optionally returns all atom partioned polarizibilities
+   real(c_double),intent(out) :: polarizibilities(natoms)
+   !> optionally returns all C6 coefficents
+   real(c_double),intent(out) :: c6_coefficients(natoms,natoms)
+   !> optionally returns all atomic partial charges
+   real(c_double),intent(out) :: charges(natoms)
    !> success status of calculation
    integer(c_int) :: status
 
@@ -65,7 +94,7 @@ function d4_calculation_c_api &
    type(dftd_parameter) :: dparam
    type(dftd_options)   :: dopt
    type(dftd_results)   :: dresults
-   integer :: i,iunit
+   integer :: iunit
    character(len=:),allocatable :: outfile
 
    call mol%allocate(natoms,.false.)
@@ -79,13 +108,7 @@ function d4_calculation_c_api &
    dparam = dparam_in
    dopt   = dopt_in
 
-   i = 0
-   outfile = ''
-   do
-      i = i+1
-      if (file_in(i).eq.c_null_char) exit
-      outfile = outfile//file_in(i)
-   enddo
+   call c_string_convert(outfile, file_in)
 
    if (outfile.ne.'-'.and.dopt%print_level > 0) then
       open(newunit=iunit,file=outfile)
@@ -103,12 +126,12 @@ function d4_calculation_c_api &
       return
    endif
 
-   if (allocated(dresults%energy)) &
-      edisp = dresults%energy
-   if (allocated(dresults%gradient)) &
-      grad = dresults%gradient
-   if (allocated(dresults%hessian)) &
-      hess = dresults%hessian
+   call c_return(edisp, dresults%energy)
+   call c_return(grad, dresults%gradient)
+   call c_return(hess, dresults%hessian)
+   call c_return(charges, dresults%charges)
+   call c_return(polarizibilities, dresults%polarizibilities)
+   call c_return(c6_coefficients, dresults%c6_coefficients)
 
    call finalize
    status = 0
@@ -121,14 +144,10 @@ subroutine finalize
 end subroutine finalize
 end function d4_calculation_c_api
 
-!  extern void D4_PBC_calculation(const int& natoms, const int* attyp,
-!        const double& charge, const double* coord, const double* lattice,
-!        const DFTD_parameter& dparam, const DFTD_options& dopt,
-!        double& energy, double* grad, double* hess);
 !> external iso-c compatible interface to the DFT-D4 program
 function d4_pbc_calculation_c_api &
       &   (natoms,attyp,charge,coord,lattice,pbc,file_in,dparam_in,dopt_in, &
-      &    edisp,grad,glat) &
+      &    edisp,grad,glat,stress,hess,polarizibilities,c6_coefficients,charges) &
       &    bind(C,name="D4_PBC_calculation") result(status)
 
    use iso_fortran_env, wp => real64, istdout => output_unit
@@ -167,11 +186,19 @@ function d4_pbc_calculation_c_api &
    !> final dispersion energy
    real(c_double),intent(out) :: edisp
    !> molecular dispersion gradient
-   !  (not referenced of dopt_in.lgradient is false)
    real(c_double),intent(out) :: grad(3,natoms)
    !> dispersion lattice gradient
-   !  (not referenced of dopt_in.lgradient is false)
    real(c_double),intent(out) :: glat(3,3)
+   !> dispersion stress tensor
+   real(c_double),intent(out) :: stress(6)
+   !> molecular dispersion hessian
+   real(c_double),intent(out) :: hess(3*natoms,3*natoms)
+   !> optionally returns all atom partioned polarizibilities
+   real(c_double),intent(out) :: polarizibilities(natoms)
+   !> optionally returns all C6 coefficents
+   real(c_double),intent(out) :: c6_coefficients(natoms,natoms)
+   !> optionally returns all atomic partial charges
+   real(c_double),intent(out) :: charges(natoms)
    !> success status of calculation
    integer(c_int) :: status
 
@@ -180,7 +207,7 @@ function d4_pbc_calculation_c_api &
    type(dftd_parameter) :: dparam
    type(dftd_results)   :: dresults
    type(dftd_options)   :: dopt
-   integer :: i,iunit
+   integer :: iunit
    character(len=:),allocatable :: outfile
 
    call mol%allocate(natoms,.false.)
@@ -197,13 +224,7 @@ function d4_pbc_calculation_c_api &
    dparam = dparam_in
    dopt   = dopt_in
 
-   i = 0
-   outfile = ''
-   do
-      i = i+1
-      if (file_in(i).eq.c_null_char) exit
-      outfile = outfile//file_in(i)
-   enddo
+   call c_string_convert(outfile, file_in)
 
    if (outfile.ne.'-'.and.dopt%print_level > 0) then
       open(newunit=iunit,file=outfile)
@@ -221,12 +242,14 @@ function d4_pbc_calculation_c_api &
       return
    endif
 
-   if (allocated(dresults%energy)) &
-      edisp = dresults%energy
-   if (allocated(dresults%gradient)) &
-      grad = dresults%gradient
-   if (allocated(dresults%lattice_gradient)) &
-      glat = dresults%lattice_gradient
+   call c_return(edisp, dresults%energy)
+   call c_return(grad, dresults%gradient)
+   call c_return(glat, dresults%lattice_gradient)
+   call c_return(stress, dresults%stress)
+   call c_return(hess, dresults%hessian)
+   call c_return(charges, dresults%charges)
+   call c_return(polarizibilities, dresults%polarizibilities)
+   call c_return(c6_coefficients, dresults%c6_coefficients)
 
    call finalize
    status = 0
@@ -257,18 +280,12 @@ function d4_damping_parameters_c_api(name_in,dparam_out,lmbd) &
 
    type(mctc_logger) :: env
    type(dftd_parameter) :: dparam
-   integer :: mbd_mode,i
+   integer :: mbd_mode
    character(len=:),allocatable :: name
 
    mbd_mode = lmbd
 
-   i = 0
-   name = ''
-   do
-      i = i+1
-      if (name_in(i).eq.c_null_char) exit
-      name = name//name_in(i)
-   enddo
+   call c_string_convert(name, name_in)
 
    if (get_dfnum(name) > 0) then
       call d4par(name,dparam,mbd_mode,env)
@@ -291,7 +308,8 @@ end function d4_damping_parameters_c_api
 
 !> external iso-c compatible interface to the DFT-D4 program
 function d3_calculation_c_api &
-      &   (natoms,attyp,coord,file_in,dparam_in,dopt_in,edisp,grad,hess) &
+      &   (natoms,attyp,coord,file_in,dparam_in,dopt_in, &
+      &    edisp,grad,hess,polarizibilities,c6_coefficients) &
       &    bind(C,name="D3_calculation") result(status)
 
    use iso_fortran_env, wp => real64, istdout => output_unit
@@ -323,11 +341,13 @@ function d3_calculation_c_api &
    !> final dispersion energy
    real(c_double),intent(out) :: edisp
    !> molecular dispersion gradient
-   !  (not referenced of dopt_in.lgradient is false)
    real(c_double),intent(out) :: grad(3,natoms)
    !> molecular dispersion hessian
-   !  (not referenced of dopt_in.lhessian is false)
    real(c_double),intent(out) :: hess(3*natoms,3*natoms)
+   !> optionally returns all atom partioned polarizibilities
+   real(c_double),intent(out) :: polarizibilities(natoms)
+   !> optionally returns all C6 coefficents
+   real(c_double),intent(out) :: c6_coefficients(natoms,natoms)
    !> success status of calculation
    integer(c_int) :: status
 
@@ -337,7 +357,7 @@ function d3_calculation_c_api &
    type(dftd_parameter) :: dparam
    type(dftd_options)   :: dopt
    type(dftd_results)   :: dresults
-   integer :: i,iunit
+   integer :: iunit
    character(len=:),allocatable :: outfile
 
    call mol%allocate(natoms,.false.)
@@ -351,13 +371,7 @@ function d3_calculation_c_api &
    dparam = dparam_in
    dopt   = dopt_in
 
-   i = 0
-   outfile = ''
-   do
-      i = i+1
-      if (file_in(i).eq.c_null_char) exit
-      outfile = outfile//file_in(i)
-   enddo
+   call c_string_convert(outfile, file_in)
 
    if (outfile.ne.'-'.and.dopt%print_level > 0) then
       open(newunit=iunit,file=outfile)
@@ -375,12 +389,11 @@ function d3_calculation_c_api &
       return
    endif
 
-   if (allocated(dresults%energy)) &
-      edisp = dresults%energy
-   if (allocated(dresults%gradient)) &
-      grad = dresults%gradient
-   if (allocated(dresults%hessian)) &
-      hess = dresults%hessian
+   call c_return(edisp, dresults%energy)
+   call c_return(grad, dresults%gradient)
+   call c_return(hess, dresults%hessian)
+   call c_return(polarizibilities, dresults%polarizibilities)
+   call c_return(c6_coefficients, dresults%c6_coefficients)
 
    call finalize
    status = 0
@@ -396,7 +409,7 @@ end function d3_calculation_c_api
 !> external iso-c compatible interface to the DFT-D4 program
 function d3_pbc_calculation_c_api &
       &   (natoms,attyp,coord,lattice,pbc,file_in,dparam_in,dopt_in, &
-      &    edisp,grad,glat) &
+      &    edisp,grad,glat,stress,hess,polarizibilities,c6_coefficients) &
       &    bind(C,name="D3_PBC_calculation") result(status)
 
    use iso_fortran_env, wp => real64, istdout => output_unit
@@ -433,11 +446,17 @@ function d3_pbc_calculation_c_api &
    !> final dispersion energy
    real(c_double),intent(out) :: edisp
    !> molecular dispersion gradient
-   !  (not referenced of dopt_in.lgradient is false)
    real(c_double),intent(out) :: grad(3,natoms)
    !> dispersion lattice gradient
-   !  (not referenced of dopt_in.lgradient is false)
    real(c_double),intent(out) :: glat(3,3)
+   !> dispersion stress tensor
+   real(c_double),intent(out) :: stress(6)
+   !> molecular dispersion hessian
+   real(c_double),intent(out) :: hess(3*natoms,3*natoms)
+   !> optionally returns all atom partioned polarizibilities
+   real(c_double),intent(out) :: polarizibilities(natoms)
+   !> optionally returns all C6 coefficents
+   real(c_double),intent(out) :: c6_coefficients(natoms,natoms)
    !> success status of calculation
    integer(c_int) :: status
 
@@ -446,7 +465,7 @@ function d3_pbc_calculation_c_api &
    type(dftd_parameter) :: dparam
    type(dftd_results)   :: dresults
    type(dftd_options)   :: dopt
-   integer :: i,iunit
+   integer :: iunit
    character(len=:),allocatable :: outfile
 
    call mol%allocate(natoms,.false.)
@@ -463,13 +482,7 @@ function d3_pbc_calculation_c_api &
    dparam = dparam_in
    dopt   = dopt_in
 
-   i = 0
-   outfile = ''
-   do
-      i = i+1
-      if (file_in(i).eq.c_null_char) exit
-      outfile = outfile//file_in(i)
-   enddo
+   call c_string_convert(outfile, file_in)
 
    if (outfile.ne.'-'.and.dopt%print_level > 0) then
       open(newunit=iunit,file=outfile)
@@ -487,12 +500,13 @@ function d3_pbc_calculation_c_api &
       return
    endif
 
-   if (allocated(dresults%energy)) &
-      edisp = dresults%energy
-   if (allocated(dresults%gradient)) &
-      grad = dresults%gradient
-   if (allocated(dresults%lattice_gradient)) &
-      glat = dresults%lattice_gradient
+   call c_return(edisp, dresults%energy)
+   call c_return(grad, dresults%gradient)
+   call c_return(glat, dresults%lattice_gradient)
+   call c_return(stress, dresults%stress)
+   call c_return(hess, dresults%hessian)
+   call c_return(polarizibilities, dresults%polarizibilities)
+   call c_return(c6_coefficients, dresults%c6_coefficients)
 
    call finalize
    status = 0
@@ -504,3 +518,49 @@ subroutine finalize
    if (iunit.ne.istdout) close(iunit)
 end subroutine finalize
 end function d3_pbc_calculation_c_api
+
+!> optional return to a c_ptr in case it is not a null pointer and the
+!  Fortran value has been calculated
+pure subroutine c_return_double_0d(c_array, f_array)
+   real(c_double), intent(out), target :: c_array
+   real(wp), allocatable, intent(in) :: f_array
+   if (c_associated(c_loc(c_array)) .and. allocated(f_array)) then
+      c_array = f_array
+   endif
+end subroutine c_return_double_0d
+
+!> optional return to a c_ptr in case it is not a null pointer and the
+!  Fortran array has been populated
+pure subroutine c_return_double_1d(c_array, f_array)
+   real(c_double), intent(out), target :: c_array(:)
+   real(wp), allocatable, intent(in) :: f_array(:)
+   if (c_associated(c_loc(c_array)) .and. allocated(f_array)) then
+      c_array = f_array
+   endif
+end subroutine c_return_double_1d
+
+!> optional return to a c_ptr in case it is not a null pointer and the
+!  Fortran array has been populated (2D version)
+pure subroutine c_return_double_2d(c_array, f_array)
+   real(c_double), intent(out), target :: c_array(:,:)
+   real(wp), allocatable, intent(in) :: f_array(:,:)
+   if (c_associated(c_loc(c_array)) .and. allocated(f_array)) then
+      c_array = f_array
+   endif
+end subroutine c_return_double_2d
+
+!> convert vector of chars to deferred size character
+subroutine c_string_convert(f_string, c_string)
+   character(c_char), dimension(*), intent(in) :: c_string
+   character(len=:), allocatable, intent(out) :: f_string
+   integer :: i
+   i = 0
+   f_string = ''
+   do
+      i = i+1
+      if (c_string(i).eq.c_null_char) exit
+      f_string = f_string//c_string(i)
+   enddo
+end subroutine c_string_convert
+
+end module c_api

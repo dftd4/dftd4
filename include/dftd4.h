@@ -59,17 +59,33 @@ extern int
 D4_calculation(const int* natoms, const int* attyp, const double* charge,
       const double* coord, const char* outfile,
       const DFTD_parameter* dparam, const DFTD_options* dopt,
-      double* energy, double* grad, double* hess);
+      double* energy, double* grad, double* hess,
+      double* polarizibilities, double* c6_coefficients, double* charges);
 
 extern int
 D4_PBC_calculation(const int* natoms, const int* attyp, const double* charge,
       const double* coord, const double* lattice, const bool* pbc,
       const char* outfile, const DFTD_parameter* dparam, const DFTD_options* dopt,
-      double* energy, double* grad, double* latgrad);
+      double* energy, double* grad, double* latgrad, double* stress, double* hess,
+      double* polarizibilities, double* c6_coefficients, double* charges);
 
 extern int
 D4_damping_parameters(
       const char* name, const DFTD_parameter* dparam, const int* lmbd);
+
+extern int
+D3_calculation(const int* natoms, const int* attyp,
+      const double* coord, const char* outfile,
+      const DFTD_parameter* dparam, const DFTD_options* dopt,
+      double* energy, double* grad, double* hess,
+      double* polarizibilities, double* c6_coefficients);
+
+extern int
+D3_PBC_calculation(const int* natoms, const int* attyp,
+      const double* coord, const double* lattice, const bool* pbc,
+      const char* outfile, const DFTD_parameter* dparam, const DFTD_options* dopt,
+      double* energy, double* grad, double* latgrad, double* stress, double* hess,
+      double* polarizibilities, double* c6_coefficients);
 
 #ifdef __cplusplus
 }

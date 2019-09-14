@@ -33,7 +33,7 @@ main (int argc, char **argv)
    double hess[3*3*3*3] = {0.0};
 
    D4_calculation(&natoms, attyp, &charge, coord, "-", &dparam_tpss, &opt_1,
-         &energy, grad, hess);
+         &energy, NULL, hess, NULL, NULL, NULL);
    assert(abs(-0.26682682254336E-03 - energy) < thr);
 
    assert(abs(-0.97182441530696E-05 - hess[3]             ) < thr);
@@ -41,7 +41,7 @@ main (int argc, char **argv)
    assert(abs( 7.59401653431350E-06 - hess[3*3*3*3-1]) < thr);
 
    D4_calculation(&natoms, attyp, &charge, coord, "-", &dparam_b2plyp, &opt_2,
-         &energy, grad, hess);
+         &energy, grad, NULL, NULL, NULL, NULL);
    assert(abs(-0.13368190339570E-03 - energy) < thr);
 
    assert(abs( 0.00000000000000E+00 - grad[0]) < thr);

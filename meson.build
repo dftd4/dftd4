@@ -1,6 +1,6 @@
 # 
 project('dftd4', 'fortran', 'cpp', 'c',
-        version : '2.2',
+        version : '2.3',
         license : 'GPL',
         meson_version : '>=0.49')
 
