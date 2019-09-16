@@ -15,30 +15,21 @@
 ! You should have received a copy of the GNU Lesser General Public License
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-!> global calculation data for error handling
-module mctc_global
-   character(len=:),allocatable :: name  !< name of the currently running program
-   character(len=:),allocatable,target :: msgbuffer !< error message buffer
-   integer :: msgid !< number of generated errors
-   integer :: maxmsg = 100 !< size of error buffer
-
-!> wrapper
-   type :: errormsg
-      character(len=:),allocatable :: msg
-      integer :: len
-   endtype errormsg
-
-   type(errormsg),allocatable :: errorbuffer(:)
-
-contains
-
-subroutine init_errorbuffer
+module mctc_constants
+   use iso_fortran_env, only : wp => real64
    implicit none
-   if (allocated(errorbuffer)) deallocate ( errorbuffer )
-   allocate ( errorbuffer(maxmsg) )
-   msgid = 0
-   msgbuffer = ' '
-end subroutine init_errorbuffer
-
-end module mctc_global
-
+   private
+   real(wp),public,parameter :: pi = 3.1415926535897932384626433832795029_wp
+!  √π
+   real(wp),public,parameter ::  sqrtpi  = sqrt(pi)
+!  2×π
+   real(wp),public,parameter :: twopi = 2.0_wp * pi
+!  4×π
+   real(wp),public,parameter :: fourpi = 4.0_wp * pi
+!  π/2
+   real(wp),public,parameter :: pihalf = 0.5_wp * pi
+!  Boltzmann constant in Eh/K
+   real(wp),public,parameter :: kB = 3.166808578545117e-06_wp
+!  speed of light c in vacuum in a.u.
+   real(wp),public,parameter :: lightspeed = 137.0359990740_wp
+end module mctc_constants

@@ -30,6 +30,19 @@ The man-page can be build by
 By adding the directory to the `MANPATH` variable the documentation
 of DFT-D4 is accessable by `man`.
 
+`dftd4` as been successfully build using
+
+* `ifort` 19.0.3 with the MKL as linear algebra backend
+  on Manjaro Linux 18.0
+* `gfortran` 8.3.0 with the MKL (19.0.3.199) as linear algebra backend
+  on Manjaro Linux 18.0
+* `gfortran` 8.3.0 with LAPACK (3.8.0-2) and openBLAS (0.3.6-1)
+  as linear algebra backend on Manjaro Linux 18.0
+
+`dftd4` could not be compiled with
+
+* `gfortran` 4 or older (missing Fortran 2003 standard)
+
 Usage
 -----
 
@@ -70,23 +83,57 @@ augment an already present `gradient` file with the dispersion gradient.
 For the D4(EEQ)-MBD method use
 
     $ dftd4 --func pbe0 --mbd coord
-    
+
+Using in Python
+---------------
+
+This `dftd4` version is python-powered if you can provide a version of `ase`.
+To run a PBE0-D4 calculation use
+
+    >>> from ase.collections import s22
+    >>> from dftd4 import D4_model
+    >>> atoms = s22['Uracil_dimer_h-bonded']
+    >>> dispersion_correction = D4_model()
+    >>> dispersion_correction.load_damping_parameters('pbe0')
+    >>> atoms.set_calculator(dispersion_correction)
+    >>> atoms.get_potential_energy() # returns dispersion energy in eV
+    -0.6293912201778475
+    >>> atoms.get_forces() # returns dispersion forces in eV/Å
+    array([[ 0.01733278, -0.00404559, -0.        ],
+           [ 0.00799319, -0.00669631, -0.        ],
+           ...
+
+The shared library offers also access to serval other related properties
+(currently not available from the atoms object),
+which can be requested when creating the calculator.
+
+    >>> from ase.collections import s22
+    >>> from dftd4 import D4_model
+    >>> atoms = s22['Water_dimer']
+    >>> dispersion_correction = D4_model(c6_coefficients=True,
+    ...                                  polarizibilities=True)
+    >>> dispersion_correction.get_property('polarizibilities', atoms=atoms)
+    array([1.00166447, 0.19537086, 0.18334599, 1.02660689, 0.19592143,
+           0.19592143]) # dipole polarizibilities in Å³
+
+By the same means force-calculations can be disabled with `forces=False`,
+if one is only interested in properties and dispersion energies.
+
 Citation
 --------
+
+Always cite:
 
 Eike Caldeweyher, Christoph Bannwarth and Stefan Grimme, *J. Chem. Phys.*, **2017**, 147, 034112.
 DOI: [10.1063/1.4993215](https://doi.org/10.1063/1.4993215)
 
-Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, *ChemRxiv*, **2019**, preprint. DOI: [10.26434/chemrxiv.7430216](https://doi.org/10.26434/chemrxiv.7430216.v2)
-
-Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme,
-*J. Chem. Phys.*, **2019**, 150, 154122. DOI: [https://doi.org/10.1063/1.5090222](https://doi.org/10.1063/1.5090222)
-
+Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, *J. Chem Phys*, **2019**, 150, 154122.
+DOI: [10.1063/1.5090222](https://doi.org/10.1063/1.5090222)
+chemrxiv: [10.26434/chemrxiv.7430216](https://doi.org/10.26434/chemrxiv.7430216.v2)
 
 Bugs
 ----
 
 please report all bugs with an example input and the used geometry,
-as well as the `--verbose` output to grimme@thch.uni-bonn.de
+as well as the `--verbose` output to [Stefan Grimme](mailto:grimme@thch.uni-bonn.de)
 or open an issue.
-
