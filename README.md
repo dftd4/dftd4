@@ -1,4 +1,4 @@
-DFT-D4 standalone program [![Build Status](https://travis-ci.org/awvwgk/dftd4.svg?branch=master)](https://travis-ci.org/awvwgk/dftd4)
+DFT-D4 standalone program [![Build Status](https://travis-ci.org/dftd4/dftd4.svg?branch=master)](https://travis-ci.org/dftd4/dftd4)
 =========================
 
 Copied from
@@ -127,7 +127,9 @@ Always cite:
 Eike Caldeweyher, Christoph Bannwarth and Stefan Grimme, *J. Chem. Phys.*, **2017**, 147, 034112.
 DOI: [10.1063/1.4993215](https://doi.org/10.1063/1.4993215)
 
-Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, *J. Chem Phys*, **2019**, 150, 154122. DOI: [10.1063/1.5090222](https://doi.org/10.1063/1.5090222)
+Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, *J. Chem Phys*, **2019**, 150, 154122.
+DOI: [10.1063/1.5090222](https://doi.org/10.1063/1.5090222)
+chemrxiv: [10.26434/chemrxiv.7430216](https://doi.org/10.26434/chemrxiv.7430216.v2)
 
 Bugs
 ----
