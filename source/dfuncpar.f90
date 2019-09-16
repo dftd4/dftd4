@@ -1,7 +1,28 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! dftd4 is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! dftd4 is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
+
+!> saves all the damping parameters obtained by fitting the DFT-D4
+!  dispersion energies to CCSD(T) interaction energies obtained
+!  on different dissociation curves
 module dfuncpar
    use iso_fortran_env, only : wp => real64
    use class_param, only : dftd_parameter
    implicit none
+   !> unique idenifiers for all functionals known to me -- SAW
    integer,private,parameter ::  &
    &  p_df_none           =   0,  &
    &  p_df_hf             =   1,  &
@@ -136,15 +157,15 @@ module dfuncpar
 
 contains
 
-!!! ========================================================================
-!!  DFT-D4(EEQ)-ATM/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
-function get_d4eeqbjatm_2019_parameter(dfnum,bsnum) result(param)
+! ========================================================================
+!> DFT-D4(EEQ)-ATM/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
+subroutine get_d4eeqbjatm_2019_parameter(dfnum,bsnum,param)
    implicit none
    integer,intent(in)   :: dfnum,bsnum
-   type(dftd_parameter) :: param
+   type(dftd_parameter),allocatable :: param
    select case(dfnum)
-   case default; call raise('E','No parameters for this Functional')
-!! ------------------------------------------------------------------------
+   case default; return
+! ------------------------------------------------------------------------
    case(p_df_b1b95); param = dftd_parameter ( & ! (SAW190107)
    &  s6=1.0000_wp, s8=1.27701162_wp, a1=0.40554715_wp, a2=4.63323074_wp )
 !  Fitset: MD= 0.22852 MAD= 0.35189 RMSD= 0.46982
@@ -371,18 +392,18 @@ function get_d4eeqbjatm_2019_parameter(dfnum,bsnum) result(param)
    &  s6=1.0000_wp, s8=1.62972054_wp, a1=0.11268673_wp, a2=5.40786417_wp )
 !  Fitset: MD= -0.03900 MAD= 0.27562 RMSD= 0.38491
    end select
-end function get_d4eeqbjatm_2019_parameter
-!! ========================================================================
+end subroutine get_d4eeqbjatm_2019_parameter
+! ========================================================================
 
-!!! ========================================================================
-!!  DFT-D4(EEQ)-MBD/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
-function get_d4eeqbjmbd_2019_parameter(dfnum,bsnum) result(param)
+! ========================================================================
+!> DFT-D4(EEQ)-MBD/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
+subroutine get_d4eeqbjmbd_2019_parameter(dfnum,bsnum,param)
    implicit none
    integer,intent(in)   :: dfnum,bsnum
-   type(dftd_parameter) :: param
+   type(dftd_parameter), allocatable :: param
    select case(dfnum)
-   case default; call raise('E','No parameters for this Functional')
-!! ------------------------------------------------------------------------
+   case default; return
+! ------------------------------------------------------------------------
    case(p_df_b1b95); param = dftd_parameter ( & ! (SAW190107)
    &  s6=1.0000_wp, s8=1.19549420_wp, a1=0.39241474_wp, a2=4.60397611_wp )
 !  Fitset: MD= 0.21329 MAD= 0.33289 RMSD= 0.44693
@@ -609,10 +630,11 @@ function get_d4eeqbjmbd_2019_parameter(dfnum,bsnum) result(param)
    &  s6=1.0000_wp, s8=1.51577878_wp, a1=0.10026585_wp, a2=5.37506460_wp )
 !  Fitset: MD= -0.06152 MAD= 0.27318 RMSD= 0.38360
    end select
-end function get_d4eeqbjmbd_2019_parameter
-!! ========================================================================
+end subroutine get_d4eeqbjmbd_2019_parameter
+! ========================================================================
 
-
+!> get the unique identifier for most functionals, returns none if
+!  the functional was not known at the time I implemented this mapping
 function get_dfnum(df) result(num)
    integer :: num
    character(len=*),intent(in) :: df
@@ -741,12 +763,15 @@ function get_dfnum(df) result(num)
    end select
 end function get_dfnum
 
-subroutine d4par(inp,param,lmbd)
+subroutine d4par(inp,dparam,lmbd,env)
    use iso_fortran_env, only : wp => real64
+   use mctc_environment
    use dftd4, only : p_mbd_none,p_mbd_rpalike,p_mbd_exact_atm,p_mbd_approx_atm
    implicit none
+   type(mctc_logger),intent(inout) :: env
    character(len=*),intent(in)   :: inp
-   type(dftd_parameter),intent(out) :: param
+   type(dftd_parameter),intent(out) :: dparam
+   type(dftd_parameter),allocatable :: param
    integer,intent(in) :: lmbd
    character(len=20) :: dfa,bas
    character(len=80) :: ftmp,homedir
@@ -768,16 +793,20 @@ subroutine d4par(inp,param,lmbd)
    dfnum = get_dfnum(dfa)
    if (dfnum.gt.0) then
       if (lmbd.eq.p_mbd_approx_atm) then
-         param = get_d4eeqbjatm_2019_parameter(dfnum,p_bas_default)
+         call get_d4eeqbjatm_2019_parameter(dfnum,p_bas_default,param)
       else
-         param = get_d4eeqbjmbd_2019_parameter(dfnum,p_bas_default)
+         call get_d4eeqbjmbd_2019_parameter(dfnum,p_bas_default,param)
+      endif
+      if (.not.allocated(param)) then
+         call env%error(5,"No parameters for '"//trim(inp)//"' available")
       endif
    else
-      call raise('E',"Functional '"//trim(inp)//"' unknown")
+      call env%error(5,"Functional '"//trim(inp)//"' unknown")
    endif
+   if (env%sane) dparam = param
 end subroutine d4par
 
-! convert string to lower case
+!> convert string to lower case
 function lowercase(str) result(lcstr)
    implicit none
    character(len=*),intent(in)  :: str

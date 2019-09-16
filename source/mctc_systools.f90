@@ -1,4 +1,21 @@
-!> @brief wrapper for IO functions to work with allocatable characters
+! This file is part of dftd4.
+!
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! dftd4 is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! dftd4 is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
+
+!> wrapper for IO functions to work with allocatable characters
 module mctc_systools
 
    character,parameter :: space = ' '
@@ -7,7 +24,7 @@ module mctc_systools
 
 contains
 
-!> @brief reads a line from unit into an allocatable character
+!> reads a line from unit into an allocatable character
 subroutine getline(unit,line,iostat)
    use iso_fortran_env, only : iostat_eor
    integer,intent(in) :: unit
@@ -37,7 +54,7 @@ subroutine getline(unit,line,iostat)
 
 end subroutine getline
 
-!> @brief searches for an file in a given path variable
+!> searches for an file in a given path variable
 subroutine rdpath(path,arg,fname,ex)
    implicit none
    character(len=*),intent(in)  :: arg  !< file to be found in path
@@ -72,10 +89,10 @@ subroutine rdpath(path,arg,fname,ex)
 
    if (exist) fname = fpath
    if (present(ex)) ex = exist
-   
+
 end subroutine rdpath
 
-!> @brief reads a command line argument in an allocatable character
+!> reads a command line argument in an allocatable character
 subroutine rdarg(i,arg,iostat)
    integer,intent(in) :: i !< number of argument
    character(len=:),allocatable,intent(out) :: arg !< contains argument on exit
@@ -87,8 +104,6 @@ subroutine rdarg(i,arg,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','Command argument corrupted')
       endif
    endif
    allocate( character(len=l) :: arg, stat=err )
@@ -96,8 +111,6 @@ subroutine rdarg(i,arg,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','could not be allocated')
       endif
    endif
    call get_command_argument(i,arg,status=err)
@@ -105,14 +118,12 @@ subroutine rdarg(i,arg,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','Command argument corrupted')
       endif
    endif
    if (present(iostat)) iostat=0
 end subroutine rdarg
 
-!> @brief reads a system cariable in an allocatable character
+!> reads a system cariable in an allocatable character
 subroutine rdvar(name,var,iostat)
    character(len=*),intent(in) :: name
    character(len=:),allocatable,intent(out) :: var
@@ -124,8 +135,6 @@ subroutine rdvar(name,var,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','System variable unassigned')
       endif
    endif
    allocate( character(len=l) :: var, stat=err )
@@ -133,8 +142,6 @@ subroutine rdvar(name,var,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','could not be allocated')
       endif
    endif
    call get_environment_variable(name,var,status=err)
@@ -142,8 +149,6 @@ subroutine rdvar(name,var,iostat)
       if (present(iostat)) then
          iostat = err
          return
-      else
-         call raise('E','System variable corrupted')
       endif
    endif
    if (present(iostat)) iostat=0

@@ -24,6 +24,6 @@ install:
 script:
   - meson --version
   - ninja --version
-  - meson builddir
+  - meson builddir --optimization=2 -Dla_backend=netlib
   - ninja -C builddir
   - ninja -C builddir test

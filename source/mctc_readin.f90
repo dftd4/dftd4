@@ -1,4 +1,21 @@
-!> @brief general IO-operations and string parsing library
+! This file is part of dftd4.
+!
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! dftd4 is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! dftd4 is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
+
+!> general IO-operations and string parsing library
 module mctc_readin
    use iso_fortran_env, wp => real64
    implicit none
@@ -29,7 +46,7 @@ module mctc_readin
 contains
 
 ! ------------------------------------------------------------------[SAW]-
-!  I could use rdpath directly, but this would require access to xpath,
+!> I could use rdpath directly, but this would require access to xpath,
 !  so I use xfind as a wrapper with access to the xpath variable to
 !  circumvent this. Also as a gimmick, I do not return a logical, but
 !  some file name. xfind succeeds if fname.ne.name, but if you inquire
@@ -52,7 +69,7 @@ function xfind(name) result(fname)
 end function xfind
 
 ! ------------------------------------------------------------------[SAW]-
-!  wrapper around getline from the MCTC lib that strips comments
+!> wrapper around getline from the MCTC lib that strips comments
 !  automatically und removes all leading and trailing whitespace
 subroutine strip_line(in,line,err)
    use mctc_systools, only : getline
@@ -77,7 +94,7 @@ subroutine strip_line(in,line,err)
 end subroutine strip_line
 
 ! ------------------------------------------------------------------[SAW]-
-!  same as strip_line, but has the additional function of copying to
+!> same as strip_line, but has the additional function of copying to
 !  one unit while reading from another, which is helpful for backing up
 !  files you plan to replace in the next step of you program.
 !  Funnily this subroutine exist way before strip_line...
@@ -109,7 +126,7 @@ subroutine mirror_line(in,out,line,err)
 
 end subroutine mirror_line
 
-!> @brief takes a string and search a name for a file that is not already present
+!> takes a string and search a name for a file that is not already present
 function find_new_name(fname) result(newname)
    character(len=*),intent(in)  :: fname
    character(len=:),allocatable :: newname
@@ -136,13 +153,12 @@ function get_int_value(val,dum) result(status)
    integer,intent(out) :: dum
    integer :: err
    logical :: status
-   
+
 !  call value(val,dum,ios=err)
    read(val,*,iostat=err) dum
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 end function get_int_value
@@ -153,13 +169,12 @@ function get_real_value(val,dum) result(status)
    real(wp),intent(out) :: dum
    integer :: err
    logical :: status
-   
+
 !  call value(val,dum,ios=err)
    read(val,*,iostat=err) dum
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 end function get_real_value
@@ -169,7 +184,7 @@ function get_bool_value(val,dum) result(status)
    character(len=*),intent(in) :: val
    logical,intent(out) :: dum
    logical :: status
-   
+
    select case(val)
    case('Y','y','Yes','yes','T','t','true','True','1')
       status = .true.
@@ -178,7 +193,6 @@ function get_bool_value(val,dum) result(status)
       status = .true.
       dum = .false.
    case default
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    end select
 
@@ -190,13 +204,12 @@ function get_int_array_value(val,dum) result(status)
    integer,intent(out) :: dum(:)
    integer :: i,err
    logical :: status
-  
+
 !  call value(val,dum,ios=err)
    read(val,*,iostat=err) (dum(i),i=1,size(dum,1))
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 
@@ -208,13 +221,12 @@ function get_real_array_value(val,dum) result(status)
    real(wp),intent(out) :: dum(:)
    integer :: i,err
    logical :: status
-  
+
 !  call value(val,dum,ios=err)
    read(val,*,iostat=err) (dum(i),i=1,size(dum,1))
    if (err.eq.0) then
       status = .true.
    else
-      call raise('S','could not parse '''//val//'''')
       status = .false.
    endif
 
@@ -247,12 +259,11 @@ function get_list_value(val,dum,n) result(status)
    integer,intent(out) :: n
    integer :: i,j,k,l,err
    logical :: status
-  
+
    i = index(val,minus)
    if (i.eq.0) then
       read(val,*,iostat=err) dum(1)
       if (err.ne.0) then
-         call raise('S','could not parse '''//val//'''')
          status = .false.
          return
       endif
@@ -261,23 +272,19 @@ function get_list_value(val,dum,n) result(status)
    else
       read(val(:i-1),*,iostat=err) j
       if (err.ne.0) then
-         call raise('S','could not parse '''//val(:i-1)//''' in '''//val//'''')
          status = .false.
          return
       endif
       read(val(i+1:),*,iostat=err) k
       if (err.ne.0) then
-         call raise('S','could not parse '''//val(i+1:)//''' in '''//val//'''')
          status = .false.
          return
       endif
       if (k.lt.j) then
-         call raise('S','end is lower than start in list '''//val//'''')
          status = .false.
          return
       endif
       if ((k-j).gt.size(dum,1)) then
-         call raise('S','too many list items in '''//val//'''')
          status = .false.
          return
       endif

@@ -1,3 +1,20 @@
+! This file is part of dftd4.
+!
+! Copyright (C) 2017-2019 Stefan Grimme, Sebastian Ehlert, Eike Caldeweyher
+!
+! dftd4 is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! dftd4 is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
+
 program dftd
    use iso_fortran_env, istdout => output_unit, kdp => real64
 !$ use omp_lib
@@ -7,20 +24,24 @@ program dftd
    use mctc_global
    use mctc_timings
    use mctc_econv
+   use mctc_environment
 
 ! ------------------------------------------------------------------------
 !  class definitions
 ! ------------------------------------------------------------------------
    use class_molecule
    use class_set
+   use class_results
 
 ! ------------------------------------------------------------------------
 !  interfaces
 ! ------------------------------------------------------------------------
+   use geometry_reader
    use coordination_number
    use eeq_model
    use dftd4
    use dfuncpar
+   use dispersion_calculator
 
    implicit none
 
@@ -32,6 +53,8 @@ program dftd
    type(dftd_options)   :: dopt
    type(dftd_parameter) :: dparam
    type(chrg_parameter) :: chrgeq
+   type(dftd_results)   :: dresults
+   type(mctc_logger)    :: env
 
 ! ------------------------------------------------------------------------
 !  local variables
@@ -40,11 +63,9 @@ program dftd
    integer  :: i,j,k,l,ii,jj
    integer  :: err
    real(wp) :: memory
-   real(wp) :: energy                    ! dispersion energy
    real(wp) :: etmp,etwo,emany,er,el,es
    real(wp) :: molpol,molc6,molc8        ! molecular Polarizibility
-   real(wp),allocatable :: gradient(:,:) ! nuclear gradient
-   real(wp),allocatable :: hessian(:,:)  ! nuclear hessian
+   real(wp) :: lattice_grad(3,3)
    real(wp),allocatable :: q(:)          ! partial charges
    real(wp),allocatable :: dqdr(:,:,:)   ! partial charges
    real(wp),allocatable :: covcn(:)      ! covalent coordination number
@@ -59,6 +80,8 @@ program dftd
    real(wp),allocatable :: gr(:,:)
    real(wp),allocatable :: gl(:,:)
    real(wp),parameter   :: step = 1.0e-5_wp, step2 = 0.5_wp/step
+
+   integer, parameter   :: rep_wsc(3) = [1,1,1]
 
 !! ------------------------------------------------------------------------
 !!  signal processing
@@ -88,21 +111,24 @@ program dftd
 ! ------------------------------------------------------------------------
 !  command line arguments
 ! ------------------------------------------------------------------------
-   call read_commandline_arguments(set)
+   call read_commandline_arguments(env,set)
+   call env%checkpoint
 
 ! ------------------------------------------------------------------------
 !  get molecular geometry
 ! ------------------------------------------------------------------------
-   call get_geometry(mol,set%fname)
+   call read_geometry(set%fname,mol,env)
+   call env%checkpoint
+   call generate_wsc(mol,mol%wsc)
    if (set%inchrg) mol%chrg = set%chrg
 
 ! ------------------------------------------------------------------------
 !  Output:
 !  Header, Citation and Licence
 ! ------------------------------------------------------------------------
-   call dftd4_header(set%verbose)
-   if (.not.set%silent) then
-   call dftd4_citation
+   call dftd4_header(istdout,set%print_level > 1)
+   if (set%print_level > 0) then
+   call dftd4_citation(istdout)
    call prdate('S')
    write(istdout,'(a)')
    endif
@@ -114,24 +140,31 @@ program dftd
       dparam = set%dparam
       if (.not.(set%lgradient.or.set%lhessian)) set%lenergy = .true.
    else if (allocated(set%func)) then
-      call d4par(set%func,dparam,set%lmbd)
+      call d4par(set%func,dparam,set%lmbd,env)
       if (.not.(set%lgradient.or.set%lhessian)) set%lenergy = .true.
    else
       if (set%lenergy) &
-         call raise('E','Dispersion energy requested but no parameters given')
+         call env%error(1,'Dispersion energy requested but no parameters given')
       if (set%lgradient) &
-         call raise('E','Dispersion gradient requested but no parameters given')
+         call env%error(1,'Dispersion gradient requested but no parameters given')
       if (set%lhessian) &
-         call raise('E','Dispersion Hessian requested but no parameters given')
+         call env%error(1,'Dispersion Hessian requested but no parameters given')
    endif
    if (.not.(set%lenergy.or.set%lgradient.or.set%lhessian)) set%lmolpol = .true.
+   if (set%lhessian .and. set%lperiodic) then
+      call env%warning(1,"Cannot calculate Hessian under periodic boundary conditions")
+      set%lhessian = .false.
+   endif
+   if (set%lorca .and. set%lperiodic) then
+      call env%warning(1,"To my knowledge there are no PBC in ORCA!")
+      set%lorca = .false.
+   endif
+   call env%checkpoint
 
    dopt = set%export()
 
-   if (dopt%lgradient) allocate( gradient(3,mol%nat) )
-   if (dopt%lhessian)  allocate( hessian(3*mol%nat,3*mol%nat) )
-
-   call d4_calculation(istdout,dopt,mol,dparam,energy,gradient,hessian)
+   call d4_calculation(istdout,env,dopt,mol,dparam,dresults)
+   call env%checkpoint
 
 ! ------------------------------------------------------------------------
 !  Output:
@@ -141,48 +174,44 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
    if (set%lenergy) then
       write(istdout,'('// &
       &      '1x,"Edisp  /kcal,au:",f11.4,1x,f12.8)') &
-      &       energy*autokcal,energy
-      if(set%verbose) &
-      write(istdout,'('// &
-      &      '1x,"E(2)   /kcal,au:",f11.4,1x,f12.8,'// &
-      &      '/,1x,"Emany  /kcal,au:",f11.4,1x,f12.8)') &
-      &       Etwo*autokcal,Etwo, &
-      &       Emany*autokcal,Emany
+      &       dresults%energy*autokcal,dresults%energy
       write(istdout,'(a)')
    endif
    if (set%ltmer.or.(.not.set%lorca.and.set%lenergy)) &
-      call out_tmer('.EDISP',energy)
+      call out_tmer('.EDISP',dresults%energy)
 
    if (set%lgradient) then
-      if (set%verbose) then
+      if (set%print_level > 1) then
          write(istdout,'(1x,a)') &
             "Dispersion gradient"
-         call write_gradient(mol,istdout,gradient)
+         call write_gradient(mol,istdout,dresults%gradient)
          write(istdout,'(a)')
       endif
-      write(istdout,'(1x,"E(opt) /kcal,au:",f11.4,1x,f12.8)') &
-      &       Etmp*autokcal,Etmp
       write(istdout,'(1x,"|G| =",1x,f34.10)') &
-      &       norm2(gradient)
+      &       norm2(dresults%gradient)
       write(istdout,'(a)')
 
       if (set%lorca) then
-         call orca_gradient(mol,istdout,gradient)
+         call orca_gradient(mol,istdout,dresults%gradient)
       else
-         call out_gradient(mol,'gradient',energy,gradient)
+         call out_gradient(mol,'gradient',dresults%energy,dresults%gradient,env)
+         if (mol%npbc > 0) then
+            call out_gradlatt(mol,'gradlatt',dresults%energy,dresults%lattice_gradient,env)
+         endif
       endif
    endif
 
    if (set%lhessian) then
-      call orca_hessian(mol,istdout,hessian)
+      call orca_hessian(mol,istdout,dresults%hessian)
    endif
 
-   call raise('F','Some non-fatal runtime exceptions occurred, please check:')
+   call env%checkpoint
+   call env%write('Some non-fatal runtime exceptions occurred, please check:')
 
 ! ------------------------------------------------------------------------
 !  Print timings
 ! ------------------------------------------------------------------------
-   if (.not.set%silent) then
+   if (set%print_level > 0) then
    write(istdout,'(a)')
    call stop_timing_run
    call stop_timing(1)
