@@ -1,7 +1,7 @@
 sudo: false
 
 os: linux
-dist: xenial
+dist: bionic
 
 language: python
 
@@ -15,6 +15,8 @@ addons:
   - ninja-build
 
 install:
+  - pip install pylint mypy
+  - pip install -r requirements.txt
   - export NINJA_LATEST=$(curl -s https://api.github.com/repos/ninja-build/ninja/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep ninja-linux.zip)
   - wget "$NINJA_LATEST"
   - unzip -q ninja-linux.zip -d build
@@ -24,6 +26,6 @@ install:
 script:
   - meson --version
   - ninja --version
-  - meson builddir --optimization=2 -Dla_backend=netlib
+  - meson builddir --optimization=2 -Dla_backend=netlib -Dopenmp=false
   - ninja -C builddir
   - ninja -C builddir test
