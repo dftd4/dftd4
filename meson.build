@@ -152,12 +152,14 @@ else
   dependencies += fc.find_library('lapack', required : true)
 endif
 
-if fc.get_id() == 'intel'
-  add_project_arguments('-qopenmp', language : 'fortran')
-  add_project_link_arguments('-qopenmp', language : 'fortran')
-else
-  add_project_arguments('-fopenmp', language : 'fortran')
-  add_project_link_arguments('-fopenmp', language : 'fortran')
+if get_option('openmp')
+  if fc.get_id() == 'intel'
+    add_project_arguments('-qopenmp', language : 'fortran')
+    add_project_link_arguments('-qopenmp', language : 'fortran')
+  else
+    add_project_arguments('-fopenmp', language : 'fortran')
+    add_project_link_arguments('-fopenmp', language : 'fortran')
+  endif
 endif
 
 pthread_dep = dependency('threads')
@@ -211,8 +213,7 @@ pylint = find_program('pylint', required: false)
 d4tester = executable('d4test', ftest,
                  dependencies : dependencies_exe,
                  include_directories : incdir,
-                 link_with : d4lib_static,
-                 link_args : '-fopenmp' )
+                 link_with : d4lib_static)
 
 d4cpp = executable('dftd4_cpp', cpp_srcs,
                  dependencies : dependencies,
