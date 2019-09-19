@@ -1,31 +1,39 @@
 sudo: false
-
 os: linux
 dist: bionic
 
 language: python
-
-python: 3.6
+python:
+- 3.7
+- 3.6
+- 3.5
 
 addons:
-  apt_packages:
-  - gfortran
-  - libblas-dev
-  - liblapack-dev
-  - ninja-build
+  apt:
+     packages:
+     - gfortran
+     - libblas-dev
+     - liblapack-dev
+     - ninja-build
+  homebrew:
+     update: true
+     packages:
+     - gcc
+     - lapack
+     - ninja
+
+matrix:
+  include:
+  - os: osx
+    env: FC=gfortran
+    language: minimal
+    python: 3.7
 
 install:
-  - pip install pylint mypy
-  - pip install -r requirements.txt
-  - export NINJA_LATEST=$(curl -s https://api.github.com/repos/ninja-build/ninja/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep ninja-linux.zip)
-  - wget "$NINJA_LATEST"
-  - unzip -q ninja-linux.zip -d build
-  - export PATH="$PWD/build:$PATH"
-  - pip install meson
+  - pip3 install pylint mypy pytest
+  - pip3 install -r requirements.txt
 
 script:
-  - meson --version
-  - ninja --version
   - meson builddir --optimization=2 -Dla_backend=netlib -Dopenmp=false
   - ninja -C builddir
   - ninja -C builddir test

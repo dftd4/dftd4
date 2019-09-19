@@ -1,5 +1,5 @@
 # 
-project('dftd4', 'fortran', 'cpp', 'c',
+project('dftd4', 'fortran',
         version : '2.3',
         license : 'GPL',
         meson_version : '>=0.49')
@@ -31,25 +31,30 @@ endif
 
 add_project_arguments(dialect, language: 'fortran')
 add_project_arguments(bounds,  language: 'fortran')
-cpp_std = ''
-cxx = meson.get_compiler('cpp')
-if cxx.get_id() == 'gcc'
-  cpp_std = '-std=c++11'
-endif
-if cxx.get_id() == 'intel'
-  cpp_std = '-std=c++11'
-endif
-add_project_arguments(cpp_std, language : 'cpp')
 
-c_std = ''
-cc = meson.get_compiler('c')
-if cc.get_id() == 'gcc'
-  c_std = '-std=c11'
+# currently we only test the API from the C/C++ side on Linux
+if build_machine.system() == 'linux'
+  if add_languages('cpp', required: false)
+    cxx = meson.get_compiler('cpp')
+    if cxx.get_id() == 'gcc'
+      cpp_std = '-std=c++11'
+    endif
+    if cxx.get_id() == 'intel'
+      cpp_std = '-std=c++11'
+    endif
+    add_project_arguments(cpp_std, language: 'cpp')
+  endif
+  if add_languages('c', required: false)
+    cc = meson.get_compiler('c')
+    if cc.get_id() == 'gcc'
+      c_std = '-std=c11'
+    endif
+    if cc.get_id() == 'intel'
+      c_std = '-std=c11'
+    endif
+    add_project_arguments(c_std, language: 'c')
+  endif
 endif
-if cc.get_id() == 'intel'
-  c_std = '-std=c11'
-endif
-add_project_arguments(c_std, language : 'c')
 
 ## ========================================== ##
 ## SOURCE
@@ -215,16 +220,6 @@ d4tester = executable('d4test', ftest,
                  include_directories : incdir,
                  link_with : d4lib_static)
 
-d4cpp = executable('dftd4_cpp', cpp_srcs,
-                 dependencies : dependencies,
-                 include_directories : incdir,
-                 link_with : d4lib_shared)
-
-d4c = executable('dftd4_c', c_srcs,
-                 dependencies : dependencies,
-                 include_directories : incdir,
-                 link_with : d4lib_shared)
-
 py_dftd4 = meson.current_source_dir() / 'python' / 'dftd4'
 pypath = environment()
 pypath.prepend('LD_LIBRARY_PATH', meson.current_build_dir())
@@ -265,8 +260,23 @@ test('Dispersion: API (PBC)',     d4tester,args: ['dftd4','pbc_api'])
 test('Dispersion: cell gradient', d4tester,args: ['dftd4','cell_gradient'])
 #test('Dispersion: PBC test',      d4tester,args: ['dftd4','periodic'])
 
-test('API: C++', d4cpp)
-test('API: C', d4c)
+# currently we only test the API from the C/C++ side on Linux
+if build_machine.system() == 'linux'
+  if add_languages('cpp', required: false)
+    d4cpp = executable('dftd4_cpp', cpp_srcs,
+                       dependencies : dependencies,
+                       include_directories : incdir,
+                       link_with : d4lib_shared)
+    test('API: C++', d4cpp)
+  endif
+  if add_languages('c', required: false)
+    d4c = executable('dftd4_c', c_srcs,
+                     dependencies : dependencies,
+                     include_directories : incdir,
+                     link_with : d4lib_shared)
+    test('API: C', d4c)
+  endif
+endif
 
 if pytest.found()
   test('pytest: dftd4.py', pytest, args: ['--pyargs', 'dftd4'], env: pypath)
