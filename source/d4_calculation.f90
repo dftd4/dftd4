@@ -234,7 +234,7 @@ dispersion_gradient: if (opt%lgradient) then
    dresults%energy = energy
    dresults%gradient = gradient
    if (mol%npbc > 0) then
-      dresults%stress = pack(sigma,mask=voigt_mask)/mol%volume
+      dresults%stress = sigma/mol%volume
       dresults%lattice_gradient = latgrad
    endif
 
@@ -475,7 +475,7 @@ dispersion_gradient: if (opt%lgradient) then
    dresults%energy = energy
    dresults%gradient = gradient
    if (mol%npbc > 0) then
-      dresults%stress = pack(sigma,mask=voigt_mask)/mol%volume
+      dresults%stress = sigma/mol%volume
       dresults%lattice_gradient = latgrad
    endif
 

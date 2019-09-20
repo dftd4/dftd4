@@ -190,7 +190,7 @@ function d4_pbc_calculation_c_api &
    !> dispersion lattice gradient
    real(c_double),intent(out) :: glat(3,3)
    !> dispersion stress tensor
-   real(c_double),intent(out) :: stress(6)
+   real(c_double),intent(out) :: stress(3,3)
    !> molecular dispersion hessian
    real(c_double),intent(out) :: hess(3*natoms,3*natoms)
    !> optionally returns all atom partioned polarizibilities
@@ -287,6 +287,7 @@ function d4_damping_parameters_c_api(name_in,dparam_out,lmbd) &
 
    call c_string_convert(name, name_in)
 
+   name = lowercase(name)
    if (get_dfnum(name) > 0) then
       call d4par(name,dparam,mbd_mode,env)
       if (.not.env%sane) then
@@ -450,7 +451,7 @@ function d3_pbc_calculation_c_api &
    !> dispersion lattice gradient
    real(c_double),intent(out) :: glat(3,3)
    !> dispersion stress tensor
-   real(c_double),intent(out) :: stress(6)
+   real(c_double),intent(out) :: stress(3,3)
    !> molecular dispersion hessian
    real(c_double),intent(out) :: hess(3*natoms,3*natoms)
    !> optionally returns all atom partioned polarizibilities
