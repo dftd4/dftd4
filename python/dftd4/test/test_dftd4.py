@@ -41,19 +41,21 @@ def test_d4_molecular():
               'SiH2_s1A1d': (-0.018788347860837842, 0.00038250905286212267),
               'C4H4S': (-0.1993641839842852, 0.0018407544464185575)}
 
-    calc = D4_model(s6=1.0, s8=1.26829475, a1=0.39907098, a2=5.03951304, s9=1.0, alp=16)
-    #table = {}
+    calc = D4_model(s6=1.0, s8=1.26829475, a1=0.39907098, a2=5.03951304,
+                    s9=1.0, alp=16)  # PBE-D4 parameters
+    # table = {}
     for name, data in subset.items():
         atoms = g2[name]
         energy, gnorm = data
         atoms.set_calculator(calc)
-        #energy = atoms.get_potential_energy()
-        #gnorm = abs(atoms.get_forces().flatten()).mean()
-        #table[name] = (energy, gnorm)
+        # energy = atoms.get_potential_energy()
+        # gnorm = abs(atoms.get_forces().flatten()).mean()
+        # table[name] = (energy, gnorm)
         assert atoms.get_potential_energy() == approx(energy, thr)
         assert abs(atoms.get_forces().flatten()).mean() == approx(gnorm, thr)
-    #print(table)
-    #assert 0
+    # print(table)
+    # assert 0
+
 
 def test_d3_molecular():
     """Short test for DFT-D4 on a subset of the G2."""
@@ -75,16 +77,17 @@ def test_d3_molecular():
               'SiH2_s3B1d': (-0.0210666014260993, 0.00033626052109999774),
               'N2O': (-0.022067882590594678, 0.0002285471242781216)}
 
-    calc = D3_model(s6=1.0, s8=1.44956635, a1=0.32704579, a2=5.36988013, s9=1.0, alp=16)
-    #table = {}
+    calc = D3_model(s6=1.0, s8=1.44956635, a1=0.32704579, a2=5.36988013,
+                    s9=1.0, alp=16)  # refitted PBE-D3 parameters
+    # table = {}
     for name, data in subset.items():
         atoms = g2[name]
         energy, gnorm = data
         atoms.set_calculator(calc)
-        #energy = atoms.get_potential_energy()
-        #gnorm = abs(atoms.get_forces().flatten()).mean()
-        #table[name] = (energy, gnorm)
+        # energy = atoms.get_potential_energy()
+        # gnorm = abs(atoms.get_forces().flatten()).mean()
+        # table[name] = (energy, gnorm)
         assert atoms.get_potential_energy() == approx(energy, thr)
         assert abs(atoms.get_forces().flatten()).mean() == approx(gnorm, thr)
-    #print(table)
-    #assert 0
+    # print(table)
+    # assert 0

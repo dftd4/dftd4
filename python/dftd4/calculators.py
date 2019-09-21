@@ -20,7 +20,7 @@ Wrapper for the dftd4-program.
 
 from __future__ import print_function
 
-from typing import List, Optional
+from typing import List, Optional, Tuple, Any, Union
 
 from ctypes import cdll, CDLL, Structure, c_double, c_int, c_bool, \
                    POINTER, pointer, c_char_p
@@ -38,7 +38,8 @@ P_MBD_NONE: int = 0
 P_MBD_RPALIKE: int = 1
 P_MBD_APPROX_ATM: int = 3
 
-class DFTD_parameters(Structure): # pylint: disable=invalid-name, too-few-public-methods
+
+class DFTDParameters(Structure):  # pylint: disable=too-few-public-methods
     """DFTD damping parameters"""
     _fields_ = [
         ('s6', c_double),
@@ -62,7 +63,8 @@ class DFTD_parameters(Structure): # pylint: disable=invalid-name, too-few-public
                 'alp': self.alp,
                 'beta': self.beta}
 
-class DFTD_options(Structure): # pylint: disable=invalid-name, too-few-public-methods
+
+class DFTDOptions(Structure):  # pylint: disable=too-few-public-methods
     """Options for the dftd4 library"""
     _fields_ = [
         ('lmbd', c_int),
@@ -76,6 +78,20 @@ class DFTD_options(Structure): # pylint: disable=invalid-name, too-few-public-me
         ('hessian', c_bool),
         ('print_level', c_int),
     ]
+
+    def to_dict(self) -> dict:
+        """return structure as dictionary"""
+        return {'lmbd': self.lmbd,
+                'refq': self.refq,
+                'wf': self.wf,
+                'g_a': self.g_a,
+                'g_c': self.g_c,
+                'properties': self.properties,
+                'energy': self.energy,
+                'forces': self.forces,
+                'hessian': self.hessian,
+                'print_level': self.print_level}
+
 
 def load_dftd4_library(library_path: Optional[str] = None) -> CDLL:
     """loader for dftd4 shared object"""
@@ -94,8 +110,8 @@ def load_dftd4_library(library_path: Optional[str] = None) -> CDLL:
         c_double_p,  # molecular charge
         c_double_p,  # cartesian coordinates, dimension(3*number of atoms)
         c_char_p,  # output file name
-        POINTER(DFTD_parameters),
-        POINTER(DFTD_options),
+        POINTER(DFTDParameters),
+        POINTER(DFTDOptions),
         c_double_p,  # energy
         c_double_p,  # gradient, dimension(3*number of atoms)
         c_double_p,  # hessian, dimension((3*number of atoms)**2)
@@ -111,12 +127,12 @@ def load_dftd4_library(library_path: Optional[str] = None) -> CDLL:
         c_double_p,  # lattice parameters, dimension(9)
         c_bool_p,  # periodicity of the system
         c_char_p,  # output file name
-        POINTER(DFTD_parameters),
-        POINTER(DFTD_options),
+        POINTER(DFTDParameters),
+        POINTER(DFTDOptions),
         c_double_p,  # energy
         c_double_p,  # gradient, dimension(3*number of atoms)
         c_double_p,  # lattice gradient, dimension(9)
-        c_double_p,  # stress tensor, dimension(6)
+        c_double_p,  # stress tensor, dimension(9)
         c_double_p,  # hessian, dimension((3*number of atoms)**2)
         c_double_p,  # polarizibilities, dimension(number of atoms)
         c_double_p,  # C6-coefficients, dimension(number of atoms**2)
@@ -124,7 +140,7 @@ def load_dftd4_library(library_path: Optional[str] = None) -> CDLL:
 
     lib.D4_damping_parameters.argtypes = [
         c_char_p,
-        POINTER(DFTD_parameters),
+        POINTER(DFTDParameters),
         c_int_p]
 
     lib.D3_calculation.argtypes = [
@@ -132,8 +148,8 @@ def load_dftd4_library(library_path: Optional[str] = None) -> CDLL:
         c_int_p,  # atomic numbers, dimension(number of atoms)
         c_double_p,  # cartesian coordinates, dimension(3*number of atoms)
         c_char_p,  # output file name
-        POINTER(DFTD_parameters),
-        POINTER(DFTD_options),
+        POINTER(DFTDParameters),
+        POINTER(DFTDOptions),
         c_double_p,  # energy
         c_double_p,  # gradient, dimension(3*number of atoms)
         c_double_p,  # hessian, dimension((3*number of atoms)**2)
@@ -147,27 +163,29 @@ def load_dftd4_library(library_path: Optional[str] = None) -> CDLL:
         c_double_p,  # lattice parameters, dimension(9)
         c_bool_p,  # periodicity of the system
         c_char_p,  # output file name
-        POINTER(DFTD_parameters),
-        POINTER(DFTD_options),
+        POINTER(DFTDParameters),
+        POINTER(DFTDOptions),
         c_double_p,  # energy
         c_double_p,  # gradient, dimension(3*number of atoms)
         c_double_p,  # lattice gradient, dimension(9)
-        c_double_p,  # stress tensor, dimension(6)
+        c_double_p,  # stress tensor, dimension(9)
         c_double_p,  # hessian, dimension((3*number of atoms)**2)
         c_double_p,  # polarizibilities, dimension(number of atoms)
         c_double_p]  # C6-coefficients, dimension(number of atoms**2)
 
     return lib
 
-def load_damping_parameters(lib: CDLL, functional: str,
-                            lmbd: int = P_MBD_APPROX_ATM) -> dict:
+
+def load_d4_damping_parameters(lib: CDLL, functional: str,
+                               lmbd: int = P_MBD_APPROX_ATM) -> dict:
     """load damping parameters from dftd4 shared library"""
-    dparam = DFTD_parameters()
+    dparam = DFTDParameters()
     stat: c_int = lib.D4_damping_parameters(functional.encode('utf-8'),
                                             dparam, c_int(lmbd))
     if stat == 0:
         return dparam.to_dict()
     return {}
+
 
 class SharedObjectCalculator(Calculator):
     """Base class for calculators that wrap an external shared library"""
@@ -185,36 +203,8 @@ class SharedObjectCalculator(Calculator):
         if library is not None:
             self.library = library
 
-    def get_number_of_atoms_as(self, ctype=c_int) -> c_int:
-        """return number of atoms from current Atoms-object as ctype"""
-        return ctype(len(self.atoms))
-
-    def get_atomic_numbers_as(self, ctype=c_int) -> pointer:
-        """return atomic numbers from current Atoms-object as ctype"""
-        attyp = np.array(self.atoms.get_atomic_numbers(), dtype=ctype)
-        return attyp.ctypes.data_as(POINTER(ctype))
-
-    def get_positions_as(self, ctype=c_double, convert=1.0) -> pointer:
-        """Cartesian coordinates from current Atoms-object as ctype"""
-        coord = np.array(self.atoms.get_positions() * convert, dtype=ctype)
-        return coord.ctypes.data_as(POINTER(ctype))
-
-    def get_cell_as(self, ctype=c_double, convert=1.0) -> pointer:
-        """lattice parameter from current Atoms-object as ctype"""
-        lattice = np.array(self.atoms.get_cell() * convert, dtype=ctype)
-        return lattice.ctypes.data_as(POINTER(ctype))
-
-    def get_initial_charge_as(self, ctype=c_double) -> c_double:
-        """total charge of the system from current Atoms-object as ctype"""
-        return ctype(self.atoms.get_initial_charges().sum().round())
-
-    def get_pbc_as(self, ctype=c_bool) -> pointer:
-        """periodic directions from current Atoms-object as ctype"""
-        pbc = np.array(self.atoms.get_pbc(), dtype=c_bool)
-        return pbc.ctypes.data_as(POINTER(ctype))
-
     # pylint: disable=protected-access
-    def get_struct(self, struct, parameters=None, failsave=False) -> Structure:
+    def get_struct(self, struct, parameters=None, failsave=False):
         """create a Structure from the parameters dictionary.
 
         It uses dictionary comprehension to filter the keys in the fields list
@@ -242,6 +232,7 @@ class SharedObjectCalculator(Calculator):
             raise CalculatorSetupError(
                 "No shared object bound to {} calculator!"
                 .format(self.__class__.__name__))
+
 
 class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
     """Base-class for dftd4 calculators"""
@@ -299,11 +290,12 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
         if calc is not None:
             self.calc = calc
 
-    def load_damping_parameters(self, functional) -> None:
+    def load_damping_parameters(self, functional: str) -> None:
         """load damping parameters and connect it to class"""
-        params = load_damping_parameters(self.library, functional)
+        params = load_d4_damping_parameters(self.library, functional)
         if not params:
-            raise RuntimeError("D4 is not parametrized for '"+functional+"'")
+            raise RuntimeError("D4 is not parametrized for '{}'"
+                               .format(functional))
         self.set(**params)
 
     def output_file_name(self) -> c_char_p:
@@ -313,7 +305,8 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
         output_file: str = self.label + ".out"
         return c_char_p(output_file.encode('utf-8'))
 
-    def ctypes_array(self, name, size, ctype=c_double):
+    def ctypes_array(self, name: str, size: Union[tuple, int], ctype=c_double)\
+            -> Tuple[Optional[np.ndarray], Optional[pointer]]:
         """return an optional array as ctype"""
         if name in self.implemented_properties:
             array = np.zeros(size, dtype=ctype)
@@ -335,7 +328,8 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
             # little hack for get_potential_energy bypassing this routine
             # in case of force_consistent=True
             if 'free_energy' in self.calc.results:
-                self.results['free_energy'] += self.calc.results['free_energy']
+                self.results['free_energy'] = self.results['energy'] \
+                                              + self.calc.results['free_energy']
             else:
                 del self.results['free_energy']
 
@@ -347,13 +341,14 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
             return calc_result
         return calc_result + self_result
 
-    def store_result(self, name: str, result, convert=1.0) -> None:
+    def store_result(self, name: str, result: Any, convert=1.0) -> None:
         """store results in dict, make sure the property is implemented"""
         if name in self.implemented_properties:
             self.results[name] = result * convert
 
     # pylint: disable=too-many-locals, dangerous-default-value
-    def calculate(self, atoms=None, properties=None, system_changes=all_changes):
+    def calculate(self, atoms=None, properties: List[str] = None,
+                  system_changes: List[str] = all_changes) -> None:
         """calculation interface to libdftd4"""
 
         if not properties:
@@ -364,15 +359,15 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
             print("system_changes:", system_changes)
 
         # construct ctypes representations from all intent(in) arguments
-        natoms: c_int = self.get_number_of_atoms_as(c_int)
-        attyp_p: pointer = self.get_atomic_numbers_as(c_int)
-        charge: c_double = self.get_initial_charge_as(c_double)
-        coord_p: pointer = self.get_positions_as(c_double, convert=1.0/Bohr)
-        dlat_p: pointer = self.get_cell_as(c_double, convert=1.0/Bohr)
-        pbc_p: pointer = self.get_pbc_as(c_bool)
+        natoms = c_int(len(self.atoms))
+        numbers = np.array(self.atoms.get_atomic_numbers(), dtype=c_int)
+        charge = c_double(self.atoms.get_initial_charges().sum().round())
+        positions = np.array(self.atoms.get_positions() / Bohr, dtype=c_double)
+        cell = np.array(self.atoms.get_cell() / Bohr, dtype=c_double)
+        pbc = np.array(self.atoms.get_pbc(), dtype=c_bool)
         outfile: c_char_p = self.output_file_name()
-        dparam: DFTD_parameters = self.get_struct(DFTD_parameters)
-        opt: DFTD_options = self.get_struct(DFTD_options)
+        dparam: DFTDParameters = self.get_struct(DFTDParameters)
+        opt: DFTDOptions = self.get_struct(DFTDOptions)
 
         # now we need to make space for all intent(out) arguments
         # note: the library will not write to the address if we pass None
@@ -385,9 +380,23 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
                                                  (natoms.value, natoms.value))
 
         stat = self.library.D4_PBC_calculation(
-            natoms, attyp_p, charge, coord_p, dlat_p, pbc_p, outfile,
-            dparam, opt, energy, grad_p, None, stress_p, None,
-            alphas_p, c6_coeff_p, charges_p)
+            natoms,
+            numbers.ctypes.data_as(POINTER(c_int)),
+            charge,
+            positions.ctypes.data_as(POINTER(c_double)),
+            cell.ctypes.data_as(POINTER(c_double)),
+            pbc.ctypes.data_as(POINTER(c_bool)),
+            outfile,
+            dparam,
+            opt,
+            energy,
+            grad_p,
+            None,
+            stress_p,
+            None,
+            alphas_p,
+            c6_coeff_p,
+            charges_p)
         # in case Fortran behaves we find a useful return value
         if stat != 0:
             raise RuntimeError("dftd4 terminated in error.")
@@ -399,6 +408,7 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
         self.store_result('charges', charges)
         self.store_result('polarizibilities', alphas, Bohr**3)
         self.store_result('c6_coefficients', c6_coeff, Bohr**6 * Hartree)
+
 
 class D3_model(D4_model):  # pylint: disable=invalid-name
     """D3-like dispersion calculator based on dftd4."""
@@ -437,6 +447,10 @@ class D3_model(D4_model):  # pylint: disable=invalid-name
         D4_model.__init__(self, restart, ignore_bad_restart_file,
                           label, atoms, library, xc, calc, **kwargs)
 
+    def load_damping_parameters(self, functional) -> None:
+        """load damping parameters and connect it to class"""
+        raise RuntimeError("This kind of D3 has no published damping parameters")
+
     # pylint: disable=too-many-locals, dangerous-default-value
     def calculate(self, atoms=None, properties=None, system_changes=all_changes):
         """calculation interface to libdftd4"""
@@ -449,14 +463,14 @@ class D3_model(D4_model):  # pylint: disable=invalid-name
             print("system_changes:", system_changes)
 
         # construct ctypes representations from all intent(in) arguments
-        natoms: c_int = self.get_number_of_atoms_as(c_int)
-        attyp_p: pointer = self.get_atomic_numbers_as(c_int)
-        coord_p: pointer = self.get_positions_as(c_double, convert=1.0/Bohr)
-        dlat_p: pointer = self.get_cell_as(c_double, convert=1.0/Bohr)
-        pbc_p: pointer = self.get_pbc_as(c_bool)
-        opt: DFTD_options = self.get_struct(DFTD_options)
-        dparam: DFTD_parameters = self.get_struct(DFTD_parameters)
+        natoms = c_int(len(self.atoms))
+        numbers = np.array(self.atoms.get_atomic_numbers(), dtype=c_int)
+        positions = np.array(self.atoms.get_positions() / Bohr, dtype=c_double)
+        cell = np.array(self.atoms.get_cell() / Bohr, dtype=c_double)
+        pbc = np.array(self.atoms.get_pbc(), dtype=c_bool)
         outfile: c_char_p = self.output_file_name()
+        dparam: DFTDParameters = self.get_struct(DFTDParameters)
+        opt: DFTDOptions = self.get_struct(DFTDOptions)
 
         # now we need to make space for all intent(out) arguments
         # note: the library will not write to the address if we pass None
@@ -468,9 +482,21 @@ class D3_model(D4_model):  # pylint: disable=invalid-name
                                                  (natoms.value, natoms.value))
 
         stat = self.library.D3_PBC_calculation(
-            natoms, attyp_p, coord_p, dlat_p, pbc_p, outfile,
-            dparam, opt, energy, grad_p, None, stress_p, None,
-            alphas_p, c6_coeff_p)
+            natoms,
+            numbers.ctypes.data_as(POINTER(c_int)),
+            positions.ctypes.data_as(POINTER(c_double)),
+            cell.ctypes.data_as(POINTER(c_double)),
+            pbc.ctypes.data_as(POINTER(c_bool)),
+            outfile,
+            dparam,
+            opt,
+            energy,
+            grad_p,
+            None,
+            stress_p,
+            None,
+            alphas_p,
+            c6_coeff_p)
         # in case Fortran behaves we find a useful return value
         if stat != 0:
             raise RuntimeError("dftd4 terminated in error.")
