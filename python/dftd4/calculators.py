@@ -32,11 +32,11 @@ from ase.units import Hartree, Bohr
 
 import numpy as np
 
-P_REFQ_EEQ: int = 5
+P_REFQ_EEQ = 5
 
-P_MBD_NONE: int = 0
-P_MBD_RPALIKE: int = 1
-P_MBD_APPROX_ATM: int = 3
+P_MBD_NONE = 0
+P_MBD_RPALIKE = 1
+P_MBD_APPROX_ATM = 3
 
 
 class DFTDParameters(Structure):  # pylint: disable=too-few-public-methods
@@ -180,8 +180,8 @@ def load_d4_damping_parameters(lib: CDLL, functional: str,
                                lmbd: int = P_MBD_APPROX_ATM) -> dict:
     """load damping parameters from dftd4 shared library"""
     dparam = DFTDParameters()
-    stat: c_int = lib.D4_damping_parameters(functional.encode('utf-8'),
-                                            dparam, c_int(lmbd))
+    stat = lib.D4_damping_parameters(functional.encode('utf-8'),
+                                     dparam, c_int(lmbd))
     if stat == 0:
         return dparam.to_dict()
     return {}
@@ -236,7 +236,7 @@ class SharedObjectCalculator(Calculator):
 
 class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
     """Base-class for dftd4 calculators"""
-    implemented_properties: List[str] = [
+    implemented_properties = [
         'energy', 'free_energy', 'forces', 'stress',
         'charges', 'polarizibilities', 'c6_coefficients']
     default_parameters = {
@@ -257,18 +257,22 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
         'g_a': 3.0,
         'g_c': 2.0,
         'print_level': 2,
+        # switches for the shared library, the respective property is simply
+        # not calculated if set to False (despite what implemented_properties says)
         'properties': True,
         'energy': True,
         'forces': True,
-        'hessian': False,
+        'hessian': False,  # unused
     }
+    # check this parameter list to be positive before calling the shared library
+    verify = ['s6', 's8', 's9', 's10', 'a1', 'a2', 'alp', 'wf', 'g_a', 'g_c']
 
     calc = None
-    _debug: bool = False
+    _debug = False
 
     # pylint: disable=too-many-arguments
     def __init__(self, restart=None, ignore_bad_restart_file=False,
-                 label=None, atoms=None, library=None, xc=None, calc=None,
+                 label='dftd4', atoms=None, library=None, xc=None, calc=None,
                  **kwargs):
         """Construct the dftd-calculator object."""
 
@@ -277,10 +281,10 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
 
         if library is None:
             path = find_library('dftd4')
-            self.library: CDLL = load_dftd4_library(path)
+            self.library = load_dftd4_library(path)  # type: CDLL
 
         # loads the default parameters and updates with actual values
-        self.parameters: dict = self.get_default_parameters()
+        self.parameters = self.get_default_parameters()
         self.set(**kwargs)
 
         if xc is not None:
@@ -300,9 +304,10 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
 
     def output_file_name(self) -> c_char_p:
         """create output file name from label as ctype"""
-        if self.label is None:
-            self.label: str = "saw"
-        output_file: str = self.label + ".out"
+        if self.label is not None:
+            output_file = self.label + ".out"
+        else:
+            output_file = "-"  # standard output
         return c_char_p(output_file.encode('utf-8'))
 
     def ctypes_array(self, name: str, size: Union[tuple, int], ctype=c_double)\
@@ -346,10 +351,19 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
         if name in self.implemented_properties:
             self.results[name] = result * convert
 
+    def check_parameters(self):
+        """sanity check for the parameters to be verified"""
+        check_failed = [key for key in self.verify if self.parameters[key] < 0]
+        if check_failed:
+            raise CalculatorSetupError('Method parameters {} cannot be negative!'
+                                       .format(check_failed))
+
     # pylint: disable=too-many-locals, dangerous-default-value
     def calculate(self, atoms=None, properties: List[str] = None,
                   system_changes: List[str] = all_changes) -> None:
         """calculation interface to libdftd4"""
+
+        self.check_parameters()
 
         if not properties:
             properties = ['energy']
@@ -365,9 +379,9 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
         positions = np.array(self.atoms.get_positions() / Bohr, dtype=c_double)
         cell = np.array(self.atoms.get_cell() / Bohr, dtype=c_double)
         pbc = np.array(self.atoms.get_pbc(), dtype=c_bool)
-        outfile: c_char_p = self.output_file_name()
-        dparam: DFTDParameters = self.get_struct(DFTDParameters)
-        opt: DFTDOptions = self.get_struct(DFTDOptions)
+        outfile = self.output_file_name()
+        dparam = self.get_struct(DFTDParameters)
+        opt = self.get_struct(DFTDOptions)
 
         # now we need to make space for all intent(out) arguments
         # note: the library will not write to the address if we pass None
@@ -412,7 +426,7 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
 
 class D3_model(D4_model):  # pylint: disable=invalid-name
     """D3-like dispersion calculator based on dftd4."""
-    implemented_properties: List[str] = [
+    implemented_properties = [
         'energy', 'free_energy', 'forces', 'stress',
         'polarizibilities', 'c6_coefficients']
     default_parameters = {
@@ -440,20 +454,24 @@ class D3_model(D4_model):  # pylint: disable=invalid-name
     }
 
     # pylint: disable=too-many-arguments
-    def __init__(self, restart=None, ignore_bad_restart_file=False, label=None,
+    def __init__(self, restart=None, ignore_bad_restart_file=False, label='dftd3',
                  atoms=None, library=None, xc=None, calc=None, **kwargs):
         """Construct the dftd-calculator object."""
 
         D4_model.__init__(self, restart, ignore_bad_restart_file,
                           label, atoms, library, xc, calc, **kwargs)
 
-    def load_damping_parameters(self, functional) -> None:
-        """load damping parameters and connect it to class"""
+    def load_damping_parameters(self, functional: str) -> None:
+        """load damping parameters and connect it to class.
+
+        Note that this D3 method does not have official parameters"""
         raise RuntimeError("This kind of D3 has no published damping parameters")
 
     # pylint: disable=too-many-locals, dangerous-default-value
     def calculate(self, atoms=None, properties=None, system_changes=all_changes):
         """calculation interface to libdftd4"""
+
+        self.check_parameters()
 
         if not properties:
             properties = ['energy']
@@ -468,9 +486,9 @@ class D3_model(D4_model):  # pylint: disable=invalid-name
         positions = np.array(self.atoms.get_positions() / Bohr, dtype=c_double)
         cell = np.array(self.atoms.get_cell() / Bohr, dtype=c_double)
         pbc = np.array(self.atoms.get_pbc(), dtype=c_bool)
-        outfile: c_char_p = self.output_file_name()
-        dparam: DFTDParameters = self.get_struct(DFTDParameters)
-        opt: DFTDOptions = self.get_struct(DFTDOptions)
+        outfile = self.output_file_name()
+        dparam = self.get_struct(DFTDParameters)
+        opt = self.get_struct(DFTDOptions)
 
         # now we need to make space for all intent(out) arguments
         # note: the library will not write to the address if we pass None
