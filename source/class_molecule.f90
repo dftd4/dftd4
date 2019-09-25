@@ -276,7 +276,7 @@ subroutine calculate_distances(self)
                &              self%abc(:,j),self%lattice,self%pbc)
             self%dist(i,j) = self%dist(j,i)
          enddo
-         self%dist(j,i) = minimum_image_distance(.true.,self%abc(:,i), &
+         self%dist(i,i) = minimum_image_distance(.true.,self%abc(:,i), &
             &              self%abc(:,i),self%lattice,self%pbc)
       enddo
    else
