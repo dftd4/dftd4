@@ -25,7 +25,7 @@ module class_results
    type :: dftd_results
       real(wp), allocatable :: energy
       real(wp), allocatable :: gradient(:,:)
-      real(wp), allocatable :: stress(:)
+      real(wp), allocatable :: stress(:,:)
       real(wp), allocatable :: lattice_gradient(:,:)
       real(wp), allocatable :: charges(:)
       real(wp), allocatable :: dipole_moment(:)
@@ -45,7 +45,7 @@ subroutine allocate_results(self,n)
    call self%deallocate
    self%energy = 0.0_wp
    allocate(self%gradient(3,n),         source = 0.0_wp)
-   allocate(self%stress(6),             source = 0.0_wp)
+   allocate(self%stress(3,3),           source = 0.0_wp)
    allocate(self%lattice_gradient(3,3), source = 0.0_wp)
    allocate(self%charges(n),            source = 0.0_wp)
    allocate(self%dipole_moment(3),      source = 0.0_wp)
