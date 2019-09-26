@@ -16,6 +16,13 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 """
 Wrapper for the dftd4-program.
+
+To use import the D4_model Calculator and create a new dispersion correction
+either with `D4_model(xc=functional_name)` or provide at least the damping
+parameters `s6`, `s8`, `a1` and `a2` as arguments.
+
+The calculator will sanity check if all method parameters are physical
+(greater or equal to zero) before allowing a calculation.
 """
 
 from __future__ import print_function
@@ -93,12 +100,13 @@ class DFTDOptions(Structure):  # pylint: disable=too-few-public-methods
                 'print_level': self.print_level}
 
 
-def load_dftd4_library(library_path: Optional[str] = None) -> CDLL:
+def load_dftd4_library(library_path=None) -> CDLL:
     """loader for dftd4 shared object"""
-    if library_path is not None:
-        lib = cdll.LoadLibrary(library_path)
-    else:
-        lib = cdll.LoadLibrary('libdftd4.so')
+    if library_path is None:
+        library_path = find_library('dftd4')
+        if library_path is None:  # fallback in case we cannot find a library
+            library_path = 'libdftd4.so'
+    lib = cdll.LoadLibrary(library_path)
 
     c_int_p = POINTER(c_int)
     c_bool_p = POINTER(c_bool)
@@ -188,7 +196,11 @@ def load_d4_damping_parameters(lib: CDLL, functional: str,
 
 
 class SharedObjectCalculator(Calculator):
-    """Base class for calculators that wrap an external shared library"""
+    """Base class for calculators that wrap an external shared library.
+
+    This class aims to provide an interface to shared libraries using ctypes,
+    currently it is not doing much, except for providing a convient interface
+    for custom structs and binding the shared library to the calculator class."""
 
     library = None
 
@@ -235,7 +247,10 @@ class SharedObjectCalculator(Calculator):
 
 
 class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
-    """Base-class for dftd4 calculators"""
+    """Base-class for dftd4 calculators.
+
+    This class does the heavy-lifting work to interface with the dftd4
+    shared library, this class is still working on the bare ctypes interface."""
     implemented_properties = [
         'energy', 'free_energy', 'forces', 'stress',
         'charges', 'polarizibilities', 'c6_coefficients']
@@ -280,15 +295,15 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
                                         label, atoms, library, **kwargs)
 
         if library is None:
-            path = find_library('dftd4')
-            self.library = load_dftd4_library(path)  # type: CDLL
+            self.library = load_dftd4_library()  # type: CDLL
 
         # loads the default parameters and updates with actual values
         self.parameters = self.get_default_parameters()
-        self.set(**kwargs)
-
+        # load damping parameters for functional first, than override with set
         if xc is not None:
             self.load_damping_parameters(xc)
+        # now set all parameters, this overrides loaded damping parameters
+        self.set(**kwargs)
 
         # used as dispersion correction
         if calc is not None:
@@ -333,8 +348,17 @@ class D4_model(SharedObjectCalculator):  # pylint: disable=invalid-name
             # little hack for get_potential_energy bypassing this routine
             # in case of force_consistent=True
             if 'free_energy' in self.calc.results:
+                # in case we request 'free_energy' with get_property,
+                # it will work the first time, the second call will pile
+                # up 'free_energy' in the results-array of the dispersion
+                # correction and return a wrong value...
                 self.results['free_energy'] = self.results['energy'] \
                                               + self.calc.results['free_energy']
+                # so here is a really ugly fix to also account for this case
+                # -> fix the calculator interface, pls.
+                if name == 'free_energy':
+                    self_result = self.results['free_energy']
+                    calc_result = None
             else:
                 del self.results['free_energy']
 
