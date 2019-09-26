@@ -1,5 +1,8 @@
 
-option('la_backend', type : 'string', value : 'mkl',
-description : 'linear algebra backend')
+option('la_backend', type: 'combo', value: 'mkl',
+       choices: ['mkl', 'openblas', 'netlib', 'custom'],
+       description : 'linear algebra backend')
+option('custom_libraries', type: 'array', value: [],
+       description: 'libraries to load for custom linear algebra backend')
 option('openmp', type: 'boolean', value: true,
        description: 'use OpenMP parallelisation')
