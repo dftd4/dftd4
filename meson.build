@@ -135,7 +135,8 @@ dependencies = []
 dependencies_exe = []
 dependencies_sha = []
 
-if get_option('la_backend') == 'mkl'
+la_backend = get_option('la_backend')
+if la_backend == 'mkl'
   libmkl = [fc.find_library('pthread')]
   libmkl += fc.find_library('m')
   libmkl += fc.find_library('dl')
@@ -152,6 +153,13 @@ if get_option('la_backend') == 'mkl'
   dependencies += libmkl
   dependencies_sha += libmkl_sha
   dependencies_exe += libmkl_exe
+elif la_backend == 'openblas'
+  dependencies += fc.find_library('openblas', required : true)
+  dependencies += fc.find_library('lapack', required : true)
+elif la_backend == 'custom'
+  foreach lib: get_option('custom_libraries')
+    dependencies += fc.find_library(lib)
+  endforeach
 else
   dependencies += fc.find_library('blas', required : true)
   dependencies += fc.find_library('lapack', required : true)
