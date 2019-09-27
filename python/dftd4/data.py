@@ -25,6 +25,13 @@ import numpy as np
 # yes, this are `global' variables, but I prefer not to be shouted at
 # pylint: disable=invalid-name
 
+from ase.collections import Collection
+from os.path import join, dirname
+# using a collection will remove the data 
+references = Collection('references')
+# need to patch the collection immediately
+references.filename = join(dirname(__file__), references.name + '.json')
+
 # covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197),
 # values for metals decreased by 10 %
 covalent_radii = np.array([
@@ -648,7 +655,7 @@ r4_over_r2 = np.array([
     8.6641,  # Og
     ])
 
-sqrt_z_r4_over_r2 = np.sqrt(np.array([0.5 * sqrt(z) for z in range(0, 118)])
+sqrt_z_r4_over_r2 = np.sqrt(np.array([0.5 * sqrt(z) for z in range(0, 119)])
                             * r4_over_r2)
 
 covalent_radii_d3 = 4.0/3.0 * covalent_radii
