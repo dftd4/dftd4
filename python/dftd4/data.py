@@ -19,15 +19,14 @@ Data used in the dftd4-program
 """
 
 from math import sqrt
+from os.path import join, dirname
+from ase.collections import Collection
 import numpy as np
-
 
 # yes, this are `global' variables, but I prefer not to be shouted at
 # pylint: disable=invalid-name
 
-from ase.collections import Collection
-from os.path import join, dirname
-# using a collection will remove the data 
+# using a collection will remove the data
 references = Collection('references')
 # need to patch the collection immediately
 references.filename = join(dirname(__file__), references.name + '.json')
