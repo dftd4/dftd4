@@ -199,11 +199,11 @@ d4lib_shared = shared_library(meson.project_name(),
                  install : true)
 
 # dependency declaration for wrap
-dftd4_dependency = [declare_dependency(link_with: d4lib_shared), dependencies_sha]
+dftd4_dep = [declare_dependency(link_with: d4lib_shared), dependencies_sha]
 
 # optional static depenendency for wrap
-dftd4_dependency_static = [declare_dependency(link_with: d4lib_static),
-                           dependencies_exe]
+dftd4_dep_static = [declare_dependency(link_with: d4lib_static),
+                    dependencies_exe]
 
 # and link it into an executable
 d4exe = executable(meson.project_name(), fmain,
