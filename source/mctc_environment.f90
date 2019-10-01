@@ -89,7 +89,7 @@ logical function get_argument_as_integer(self,iarg,ival) result(status)
    status = self%get(iarg,arg)
    if (status) then
       read(arg,*,iostat=err) idum
-      status = err /= 0
+      status = err == 0
    endif
    if (status) ival = idum
 end function get_argument_as_integer
@@ -104,7 +104,7 @@ logical function get_argument_as_logical(self,iarg,lval) result(status)
    status = self%get(iarg,arg)
    if (status) then
       read(arg,*,iostat=err) ldum
-      status = err /= 0
+      status = err == 0
    endif
    if (status) lval = ldum
 end function get_argument_as_logical
@@ -120,7 +120,7 @@ logical function get_argument_as_real(self,iarg,dval) result(status)
    status = self%get(iarg,arg)
    if (status) then
       read(arg,*,iostat=err) ddum
-      status = err /= 0
+      status = err == 0
    endif
    if (status) dval = ddum
 end function get_argument_as_real
