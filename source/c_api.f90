@@ -522,7 +522,7 @@ end function d3_pbc_calculation_c_api
 
 !> optional return to a c_ptr in case it is not a null pointer and the
 !  Fortran value has been calculated
-pure subroutine c_return_double_0d(c_array, f_array)
+subroutine c_return_double_0d(c_array, f_array)
    real(c_double), intent(out), target :: c_array
    real(wp), allocatable, intent(in) :: f_array
    if (c_associated(c_loc(c_array)) .and. allocated(f_array)) then
@@ -532,7 +532,7 @@ end subroutine c_return_double_0d
 
 !> optional return to a c_ptr in case it is not a null pointer and the
 !  Fortran array has been populated
-pure subroutine c_return_double_1d(c_array, f_array)
+subroutine c_return_double_1d(c_array, f_array)
    real(c_double), intent(out), target :: c_array(:)
    real(wp), allocatable, intent(in) :: f_array(:)
    if (c_associated(c_loc(c_array)) .and. allocated(f_array)) then
@@ -542,7 +542,7 @@ end subroutine c_return_double_1d
 
 !> optional return to a c_ptr in case it is not a null pointer and the
 !  Fortran array has been populated (2D version)
-pure subroutine c_return_double_2d(c_array, f_array)
+subroutine c_return_double_2d(c_array, f_array)
    real(c_double), intent(out), target :: c_array(:,:)
    real(wp), allocatable, intent(in) :: f_array(:,:)
    if (c_associated(c_loc(c_array)) .and. allocated(f_array)) then
