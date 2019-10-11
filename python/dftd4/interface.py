@@ -20,8 +20,8 @@ from typing import Optional
 
 from ctypes import Structure, c_int, c_double, c_bool, c_char_p, \
                    POINTER, cdll, CDLL
-from ctypes.util import find_library
 
+import os.path as op
 import numpy as np
 
 __all__ = [
@@ -32,14 +32,34 @@ __all__ = [
     'P_MBD_NONE',
     'P_MBD_RPALIKE',
     'P_MBD_APPROX_ATM',
+    'load_library',
 ]
-__DFTD4_LIBRARY_NAME__ = find_library('dftd4') or 'libdftd4.so'
 
 P_REFQ_EEQ = 5
 
 P_MBD_NONE = 0
 P_MBD_RPALIKE = 1
 P_MBD_APPROX_ATM = 3
+
+# seems like ctypeslib is not always available
+try:
+    as_ctype = np.ctypeslib.as_ctypes_type  # pylint:disable=invalid-name
+except AttributeError:
+    as_ctype = None  # pylint:disable=invalid-name
+
+
+def load_library(libname: str) -> CDLL:
+    """load library cross-platform compatible."""
+
+    if not op.splitext(libname)[1]:
+        # Try to load library with platform-specific name
+        from numpy.distutils.misc_util import get_shared_lib_extension
+        so_ext = get_shared_lib_extension()
+        libname_ext = libname + so_ext
+    else:
+        libname_ext = libname
+
+    return cdll.LoadLibrary(libname_ext)
 
 
 class _Structure_(Structure):  # pylint: disable=invalid-name,protected-access
@@ -90,9 +110,10 @@ def check_ndarray(array: np.ndarray, ctype, size: int, name="array") -> None:
     if array.size != size:
         raise ValueError("{} does not have the correct size of {}"
                          .format(name, size))
-    if np.ctypeslib.as_ctypes_type(array.dtype) != ctype:
-        raise ValueError("{} must be of {} compatible type"
-                         .format(name, ctype.__class__.__name__))
+    if as_ctype is not None:
+        if as_ctype(array.dtype) != ctype:
+            raise ValueError("{} must be of {} compatible type"
+                             .format(name, ctype))
 
 
 class DFTD4Library:
@@ -175,7 +196,7 @@ class DFTD4Library:
     def __init__(self, library: Optional[CDLL] = None):
         """construct library from CDLL object."""
         if library is None:
-            library = cdll.LoadLibrary(__DFTD4_LIBRARY_NAME__)
+            library = load_library('libdftd4')
 
         self.library = library
         self._set_argtypes_()

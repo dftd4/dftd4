@@ -20,13 +20,10 @@
 
 def test_library():
     """check if we can find the library and it looks okay"""
-    from ctypes import cdll
-    from ctypes.util import find_library
+    from dftd4.interface import load_library
 
-    name = find_library("dftd4")
-    assert name is not None
     # check if we can load this one
-    lib = cdll.LoadLibrary(name)
+    lib = load_library('libdftd4')
     # check if we find some functions
     assert lib.D4_calculation is not None
     assert lib.D4_PBC_calculation is not None
