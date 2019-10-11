@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for the ASE interface to dftd4.
-"""
+"""Tests for the ASE interface to dftd4."""
 
 def test_d4_molecular():
     """Short test for DFT-D4 on a subset of the G2."""
@@ -55,74 +53,6 @@ def test_d4_molecular():
         assert abs(atoms.get_forces().flatten()).mean() == approx(gnorm, thr)
     # print(table)
     # assert 0
-
-
-def test_load_D4_damping_parameters():
-    """check if we can load parameters from the shared object"""
-    from dftd4.calculators import D4_model, DFTDParameters
-
-    funcs = {'pbe0': {'s6': 1.0, 's8': 1.20065498, 's10': 0.0, 'a1': 0.40085597,
-                      'a2': 5.02928789, 's9': 1.0, 'alp': 16, 'beta': 1.0},
-             'b3lyp': {'s6': 1.0, 's8': 2.02929367, 's10': 0.0, 'a1': 0.40868035,
-                       'a2': 4.53807137, 's9': 1.0, 'alp': 16, 'beta': 1.0},
-             'B3-LYP': {'s6': 1.0, 's8': 2.02929367, 's10': 0.0, 'a1': 0.40868035,
-                        'a2': 4.53807137, 's9': 1.0, 'alp': 16, 'beta': 1.0},
-             'PwpB95': {'s6': 0.82, 's8': -0.34639127, 's10': 0.0,
-                        'a1': 0.41080636, 'a2': 3.83878274, 's9': 1.0, 'alp': 16,
-                        'beta': 1.0},
-             'Lh07sSVWN': {'s6': 1.0, 's8': 3.16675531, 's10': 0.0,
-                           'a1': 0.35965552, 'a2': 4.31947614, 's9': 1.0,
-                           'alp': 16, 'beta': 1.0},
-             'revPBE': {'s6': 1.0, 's8': 1.7467653, 's10': 0.0, 'a1': 0.536349,
-                        'a2': 3.07261485, 's9': 1.0, 'alp': 16, 'beta': 1.0}}
-
-    calc = D4_model()
-    for func in funcs:
-        calc.load_damping_parameters(func)
-        assert funcs[func] == calc.get_struct(DFTDParameters).to_dict()
-
-
-def test_load_dftd4_library():
-    """check the ctypes library loader"""
-    from ctypes.util import find_library
-    from dftd4.calculators import load_dftd4_library
-    lib = load_dftd4_library()
-    assert lib is not None
-    path = find_library('dftd4')
-    lib = load_dftd4_library(path)
-    assert lib is not None
-
-
-def test_structs():
-    """test if structures are robust against input"""
-    from dftd4.calculators import DFTDParameters, DFTDOptions
-
-    parameters = {'s6': 1.0, 's8': 1.44956635, 'a1': 0.32704579, 'a2': 5.36988013,
-                  's9': 1.0, 'alp': 16, 's10': 0.0, 'beta': 1.0,
-                  'wrong_key': 'stuff'}
-    dparam = DFTDParameters(**parameters).to_dict()
-    del parameters['wrong_key']
-    assert parameters == dparam
-
-    parameters = {'s6': 1.0, 's8': 1.44956635, 'a1': 0.32704579, 'a2': 5.36988013,
-                  's9': 1.0, 'alp': 16}
-    dparam = DFTDParameters(**parameters).to_dict()
-    assert parameters == {key: dparam[key] for key in parameters}
-
-    options = {'lmbd': 3, 'refq': 5, 'wf': 6.0, 'g_a': 3.0, 'g_c': 2.0,
-               'properties': True, 'energy': True, 'forces': True,
-               'hessian': False, 'print_level': 2,
-               'wrong_key': 'stuff'}
-
-    dopt = DFTDOptions(**options).to_dict()
-    del options['wrong_key']
-    assert options == dopt
-
-    options = {'lmbd': 3, 'refq': 5, 'wf': 6.0, 'g_a': 3.0, 'g_c': 2.0,
-               'properties': True, 'energy': True, 'forces': True}
-
-    dopt = DFTDOptions(**options).to_dict()
-    assert options == {key: dopt[key] for key in options}
 
 
 def test_d3_molecular():
