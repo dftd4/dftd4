@@ -146,6 +146,9 @@ class D4_model(DispersionCorrection):  # pylint: disable=invalid-name
         'free_energy',
         'forces',
         'stress',
+        'polarizibilities',
+        'c6_coefficients',
+        'charges',
     ]
     default_parameters = {
         'parallel': 0,
@@ -222,6 +225,8 @@ class D3_model(DispersionCorrection):  # pylint: disable=invalid-name
         'free_energy',
         'forces',
         'stress',
+        'polarizibilities',
+        'c6_coefficients',
     ]
     default_parameters = {
         'parallel': 0,
