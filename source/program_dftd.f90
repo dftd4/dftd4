@@ -109,6 +109,16 @@ program dftd
    name = 'dftd4'
 
 ! ------------------------------------------------------------------------
+!  check for .CHRG file
+! ------------------------------------------------------------------------
+   inquire(file='.CHRG', exist=set%inchrg)
+   if (set%inchrg) then
+      open(file='.CHRG', newunit=i)
+      read(i, *, iostat=err) set%chrg
+      if (err /= 0) call env%error(2,"Could not read '.CHRG' file")
+   endif
+
+! ------------------------------------------------------------------------
 !  command line arguments
 ! ------------------------------------------------------------------------
    call read_commandline_arguments(env,set)
