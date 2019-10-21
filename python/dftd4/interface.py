@@ -23,6 +23,7 @@ from ctypes import Structure, c_int, c_double, c_bool, c_char_p, \
 
 import os.path as op
 import numpy as np
+from numpy.distutils.misc_util import get_shared_lib_extension
 
 __all__ = [
     'DFTDOptions',
@@ -53,7 +54,6 @@ def load_library(libname: str) -> CDLL:
 
     if not op.splitext(libname)[1]:
         # Try to load library with platform-specific name
-        from numpy.distutils.misc_util import get_shared_lib_extension
         so_ext = get_shared_lib_extension()
         libname_ext = libname + so_ext
     else:

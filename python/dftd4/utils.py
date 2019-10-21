@@ -17,12 +17,12 @@
 """Utilities for working with dftd4-data."""
 
 from math import exp
-from dftd4.data import def2ecp_nuclear_charges, chemical_hardness
+from dftd4.data import def2ecp_nuclear_charges, chemical_hardness, \
+                       sqrt_z_r4_over_r2 as r4r2
 
 
 def extrapolate_c8_coeff(c6_coeff: float, iat: int, jat: int) -> float:
     """C6 -> C8 extrapolation"""
-    from dftd4.data import sqrt_z_r4_over_r2 as r4r2
     return 3.0 * r4r2[iat] * r4r2[jat] * c6_coeff
 
 
