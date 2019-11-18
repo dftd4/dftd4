@@ -158,6 +158,7 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
       return
    endif
    energy = 0.0_wp
+   sigma = 0.0_wp
 
    call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
    call d4(mol,dispm,ndim,opt%wf,covcn,gweights,refc6)
@@ -171,7 +172,7 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
    if (verb) &
    call eeq_header(iunit)
    call new_charge_model(chrgeq,mol)
-   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,stmp, &
                    .false.,.false.,.true.)
    if (stat.ne.0) then
       call env%error(3,"EEQ model could not be solved")
@@ -416,6 +417,7 @@ subroutine d3_calculation(iunit,env,opt,mol,dparam,dresults)
       return
    endif
    energy = 0.0_wp
+   sigma = 0.0_wp
 
    call pbc_dncoord_erf(mol,cn,dcndr,dcndL)
    call d4(mol,dispm,ndim,opt%wf,cn,gweights,refc6)
