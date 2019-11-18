@@ -157,7 +157,6 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
       call env%error(3,'Memory allocation failed')
       return
    endif
-   energy = 0.0_wp
 
    call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
    call d4(mol,dispm,ndim,opt%wf,covcn,gweights,refc6)
@@ -171,7 +170,7 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
    if (verb) &
    call eeq_header(iunit)
    call new_charge_model(chrgeq,mol)
-   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,sigma, &
+   stat = eeq_chrgeq(chrgeq,mol,cn,dcndr,dcndL,q,dqdr,dqdL,es,ges,stmp, &
                    .false.,.false.,.true.)
    if (stat.ne.0) then
       call env%error(3,"EEQ model could not be solved")
@@ -182,6 +181,10 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
 
    dresults%charges = q
    dresults%dipole_moment = matmul(mol%xyz,q)
+
+   energy = 0.0_wp
+   gradient = 0.0_wp
+   sigma = 0.0_wp
 
 ! ------------------------------------------------------------------------
 !  calculate properties
@@ -423,6 +426,10 @@ subroutine d3_calculation(iunit,env,opt,mol,dparam,dresults)
    q = 0.0_wp
    dqdr = 0.0_wp
    dqdL = 0.0_wp
+
+   energy = 0.0_wp
+   gradient = 0.0_wp
+   sigma = 0.0_wp
 
 ! ------------------------------------------------------------------------
 !  calculate properties
