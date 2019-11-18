@@ -157,6 +157,8 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
       call env%error(3,'Memory allocation failed')
       return
    endif
+   energy = 0.0_wp
+   sigma = 0.0_wp
 
    call pbc_dncoord_d4(mol,covcn,dcovcndr,dcovcndL)
    call d4(mol,dispm,ndim,opt%wf,covcn,gweights,refc6)
@@ -181,10 +183,6 @@ subroutine d4_calculation(iunit,env,opt,mol,dparam,dresults)
 
    dresults%charges = q
    dresults%dipole_moment = matmul(mol%xyz,q)
-
-   energy = 0.0_wp
-   gradient = 0.0_wp
-   sigma = 0.0_wp
 
 ! ------------------------------------------------------------------------
 !  calculate properties
@@ -419,6 +417,7 @@ subroutine d3_calculation(iunit,env,opt,mol,dparam,dresults)
       return
    endif
    energy = 0.0_wp
+   sigma = 0.0_wp
 
    call pbc_dncoord_erf(mol,cn,dcndr,dcndL)
    call d4(mol,dispm,ndim,opt%wf,cn,gweights,refc6)
@@ -426,10 +425,6 @@ subroutine d3_calculation(iunit,env,opt,mol,dparam,dresults)
    q = 0.0_wp
    dqdr = 0.0_wp
    dqdL = 0.0_wp
-
-   energy = 0.0_wp
-   gradient = 0.0_wp
-   sigma = 0.0_wp
 
 ! ------------------------------------------------------------------------
 !  calculate properties
