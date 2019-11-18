@@ -227,7 +227,6 @@ fobjs = []
 foreach file: fsrcs
   fobjs += '@0@.o'.format('_'.join(file.split('/')))
 endforeach
-message(fobjs)
 install_subdir(meson.current_build_dir()/'@0@@sta'.format(meson.project_name()),
                install_dir: 'include',
                strip_directory: true,
