@@ -12,6 +12,8 @@ module assertion
       module procedure :: assert_close_int64
       module procedure :: assert_close_real32
       module procedure :: assert_close_real64
+      module procedure :: assert_close_real64_1d
+      module procedure :: assert_close_real64_2d
    end interface assert_close
 
    integer, public :: afail = 0
@@ -73,6 +75,33 @@ subroutine assert_close_real64(val1,val2,thr)
       afail = afail+1
    endif
 end subroutine assert_close_real64
+
+subroutine assert_close_real64_1d(val1,val2,thr)
+   use iso_fortran_env, istderr => error_unit
+   real(real64),intent(in) :: val1(:),val2(:),thr
+   integer :: i
+
+   call assert_eq(size(val1), size(val2))
+
+   do i = 1, min(size(val1), size(val2))
+      call assert_close(val1(i), val2(i), thr)
+   enddo
+
+end subroutine assert_close_real64_1d
+
+subroutine assert_close_real64_2d(val1,val2,thr)
+   use iso_fortran_env, istderr => error_unit
+   real(real64),intent(in) :: val1(:,:),val2(:,:),thr
+   integer :: i
+
+   call assert_eq(size(val1, 1), size(val2, 1))
+   call assert_eq(size(val1, 2), size(val2, 2))
+
+   do i = 1, min(size(val1, 2), size(val2, 2))
+      call assert_close(val1(:, i), val2(:, i), thr)
+   enddo
+
+end subroutine assert_close_real64_2d
 
 subroutine assert_close_real32(val1,val2,thr)
    use iso_fortran_env, istderr => error_unit

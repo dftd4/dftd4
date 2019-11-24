@@ -1250,7 +1250,7 @@ subroutine edisp_3d(mol,dispm,ndim,q,r_thr,mbd_thr,par, &
          oor10 = 1._wp/(r2**5+r0**10)
          disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
             & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-         ed = ed - c6ij*disp
+         ed = ed - c6ij*disp/2
       enddo ! tx
       ! over all j atoms
       do j = 1, i-1
@@ -1947,13 +1947,13 @@ subroutine dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
          ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
             & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-         ed = ed - c6ij*disp
+         ed = ed - c6ij*disp/2
          ! save this
          dtmp = c6ij*ddisp
-         dc6dq(i)  = dc6dq(i)  + (dizij  + djzij )*disp
-         dc6dcn(i) = dc6dcn(i) + (dic6ij + djc6ij)*disp
+         dc6dq(i)  = dc6dq(i)  + (dizij  + djzij )*disp/2
+         dc6dcn(i) = dc6dcn(i) + (dic6ij + djc6ij)*disp/2
          drdx = rij/r
-         sigma = sigma - dtmp * outer_prod_3x3(drdx,rij)
+         sigma = sigma - dtmp * outer_prod_3x3(drdx,rij)/2
       enddo ! tx
       ! over all j atoms
       do j = 1, i-1

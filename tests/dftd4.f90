@@ -301,15 +301,16 @@ subroutine test_dftd4_pbc_api
 
    call d4_calculation(istdout,env,opt,mol,dparam_pbe,dresults)
    call assert(env%sane)
-   call assert_close(dresults%energy,-0.40714169760173E-01_wp,thr)
+   call assert_close(dresults%energy,-0.35169570656335E-01_wp,thr)
 
-   call assert_close(dresults%gradient(2,5),  0.39323270625490E-04_wp,thr)
-   call assert_close(dresults%gradient(1,1), -0.99514483779533E-05_wp,thr)
-   call assert_close(norm2(dresults%gradient),0.16752008915244E-02_wp,thr)
+   call assert_close(dresults%gradient(2,5),  0.32804316473273E-04_wp,thr)
+   call assert_close(dresults%gradient(1,1), -0.17259341143795E-04_wp,thr)
+   call assert_close(norm2(dresults%gradient),0.15394115818148E-02_wp,thr)
 
-   call assert_close(dresults%lattice_gradient(2,1),  0.13257963672940E-03_wp,thr)
-   call assert_close(dresults%lattice_gradient(3,3),  0.49734519161015E-02_wp,thr)
-   call assert_close(norm2(dresults%lattice_gradient),0.85937607166932E-02_wp,thr)
+   call assert_close(dresults%lattice_gradient(2,1),  0.11616590401842E-03_wp,thr)
+   call assert_close(dresults%lattice_gradient(3,3),  0.39136299650443E-02_wp,thr)
+   call assert_close(norm2(dresults%lattice_gradient),0.67926180624990E-02_wp,thr)
+
 
    call mol%deallocate
    call dresults%deallocate
@@ -414,9 +415,9 @@ subroutine test_dftd4_pbc_energies
    call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_pbe, &
       &          gweights,refc6,lmbd,energy,e2,e3)
 
-   call assert_close(e2,    -0.42709214619586E-01_wp,thr)
+   call assert_close(e2,    -0.37164345120511E-01_wp,thr)
    call assert_close(e3,     0.19951867090604E-02_wp,thr)
-   call assert_close(energy,-0.40714027910526E-01_wp,thr)
+   call assert_close(energy,-0.35169158411452E-01_wp,thr)
 
 !   call edisp_3d(mol,dispm,ndim,q,rthr_vdw,rthr_atm,dparam_tpss, &
 !      &          gweights,refc6,lmbd,energy,e2,e3)
@@ -556,14 +557,14 @@ subroutine test_dftd4_cell_gradient
       &             rthr_vdw,rthr_cn,dparam_pbe,wf,refc6,lmbd, &
       &             gradient,sigma,energy,dqdr,dqdL)
 
-   call assert_close(energy,-0.40714169760167E-01_wp,thr)
-   call assert_close(gradient(1,1),-0.99514483779534E-05_wp,thr)
-   call assert_close(gradient(2,3),-0.13714720483521E-03_wp,thr)
-   call assert_close(gradient(3,6),-0.24647919115307E-03_wp,thr)
+   call assert_close(energy,-0.35169570656335E-01_wp,thr)
+   call assert_close(gradient(1,1),-0.17259341143795E-04_wp,thr)
+   call assert_close(gradient(2,3),-0.12191232565390E-03_wp,thr)
+   call assert_close(gradient(3,6),-0.24244945902765E-03_wp,thr)
 
-   call assert_close(sigma(1,1), 0.43552242424681E-01_wp,thr)
-   call assert_close(sigma(2,3),-0.26927086527981E-03_wp,thr)
-   call assert_close(sigma(3,1),-0.75390028066213E-03_wp,thr)
+   call assert_close(sigma(1,1), 0.34522593941908E-01_wp,thr)
+   call assert_close(sigma(2,3),-0.26588124413514E-03_wp,thr)
+   call assert_close(sigma(3,1),-0.70129075711758E-03_wp,thr)
    call assert_close(sigma(2,1),sigma(1,2),thr)
 
    call mol%deallocate
@@ -869,8 +870,116 @@ subroutine test_dftd4_numstress
    print *, numsigma
    print'(/,"difference sigma tensor")'
    print*,sigma-numsigma
-   call assert_close(norm2(sigma-numsigma)/mol%volume,0.0_wp,1.0e-8_wp)
-   call assert_close(norm2(latgrad-numlatgrad),0.0_wp,1.0e-8_wp)
+   call assert_close(norm2(sigma-numsigma)/mol%volume,0.0_wp,1.0e-7_wp)
+   call assert_close(norm2(latgrad-numlatgrad),0.0_wp,1.0e-7_wp)
 
    call terminate(afail)
 end subroutine test_dftd4_numstress
+
+subroutine test_dftd4_supercell
+   use iso_fortran_env, wp => real64, istdout => output_unit
+   use assertion
+   use mctc_environment
+   use class_molecule
+   use class_set
+   use class_param
+   use class_results
+   use dispersion_calculator
+   use dftd4
+   use pbc_tools
+   implicit none
+   real(wp), parameter :: thr = 1.0e-9_wp
+   integer, parameter :: nat = 2
+   integer, parameter :: at(nat) = [6,6]
+   real(wp),parameter :: xyz(3,nat) = reshape(&
+      [ 0.00000000000000_wp,    0.00000000000000_wp,    0.00000000000000_wp, &
+      & 1.74799650309993_wp,    1.74799650309993_wp,    1.74799650309993_wp  &
+      & ], shape(xyz))
+   real(wp),parameter :: lattice(3,3) = reshape(&
+      [ 3.49599300619985_wp,    3.49599300619985_wp,    0.00000000000000_wp, &
+      & 0.00000000000000_wp,    3.49599300619985_wp,    3.49599300619985_wp, &
+      & 3.49599300619985_wp,    0.00000000000000_wp,    3.49599300619985_wp  &
+      & ], shape(lattice))
+   integer, parameter :: nat222 = nat * 8
+   integer, parameter :: at222(nat222) = [6,6, 6,6, 6,6, 6,6, 6,6, 6,6, 6,6, 6,6]
+   real(wp),parameter :: xyz222(3,nat222) = reshape(&
+      [ 0.00000000000000_wp,    0.00000000000000_wp,    0.00000000000000_wp, &
+      & 1.74799650309992_wp,    1.74799650309993_wp,    1.74799650309993_wp, &
+      & 3.49599300619985_wp,    0.00000000000000_wp,    3.49599300619985_wp, &
+      & 5.24398950929978_wp,    1.74799650309993_wp,    5.24398950929978_wp, &
+      & 0.00000000000000_wp,    3.49599300619985_wp,    3.49599300619985_wp, &
+      & 1.74799650309992_wp,    5.24398950929978_wp,    5.24398950929978_wp, &
+      & 3.49599300619985_wp,    3.49599300619985_wp,    6.99198601239970_wp, &
+      & 5.24398950929978_wp,    5.24398950929978_wp,    8.73998251549962_wp, &
+      & 3.49599300619985_wp,    3.49599300619985_wp,    0.00000000000000_wp, &
+      & 5.24398950929978_wp,    5.24398950929978_wp,    1.74799650309993_wp, &
+      & 6.99198601239970_wp,    3.49599300619985_wp,    3.49599300619985_wp, &
+      & 8.73998251549963_wp,    5.24398950929978_wp,    5.24398950929978_wp, &
+      & 3.49599300619985_wp,    6.99198601239970_wp,    3.49599300619985_wp, &
+      & 5.24398950929978_wp,    8.73998251549962_wp,    5.24398950929978_wp, &
+      & 6.99198601239970_wp,    6.99198601239970_wp,    6.99198601239970_wp, &
+      & 8.73998251549963_wp,    8.73998251549962_wp,    8.73998251549962_wp  &
+      & ], shape(xyz222))
+   real(wp),parameter :: lattice222(3,3) = reshape(&
+      [ 6.99198601239970_wp,    6.99198601239970_wp,    0.00000000000000_wp, &
+      & 0.00000000000000_wp,    6.99198601239970_wp,    6.99198601239970_wp, &
+      & 6.99198601239970_wp,    0.00000000000000_wp,    6.99198601239970_wp  &
+      & ], shape(lattice222))
+   real(wp), parameter :: scale = real(nat, wp)/real(nat222, wp)
+   integer, parameter :: wsc_rep(3) = [1,1,1]
+   type(dftd_parameter),parameter :: dparam_pbe    = dftd_parameter ( &
+      &  s6=1.0000_wp, s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp )
+   type(dftd_options),  parameter :: opt = dftd_options ( &
+      &  lmbd = p_mbd_approx_atm, refq = p_refq_goedecker, &
+      &  wf = 6.0_wp, g_a = 3.0_wp, g_c = 2.0_wp, &
+      &  lmolpol=.false., lenergy=.true., lgradient=.true., lhessian=.false., &
+      &  print_level = 0)
+   type(mctc_logger)  :: env
+   type(dftd_results) :: dresults, dresults222
+
+   integer              :: i,j
+   type(molecule)       :: mol, mol222
+   integer              :: ndim
+
+   call mol%allocate(nat,.false.)
+   mol%at = at
+   mol%xyz = xyz
+   mol%chrg = 0.0_wp
+   mol%npbc = 3
+   mol%pbc = .true.
+   mol%lattice = lattice
+   call mol%update
+
+   call generate_wsc(mol,mol%wsc)
+
+   call d4_calculation(istdout,env,opt,mol,dparam_pbe,dresults)
+   call assert(env%sane)
+   call assert(allocated(dresults%energy))
+   call assert(allocated(dresults%gradient))
+   call assert(allocated(dresults%stress))
+
+   call mol222%allocate(nat222,.false.)
+   mol222%at = at222
+   mol222%xyz = xyz222
+   mol222%chrg = 0.0_wp
+   mol222%npbc = 3
+   mol222%pbc = .true.
+   mol222%lattice = lattice222
+   call mol222%update
+
+   call generate_wsc(mol222,mol222%wsc)
+
+   call d4_calculation(istdout,env,opt,mol222,dparam_pbe,dresults222)
+   call assert(env%sane)
+   call assert(allocated(dresults222%energy))
+   call assert(allocated(dresults222%gradient))
+   call assert(allocated(dresults222%stress))
+
+   call assert_close(dresults%energy, dresults222%energy*scale, thr)
+   call assert_close(norm2(dresults%gradient), norm2(dresults222%gradient)*scale, thr)
+   call assert_close(dresults%gradient, dresults222%gradient(:, :nat), thr)
+   call assert_close(dresults%stress, dresults222%stress, thr)
+
+   call terminate(afail)
+
+end subroutine test_dftd4_supercell
