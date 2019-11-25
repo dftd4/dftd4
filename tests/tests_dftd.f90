@@ -77,6 +77,7 @@ program dftd_tester
       case('pbc_disp');      call test_dftd4_pbc_energies
       case('cell_gradient'); call test_dftd4_cell_gradient
       case('numstress');     call test_dftd4_numstress
+      case('supercell');     call test_dftd4_supercell
       end select
    case('geometry_reader')
       select case(sec)
