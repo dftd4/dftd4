@@ -21,7 +21,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name="dftd4",
-      version="2.3.2",
+      version="2.4.0",
       author="Sebastian Ehlert",
       author_email="ehlert@thch.uni-bonn.de",
       description="Wrapper for the DFT-D4 program",
