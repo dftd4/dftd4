@@ -1,6 +1,6 @@
 # 
 project('dftd4', 'fortran',
-        version : '2.3.2',
+        version : '2.4.0',
         license : 'GPL',
         meson_version : '>=0.49')
 
@@ -188,7 +188,7 @@ dependencies_exe += dependencies
 
 # create a static library from all sources
 d4lib_static = static_library(meson.project_name(), sources,
-                 include_directories : incdir, pic : true)
+                 include_directories : incdir, install: true, pic : true)
 
 # create a shared library as well
 d4lib_shared = shared_library(meson.project_name(),
