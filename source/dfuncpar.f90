@@ -146,8 +146,12 @@ module dfuncpar
    &  p_df_bop            = 119,  &
    &  p_df_mpw1b95        = 120,  &
    &  p_df_revpbe0dh      = 121,  &
-   &  p_df_revtpss0       = 122
-   integer,private,parameter :: max_df = 122
+   &  p_df_revtpss0       = 122,  &
+   &  p_df_revdsdpbep86   = 123,  &
+   &  p_df_revdsdpbe      = 124,  &
+   &  p_df_revdsdblyp     = 125,  &
+   &  p_df_revdodpbep86   = 126
+   integer,private,parameter :: max_df = 126
    integer,private,parameter ::  &
    &  p_bas_default       = 0,   &
    &  p_bas_631gd         = 1,   &
@@ -391,6 +395,14 @@ subroutine get_d4eeqbjatm_2019_parameter(dfnum,bsnum,param)
    case(p_df_xlyp); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=1.62972054_wp, a1=0.11268673_wp, a2=5.40786417_wp )
 !  Fitset: MD= -0.03900 MAD= 0.27562 RMSD= 0.38491
+   case(p_df_revdsdpbep86); param = dftd_parameter ( & ! (WTMAD2)
+   &  s6=0.5132_wp, s8=0.00000000_wp, a1=0.44000000_wp, a2=3.60000000_wp )
+   case(p_df_revdsdpbe); param = dftd_parameter ( & ! (WTMAD2)
+   &  s6=0.6706_wp, s8=0.00000000_wp, a1=0.40000000_wp, a2=3.60000000_wp )
+   case(p_df_revdsdblyp); param = dftd_parameter ( & !(WTMAD2)
+   &  s6=0.6141_wp, s8=0.00000000_wp, a1=0.38000000_wp, a2=3.52000000_wp )
+   case(p_df_revdodpbep86); param = dftd_parameter ( & !(WTMAD2)
+   &  s6=0.5552_wp, s8=0.00000000_wp, a1=0.44000000_wp, a2=3.60000000_wp )
    end select
 end subroutine get_d4eeqbjatm_2019_parameter
 ! ========================================================================
@@ -760,6 +772,10 @@ function get_dfnum(df) result(num)
    case('glyp','g-lyp');                     num = p_df_glyp
    case('revpbe0dh','revpbe0-dh');           num = p_df_revpbe0dh
    case('revtpss0');                         num = p_df_revtpss0
+   case('revdsd-pbep86', 'revdsdpbep86');                    num = p_df_revdsdpbep86
+   case('revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe');      num = p_df_revdsdpbe
+   case('revdsd-blyp', 'revdsdblyp');                      num = p_df_revdsdblyp
+   case('revdod-pbep86', 'revdodpbep86');                    num = p_df_revdodpbep86
    end select
 end function get_dfnum
 
