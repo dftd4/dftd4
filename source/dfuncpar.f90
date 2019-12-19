@@ -772,10 +772,10 @@ function get_dfnum(df) result(num)
    case('glyp','g-lyp');                     num = p_df_glyp
    case('revpbe0dh','revpbe0-dh');           num = p_df_revpbe0dh
    case('revtpss0');                         num = p_df_revtpss0
-   case('revdsd-pbep86');                    num = p_df_revdsdpbep86
-   case('revdsd-pbe', 'revdsd-pbepbe');      num = p_df_revdsdpbe
-   case('revdsd-blyp');                      num = p_df_revdsdblyp
-   case('revdod-pbep86');                    num = p_df_revdodpbep86
+   case('revdsd-pbep86', 'revdsdpbep86');                    num = p_df_revdsdpbep86
+   case('revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe');      num = p_df_revdsdpbe
+   case('revdsd-blyp', 'revdsdblyp');                      num = p_df_revdsdblyp
+   case('revdod-pbep86', 'revdodpbep86');                    num = p_df_revdodpbep86
    end select
 end function get_dfnum
 
