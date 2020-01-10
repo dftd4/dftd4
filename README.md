@@ -1,5 +1,9 @@
-DFT-D4 standalone program [![Build Status](https://travis-ci.org/dftd4/dftd4.svg?branch=master)](https://travis-ci.org/dftd4/dftd4)
+DFT-D4 standalone program
 =========================
+
+[![Build Status](https://travis-ci.org/dftd4/dftd4.svg?branch=master)](https://travis-ci.org/dftd4/dftd4)
+[![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING)
+[![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 
 Copied from
 https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/dftd4
@@ -42,6 +46,22 @@ of DFT-D4 is accessable by `man`.
 `dftd4` could not be compiled with
 
 * `gfortran` 4 or older (missing Fortran 2003 standard)
+
+Available Package
+-----------------
+
+DFT-D4 is now also available for some package managers.
+
+### Arch User Repository (AUR)
+
+[![AUR stable](https://img.shields.io/aur/version/dftd4)](https://aur.archlinux.org/packages/dftd4/)
+[![AUR git](https://img.shields.io/aur/version/dftd4-git?label=aur-git)](https://aur.archlinux.org/packages/dftd4-git/)
+
+Get the build file from the [AUR](https://aur.archlinux.org) and use `makepkg`
+(or your favorite wrapper) to build the package for `pacman`.
+`dftd4` will be build with openBLAS backend, openMP and the most recent GCC.
+
+The package build files are available [here](assets/aur) as submodules.
 
 Usage
 -----
