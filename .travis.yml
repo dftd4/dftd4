@@ -1,39 +1,68 @@
-sudo: false
-os: linux
-dist: bionic
-
 language: python
-python:
-- 3.7
-- 3.6
-- 3.5
 
-addons:
-  apt:
-     packages:
-     - gfortran
-     - libblas-dev
-     - liblapack-dev
-     - ninja-build
-  homebrew:
-     update: true
-     packages:
-     - gcc
-     - lapack
-     - ninja
-
-matrix:
+# Build matrix: Run different versions of GCC and tests in parallel
+jobs:
   include:
-  - os: osx
-    env: FC=gfortran
-    language: minimal
-    python: 3.7
+    - os: linux
+      dist: bionic
+      python: 3.8
+      addons:
+        apt:
+          packages:
+            - libblas-dev
+            - liblapack-dev
+            - ninja-build
+            - gfortran-5
+            - python-pip
+      env:
+        - FC=gfortran-5 CC=gcc-5 CXX=g++-5
+
+    - os: linux
+      dist: bionic
+      python: 3.7
+      addons:
+        apt:
+          packages:
+            - libblas-dev
+            - liblapack-dev
+            - ninja-build
+            - gfortran-6
+            - python-pip
+      env:
+        - FC=gfortran-6 CC=gcc-6 CXX=g++-6
+
+    - os: linux
+      dist: bionic
+      python: 3.6
+      addons:
+        apt:
+          packages:
+            - libblas-dev
+            - liblapack-dev
+            - ninja-build
+            - gfortran-7
+            - python-pip
+      env:
+        - FC=gfortran-7 CC=gcc-7 CXX=g++-7
+
+    - os: linux
+      dist: bionic
+      python: 3.5
+      addons:
+        apt:
+          packages:
+            - libblas-dev
+            - liblapack-dev
+            - ninja-build
+            - gfortran-8
+            - python-pip
+      env:
+        - FC=gfortran-8 CC=gcc-8 CXX=g++-8
 
 install:
-  - pip3 install pylint mypy pytest
-  - pip3 install -r requirements.txt
+  - pip3 install meson ase pytest
 
 script:
-  - meson builddir --optimization=2 -Dla_backend=netlib -Dopenmp=false
-  - ninja -C builddir
-  - ninja -C builddir test
+  - meson build_gcc --buildtype release --warnlevel 0 -Dla_backend=netlib -Dopenmp=false
+  - ninja -C build_gcc test
+

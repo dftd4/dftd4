@@ -2,6 +2,7 @@ DFT-D4 standalone program
 =========================
 
 [![Build Status](https://travis-ci.org/dftd4/dftd4.svg?branch=master)](https://travis-ci.org/dftd4/dftd4)
+[![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
 [![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING)
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 
