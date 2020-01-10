@@ -58,10 +58,8 @@ DFT-D4 is now also available for some package managers.
 [![AUR git](https://img.shields.io/aur/version/dftd4-git?label=aur-git)](https://aur.archlinux.org/packages/dftd4-git/)
 
 Clone the AUR repository and use `makepkg` (or your favorite wrapper) to build
-the package for `pacman`.
-You can choose between the current stable and the master version from this
-repository.
-The build will use openBLAS and the most up-to-date GCC.
+the package for `pacman`. `dftd4` will be build with openBLAS backend, openMP and
+the most recent GCC.
 
 Usage
 -----
