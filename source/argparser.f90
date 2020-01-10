@@ -117,8 +117,6 @@ subroutine read_commandline_arguments(env,set)
       !$       &                'I hope you know what you are doing.')
       !$       call omp_set_num_threads(idum)
       !$    endif
-         case('--pbc','--periodic')
-            set%lperiodic = .true.
          case('-c','--chrg')
             skip = 1
             if (args%get(iarg+1,idum)) then

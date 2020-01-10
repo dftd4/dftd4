@@ -89,6 +89,10 @@ subroutine read_geometry(fname,mol,env)
       &.or. index(tmp,'coord') > 0) then
       call read_coord(ifile,mol,env)
    else if (index(tmp,'POSCAR') > 0 &
+      &.or. index(tmp,'CONTCAR') > 0 &
+      &.or. index(tmp,'poscar') > 0 &
+      &.or. index(tmp,'contcar') > 0 &
+      &.or. index(tmp,'VASP') > 0 &
       &.or. index(tmp,'vasp')   > 0) then
       call read_poscar(ifile,mol,env)
    else if (index(tmp,'sdf') > 0 &
