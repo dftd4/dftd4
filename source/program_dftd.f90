@@ -161,11 +161,11 @@ program dftd
          call env%error(1,'Dispersion Hessian requested but no parameters given')
    endif
    if (.not.(set%lenergy.or.set%lgradient.or.set%lhessian)) set%lmolpol = .true.
-   if (set%lhessian .and. set%lperiodic) then
+   if (set%lhessian .and. mol%npbc > 0) then
       call env%warning(1,"Cannot calculate Hessian under periodic boundary conditions")
       set%lhessian = .false.
    endif
-   if (set%lorca .and. set%lperiodic) then
+   if (set%lorca .and. mol%npbc > 0) then
       call env%warning(1,"To my knowledge there are no PBC in ORCA!")
       set%lorca = .false.
    endif
