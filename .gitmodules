@@ -1,0 +1,6 @@
+[submodule "assets/aur/dftd4"]
+	path = assets/aur/dftd4
+	url = https://aur.archlinux.org/dftd4.git
+[submodule "assets/aur/dftd4-git"]
+	path = assets/aur/dftd4-git
+	url = https://aur.archlinux.org/dftd4-git.git
