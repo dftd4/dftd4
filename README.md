@@ -64,6 +64,28 @@ Get the build file from the [AUR](https://aur.archlinux.org) and use `makepkg`
 
 The package build files are available [here](assets/aur) as submodules.
 
+### Conda-Forge
+
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd4.svg)](https://anaconda.org/conda-forge/dftd4)
+
+Installing `dftd4` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
+
+```
+conda config --add channels conda-forge
+```
+
+Once the `conda-forge` channel has been enabled, `dftd4` can be installed with:
+
+```
+conda install dftd4
+```
+
+It is possible to list all of the versions of `dftd4` available on your platform with:
+
+```
+conda search dftd4 --channel conda-forge
+```
+
 Usage
 -----
 
