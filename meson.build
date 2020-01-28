@@ -282,7 +282,7 @@ test('Dispersion: num. stress',   d4tester,args: ['dftd4','numstress'])
 test('Dispersion: API',           d4tester,args: ['dftd4','api'])
 test('Dispersion: API (PBC)',     d4tester,args: ['dftd4','pbc_api'])
 test('Dispersion: cell gradient', d4tester,args: ['dftd4','cell_gradient'])
-test('Dispersion: supercell',     d4tester,args: ['dftd4','supercell'])
+test('Dispersion: supercell',     d4tester,args: ['dftd4','supercell'], timeout: 120)
 #test('Dispersion: PBC test',      d4tester,args: ['dftd4','periodic'])
 
 # currently we only test the API from the C/C++ side on Linux

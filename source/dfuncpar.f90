@@ -23,149 +23,183 @@ module dfuncpar
    use class_param, only : dftd_parameter
    implicit none
    !> unique idenifiers for all functionals known to me -- SAW
-   integer,private,parameter ::  &
-   &  p_df_none           =   0,  &
-   &  p_df_hf             =   1,  &
-   &  p_df_blyp           =   2,  &
-   &  p_df_bpbe           =   3,  &
-   &  p_df_bp             =   4,  &
-   &  p_df_bpw            =   5,  &
-   &  p_df_lb94           =   6,  &
-   &  p_df_mpwlyp         =   7,  &
-   &  p_df_mpwpw          =   8,  &
-   &  p_df_olyp           =   9,  &
-   &  p_df_opbe           =  10,  &
-   &  p_df_pbe            =  11,  &
-   &  p_df_rpbe           =  12,  &
-   &  p_df_revpbe         =  13,  &
-   &  p_df_pw86pbe        =  14,  &
-   &  p_df_rpw86pbe       =  15,  &
-   &  p_df_pw91           =  16,  &
-   &  p_df_pwp            =  17,  &
-   &  p_df_xlyp           =  18,  &
-   &  p_df_b97            =  19,  &
-   &  p_df_tpss           =  20,  &
-   &  p_df_revtpss        =  21,  &
-   &  p_df_scan           =  22,  &
-   &  p_df_b1lyp          =  23,  &
-   &  p_df_b3lyp          =  24,  &
-   &  p_df_bhlyp          =  25,  &
-   &  p_df_b1p            =  26,  &
-   &  p_df_b3p            =  27,  &
-   &  p_df_b1pw           =  28,  &
-   &  p_df_b3pw           =  29,  &
-   &  p_df_o3lyp          =  30,  &
-   &  p_df_revpbe0        =  31,  &
-   &  p_df_revpbe38       =  32,  &
-   &  p_df_pbe0           =  33,  &
-   &  p_df_pwp1           =  34,  &
-   &  p_df_pw1pw          =  35,  &
-   &  p_df_mpw1pw         =  36,  &
-   &  p_df_mpw1lyp        =  37,  &
-   &  p_df_pw6b95         =  38,  &
-   &  p_df_tpssh          =  39,  &
-   &  p_df_tpss0          =  40,  &
-   &  p_df_x3lyp          =  41,  &
-   &  p_df_m06l           =  42,  &
-   &  p_df_m06            =  43,  &
-   &  p_df_m062x          =  44,  &
-   &  p_df_wb97           =  45,  &
-   &  p_df_wb97x          =  46,  &
-   &  p_df_camb3lyp       =  47,  &
-   &  p_df_lcblyp         =  48,  &
-   &  p_df_lh07tsvwn      =  49,  &
-   &  p_df_lh07ssvwn      =  50,  &
-   &  p_df_lh12ctssirpw92 =  51,  &
-   &  p_df_lh12ctssifpw92 =  52,  &
-   &  p_df_lh14tcalpbe    =  53,  &
-   &  p_df_b2plyp         =  54,  &
-   &  p_df_b2gpplyp       =  55,  &
-   &  p_df_mpw2plyp       =  56,  &
-   &  p_df_pwpb95         =  57,  &
-   &  p_df_dsdblyp        =  58,  &
-   &  p_df_dsdpbe         =  59,  &
-   &  p_df_dsdpbeb95      =  60,  &
-   &  p_df_dsdpbep86      =  61,  &
-   &  p_df_dsdsvwn        =  62,  &
-   &  p_df_dodblyp        =  63,  &
-   &  p_df_dodpbe         =  64,  &
-   &  p_df_dodpbeb95      =  65,  &
-   &  p_df_dodpbep86      =  66,  &
-   &  p_df_dodsvwn        =  67,  &
-   &  p_df_pbe0_2         =  68,  &
-   &  p_df_pbe0_dh        =  69,  &
-   &  p_df_hf3c           =  70,  &
-   &  p_df_hf3cv          =  71,  &
-   &  p_df_pbeh3c         =  72,  &
-   &  p_df_b973c          =  73,  &
-   &  p_df_hsesol         =  74,  &
-   &  p_df_pwgga          =  75,  &
-   &  p_df_dftb3          =  76,  &
-   &  p_df_hcth120        =  77,  &
-   &  p_df_ptpss          =  78,  &
-   &  p_df_lcwpbe         =  79,  &
-   &  p_df_bmk            =  80,  &
-   &  p_df_b1b95          =  81,  &
-   &  p_df_pwb6k          =  82,  &
-   &  p_df_otpss          =  83,  &
-   &  p_df_ssb            =  84,  &
-   &  p_df_revssb         =  85,  &
-   &  p_df_pbesol         =  86,  &
-   &  p_df_hse06          =  87,  &
-   &  p_df_pbexalpha      =  88,  &
-   &  p_df_pbehpbe        =  89,  &
-   &  p_df_hcth407        =  90,  &
-   &  p_df_n12            =  91,  &
-   &  p_df_pkzb           =  92,  &
-   &  p_df_thcth          =  93,  &
-   &  p_df_m11l           =  94,  &
-   &  p_df_mn15l          =  95,  &
-   &  p_df_mpwb1k         =  96,  &
-   &  p_df_mpw1kcis       =  97,  &
-   &  p_df_mpwkcis1k      =  98,  &
-   &  p_df_pbeh1pbe       =  99,  &
-   &  p_df_pbe1kcis       = 100,  &
-   &  p_df_b97_1          = 101,  &
-   &  p_df_b97_2          = 102,  &
-   &  p_df_b98            = 103,  &
-   &  p_df_hiss           = 104,  &
-   &  p_df_hse03          = 105,  &
-   &  p_df_revtpssh       = 106,  &
-   &  p_df_tpss1kcis      = 107,  &
-   &  p_df_m05            = 108,  &
-   &  p_df_m052x          = 109,  &
-   &  p_df_m08hx          = 110,  &
-   &  p_df_lcwhpbe        = 111,  &
-   &  p_df_mn12l          = 112,  &
-   &  p_df_tauhcthhyb     = 113,  &
-   &  p_df_sogga11x       = 114,  &
-   &  p_df_n12sx          = 115,  &
-   &  p_df_mn12sx         = 116,  &
-   &  p_df_mn15           = 117,  &
-   &  p_df_glyp           = 118,  &
-   &  p_df_bop            = 119,  &
-   &  p_df_mpw1b95        = 120,  &
-   &  p_df_revpbe0dh      = 121,  &
-   &  p_df_revtpss0       = 122,  &
-   &  p_df_revdsdpbep86   = 123,  &
-   &  p_df_revdsdpbe      = 124,  &
-   &  p_df_revdsdblyp     = 125,  &
-   &  p_df_revdodpbep86   = 126
-   integer,private,parameter :: max_df = 126
-   integer,private,parameter ::  &
-   &  p_bas_default       = 0,   &
-   &  p_bas_631gd         = 1,   &
-   &  p_bas_mixed         = 2,   &
-   &  p_bas_sv            = 3,   &
-   &  p_bas_minis         = 4
+   enum, bind(C)
+      enumerator :: &
+         &  p_df_none, &
+         &  p_df_hf, &
+         &  p_df_blyp, &
+         &  p_df_bpbe, &
+         &  p_df_bp, &
+         &  p_df_bpw, &
+         &  p_df_lb94, &
+         &  p_df_mpwlyp, &
+         &  p_df_mpwpw, &
+         &  p_df_olyp, &
+         &  p_df_opbe, &
+         &  p_df_pbe, &
+         &  p_df_rpbe, &
+         &  p_df_revpbe, &
+         &  p_df_pw86pbe, &
+         &  p_df_rpw86pbe, &
+         &  p_df_pw91, &
+         &  p_df_pwp, &
+         &  p_df_xlyp, &
+         &  p_df_b97, &
+         &  p_df_tpss, &
+         &  p_df_revtpss, &
+         &  p_df_scan, &
+         &  p_df_b1lyp, &
+         &  p_df_b3lyp, &
+         &  p_df_bhlyp, &
+         &  p_df_b1p, &
+         &  p_df_b3p, &
+         &  p_df_b1pw, &
+         &  p_df_b3pw, &
+         &  p_df_o3lyp, &
+         &  p_df_revpbe0, &
+         &  p_df_revpbe38, &
+         &  p_df_pbe0, &
+         &  p_df_pwp1, &
+         &  p_df_pw1pw, &
+         &  p_df_mpw1pw, &
+         &  p_df_mpw1lyp, &
+         &  p_df_pw6b95, &
+         &  p_df_tpssh, &
+         &  p_df_tpss0, &
+         &  p_df_x3lyp, &
+         &  p_df_m06l, &
+         &  p_df_m06, &
+         &  p_df_m062x, &
+         &  p_df_wb97, &
+         &  p_df_wb97x, &
+         &  p_df_camb3lyp, &
+         &  p_df_lcblyp, &
+         &  p_df_lh07tsvwn, &
+         &  p_df_lh07ssvwn, &
+         &  p_df_lh12ctssirpw92, &
+         &  p_df_lh12ctssifpw92, &
+         &  p_df_lh14tcalpbe, &
+         &  p_df_b2plyp, &
+         &  p_df_b2gpplyp, &
+         &  p_df_mpw2plyp, &
+         &  p_df_pwpb95, &
+         &  p_df_dsdblyp, &
+         &  p_df_dsdpbe, &
+         &  p_df_dsdpbeb95, &
+         &  p_df_dsdpbep86, &
+         &  p_df_dsdsvwn, &
+         &  p_df_dodblyp, &
+         &  p_df_dodpbe, &
+         &  p_df_dodpbeb95, &
+         &  p_df_dodpbep86, &
+         &  p_df_dodsvwn, &
+         &  p_df_pbe0_2, &
+         &  p_df_pbe0_dh, &
+         &  p_df_hf3c, &
+         &  p_df_hf3cv, &
+         &  p_df_pbeh3c, &
+         &  p_df_b973c, &
+         &  p_df_hsesol, &
+         &  p_df_pwgga, &
+         &  p_df_dftb_3ob, &
+         &  p_df_dftb_mio, &
+         &  p_df_dftb_ob2, &
+         &  p_df_dftb_matsci, &
+         &  p_df_dftb_pbc, &
+         &  p_df_hcth120, &
+         &  p_df_ptpss, &
+         &  p_df_lcwpbe, &
+         &  p_df_bmk, &
+         &  p_df_b1b95, &
+         &  p_df_pwb6k, &
+         &  p_df_otpss, &
+         &  p_df_ssb, &
+         &  p_df_revssb, &
+         &  p_df_pbesol, &
+         &  p_df_hse06, &
+         &  p_df_pbexalpha, &
+         &  p_df_pbehpbe, &
+         &  p_df_hcth407, &
+         &  p_df_n12, &
+         &  p_df_pkzb, &
+         &  p_df_thcth, &
+         &  p_df_m11l, &
+         &  p_df_mn15l, &
+         &  p_df_mpwb1k, &
+         &  p_df_mpw1kcis, &
+         &  p_df_mpwkcis1k, &
+         &  p_df_pbeh1pbe, &
+         &  p_df_pbe1kcis, &
+         &  p_df_b97_1, &
+         &  p_df_b97_2, &
+         &  p_df_b98, &
+         &  p_df_hiss, &
+         &  p_df_hse03, &
+         &  p_df_revtpssh, &
+         &  p_df_tpss1kcis, &
+         &  p_df_m05, &
+         &  p_df_m052x, &
+         &  p_df_m08hx, &
+         &  p_df_lcwhpbe, &
+         &  p_df_mn12l, &
+         &  p_df_tauhcthhyb, &
+         &  p_df_sogga11x, &
+         &  p_df_n12sx, &
+         &  p_df_mn12sx, &
+         &  p_df_mn15, &
+         &  p_df_glyp, &
+         &  p_df_bop, &
+         &  p_df_mpw1b95, &
+         &  p_df_revpbe0dh, &
+         &  p_df_revtpss0, &
+         &  p_df_revdsdpbep86, &
+         &  p_df_revdsdpbe, &
+         &  p_df_revdsdblyp, &
+         &  p_df_revdodpbep86
+   end enum
+   integer, parameter :: df_enum = kind(p_df_none)
+   enum, bind(C)
+      enumerator :: &
+         &  p_bas_default, &
+         &  p_bas_631gd, &
+         &  p_bas_mixed, &
+         &  p_bas_sv, &
+         &  p_bas_minis
+   end enum
+   integer, parameter :: bas_enum = kind(p_bas_default)
 
 contains
+
+! ========================================================================
+!> DFT-D4(EEQ)/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
+subroutine get_d4eeqbj_2019_parameter(dfnum,bsnum,param)
+   implicit none
+   integer(df_enum),intent(in) :: dfnum
+   integer(bas_enum),intent(in) :: bsnum
+   type(dftd_parameter),allocatable :: param
+   select case(dfnum)
+   case default; return
+   case(p_df_dftb_3ob); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=0.4727337_wp, a1=0.5467502_wp, a2=4.4955068_wp, s9=0.0_wp )
+   case(p_df_dftb_matsci); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=2.7711819_wp, a1=0.4681712_wp, a2=5.2918629_wp, s9=0.0_wp )
+   case(p_df_dftb_mio); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=1.1948145_wp, a1=0.6074567_wp, a2=4.9336133_wp, s9=0.0_wp )
+   case(p_df_dftb_ob2); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=2.7611320_wp, a1=0.6037249_wp, a2=5.3900004_wp, s9=0.0_wp )
+   case(p_df_dftb_pbc); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=1.7303734_wp, a1=0.5546548_wp, a2=4.7973454_wp, s9=0.0_wp )
+   end select
+! ------------------------------------------------------------------------
+end subroutine get_d4eeqbj_2019_parameter
+! ========================================================================
 
 ! ========================================================================
 !> DFT-D4(EEQ)-ATM/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
 subroutine get_d4eeqbjatm_2019_parameter(dfnum,bsnum,param)
    implicit none
-   integer,intent(in)   :: dfnum,bsnum
+   integer(df_enum),intent(in) :: dfnum
+   integer(bas_enum),intent(in) :: bsnum
    type(dftd_parameter),allocatable :: param
    select case(dfnum)
    case default; return
@@ -403,6 +437,16 @@ subroutine get_d4eeqbjatm_2019_parameter(dfnum,bsnum,param)
    &  s6=0.6141_wp, s8=0.00000000_wp, a1=0.38000000_wp, a2=3.52000000_wp )
    case(p_df_revdodpbep86); param = dftd_parameter ( & !(WTMAD2)
    &  s6=0.5552_wp, s8=0.00000000_wp, a1=0.44000000_wp, a2=3.60000000_wp )
+   case(p_df_dftb_3ob); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=0.6635015_wp, a1=0.5523240_wp, a2=4.3537076_wp, s9=1.0_wp )
+   case(p_df_dftb_matsci); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=3.3157614_wp, a1=0.4826330_wp, a2=5.3811976_wp, s9=1.0_wp )
+   case(p_df_dftb_mio); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=1.2916225_wp, a1=0.5965326_wp, a2=4.8778602_wp, s9=1.0_wp )
+   case(p_df_dftb_ob2); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=2.9692689_wp, a1=0.6068916_wp, a2=5.4476789_wp, s9=1.0_wp )
+   case(p_df_dftb_pbc); param = dftd_parameter( & ! (SAW191202)
+   &  s6=1.0_wp, s8=2.1667394_wp, a1=0.5646391_wp, a2=4.9576353_wp, s9=1.0_wp )
    end select
 end subroutine get_d4eeqbjatm_2019_parameter
 ! ========================================================================
@@ -411,7 +455,8 @@ end subroutine get_d4eeqbjatm_2019_parameter
 !> DFT-D4(EEQ)-MBD/def2-QZVP fitted on NCIBLIND10, S22x5, S66x8
 subroutine get_d4eeqbjmbd_2019_parameter(dfnum,bsnum,param)
    implicit none
-   integer,intent(in)   :: dfnum,bsnum
+   integer(df_enum),intent(in) :: dfnum
+   integer(bas_enum),intent(in) :: bsnum
    type(dftd_parameter), allocatable :: param
    select case(dfnum)
    case default; return
@@ -648,7 +693,7 @@ end subroutine get_d4eeqbjmbd_2019_parameter
 !> get the unique identifier for most functionals, returns none if
 !  the functional was not known at the time I implemented this mapping
 function get_dfnum(df) result(num)
-   integer :: num
+   integer(df_enum) :: num
    character(len=*),intent(in) :: df
    select case(df)
    case default;                             num = p_df_none
@@ -727,7 +772,11 @@ function get_dfnum(df) result(num)
    case('b973c','b97-3c');                   num = p_df_b973c
    case('hsesol');                           num = p_df_hsesol
    case('pwgga');                            num = p_df_pwgga
-   case('dftb3');                            num = p_df_dftb3
+   case('dftb3','dftb(3ob)');                num = p_df_dftb_3ob
+   case('dftb(mio)');                        num = p_df_dftb_mio
+   case('dftb(pbc)');                        num = p_df_dftb_pbc
+   case('dftb(matsci)');                     num = p_df_dftb_matsci
+   case('lc-dftb','dftb(ob2)');              num = p_df_dftb_ob2
    case('hcth120');                          num = p_df_hcth120
    case('ptpss');                            num = p_df_ptpss
    case('lc-wpbe','lcwpbe');                 num = p_df_lcwpbe
@@ -794,7 +843,7 @@ subroutine d4par(inp,dparam,lmbd,env)
    character(len=99) :: dtmp
    logical :: ex
    integer :: i
-   integer :: dfnum
+   integer(df_enum) :: dfnum
 !  init
    ex = .false.
    i = index(inp,'/')
@@ -810,7 +859,9 @@ subroutine d4par(inp,dparam,lmbd,env)
    if (dfnum.gt.0) then
       if (lmbd.eq.p_mbd_approx_atm) then
          call get_d4eeqbjatm_2019_parameter(dfnum,p_bas_default,param)
-      else
+      else if (lmbd.eq.p_mbd_none) then
+         call get_d4eeqbj_2019_parameter(dfnum,p_bas_default,param)
+      else if (lmbd.eq.p_mbd_rpalike) then
          call get_d4eeqbjmbd_2019_parameter(dfnum,p_bas_default,param)
       endif
       if (.not.allocated(param)) then
