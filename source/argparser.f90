@@ -174,6 +174,8 @@ subroutine read_commandline_arguments(env,set)
          case('-g','--grad'); set%lgradient = .true.
          case(     '--hess');  set%lhessian = .true.
          case(     '--orca');   set%lorca = .true.
+         case(     '--json'); set%json = .true.
+         case(     '--toml'); set%toml = .true.
 
 ! ------------------------------------------------------------------------
 !  no match => take as file name

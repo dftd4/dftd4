@@ -84,6 +84,8 @@ module class_set
       logical  :: lgradient = .false.       !< calculate dispersion gradient?
       logical  :: lhessian = .false.        !< calculate dispersion hessian?
       integer  :: print_level = 1           !< print more information
+      logical  :: json = .false.            !< dump calculation data as JSON
+      logical  :: toml = .false.            !< dump calculation data as TOML
    contains
       procedure :: default_options
       procedure :: export => export_dftd_options
