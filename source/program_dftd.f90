@@ -60,7 +60,7 @@ program dftd
 !  local variables
 ! ------------------------------------------------------------------------
    integer  :: ndim                      ! matrix dimension
-   integer  :: i,j,k,l,ii,jj
+   integer  :: i,j,k,l,ii,jj,io
    integer  :: err
    real(wp) :: memory
    real(wp) :: etmp,etwo,emany,er,el,es
@@ -214,6 +214,18 @@ if (set%lenergy.or.set%lgradient.or.set%lhessian) &
    if (set%lhessian) then
       call orca_hessian(mol,istdout,dresults%hessian)
    endif
+
+   if (set%json) then
+      open(file='dftd4.json', newunit=io)
+      call dresults%write_json(io, '  ')
+      close(io)
+   end if
+
+   if (set%toml) then
+      open(file='dftd4.toml', newunit=io)
+      call dresults%write_toml(io, ' ')
+      close(io)
+   end if
 
    call env%checkpoint
    call env%write('Some non-fatal runtime exceptions occurred, please check:')
