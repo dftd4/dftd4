@@ -62,6 +62,12 @@ OPTIONS
 *--orca*::
      Enter compatibility mode for ORCA
 
+*--json*::
+     Serialize all results as JSON (dftd4.json)
+
+*--toml*::
+     Serialize all results as TOML (dftd4.toml)
+
 *--tmer*::
      Force tmer2++ compatible .EDISP printout
 

@@ -173,6 +173,10 @@ subroutine help(iunit)
       "        force tmer2++ compatible .EDISP printout",&
       "    --orca",&
       "        ORCA compatibility mode (for usage by the orca binary)",&
+      "    --json",&
+      "        serialize all results as JSON (dftd4.json)",&
+      "    --toml",&
+      "        serialize all results as TOML (dftd4.toml)",&
       "    --molc6",&
       "        calculate dispersion related properties (default)",&
    !$ "-P, --parallel <integer>",&
