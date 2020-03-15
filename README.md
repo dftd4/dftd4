@@ -5,9 +5,7 @@ DFT-D4 standalone program
 [![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
 [![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING)
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
-
-Copied from
-https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/dftd4
+[![DOI](https://zenodo.org/badge/173139980.svg)](https://zenodo.org/badge/latestdoi/173139980)
 
 This is a minimal standalone version of DFT-D4 providing the
 D4(EEQ)-ATM and D4(EEQ)-MBD methods.
