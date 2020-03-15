@@ -1,0 +1,32 @@
+{
+    "license": "LGPL-3.0-or-later", 
+    "references": [
+        "Eike Caldeweyher, Christoph Bannwarth and Stefan Grimme, J. Chem. Phys., 2017, 147, 034112. DOI: 10.1063/1.4993215", 
+        "Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian Spicher, Christoph Bannwarth and Stefan Grimme, J. Chem Phys, 2019, 150, 154122. DOI: 10.1063/1.5090222 chemrxiv: 10.26434/chemrxiv.7430216", 
+        "Eike Caldeweyher, Jan-Michael Mewes, Sebastian Ehlert and Stefan Grimme, ChemRxiv, 2019, preprint. chemrxiv: 10.26434/chemrxiv.10299428"
+    ], 
+    "upload_type": "software", 
+    "keywords": [
+        "quantum-chemistry", 
+        "dispersion-correction", 
+        "dft-d", 
+        "density-functional-theory"
+    ], 
+    "creators": [
+        {
+            "orcid": "0000-0001-7809-771X", 
+            "affiliation": "University of Bonn, Mulliken Center for Theoretical Chemistry", 
+            "name": "Sebastian Ehlert"
+        }, 
+        {
+            "orcid": "0000-0002-3985-595X", 
+            "affiliation": "University of Bonn, Mulliken Center for Theoretical Chemistry", 
+            "name": "Eike Caldeweyher"
+        }, 
+        {
+            "orcid": "0000-0002-5844-4371", 
+            "affiliation": "University of Bonn, Mulliken Center for Theoretical Chemistry", 
+            "name": "Stefan Grimme"
+        }
+    ] 
+}
