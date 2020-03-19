@@ -137,7 +137,8 @@ Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer, Sebastian 
 DOI: [10.1063/1.5090222](https://doi.org/10.1063/1.5090222)
 chemrxiv: [10.26434/chemrxiv.7430216](https://doi.org/10.26434/chemrxiv.7430216.v2)
 
-Eike Caldeweyher, Jan-Michael Mewes, Sebastian Ehlert and Stefan Grimme, *ChemRxiv*, **2019**, preprint.
+Eike Caldeweyher, Jan-Michael Mewes, Sebastian Ehlert and Stefan Grimme, *Phys. Chem. Chem. Phys.*, **2020**, *just accepted*.
+DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 chemrxiv: [10.26434/chemrxiv.10299428](https://doi.org/10.26434/chemrxiv.10299428.v1)
 
 Bugs
