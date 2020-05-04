@@ -85,6 +85,10 @@ write(iunit,'(3x,a)') &
    "E. Caldeweyher, S. Ehlert, A. Hansen, H. Neugebauer, S. Spicher,", &
    "C. Bannwarth and S. Grimme, J. Chem. Phys., 2019, 150, 154122.", &
    "DOI: 10.1063/1.5090222 (ChemRxiv: 10.26434/chemrxiv.7430216.v2)", &
+   "and",&
+   "E. Caldeweyher, J.-M. Mewes, S. Ehlert and S. Grimme,", & 
+   "Phys. Chem. Chem. Phys., 2020, 22, 8499-8512.", &
+   "DOI: 10.1039/D0CP00502A (ChemRxiv: 10.26434/chemrxiv.10299428.v1)", &
    "",&
    "For GFN2-xTB:", &
    "C. Bannwarth, S. Ehlert and S. Grimme., ChemRxiv, 2018, preprint.",&
