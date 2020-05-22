@@ -83,9 +83,6 @@ OPTIONS
 *--license*::
      Prints GPL
 
-*--version*::
-     Prints version number
-
 *-s, --silent*::
      Clutters the screen less
 
