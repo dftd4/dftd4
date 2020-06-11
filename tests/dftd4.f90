@@ -391,7 +391,7 @@ subroutine test_dftd4_pbc_energies
    call mol%wrap_back
    call mol%calculate_distances
 
-   call generate_wsc(mol,mol%wsc,wsc_rep)
+   call generate_wsc(mol,mol%wsc)
    call dispm%new(mol%at,refqmode,g_a,g_c)
    ndim = sum(dispm%atoms*dispm%nref)
    call assert_eq(ndim,26)
@@ -529,7 +529,7 @@ subroutine test_dftd4_cell_gradient
    call mol%wrap_back
    call mol%calculate_distances
 
-   call generate_wsc(mol,mol%wsc,wsc_rep)
+   call generate_wsc(mol,mol%wsc)
    call dispm%new(mol%at,refqmode,g_a,g_c)
    ndim = sum(dispm%atoms*dispm%nref)
 

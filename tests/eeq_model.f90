@@ -140,7 +140,7 @@ subroutine test_eeq_model_ewald
    energy = 0.0_wp
    sigma = 0.0_wp
 
-   call generate_wsc(mol,mol%wsc,wsc_rep)
+   call generate_wsc(mol,mol%wsc)
 
    call pbc_dncoord_erf(mol,cn,dcndr,dcndL,900.0_wp)
 
