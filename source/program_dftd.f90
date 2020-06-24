@@ -181,12 +181,10 @@ program dftd
 ! ------------------------------------------------------------------------
 if (set%lenergy.or.set%lgradient.or.set%lhessian) &
    call generic_header(istdout,'Results',49,10)
-   if (set%lenergy) then
-      write(istdout,'('// &
-      &      '1x,"Edisp  /kcal,au:",f11.4,1x,f12.8)') &
-      &       dresults%energy*autokcal,dresults%energy
-      write(istdout,'(a)')
-   endif
+   write(istdout,'('// &
+   &      '1x,"Edisp  /kcal,au:",f11.4,1x,f12.8)') &
+   &       dresults%energy*autokcal,dresults%energy
+   write(istdout,'(a)')
    if (set%ltmer.or.(.not.set%lorca.and.set%lenergy)) &
       call out_tmer('.EDISP',dresults%energy)
 
