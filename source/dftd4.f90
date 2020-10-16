@@ -1448,7 +1448,7 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
 
             c6ik=c6ab(ik)
             c6jk=c6ab(jk)
-            c9=-sqrt(c6ij*c6ik*c6jk)
+            c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
             cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
             cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
             cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
@@ -1521,7 +1521,7 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
          c6jk=c6ik
          ikvec=xyz(:,kat)-xyz(:,iat)
          jkvec=ikvec
-         c9=-sqrt(c6ij*c6ik*c6jk)
+         c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
          cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
          cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
          cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
@@ -1606,7 +1606,7 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
          cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
          cijk = cij*cjk*cik
 
-         c9=-sqrt(c6ij*c6ik*c6jk)
+         c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
          do concurrent(tx=-rep(1):rep(1), &
                &       ty=-rep(2):rep(2), &
                &       tz=-rep(3):rep(3))
@@ -1682,7 +1682,7 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
       c6ij=c6ab(ij)
       c6ik=c6ij
       c6jk=c6ij
-      c9=-sqrt(c6ij*c6ij*c6ij)
+      c9=-par%s9*sqrt(c6ij*c6ij*c6ij)
       cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
       cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
       cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
@@ -2228,7 +2228,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
 
             c6ik=c6ab(ik)
             c6jk=c6ab(jk)
-            c9=-sqrt(c6ij*c6ik*c6jk)
+            c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
             cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
             cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
             cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
@@ -2360,7 +2360,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
          c6jk=c6ik
          ikvec=xyz(:,kat)-xyz(:,iat)
          jkvec=ikvec
-         c9=-sqrt(c6ij*c6ik*c6jk)
+         c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
          cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
          cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
          cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
@@ -2493,7 +2493,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
          cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
          cijk = cij*cjk*cik
 
-         c9=-sqrt(c6ij*c6ik*c6jk)
+         c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
          g3 = 0.0_wp
          r3 = 0.0_wp
          do concurrent(tx=-rep(1):rep(1), &
@@ -2609,7 +2609,7 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
       c6ij=c6ab(ij)
       c6ik=c6ij
       c6jk=c6ij
-      c9=-sqrt(c6ij*c6ij*c6ij)
+      c9=-par%s9*sqrt(c6ij*c6ij*c6ij)
       cij  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(jat)))+par%a2
       cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
       cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
