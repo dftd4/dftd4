@@ -1236,9 +1236,9 @@ subroutine edisp_3d(mol,dispm,ndim,q,r_thr,mbd_thr,par, &
       ! i in primitive cell with i in images
       r4r2ij = 3*r4r2(ia)*r4r2(ia)
       r0 = par%a1*sqrt(r4r2ij) + par%a2
-      do concurrent(tx = -rep(1):rep(1), &
-            &       ty = -rep(2):rep(2), &
-            &       tz = -rep(3):rep(3))
+      do tx = -rep(1), rep(1)
+      do ty = -rep(2), rep(2)
+      do tz = -rep(3), rep(3)
          ! cycle i with i interaction in same cell
          if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
          rij = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)
@@ -1251,6 +1251,8 @@ subroutine edisp_3d(mol,dispm,ndim,q,r_thr,mbd_thr,par, &
          disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
             & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
          ed = ed - c6ij*disp/2
+      enddo ! tz
+      enddo ! ty
       enddo ! tx
       ! over all j atoms
       do j = 1, i-1
@@ -1267,9 +1269,9 @@ subroutine edisp_3d(mol,dispm,ndim,q,r_thr,mbd_thr,par, &
          enddo
          r4r2ij = 3*r4r2(ia)*r4r2(ja)
          r0 = par%a1*sqrt(r4r2ij) + par%a2
-         do concurrent(tx = -rep(1):rep(1), &
-               &       ty = -rep(2):rep(2), &
-               &       tz = -rep(3):rep(3))
+         do tx = -rep(1), rep(1)
+         do ty = -rep(2), rep(2)
+         do tz = -rep(3), rep(3)
             t = tx*mol%lattice(:,1) + ty*mol%lattice(:,2) + tz*mol%lattice(:,3)
             rij = mol%xyz(:,i) - mol%xyz(:,j) + t
             r2 = sum(rij**2)
@@ -1281,6 +1283,8 @@ subroutine edisp_3d(mol,dispm,ndim,q,r_thr,mbd_thr,par, &
             disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
                & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
             ed = ed - c6ij*disp
+         enddo ! tz
+         enddo ! ty
          enddo ! tx
       enddo
    enddo
@@ -1454,9 +1458,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
             cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
             cijk = cij*cjk*cik
 
-            do concurrent (tx=-rep(1):rep(1), &
-                  &        ty=-rep(2):rep(2), &
-                  &        tz=-rep(3):rep(3))
+            do tx=-rep(1), rep(1)
+            do ty=-rep(2), rep(2)
+            do tz=-rep(3), rep(3)
                repmin(1)=max(-rep(1),tx-rep(1))
                repmax(1)=min(+rep(1),tx+rep(1))
                repmin(2)=max(-rep(2),ty-rep(2))
@@ -1470,9 +1474,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
                !rr0ij=sqrt(rij2)/r0ab(at(iat),at(jat))
 
 
-               do concurrent (sx=repmin(1):repmax(1), &
-                     &        sy=repmin(2):repmax(2), &
-                     &        sz=repmin(3):repmax(3))
+               do sx=repmin(1), repmax(1)
+               do sy=repmin(2), repmax(2)
+               do sz=repmin(3), repmax(3)
                   s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
                   rik2=SUM((ikvec+s)*(ikvec+s))
                   if(rik2.gt.thr)cycle
@@ -1499,6 +1503,10 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
                   eabc=eabc-r9ijk*c9
 
                enddo !sz
+               enddo !sy
+               enddo !sx
+            enddo !tz
+            enddo !ty
             enddo !tx
          enddo !kat
       enddo !jat
@@ -1526,9 +1534,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
          cik  = par%a1*sqrt(3._wp*r4r2(at(iat))*r4r2(at(kat)))+par%a2
          cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
          cijk = cij*cjk*cik
-         do concurrent (tx=-rep(1):rep(1), &
-               &        ty=-rep(2):rep(2), &
-               &        tz=-rep(3):rep(3))
+         do tx=-rep(1), rep(1)
+         do ty=-rep(2), rep(2)
+         do tz=-rep(3), rep(3)
             repmin(1)=max(-rep(1),tx-rep(1))
             repmax(1)=min(+rep(1),tx+rep(1))
             repmin(2)=max(-rep(2),ty-rep(2))
@@ -1543,9 +1551,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
 
             !rr0ij=sqrt(rij2)/r0ab(at(iat),at(jat))
 
-            do concurrent (sx=repmin(1):repmax(1), &
-                  &        sy=repmin(2):repmax(2), &
-                  &        sz=repmin(3):repmax(3))
+            do sx=repmin(1), repmax(1)
+            do sy=repmin(2), repmax(2)
+            do sz=repmin(3), repmax(3)
                ! every result * 0.5
 
                s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
@@ -1577,8 +1585,12 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
                r9ijk=ang*fdmp/2.0_wp   !factor 1/2 for doublecounting
                eabc=eabc-r9ijk*c9
 
+            enddo !sz
+            enddo !sy
             enddo !sx
 
+         enddo !tz
+         enddo !ty
          enddo !tx
       enddo !kat
    enddo !iat
@@ -1607,9 +1619,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
          cijk = cij*cjk*cik
 
          c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
-         do concurrent(tx=-rep(1):rep(1), &
-               &       ty=-rep(2):rep(2), &
-               &       tz=-rep(3):rep(3))
+         do tx=-rep(1), rep(1)
+         do ty=-rep(2), rep(2)
+         do tz=-rep(3), rep(3)
             repmin(1)=max(-rep(1),tx-rep(1))
             repmax(1)=min(+rep(1),tx+rep(1))
             repmin(2)=max(-rep(2),ty-rep(2))
@@ -1625,9 +1637,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
 
             !rr0ij=SQRT(rij2)/r0ab(at(iat),at(jat))
 
-            do concurrent (sx=repmin(1):repmax(1), &
-                  &        sy=repmin(2):repmax(2), &
-                  &        sz=repmin(3):repmax(3))
+            do sx=repmin(1), repmax(1)
+            do sy=repmin(2), repmax(2)
+            do sz=repmin(3), repmax(3)
                ! every result * 0.5
                IF (tx.eq.sx .and. ty.eq.sy  &
                   .and. tz.eq.sz) cycle
@@ -1659,8 +1671,12 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
                r9ijk=ang*fdmp/2.0_wp   !factor 1/2 for doublecounting
                eabc=eabc-r9ijk*c9
 
+            enddo !sz
+            enddo !sy
             enddo !sx
 
+         enddo !tz
+         enddo !ty
          enddo !tx
       enddo !kat
    enddo !iat
@@ -1688,9 +1704,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
       cjk  = par%a1*sqrt(3._wp*r4r2(at(jat))*r4r2(at(kat)))+par%a2
       cijk = cij*cjk*cik
 
-      do concurrent ( tx=-rep(1):rep(1), &
-            &         ty=-rep(2):rep(2), &
-            &         tz=-rep(3):rep(3))
+      do tx=-rep(1), rep(1)
+      do ty=-rep(2), rep(2)
+      do tz=-rep(3), rep(3)
          repmin(1)=max(-rep(1),tx-rep(1))
          repmax(1)=min(+rep(1),tx+rep(1))
          repmin(2)=max(-rep(2),ty-rep(2))
@@ -1705,9 +1721,9 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
          if(rij2.gt.thr)cycle
          !rr0ij=SQRT(rij2)/r0ab(at(iat),at(jat))
 
-         do concurrent (sx=repmin(1):repmax(1), &
-               &        sy=repmin(2):repmax(2), &
-               &        sz=repmin(3):repmax(3))
+         do sx=repmin(1), repmax(1)
+         do sy=repmin(2), repmax(2)
+         do sz=repmin(3), repmax(3)
             if ((sx.eq.0) .and.( sy.eq.0) .and.( sz.eq.0))cycle !IF iat and kat are the same then cycle
             if ((sx.eq.tx) .and. (sy.eq.ty)  &
                .and. (sz.eq.tz)) cycle      !If kat and jat are the same then cycle
@@ -1741,7 +1757,11 @@ subroutine abcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,eabc)
             r9ijk=ang*fdmp/6.0_wp
             eabc=eabc-c9*r9ijk
 
+         enddo !sz
+         enddo !sy
          enddo !sx
+      enddo !tz
+      enddo !ty
       enddo !tx
 
 
@@ -1927,10 +1947,10 @@ subroutine dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
       ! i in primitive cell with i in images
       r4r2ij = 3*r4r2(ia)*r4r2(ia)
       r0 = par%a1*sqrt(r4r2ij) + par%a2
-      do concurrent(tx = -rep(1):rep(1), &
-            &       ty = -rep(2):rep(2), &
-            &       tz = -rep(3):rep(3), &
-            &       tx.ne.0.or.ty.ne.0.or.tz.ne.0)
+      do tx = -rep(1), rep(1)
+      do ty = -rep(2), rep(2)
+      do tz = -rep(3), rep(3)
+         if (tx.eq.0.and.ty.eq.0.and.tz.eq.0) cycle
          ! cycle i with i interaction in same cell
          t = [tx,ty,tz]
          rij = matmul(mol%lattice,t)
@@ -1954,6 +1974,8 @@ subroutine dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
          dc6dcn(i) = dc6dcn(i) + (dic6ij + djc6ij)*disp/2
          drdx = rij/r
          sigma = sigma - dtmp * outer_prod_3x3(drdx,rij)/2
+      enddo ! tz
+      enddo ! ty
       enddo ! tx
       ! over all j atoms
       do j = 1, i-1
@@ -1978,9 +2000,9 @@ subroutine dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
          enddo
          r4r2ij = 3*r4r2(ia)*r4r2(ja)
          r0 = par%a1*sqrt(r4r2ij) + par%a2
-         do concurrent(tx = -rep(1):rep(1), &
-               &       ty = -rep(2):rep(2), &
-               &       tz = -rep(3):rep(3))
+         do tx = -rep(1), rep(1)
+         do ty = -rep(2), rep(2)
+         do tz = -rep(3), rep(3)
             t = [tx,ty,tz]
             rij = mol%xyz(:,i) - mol%xyz(:,j) + matmul(mol%lattice,t)
             r2 = sum(rij**2)
@@ -2008,6 +2030,8 @@ subroutine dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
             g(:,j) = g(:,j) + dtmp * drdx
 
             sigma = sigma - dtmp * outer_prod_3x3(drdx,rij)
+         enddo ! tz
+         enddo ! ty
          enddo ! tx
       enddo
    enddo
@@ -2236,9 +2260,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
 
             r3 = 0.0_wp
             g3 = 0.0_wp
-            do concurrent (tx=-rep(1):rep(1), &
-                  &        ty=-rep(2):rep(2), &
-                  &        tz=-rep(3):rep(3))
+            do tx=-rep(1), rep(1)
+            do ty=-rep(2), rep(2)
+            do tz=-rep(3), rep(3)
                repmin(1)=max(-rep(1),tx-rep(1))
                repmax(1)=min(+rep(1),tx+rep(1))
                repmin(2)=max(-rep(2),ty-rep(2))
@@ -2251,9 +2275,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
                if(rij2.gt.thr)cycle
 
 
-               do concurrent (sx=repmin(1):repmax(1), &
-                     &        sy=repmin(2):repmax(2), &
-                     &        sz=repmin(3):repmax(3))
+               do sx=repmin(1), repmax(1)
+               do sy=repmin(2), repmax(2)
+               do sz=repmin(3), repmax(3)
                   s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
                   rik = ikvec+s
                   rik2=SUM(rik*rik)
@@ -2327,6 +2351,10 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
                   sigma = sigma + outer_prod_3x3(rjk,rjk)*tmp1
 
                enddo !sz
+               enddo !sy
+               enddo !sx
+            enddo !tz
+            enddo !ty
             enddo !tx
             eabc = eabc - r3*c9
             g(:,iat) = g(:,iat) + g3(:,1)
@@ -2368,9 +2396,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
 
          g3 = 0.0_wp
          r3 = 0.0_wp
-         do concurrent (tx=-rep(1):rep(1), &
-               &        ty=-rep(2):rep(2), &
-               &        tz=-rep(3):rep(3))
+         do tx=-rep(1), rep(1)
+         do ty=-rep(2), rep(2)
+         do tz=-rep(3), rep(3)
             repmin(1)=max(-rep(1),tx-rep(1))
             repmax(1)=min(+rep(1),tx+rep(1))
             repmin(2)=max(-rep(2),ty-rep(2))
@@ -2383,9 +2411,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
             rij2=SUM(rij*rij)
             if(rij2.gt.thr)cycle
 
-            do concurrent (sx=repmin(1):repmax(1), &
-                  &        sy=repmin(2):repmax(2), &
-                  &        sz=repmin(3):repmax(3))
+            do sx=repmin(1), repmax(1)
+            do sy=repmin(2), repmax(2)
+            do sz=repmin(3), repmax(3)
                ! every result * 0.5
 
                s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
@@ -2453,8 +2481,12 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
                g3(:,3) = g3(:,3) + tmp1*rjk
                sigma = sigma + outer_prod_3x3(rjk,rjk)*tmp1
 
+            enddo !sz
+            enddo !sy
             enddo !sx
 
+         enddo !tz
+         enddo !ty
          enddo !tx
          eabc = eabc - r3*c9
          g(:,iat) = g(:,iat) + g3(:,1)
@@ -2496,9 +2528,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
          c9=-par%s9*sqrt(c6ij*c6ik*c6jk)
          g3 = 0.0_wp
          r3 = 0.0_wp
-         do concurrent(tx=-rep(1):rep(1), &
-               &       ty=-rep(2):rep(2), &
-               &       tz=-rep(3):rep(3))
+         do tx=-rep(1), rep(1)
+         do ty=-rep(2), rep(2)
+         do tz=-rep(3), rep(3)
             repmin(1)=max(-rep(1),tx-rep(1))
             repmax(1)=min(+rep(1),tx+rep(1))
             repmin(2)=max(-rep(2),ty-rep(2))
@@ -2511,9 +2543,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
             rij2=SUM(rij*rij)
             if(rij2.gt.thr)cycle
 
-            do concurrent (sx=repmin(1):repmax(1), &
-                  &        sy=repmin(2):repmax(2), &
-                  &        sz=repmin(3):repmax(3))
+            do sx=repmin(1), repmax(1)
+            do sy=repmin(2), repmax(2)
+            do sz=repmin(3), repmax(3)
                ! every result * 0.5
                if (tx.eq.sx .and. ty.eq.sy .and. tz.eq.sz) cycle
                s=sx*dlat(:,1)+sy*dlat(:,2)+sz*dlat(:,3)
@@ -2577,7 +2609,11 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
                tmp1=(-dang*c9*fdmp+dfdmp/r*c9*ang)*0.5_wp/r
                sigma = sigma + outer_prod_3x3(rjk,rjk)*tmp1
 
+            enddo !sz
+            enddo !sy
             enddo !sx
+         enddo !tz
+         enddo !ty
          enddo !tx
          eabc = eabc - r3*c9
          g(:,iat) = g(:,iat) + g3(:,1)
@@ -2616,9 +2652,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
       cijk = cij*cjk*cik
 
       r3 = 0.0_wp
-      do concurrent ( tx=-rep(1):rep(1), &
-            &         ty=-rep(2):rep(2), &
-            &         tz=-rep(3):rep(3))
+      do tx=-rep(1), rep(1)
+      do ty=-rep(2), rep(2)
+      do tz=-rep(3), rep(3)
          repmin(1)=max(-rep(1),tx-rep(1))
          repmax(1)=min(+rep(1),tx+rep(1))
          repmin(2)=max(-rep(2),ty-rep(2))
@@ -2632,9 +2668,9 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
          rij2=SUM(rij*rij)
          if(rij2.gt.thr)cycle
 
-         do concurrent (sx=repmin(1):repmax(1), &
-               &        sy=repmin(2):repmax(2), &
-               &        sz=repmin(3):repmax(3))
+         do sx=repmin(1), repmax(1)
+         do sy=repmin(2), repmax(2)
+         do sz=repmin(3), repmax(3)
             ! if iat and kat are the same then cycle
             if ((sx.eq.0) .and.( sy.eq.0) .and.( sz.eq.0))cycle
             ! If kat and jat are the same then cycle
@@ -2701,7 +2737,11 @@ subroutine dabcappr_3d_dftd3_like_style(nat,at,xyz,par,thr,rep,dlat,c6ab,dc6ab, 
             tmp1=(-dang*c9*fdmp+dfdmp/r*c9*ang)/(r*6.0_wp)
             sigma = sigma + outer_prod_3x3(rjk,rjk)*tmp1
 
+         enddo !sz
+         enddo !sy
          enddo !sx
+      enddo !tz
+      enddo !ty
       enddo !tx
       eabc = eabc - r3*c9
       !calculating the CN derivative dE_disp(ijk)/dCN(i)
