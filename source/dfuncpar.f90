@@ -48,6 +48,8 @@ module dfuncpar
          &  p_df_tpss, &
          &  p_df_revtpss, &
          &  p_df_scan, &
+         &  p_df_rscan, &
+         &  p_df_r2scan, &
          &  p_df_b1lyp, &
          &  p_df_b3lyp, &
          &  p_df_bhlyp, &
@@ -70,8 +72,11 @@ module dfuncpar
          &  p_df_m06l, &
          &  p_df_m06, &
          &  p_df_m062x, &
+         &  p_df_b97d, &
          &  p_df_wb97, &
          &  p_df_wb97x, &
+         &  p_df_b97m, &
+         &  p_df_wb97m, &
          &  p_df_camb3lyp, &
          &  p_df_lcblyp, &
          &  p_df_lh07tsvwn, &
@@ -416,12 +421,25 @@ subroutine get_d4eeqbjatm_2019_parameter(dfnum,bsnum,param)
 !  Fitset: MD= -0.09296 MAD= 0.27505 RMSD= 0.42537
    case(p_df_tpssh); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=1.85897750_wp, a1=0.44286966_wp, a2=4.60230534_wp )
+!  Fitset: MD=  0.02238 MAD= 0.16042 RMSD= 0.33519
+   case(p_df_b97d); param = dftd_parameter ( & ! (SAW201029)
+   &  s6=1.0000_wp, s8=1.69460052_wp, a1=0.28904684_wp, a2=4.13407323_wp )
 !  Fitset: MD= -0.09858 MAD= 0.26757 RMSD= 0.42380
    case(p_df_wb97); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=6.55792598_wp, a1=0.76666802_wp, a2=8.36027334_wp )
 !  Fitset: MD= -0.12779 MAD= 0.36152 RMSD= 0.49991
    case(p_df_wb97x); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=-0.07519516_wp, a1=0.45094893_wp, a2=6.78425255_wp )
+!  S22x5: MD= 0.05 MAD= 0.16 RMSD= 0.22
+!  S66x8: MD= 0.06 MAD= 0.16 RMSD= 0.21
+!  NCI10: MD= 0.08 MAD= 0.15 RMSD= 0.25
+   case(p_df_b97m); param = dftd_parameter ( & ! (10.1002/jcc.26411)
+   &  s6=1.0000_wp, s8=0.6633_wp, a1=0.4288_wp, a2=3.9935_wp )
+!  S22x5: MD= 0.03 MAD= 0.12 RMSD= 0.18
+!  S66x8: MD= 0.09 MAD= 0.17 RMSD= 0.22
+!  NCI10: MD= 0.09 MAD= 0.15 RMSD= 0.32
+   case(p_df_wb97m); param = dftd_parameter ( & ! (10.1002/jcc.26411)
+   &  s6=1.0000_wp, s8=0.7761_wp, a1=0.7514_wp, a2=2.7099_wp )
 !  Fitset: MD= -0.20216 MAD= 0.34696 RMSD= 0.53641
    case(p_df_x3lyp); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=1.54701429_wp, a1=0.20318443_wp, a2=5.61852648_wp )
@@ -719,6 +737,8 @@ function get_dfnum(df) result(num)
    case('tpss');                             num = p_df_tpss
    case('revtpss');                          num = p_df_revtpss
    case('scan');                             num = p_df_scan
+   case('rscan');                            num = p_df_rscan
+   case('r2scan', 'r²scan');                 num = p_df_r2scan
    case('b1lyp','b1-lyp');                   num = p_df_b1lyp
    case('b3-lyp','b3lyp');                   num = p_df_b3lyp
    case('bh-lyp','bhlyp');                   num = p_df_bhlyp
@@ -821,10 +841,12 @@ function get_dfnum(df) result(num)
    case('glyp','g-lyp');                     num = p_df_glyp
    case('revpbe0dh','revpbe0-dh');           num = p_df_revpbe0dh
    case('revtpss0');                         num = p_df_revtpss0
-   case('revdsd-pbep86', 'revdsdpbep86');                    num = p_df_revdsdpbep86
-   case('revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe');      num = p_df_revdsdpbe
-   case('revdsd-blyp', 'revdsdblyp');                      num = p_df_revdsdblyp
-   case('revdod-pbep86', 'revdodpbep86');                    num = p_df_revdodpbep86
+   case('revdsd-pbep86', 'revdsdpbep86');    num = p_df_revdsdpbep86
+   case('revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe'); num = p_df_revdsdpbe
+   case('revdsd-blyp', 'revdsdblyp');        num = p_df_revdsdblyp
+   case('revdod-pbep86', 'revdodpbep86');    num = p_df_revdodpbep86
+   case('b97m');                             num = p_df_b97m
+   case('wb97m','ωb97m','omegab97m');        num = p_df_wb97m
    end select
 end function get_dfnum
 
