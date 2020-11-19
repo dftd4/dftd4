@@ -1,27 +1,56 @@
 name: CI
+
 on: [push, pull_request]
 
 jobs:
-  linux-build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - run: sudo apt update --fix-missing
-    - run: sudo apt install -yq --no-install-recommends gfortran-8 ninja-build liblapack-dev libblas-dev
-    - run: pip3 install meson
-    - run: FC=gfortran-8 CC=gcc-8 CXX=g++-8 meson setup build_gcc --buildtype release --warnlevel 0 -Dla_backend=netlib
-    - run: ninja -C build_gcc test
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        gcc_v: [9] # Version of GCC we want to use.
 
-  osx-build:
-    runs-on: macos-latest
+    env:
+      FC: gfortran
+      CC: gcc
+      CXX: g++
+      GCC_V: ${{ matrix.gcc_v }}
+      OMP_NUM_THREADS: 2,1
+
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
+
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc@8 ninja meson lapack
-    - run: FC=gfortran-8 meson setup build_gcc --buildtype release --warnlevel 0 -Dla_backend=netlib
-    - run: ninja -C build_gcc test
+
+    - name: Install GCC (OSX)
+      if: contains(matrix.os, 'macos')
+      run: |
+          ln -s /usr/local/bin/gfortran-${GCC_V} /usr/local/bin/gfortran
+          ln -s /usr/local/bin/gcc-${GCC_V} /usr/local/bin/gcc
+          ln -s /usr/local/bin/g++-${GCC_V} /usr/local/bin/g++
+          which gfortran-${GCC_V}
+          which gfortran
+
+    - name: Install GCC (Linux)
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
+        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
+        --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_V} \
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
+
+    - name: Install meson
+      run: pip3 install meson==0.55.3 ninja
+
+    - name: Configure build
+      run: meson setup _build -Dla_backend=netlib --warnlevel=0
+
+    - name: Build library
+      run: meson compile -C _build
+
+    - name: Run unit tests
+      run: meson test -C _build --print-errorlogs --no-rebuild
