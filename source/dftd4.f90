@@ -1904,7 +1904,7 @@ subroutine dispgrad_3d(mol,dispm,ndim,q,cn,dcndr,dcndL,r_thr,mbd_thr,par,wf, &
          ! NEW: q=0 for ATM
          gw(k) =  zeta(dispm%g_a,gam(ia)*dispm%g_c,dispm%q(ii,ia)+iz,iz) * gwk
 
-         dgwk = dexpw*norm-expw*dnorm*norm**2
+         dgwk = norm*(dexpw-expw*dnorm*norm)
          if (dgwk.ne.dgwk) then
             dgwk = 0.0_wp
          endif
