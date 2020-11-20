@@ -161,7 +161,7 @@ pure subroutine shiftstr(str,n)
    integer :: lenstr,nabs
 
    lenstr=len(str)
-   nabs=iabs(n)
+   nabs=abs(n)
    if(nabs>=lenstr) then
       str=repeat(' ',lenstr)
       return

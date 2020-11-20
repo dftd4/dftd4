@@ -364,7 +364,7 @@ pure function minimum_image_distance(lsame,fi,fj,dlat,lpbc) result(dist)
 
    else
       do idir = 1, 3
-         if (lpbc(idir)) fij(idir) = fij(idir) - idnint(fij(idir))
+         if (lpbc(idir)) fij(idir) = fij(idir) - nint(fij(idir))
       enddo
 
       rij = matmul(dlat,fij)
