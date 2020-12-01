@@ -7,7 +7,7 @@ project('dftd4', 'fortran',
 conf = configuration_data()
 conf.set('version', meson.project_version())
 conf.set('commit', run_command(find_program('git'),'show','-s','--format=%h').stdout().strip())
-conf.set('date', run_command(find_program('date'),'-I').stdout().strip())
+conf.set('date', run_command(find_program('date'),'+%Y-%m-%d').stdout().strip())
 conf.set('author', run_command(find_program('whoami')).stdout().strip())
 conf.set('origin', run_command(find_program('hostname')).stdout().strip())
 configure_file(input : 'source/version.f90.in', output : 'dftd4_version.fh',
