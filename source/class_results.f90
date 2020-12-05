@@ -74,77 +74,73 @@ subroutine write_json(self, unit, indentation)
    class(dftd_results), intent(in) :: self
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
-   character(len=:), allocatable :: indent
    character(len=*), parameter :: jsonkey = "('""',a,'"":',1x)"
    real(wp), allocatable :: array(:)
-   if (present(indentation)) then
-      indent = indentation
-   end if
 
    write(unit, '("{")', advance='no')
-   if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+   if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
    write(unit, jsonkey, advance='no') 'version'
    write(unit, '(1x,a)', advance='no') '"'//version//'"'
    if (allocated(self%energy)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'energy'
       write(unit, '(1x,es25.16)', advance='no') self%energy
    end if
    if (allocated(self%stress)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'stress tensor'
       array = reshape(self%stress, [product(shape(self%stress))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
    end if
    if (allocated(self%lattice_gradient)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'lattice gradient'
       array = reshape(self%lattice_gradient, [product(shape(self%lattice_gradient))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
    end if
    if (allocated(self%gradient)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'gradient'
       array = reshape(self%gradient, [product(shape(self%gradient))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
    end if
    if (allocated(self%charges)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'partial charges'
-      call write_json_array(unit, self%charges, indent)
+      call write_json_array(unit, self%charges, indentation)
    end if
    if (allocated(self%dipole_moment)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'dipole moment'
-      call write_json_array(unit, self%dipole_moment, indent)
+      call write_json_array(unit, self%dipole_moment, indentation)
    end if
    if (allocated(self%polarizibilities)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'polarizibilities'
-      call write_json_array(unit, self%polarizibilities, indent)
+      call write_json_array(unit, self%polarizibilities, indentation)
    end if
    if (allocated(self%c6_coefficients)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'c6 coefficients'
       array = reshape(self%c6_coefficients, [product(shape(self%c6_coefficients))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
    end if
    if (allocated(self%hessian)) then
       write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, jsonkey, advance='no') 'hessian'
       array = reshape(self%hessian, [product(shape(self%hessian))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
    end if
-   if (allocated(indent)) write(unit, '(/)', advance='no')
+   if (present(indentation)) write(unit, '(/)', advance='no')
    write(unit, '("}")')
 
 end subroutine write_json
@@ -152,15 +148,15 @@ end subroutine write_json
 subroutine write_json_array(unit, array, indent)
    integer, intent(in) :: unit
    real(wp), intent(in) :: array(:)
-   character(len=:), allocatable, intent(in) :: indent
+   character(len=*), intent(in), optional :: indent
    integer :: i
    write(unit, '("[")', advance='no')
    do i = 1, size(array)
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 2)
+      if (present(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 2)
       write(unit, '(1x,es25.16)', advance='no') array(i)
       if (i /= size(array)) write(unit, '(",")', advance='no')
    end do
-   if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+   if (present(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
    write(unit, '("]")', advance='no')
 end subroutine write_json_array
 
@@ -169,12 +165,8 @@ subroutine write_toml(self, unit, indentation)
    class(dftd_results), intent(in) :: self
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
-   character(len=:), allocatable :: indent
    character(len=*), parameter :: tomlkey = "('""',a,'"" = ')"
    real(wp), allocatable :: array(:)
-   if (present(indentation)) then
-      indent = indentation
-   end if
 
    write(unit, tomlkey, advance='no') 'version'
    write(unit, '(a)') '"'//version//'"'
@@ -185,47 +177,47 @@ subroutine write_toml(self, unit, indentation)
    if (allocated(self%stress)) then
       write(unit, tomlkey, advance='no') 'stress tensor'
       array = reshape(self%stress, [product(shape(self%stress))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
       write(unit, '(a)')
    end if
    if (allocated(self%lattice_gradient)) then
       write(unit, tomlkey, advance='no') 'lattice gradient'
       array = reshape(self%lattice_gradient, [product(shape(self%lattice_gradient))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
       write(unit, '(a)')
    end if
    if (allocated(self%gradient)) then
       write(unit, tomlkey, advance='no') 'gradient'
       array = reshape(self%gradient, [product(shape(self%gradient))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
       write(unit, '(a)')
    end if
    if (allocated(self%charges)) then
       write(unit, tomlkey, advance='no') 'partial charges'
-      call write_json_array(unit, self%charges, indent)
+      call write_json_array(unit, self%charges, indentation)
       write(unit, '(a)')
    end if
    if (allocated(self%dipole_moment)) then
       write(unit, tomlkey, advance='no') 'dipole moment'
-      call write_json_array(unit, self%dipole_moment, indent)
+      call write_json_array(unit, self%dipole_moment, indentation)
       write(unit, '(a)')
    end if
    if (allocated(self%polarizibilities)) then
       write(unit, tomlkey, advance='no') 'polarizibilities'
-      call write_json_array(unit, self%polarizibilities, indent)
+      call write_json_array(unit, self%polarizibilities, indentation)
       write(unit, '(a)')
    end if
    if (allocated(self%c6_coefficients)) then
       write(unit, tomlkey, advance='no') 'c6 coefficients'
       array = reshape(self%c6_coefficients, [product(shape(self%c6_coefficients))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
       write(unit, '(a)')
    end if
    if (allocated(self%hessian)) then
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      if (present(indentation)) write(unit, '(/,a)', advance='no') repeat(indentation, 1)
       write(unit, tomlkey, advance='no') 'hessian'
       array = reshape(self%hessian, [product(shape(self%hessian))])
-      call write_json_array(unit, array, indent)
+      call write_json_array(unit, array, indentation)
       write(unit, '(a)')
    end if
 
