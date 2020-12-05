@@ -502,7 +502,7 @@ pure subroutine split(str,delims,before,sep)
          ibsl=0
          cycle
       end if
-      if(ch == '\') then          ! backslash with backslash inactive
+      if(ch == achar(92)) then    ! backslash with backslash inactive
          k=k+1
          before(k:k)=ch
          ibsl=1
@@ -561,7 +561,7 @@ pure subroutine removebksl(str)
          ibsl=0
          cycle
       end if
-      if(ch == '\') then          ! backslash with backslash inactive
+      if(ch == achar(92)) then    ! backslash with backslash inactive
          ibsl=1
          cycle
       end if
