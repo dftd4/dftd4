@@ -413,6 +413,12 @@ subroutine get_d4eeqbjatm_2019_parameter(dfnum,bsnum,param)
    case(p_df_scan); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=1.46126056_wp, a1=0.62930855_wp, a2=6.31284039_wp )
 !  Fitset: MD= -0.13170 MAD= 0.28640 RMSD= 0.51183
+   case(p_df_rscan); param = dftd_parameter ( & ! (SAW201221)
+   &  s6=1.0000_wp, s8=0.87728975_wp, a1=0.49116966_wp, a2=5.75859346_wp )
+!  Fitset: MD= -0.05386 MAD= 0.11914 RMSD= 0.30391
+   case(p_df_r2scan); param = dftd_parameter ( & ! (SAW201221)
+   &  s6=1.0000_wp, s8=0.60187490_wp, a1=0.51559235_wp, a2=5.77342911_wp )
+!  Fitset: MD= -0.04759 MAD= 0.11711 RMSD= 0.27799
    case(p_df_tpss0); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=1.62438102_wp, a1=0.40329022_wp, a2=4.80537871_wp )
 !  Fitset: MD= -0.09569 MAD= 0.26733 RMSD= 0.44767
@@ -430,17 +436,17 @@ subroutine get_d4eeqbjatm_2019_parameter(dfnum,bsnum,param)
 !  Fitset: MD= -0.12779 MAD= 0.36152 RMSD= 0.49991
    case(p_df_wb97x); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=-0.07519516_wp, a1=0.45094893_wp, a2=6.78425255_wp )
+!  Fitset: MD= -0.20216 MAD= 0.34696 RMSD= 0.53641
+   case(p_df_b97m); param = dftd_parameter ( & ! (10.1002/jcc.26411)
+   &  s6=1.0000_wp, s8=0.6633_wp, a1=0.4288_wp, a2=3.9935_wp )
 !  S22x5: MD= 0.05 MAD= 0.16 RMSD= 0.22
 !  S66x8: MD= 0.06 MAD= 0.16 RMSD= 0.21
 !  NCI10: MD= 0.08 MAD= 0.15 RMSD= 0.25
-   case(p_df_b97m); param = dftd_parameter ( & ! (10.1002/jcc.26411)
-   &  s6=1.0000_wp, s8=0.6633_wp, a1=0.4288_wp, a2=3.9935_wp )
+   case(p_df_wb97m); param = dftd_parameter ( & ! (10.1002/jcc.26411)
+   &  s6=1.0000_wp, s8=0.7761_wp, a1=0.7514_wp, a2=2.7099_wp )
 !  S22x5: MD= 0.03 MAD= 0.12 RMSD= 0.18
 !  S66x8: MD= 0.09 MAD= 0.17 RMSD= 0.22
 !  NCI10: MD= 0.09 MAD= 0.15 RMSD= 0.32
-   case(p_df_wb97m); param = dftd_parameter ( & ! (10.1002/jcc.26411)
-   &  s6=1.0000_wp, s8=0.7761_wp, a1=0.7514_wp, a2=2.7099_wp )
-!  Fitset: MD= -0.20216 MAD= 0.34696 RMSD= 0.53641
    case(p_df_x3lyp); param = dftd_parameter ( & ! (SAW190103)
    &  s6=1.0000_wp, s8=1.54701429_wp, a1=0.20318443_wp, a2=5.61852648_wp )
 !  Fitset: MD= -0.15607 MAD= 0.31342 RMSD= 0.49546
