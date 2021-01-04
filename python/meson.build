@@ -14,22 +14,25 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-option(
-  'la_backend',
-  type: 'combo',
-  value: 'mkl',
-  choices: ['mkl', 'openblas', 'netlib', 'custom'],
-  description : 'linear algebra backend',
-)
-option(
-  'custom_libraries',
-  type: 'array',
-  value: [],
-  description: 'libraries to load for custom linear algebra backend',
-)
-option(
-  'openmp',
-  type: 'boolean',
-  value: true,
-  description: 'use OpenMP parallelisation',
-)
+mypy = find_program('mypy', required: false)
+pytest = find_program('pytest', required: false)
+pylint = find_program('pylint', required: false)
+
+py_dftd4 = meson.current_source_dir() / 'dftd4'
+pypath = environment()
+pypath.prepend('LD_LIBRARY_PATH', meson.current_build_dir() / '..')
+pypath.prepend('PYTHONPATH', meson.current_source_dir())
+
+if pytest.found()
+  test('pytest: dftd4.py', pytest, args: ['--pyargs', 'dftd4'], env: pypath)
+endif
+
+if mypy.found()
+  test('mypy: dftd4.py', mypy, args: [py_dftd4, '--ignore-missing-imports'],
+       env: pypath)
+endif
+
+if pylint.found()
+  test('pylint: dftd4.py', pylint, args: [py_dftd4, '--disable=invalid-names'],
+       env: pypath)
+endif

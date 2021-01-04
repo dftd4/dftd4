@@ -14,22 +14,15 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-option(
-  'la_backend',
-  type: 'combo',
-  value: 'mkl',
-  choices: ['mkl', 'openblas', 'netlib', 'custom'],
-  description : 'linear algebra backend',
+dftd4_exe = executable(
+  meson.project_name(),
+  sources: files('main.f90'),
+  dependencies: dftd4_dep_static,
+  install: not meson.is_subproject(),
 )
-option(
-  'custom_libraries',
-  type: 'array',
-  value: [],
-  description: 'libraries to load for custom linear algebra backend',
-)
-option(
-  'openmp',
-  type: 'boolean',
-  value: true,
-  description: 'use OpenMP parallelisation',
-)
+
+# some very basic checks to see if the executable reacts at all
+test('Print version', dftd4_exe, args: '--version')
+test('Print help', dftd4_exe, args: '--help')
+test('Print license', dftd4_exe, args: '--license')
+test('No arguments', dftd4_exe, should_fail: true)

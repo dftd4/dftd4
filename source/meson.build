@@ -14,22 +14,33 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-option(
-  'la_backend',
-  type: 'combo',
-  value: 'mkl',
-  choices: ['mkl', 'openblas', 'netlib', 'custom'],
-  description : 'linear algebra backend',
-)
-option(
-  'custom_libraries',
-  type: 'array',
-  value: [],
-  description: 'libraries to load for custom linear algebra backend',
-)
-option(
-  'openmp',
-  type: 'boolean',
-  value: true,
-  description: 'use OpenMP parallelisation',
+fsrcs += files(
+  'argparser.f90',
+  'c_api.f90',
+  'class_molecule.f90',
+  'class_param.f90',
+  'class_results.f90',
+  'class_set.f90',
+  'class_wsc.f90',
+  'coordination_number.f90',
+  'disp_output.f90',
+  'd4_calculation.f90',
+  'dftd4.f90',
+  'dfuncpar.f90',
+  'eeq_model.f90',
+  'error.f90',
+  'f_api.f90',
+  'geometry_reader.f90',
+  'mctc_constants.f90',
+  'mctc_econv.f90',
+  'mctc_environment.f90',
+  'mctc_global.f90',
+  'mctc_param.f90',
+  'mctc_readin.f90',
+  'mctc_strings.f90',
+  'mctc_systools.f90',
+  'mctc_timings.f90',
+  'printout.f90',
+  'pbc.f90',
+  'pbc_tools.f90',
 )

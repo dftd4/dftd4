@@ -7,8 +7,8 @@ DFT-D4 standalone program
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 [![DOI](https://zenodo.org/badge/173139980.svg)](https://zenodo.org/badge/latestdoi/173139980)
 
-This is a minimal standalone version of DFT-D4 providing the
-D4(EEQ)-ATM and D4(EEQ)-MBD methods.
+This is a minimal standalone version of DFT-D4 providing the D4(EEQ)-ATM method.
+
 
 Installing
 ----------
@@ -16,9 +16,9 @@ Installing
 To compile this version of DFT-D4 the following programs are needed
 (the number in parentheses specifies the tested versions).
 
-* `gfortran` (8.2.1) or `ifort` (17.0.7 or 18.0.3) compiler
-* `meson` (0.49.0) and `ninja` (1.8.2) as build system
-* `asciidoc` (8.6.10) to build the man-page
+* `gfortran` or `ifort` compiler
+* `meson` (0.53 or newer) and `ninja` (1.7 or newer) as build system
+* `asciidoctor` to build the man-page
 
 The program is build by
 
@@ -46,12 +46,14 @@ of DFT-D4 is accessable by `man`.
 
 * `gfortran` 4 or older (missing Fortran 2003 standard)
 
+
 Available Package
 -----------------
 
 DFT-D4 is now also available for some package managers.
 
 ### Arch User Repository (AUR)
+
 
 [![AUR stable](https://img.shields.io/aur/version/dftd4)](https://aur.archlinux.org/packages/dftd4/)
 [![AUR git](https://img.shields.io/aur/version/dftd4-git?label=aur-git)](https://aur.archlinux.org/packages/dftd4-git/)
@@ -61,6 +63,7 @@ Get the build file from the [AUR](https://aur.archlinux.org) and use `makepkg`
 `dftd4` will be build with openBLAS backend, openMP and the most recent GCC.
 
 The package build files are available [here](assets/aur) as submodules.
+
 
 ### Conda-Forge
 
@@ -84,6 +87,7 @@ It is possible to list all of the versions of `dftd4` available on your platform
 conda search dftd4 --channel conda-forge
 ```
 
+
 Usage
 -----
 
@@ -97,6 +101,7 @@ coordinates in Bohr.
 
 More information can be obtained from the manpage or by
 invoking the program intern help page with `--help`.
+
 
 Examples
 --------
@@ -125,6 +130,7 @@ For the D4(EEQ)-MBD method use
 
     $ dftd4 --func pbe0 --mbd coord
 
+
 Citation
 --------
 
@@ -141,9 +147,21 @@ Eike Caldeweyher, Jan-Michael Mewes, Sebastian Ehlert and Stefan Grimme, *Phys. 
 DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 chemrxiv: [10.26434/chemrxiv.10299428](https://doi.org/10.26434/chemrxiv.10299428.v1)
 
-Bugs
-----
 
-please report all bugs with an example input and the used geometry,
-as well as the `--verbose` output to [Stefan Grimme](mailto:grimme@thch.uni-bonn.de)
-or open an issue.
+License
+-------
+
+This project is free software: you can redistribute it and/or modify it under
+the terms of the Lesser GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This project is distributed in the hope that it will be useful,
+but without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.  See the
+Lesser GNU General Public License for more details.
+
+Unless you explicitly state otherwise, any contribution intentionally
+submitted for inclusion in this project by you, as defined in the
+Lesser GNU General Public license, shall be licensed as above, without any
+additional terms or conditions.
