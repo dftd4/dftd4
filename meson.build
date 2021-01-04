@@ -90,51 +90,41 @@ if build_machine.system() == 'linux'
   endif
 endif
 
-## ========================================== ##
-## SOURCE
-## ========================================== ##
-
+# Collect source files
 fsrcs  = []
 subdir('source')
 
-## ========================================== ##
-## LIBRARIES
-## ========================================== ##
-
-## ========================================== ##
-## TARGETS
-## ========================================== ##
-
 # create a static library from all sources
-d4lib_static = static_library(
+dftd4_lib_static = static_library(
   meson.project_name(),
   sources: fsrcs,
+  dependencies: exe_deps,
   include_directories: include_directories('include'),
   install: install,
   pic: true,
 )
 
 # create a shared library as well
-d4lib_shared = shared_library(
+dftd4_lib = shared_library(
   meson.project_name(),
   version: meson.project_version(),
   dependencies: lib_deps,
-  link_whole: d4lib_static,
+  link_whole: dftd4_lib_static,
   install: install,
 )
 
-dftd4_inc = [include_directories('include'), d4lib_static.private_dir_include()]
+dftd4_inc = [include_directories('include'), dftd4_lib_static.private_dir_include()]
 
 # dependency declaration for wrap
 dftd4_dep = declare_dependency(
-  link_with: d4lib_shared,
+  link_with: dftd4_lib,
   dependencies: lib_deps,
   include_directories: dftd4_inc,
 )
 
 # optional static depenendency for wrap
 dftd4_dep_static = declare_dependency(
-  link_with: d4lib_static,
+  link_with: dftd4_lib_static,
   dependencies: exe_deps,
   include_directories: dftd4_inc,
 )
@@ -142,9 +132,6 @@ dftd4_dep_static = declare_dependency(
 # Collect main executable
 subdir('app')
 
-## ========================================== ##
-## INSTALL
-## ========================================== ##
 if install
   install_headers('include/dftd4.h')
   
@@ -160,8 +147,8 @@ if install
   endif
 endif
 
-## ========================================== ##
-## TESTSUITE
-## ========================================== ##
+# Include testsuite
 subdir('tests')
+
+# Python extension module
 subdir('python')

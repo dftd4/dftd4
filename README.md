@@ -50,10 +50,11 @@ of DFT-D4 is accessable by `man`.
 Available Package
 -----------------
 
+Statically linked binaries can be found at the [latest release page](https://github.com/dftd4/dftd4/releases/latest).
 DFT-D4 is now also available for some package managers.
 
-### Arch User Repository (AUR)
 
+### Arch User Repository (AUR)
 
 [![AUR stable](https://img.shields.io/aur/version/dftd4)](https://aur.archlinux.org/packages/dftd4/)
 [![AUR git](https://img.shields.io/aur/version/dftd4-git?label=aur-git)](https://aur.archlinux.org/packages/dftd4-git/)

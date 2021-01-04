@@ -112,7 +112,13 @@ else
 endif
 
 if get_option('openmp')
-  omp_dep = dependency('OpenMP')
+  omp_dep = dependency('openmp', required: fc.get_id() != 'intel')
+  if not omp_dep.found()
+    omp_dep = declare_dependency(
+      compile_args: '-qopenmp',
+      link_args: '-qopenmp',
+    )
+  endif
   gen_deps += omp_dep
 endif
 
