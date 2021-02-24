@@ -1,0 +1,23 @@
+name: docs
+
+on: [push, pull_request]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: pip install ford
+    - name: Build Documentation
+      run: ford ford.md
+    - uses: JamesIves/github-pages-deploy-action@3.7.1
+      if: github.event_name == 'push' && github.repository == 'dftd4/dftd4' && ( startsWith( github.ref, 'refs/tags/' ) || github.ref == 'refs/heads/main' )
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: _docs
+        CLEAN: true
