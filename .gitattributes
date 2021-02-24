@@ -1,2 +1,4 @@
+*     text=auto
+
 # Fortran include files
-*.inc text diff=f90
+*.inc text diff=fortran
