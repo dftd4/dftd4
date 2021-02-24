@@ -2,6 +2,9 @@ name: CI
 
 on: [push, pull_request]
 
+env:
+  BUILD_DIR: _build
+
 jobs:
   gcc-build:
     runs-on: ${{ matrix.os }}
@@ -9,13 +12,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        gcc_v: [9] # Version of GCC we want to use.
 
     env:
       FC: gfortran
       CC: gcc
-      CXX: g++
-      GCC_V: ${{ matrix.gcc_v }}
+      GCC_V: 9
       OMP_NUM_THREADS: 2,1
 
     steps:
@@ -29,28 +30,123 @@ jobs:
     - name: Install GCC (OSX)
       if: contains(matrix.os, 'macos')
       run: |
-          ln -s /usr/local/bin/gfortran-${GCC_V} /usr/local/bin/gfortran
-          ln -s /usr/local/bin/gcc-${GCC_V} /usr/local/bin/gcc
-          ln -s /usr/local/bin/g++-${GCC_V} /usr/local/bin/g++
-          which gfortran-${GCC_V}
-          which gfortran
+        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
+        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
+        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
 
     - name: Install GCC (Linux)
       if: contains(matrix.os, 'ubuntu')
-      run: |
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
-        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
-        --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_V} \
-        --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
+      run: >-
+        sudo update-alternatives
+        --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_V }} 100
+        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${{ env.GCC_V }}
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
     - name: Install meson
       run: pip3 install meson==0.55.3 ninja
 
     - name: Configure build
-      run: meson setup _build -Dla_backend=netlib --warnlevel=0
+      run: meson setup ${{ env.BUILD_DIR }} -Dla_backend=netlib --warnlevel=0
 
     - name: Build library
-      run: meson compile -C _build
+      run: meson compile -C ${{ env.BUILD_DIR }}
 
     - name: Run unit tests
-      run: meson test -C _build --print-errorlogs --no-rebuild
+      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+
+  # Test native MinGW Windows build
+  mingw-build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          { msystem: MINGW64, arch: x86_64 },
+        # { msystem: MINGW32, arch: i686   }
+        ]
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup MSYS2 toolchain
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        update: false
+        install: >-
+          git
+          mingw-w64-${{ matrix.arch }}-gcc-fortran
+          mingw-w64-${{ matrix.arch }}-openblas
+          mingw-w64-${{ matrix.arch }}-lapack
+          mingw-w64-${{ matrix.arch }}-meson
+          mingw-w64-${{ matrix.arch }}-ninja
+
+    - name: Configure build
+      run: meson setup ${{ env.BUILD_DIR }} -Dla_backend=netlib --warnlevel=0
+      env:
+        FC: gfortran
+        CC: gcc
+
+    - name: Build project
+      run: meson compile -C ${{ env.BUILD_DIR }}
+
+    - name: Run unit tests
+      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+      env:
+        OMP_NUM_THREADS: 2,1
+
+  intel-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04]
+        fc: [ifort]
+        cc: [icc]
+
+    env:
+      FC: ${{ matrix.fc }}
+      CC: ${{ matrix.cc }}
+      APT_PACKAGES: >-
+        intel-oneapi-compiler-fortran
+        intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
+        intel-oneapi-mkl-devel
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+
+    - name: Add Intel repository
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+
+    - name: Install Intel oneAPI compiler
+      run: |
+        sudo apt-get install ${{ env.APT_PACKAGES }}
+        source /opt/intel/oneapi/setvars.sh
+        printenv >> $GITHUB_ENV
+
+    - name: Install meson/cmake
+      run: pip3 install meson==0.56.2 ninja
+
+    - name: Configure meson build
+      run: meson setup ${{ env.BUILD_DIR }} -Dfortran_link_args=-qopenmp
+
+    - name: Build library
+      run: meson compile -C ${{ env.BUILD_DIR }}
+
+    - name: Run unit tests
+      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+      env:
+        OMP_NUM_THREADS: 2,1

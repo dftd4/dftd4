@@ -1,139 +1,144 @@
-DFT-D4 standalone program
-=========================
+DFT-D4 project
+==============
 
-[![Build Status](https://travis-ci.org/dftd4/dftd4.svg?branch=master)](https://travis-ci.org/dftd4/dftd4)
-[![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
-[![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING)
+[![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING.LESSER)
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
-[![DOI](https://zenodo.org/badge/173139980.svg)](https://zenodo.org/badge/latestdoi/173139980)
+[![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
 
-This is a minimal standalone version of DFT-D4 providing the D4(EEQ)-ATM method.
+Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 
 
-Installing
-----------
+## Installing
 
 To compile this version of DFT-D4 the following programs are needed
 (the number in parentheses specifies the tested versions).
 
-* `gfortran` or `ifort` compiler
-* `meson` (0.53 or newer) and `ninja` (1.7 or newer) as build system
-* `asciidoctor` to build the man-page
+To build this project from the source code in this repository you need to have
+- a Fortran compiler supporting Fortran 2008
+- [meson](https://mesonbuild.com) version 0.53 or newer
+- a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
+- a LAPACK / BLAS provider, like MKL or OpenBLAS
 
-The program is build by
+Optional dependencies are
+- asciidoctor to build the manual page
+- FORD to build the developer documentation
+- C compiler to test the C-API and compile the Python extension module
+- Python 3.6 or newer with the CFFI package installed to build the Python API
 
-    $ FC=ifort meson setup build && ninja -C build
+Setup a build with
 
-The binary is found at build/dftd4 and is ready to use.
-
-The man-page can be build by
-
-    $ asciidoc --doctype manpage --format manpage man1/dftd4.1.txt
-
-By adding the directory to the `MANPATH` variable the documentation
-of DFT-D4 is accessable by `man`.
-
-`dftd4` as been successfully build using
-
-* `ifort` 19.0.3 with the MKL as linear algebra backend
-  on Manjaro Linux 18.0
-* `gfortran` 8.3.0 with the MKL (19.0.3.199) as linear algebra backend
-  on Manjaro Linux 18.0
-* `gfortran` 8.3.0 with LAPACK (3.8.0-2) and openBLAS (0.3.6-1)
-  as linear algebra backend on Manjaro Linux 18.0
-
-`dftd4` could not be compiled with
-
-* `gfortran` 4 or older (missing Fortran 2003 standard)
-
-
-Available Package
------------------
-
-Statically linked binaries can be found at the [latest release page](https://github.com/dftd4/dftd4/releases/latest).
-DFT-D4 is now also available for some package managers.
-
-
-### Arch User Repository (AUR)
-
-[![AUR stable](https://img.shields.io/aur/version/dftd4)](https://aur.archlinux.org/packages/dftd4/)
-[![AUR git](https://img.shields.io/aur/version/dftd4-git?label=aur-git)](https://aur.archlinux.org/packages/dftd4-git/)
-
-Get the build file from the [AUR](https://aur.archlinux.org) and use `makepkg`
-(or your favorite wrapper) to build the package for `pacman`.
-`dftd4` will be build with openBLAS backend, openMP and the most recent GCC.
-
-The package build files are available [here](assets/aur) as submodules.
-
-
-### Conda-Forge
-
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd4.svg)](https://anaconda.org/conda-forge/dftd4)
-
-Installing `dftd4` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
-
-```
-conda config --add channels conda-forge
+```sh
+meson setup _build
 ```
 
-Once the `conda-forge` channel has been enabled, `dftd4` can be installed with:
+You can select the Fortran compiler by the `FC` environment variable.
+To compile and run the projects testsuite use
 
-```
-conda install dftd4
-```
-
-It is possible to list all of the versions of `dftd4` available on your platform with:
-
-```
-conda search dftd4 --channel conda-forge
+```sh
+meson test -C _build --print-errorlogs
 ```
 
+If the testsuite passes you can install with
 
-Usage
------
+```sh
+meson configure _build --prefix=/path/to/install
+meson install -C _build
+```
 
-DFT-D4 is invoked by
-
-    $ dftd4 [options] <file>
-
-where file is a valid xyz-file (coordinates in Ångström) or a
-Turbomole coord file containing only the $coord data group with
-coordinates in Bohr.
-
-More information can be obtained from the manpage or by
-invoking the program intern help page with `--help`.
+This might require administrator access depending on the chosen install prefix.
 
 
-Examples
---------
+## Usage
 
-For a general D4 calculation to obtain C6 coefficients use
+DFT-D4 calculations can be performed with the ``s-dftd4`` executable.
+To calculate the dispersion correction for PBE0-D4 run:
 
-    $ dftd4 coord
+```sh
+dftd4 --func pbe0 coord
+```
 
-To calculate a dispersion correction for a PBE0 calculation use
+In case you want to access the DFT-D4 results from other programs, dump the results to JSON with
+(the ``--noedisp`` flag prevents the ``.EDISP`` file generation):
 
-    $ dftd4 --func pbe0 coord
+```sh
+dftd4 --func pbe0 --json --noedisp --grad struct.xyz
+```
 
-Note that, the `--func` option will try to make as much sense as
-possible from your input, by converting it internally to lowercase
-and ignoring most dashes or year number. The input `b-p` and `BP86/def-TZVP`
-are therefore equivalent.
+Dispersion related properties can be calculated as well:
 
-To calculate the derivative of the dispersion energy use
+```sh
+dftd4 --property geo.gen
+```
 
-    $ dftd4 --func pbe0 --grad coord
-
-This will write a Turbomole style `gradient` file or will try to
-augment an already present `gradient` file with the dispersion gradient.
-
-For the D4(EEQ)-MBD method use
-
-    $ dftd4 --func pbe0 --mbd coord
+For an overview over all command line arguments use the ``--help`` argument or checkout the [``dftd4(1)``](man/dftd4.1.adoc) manpage.
 
 
-Citation
---------
+## API access
+
+The DFT-D4 project provides first class API support Fortran, C and Python.
+Other programming languages should try to interface with to DFT-D4 via one of those three APIs.
+To provide first class API support for a new language the interface specification should be available as meson build files.
+
+
+### Fortran API
+
+The recommended way to access the Fortran module API is by using ``dftd4`` as a meson subproject.
+Alternatively, the project is accessible by the Fortran package manager ([fpm](https://github.com/fortran-lang/fpm))
+
+The complete API is available from ``dftd4`` module, the individual modules are available to the user as well but are not part of the public API and therefore not guaranteed to remain stable.
+ABI compatibility is only guaranteed for the same minor version.
+
+The communication with the Fortran API uses the ``error_type`` and ``structure_type`` of the modular computation tool chain library (mctc-lib) to handle errors and represent geometries, respectively.
+
+
+### C API
+
+The C API provides access to the basic Fortran objects and their most important methods to interact with them.
+All Fortran objects are available as opaque ``void*`` in C and can only be manipulated with the correct API calls.
+To evaluate a dispersion correction in C four objects are available:
+
+1. the error handler:
+
+   Simple error handler to carry runtime exceptions created by the library.
+   Exceptions can be handled and/or transfered to the downstream error handling system by this means.
+
+2. the molecular structure data:
+
+   Provides a representation of the molecular structure with immutable number of atoms, atomic species, total charge and boundary conditions.
+   The object provides a way to update coordinates and lattice parameters, to update immutable quantities the object has to be recreated.
+
+3. the dispersion model:
+
+   Instantiated for a given molecular structure type, it carries no information on the geometry but relies on the atomic species of the structure object.
+   Recreating a structure object requires to recreate the dispersion model as well.
+
+4. the damping parameters:
+
+   Damping parameter object determining the short-range behaviour of the dispersion correction.
+   Standard damping parameters like the rational damping are independent of the molecular structure and can easily be reused for several structures or easily exchanged.
+
+The user is responsible for creating and deleting the objects to avoid memory leaks.
+
+
+### Python API
+
+The Python API is disabled by default and can be built in-tree or out-of-tree.
+The in-tree build is mainly meant for end users and packages.
+To build the Python API with the normal project set the ``python`` option in the configuration step with
+
+```sh
+meson setup _build -Dpython=true -Dpython_version=3
+```
+
+The Python version can be used to select a different Python version, it defaults to `'3'`.
+Python 2 is not supported with this project, the Python version key is meant to select between several local Python 3 versions.
+
+Proceed with the build as described before and install the projects to make the Python API available in the selected prefix.
+
+For the out-of-tree build see the instructions in the [``python``](./python) directory.
+
+
+## Citation
 
 Always cite:
 
@@ -149,8 +154,7 @@ DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 chemrxiv: [10.26434/chemrxiv.10299428](https://doi.org/10.26434/chemrxiv.10299428.v1)
 
 
-License
--------
+## License
 
 This project is free software: you can redistribute it and/or modify it under
 the terms of the Lesser GNU General Public License as published by
