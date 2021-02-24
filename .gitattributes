@@ -1,0 +1,2 @@
+# Fortran include files
+*.inc text diff=f90
