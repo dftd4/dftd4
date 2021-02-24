@@ -1,0 +1,71 @@
+= dftd4(1)
+:doctype: manpage
+
+== Name
+dftd4 - Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
+
+== Synopsis
+*dftd4* [_options_] _input_
+
+
+== Description
+
+Takes an geometry input to calculate the D4 dispersion correction.
+Periodic calculations are performed automatically for periodic input formats.
+Specify the functional to select the correct parameters.
+
+
+== Options
+
+*-c, --charge* _integer_::
+     Set charge to molecule,
+     overrides charge in .CHRG file
+
+*-f, --func* _functional_::
+     Dispersion correction for specified density functional method
+
+*--param* _s6_ _s8_ _a1_ _a2_::
+     use this damping parameters for energy calculation
+
+*--mbdscale* _s9_::
+     scale the many-body dispersion energy (default=1.0)
+
+*--zeta* _real_ _real_::
+     Adjust charge scaling height and charge scaling steepness
+     (default: 3.0 and 2.0)
+
+*--wfactor* _real_::
+     Adjust weighting factor for the Gaussian interpolation
+     (default: 6.0)
+
+*-g, --grad* [_file_]::
+     prints analytical gradient to file,
+     write results to file (default: dftd4.txt),
+     attempts to add to Turbomole gradient and gradlatt files
+
+*--json* [_file_]::
+     Serialize all results as JSON (dftd4.json)
+
+*--noedisp*::
+     Do not write dispersion energy in `.EDISP` file
+
+*--property*::
+     Print atomic properties and molecular C6-coefficient
+
+*--version*::
+     Prints version number and citation
+
+*--citation*::
+     Prints references for DFT-D4 method
+
+*--license*::
+     Prints licensing information
+
+*-v, --verbose*::
+     Show more, can be used multiple times
+
+*-s, --silent*::
+     Show less, use twice to supress all output
+
+*-h, --help*::
+     Show this message

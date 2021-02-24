@@ -14,15 +14,12 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-dftd4_exe = executable(
-  meson.project_name(),
-  sources: files('main.f90'),
-  dependencies: dftd4_dep,
-  install: install,
+test(
+  'api-test',
+  executable(
+    'api-tester',
+    sources: files('example.c'),
+    dependencies: dftd4_dep,
+  ),
 )
 
-test('app-version', dftd4_exe, args: '--version')
-test('app-help', dftd4_exe, args: '--help')
-test('app-license', dftd4_exe, args: '--license')
-test('app-citation', dftd4_exe, args: '--citation')
-test('app-noargs', dftd4_exe, should_fail: true)

@@ -1,0 +1,29 @@
+name = "dftd4"
+version = "3.0.0"
+license = "LGPL-3.0-or-later"
+maintainer = ["@awvwgk"]
+author = ["Eike Caldeweyher", "Sebastian Ehlert", "Stefan Grimme"]
+description = "Generally Applicable Atomic-Charge Dependent London Dispersion Correction"
+keywords = ["quantum-chemistry", "dispersion-correction"]
+copyright = "Copyright 2017-2021 E. Caldeweyher, S. Ehlert, S. Grimme"
+
+[build]
+link = ["lapack", "blas"]
+auto-tests = false
+
+[dependencies]
+[dependencies.mctc-lib]
+git = "https://github.com/grimme-lab/mctc-lib.git"
+tag = "v0.2.1"
+[dependencies.multicharge]
+git = "https://github.com/grimme-lab/multicharge.git"
+tag = "v0.1.0"
+
+[dev-dependencies]
+[dev-dependencies.mstore]
+git = "https://github.com/grimme-lab/mstore.git"
+tag = "v0.1.2"
+
+[[test]]
+name = "tester"
+source-dir = "test/unit"

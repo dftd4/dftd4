@@ -14,15 +14,12 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-dftd4_exe = executable(
-  meson.project_name(),
-  sources: files('main.f90'),
-  dependencies: dftd4_dep,
-  install: install,
-)
 
-test('app-version', dftd4_exe, args: '--version')
-test('app-help', dftd4_exe, args: '--help')
-test('app-license', dftd4_exe, args: '--license')
-test('app-citation', dftd4_exe, args: '--citation')
-test('app-noargs', dftd4_exe, should_fail: true)
+from pkg_resources import parse_version
+from dftd4 import __version__
+from dftd4.libdftd4 import get_api_version
+
+
+def test_api_version():
+    """Ensure that the API version is compatible."""
+    assert parse_version(get_api_version()) == parse_version(__version__)
