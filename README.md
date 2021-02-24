@@ -10,6 +10,38 @@ Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 
 ## Installing
 
+A statically linked binary distribution for Linux platforms is available at the [latest release](https://github.com/dftd4/dftd4/releases/latest) tag.
+
+
+### Conda package
+
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd4.svg)](https://anaconda.org/conda-forge/dftd4)
+
+This project is packaged for the *conda* package manager and available on the *conda-forge* channel.
+To install the *conda* package manager we recommend the [miniforge](https://github.com/conda-forge/miniforge/releases) installer.
+If the *conda-forge* channel is not yet enabled, add it to your channels with
+
+```
+conda config --add channels conda-forge
+```
+
+Once the *conda-forge* channel has been enabled, this project can be installed with:
+
+```
+conda install dftd4
+```
+
+It is possible to list all of the versions available on your platform with:
+
+```
+conda search dftd4 --channel conda-forge
+```
+
+Now you are ready to use ``dftd4``.
+
+
+### Building from Source
+
 To compile this version of DFT-D4 the following programs are needed
 (the number in parentheses specifies the tested versions).
 
@@ -83,7 +115,7 @@ To provide first class API support for a new language the interface specificatio
 ### Fortran API
 
 The recommended way to access the Fortran module API is by using ``dftd4`` as a meson subproject.
-Alternatively, the project is accessible by the Fortran package manager ([fpm](https://github.com/fortran-lang/fpm))
+Alternatively, the project is accessible by the Fortran package manager ([fpm](https://github.com/fortran-lang/fpm)).
 
 The complete API is available from ``dftd4`` module, the individual modules are available to the user as well but are not part of the public API and therefore not guaranteed to remain stable.
 ABI compatibility is only guaranteed for the same minor version.

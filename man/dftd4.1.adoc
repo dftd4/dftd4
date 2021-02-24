@@ -1,118 +1,71 @@
-DFTD4(1)
-========
+= dftd4(1)
 :doctype: manpage
 
-NAME
-----
-dftd4 - performs DFT-D4 calculations to obtain dispersion energies
-        and its derivatives
+== Name
+dftd4 - Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 
-SYNOPSIS
---------
-*dftd4* ['OPTIONS'] 'FILE' ['OPTIONS']
+== Synopsis
+*dftd4* [_options_] _input_
 
-DESCRIPTION
------------
-The dftd4(1) program calculates the dispersion energy based on
-the molecular geometry from 'FILE'. 'FILE' is either valid a
-valid Turbomole formatted coordinate file or a XMOL file.
 
-OPTIONS
--------
-*-c, --chrg* 'INTEGER'::
-     Set charge to molecule
+== Description
+
+Takes an geometry input to calculate the D4 dispersion correction.
+Periodic calculations are performed automatically for periodic input formats.
+Specify the functional to select the correct parameters.
+
+
+== Options
+
+*-c, --charge* _integer_::
+     Set charge to molecule,
      overrides charge in .CHRG file
 
-*-f, --func* 'FUNCTIONAL'::
-     Dispersion correction for specified DF method
+*-f, --func* _functional_::
+     Dispersion correction for specified density functional method
 
-*--zeta* 'GAMMA_A' 'GAMMA_C'::
-     development feature (experimental)
-
-*--wfactor* 'W_FACTOR'::
-     development feature (experimental)
-
-*--param* 'S6' 'S8' 'A1' 'A2'::
+*--param* _s6_ _s8_ _a1_ _a2_::
      use this damping parameters for energy calculation
 
-*--s10* 'S10'::
-     use C10 coeffients in dispersion energy (not recommended, default=0.0).
-     C10 coeffients are very large and can lead to spurios dispersion energies,
-     this factor should not be used without any extensive testing
+*--mbdscale* _s9_::
+     scale the many-body dispersion energy (default=1.0)
 
-*--mbdscale* 'S9'::
-     scale the many-body dispersion energy (default=1.0), this might be
-     handy for e.g. RPA based double hybrid density functionals which can
-     capture many-body dispersion by themselves
+*--zeta* _real_ _real_::
+     Adjust charge scaling height and charge scaling steepness
+     (default: 3.0 and 2.0)
 
-*-2, --nomb*::
-     Just pairwise dispersion energy (not recommended)
+*--wfactor* _real_::
+     Adjust weighting factor for the Gaussian interpolation
+     (default: 6.0)
 
-*-3, --abc*::
-     Use approximate zero-damped ATM term (default)
+*-g, --grad* [_file_]::
+     prints analytical gradient to file,
+     write results to file (default: dftd4.txt),
+     attempts to add to Turbomole gradient and gradlatt files
 
-*-m, --mbd*::
-     Use exact RPA-like many-body dispersion energy. This is recommended
-     for large systems as energy corrections (note that D4-MBD and D4-ATM
-     use different damping parameters)
-
-*-g, --grad*::
-     prints analytical gradient to file
-
-*--orca*::
-     Enter compatibility mode for ORCA
-
-*--json*::
+*--json* [_file_]::
      Serialize all results as JSON (dftd4.json)
 
-*--toml*::
-     Serialize all results as TOML (dftd4.toml)
+*--noedisp*::
+     Do not write dispersion energy in `.EDISP` file
 
-*--tmer*::
-     Force tmer2++ compatible .EDISP printout
-
-*--molc6*::
-     Print molecular C6-coeffient and polarizability
+*--property*::
+     Print atomic properties and molecular C6-coefficient
 
 *--version*::
      Prints version number and citation
 
 *--citation*::
-     Prints references for DFT-D4 method.
+     Prints references for DFT-D4 method
 
 *--license*::
-     Prints GPL
-
-*-s, --silent*::
-     Clutters the screen less
+     Prints licensing information
 
 *-v, --verbose*::
-     be verbose
+     Show more, can be used multiple times
+
+*-s, --silent*::
+     Show less, use twice to supress all output
 
 *-h, --help*::
      Show this message
-
-EXIT STATUS
------------
-*0*::
-   Success
-
-*128*::
-   Failure
-
-BUGS
-----
-Please report any bugs to the xtb-mailing list <xtb@thch.uni-bonn.de>
-
-AUTHOR
-------
-DFT-D4 is part of the TB project of S. Grimme. The DFT-D4 method
-was developed and implemented by E. Caldeweyher and S. Ehlert.
-
-RESOURCES
----------
-Main web site: <http://grimme.uni-bonn.de>
-
-COPYING
--------
-Copyright \(C) 2015-2019 S. Grimme. For non-commerical, academia use only.

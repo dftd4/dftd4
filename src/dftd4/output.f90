@@ -48,17 +48,21 @@ subroutine ascii_atomic_radii(unit, mol, disp)
 
    integer :: isp
 
-   write(unit, '(a,":")') "Atomic radii (in Angstrom)"
-   write(unit, '(32("-"))')
-   write(unit, '(a4,5x,*(1x,a10))') "Z", "R(cov)", "r4/r2"
-   write(unit, '(32("-"))')
+   write(unit, '(a,":")') "Atomic data, radii in Ånström"
+   write(unit, '(54("-"))')
+   write(unit, '(a4,5x,*(1x,a10))') &
+      "Z", "R(cov)", "r4/r2", "hardness", "EN"
+   write(unit, '(54("-"))')
    do isp = 1, mol%nid
       write(unit, '(i4, 1x, a4, *(1x,f10.4))') &
          & mol%num(isp), mol%sym(isp), &
          & disp%rcov(isp)*autoaa, &
-         & disp%r4r2(isp)*autoaa
+         & disp%r4r2(isp)*autoaa, &
+         & disp%eta(isp), &
+         & disp%en(isp)
    end do
-   write(unit, '(32("-"))')
+   write(unit, '(54("-"))')
+   write(unit, '(a)')
 
 end subroutine ascii_atomic_radii
 
@@ -78,20 +82,25 @@ subroutine ascii_atomic_references(unit, mol, disp)
 
    mref = maxval(disp%ref)
    write(unit, '(a,":")') "Atomic reference systems (in atomic units)"
-   write(unit, '(76("-"))')
+   write(unit, '(70("-"))')
    write(unit, '(a4, 5x)', advance='no') "Z"
-   do iref = 1, 3
-      write(unit, '(a4, 1x, a7, 1x, a9)', advance='no') "#", "CN", "C6(AA)"
+   do iref = 1, 2
+      write(unit, '(a4, 2(1x, a7), 1x, a9)', advance='no') &
+         "#", "CN", "q+Z", "C6(AA)"
    end do
    write(unit, '(a)')
-   write(unit, '(76("-"))')
+   write(unit, '(70("-"))')
    do isp = 1, mol%nid
       write(unit, '(i4, 1x, a4)', advance='no') &
          & mol%num(isp), mol%sym(isp)
       do iref = 1, disp%ref(isp)
-         write(unit, '(i4, 1x, f7.4, 1x, f9.4)', advance='no') &
-            iref, disp%cn(iref, isp), disp%c6(iref, iref, isp, isp)
-         if (iref == 3 .and. disp%ref(isp) > 3) then
+         write(unit, '(i4, 2(1x, f7.4), 1x, f9.4)', advance='no') &
+            iref, disp%cn(iref, isp), disp%q(iref, isp) + disp%zeff(isp), &
+            disp%c6(iref, iref, isp, isp)
+         if (iref == 2 .and. disp%ref(isp) > 2) then
+            write(unit, '(/,9x)', advance='no')
+         end if
+         if (iref == 4 .and. disp%ref(isp) > 4) then
             write(unit, '(/,9x)', advance='no')
          end if
          if (iref == 6 .and. disp%ref(isp) > 6) then
@@ -100,7 +109,8 @@ subroutine ascii_atomic_references(unit, mol, disp)
       end do
       write(unit, '(a)')
    end do
-   write(unit, '(76("-"))')
+   write(unit, '(70("-"))')
+   write(unit, '(a)')
 
 end subroutine ascii_atomic_references
 
@@ -125,9 +135,11 @@ subroutine ascii_system_properties(unit, mol, disp, cn, q, c6)
    !> Atomic dispersion coefficients
    real(wp), intent(in) :: c6(:, :)
 
-   integer :: iat, isp
+   integer :: iat, isp, jat
+   real(wp) :: sum_c8
 
-   write(unit, '(a,":")') "Dispersion properties (in atomic units)"
+   sum_c8 = 0.0_wp
+   write(unit, '(a,":")') "Atomic properties (in atomic units)"
    write(unit, '(61("-"))')
    write(unit, '(a6,1x,a4,5x,*(1x,a10))') "#", "Z", "CN", "q", "C6(AA)", "C8(AA)"
    write(unit, '(61("-"))')
@@ -136,8 +148,20 @@ subroutine ascii_system_properties(unit, mol, disp, cn, q, c6)
       write(unit, '(i6,1x,i4,1x,a4,*(1x,f10.4))') &
          & iat, mol%num(isp), mol%sym(isp), cn(iat), q(iat), c6(iat, iat), &
          & c6(iat, iat)*3*disp%r4r2(isp)**2
+      do jat = 1, mol%nat
+         sum_c8 = sum_c8 + 3*c6(jat, iat)*disp%r4r2(mol%id(jat))*disp%r4r2(isp)
+      end do
    end do
    write(unit, '(61("-"))')
+   write(unit, '(a)')
+
+   write(unit, '(a,":")') "Molecular properties (in atomic units)"
+   write(unit, '(40("-"))')
+   write(unit, '(1x, a, t20, f19.4)') &
+      "molecular C6",  sum(c6), &
+      "molecular C8",  sum_c8
+   write(unit, '(40("-"))')
+   write(unit, '(a)')
 
 end subroutine ascii_system_properties
 
@@ -426,13 +450,14 @@ subroutine getline(unit,line,iostat)
 end subroutine getline
 
 
-subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6)
+subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
    real(wp), intent(in), optional :: energy
    real(wp), intent(in), optional :: gradient(:, :)
    real(wp), intent(in), optional :: sigma(:, :)
    real(wp), intent(in), optional :: cn(:)
+   real(wp), intent(in), optional :: q(:)
    real(wp), intent(in), optional :: c6(:, :)
    character(len=:), allocatable :: indent, version_string
    character(len=*), parameter :: jsonkey = "('""',a,'"":',1x)"
@@ -473,6 +498,12 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6)
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'coordination numbers'
       call write_json_array(unit, cn, indent)
+   end if
+   if (present(q)) then
+      write(unit, '(",")', advance='no')
+      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      write(unit, jsonkey, advance='no') 'coordination numbers'
+      call write_json_array(unit, q, indent)
    end if
    if (present(c6)) then
       write(unit, '(",")', advance='no')

@@ -40,6 +40,10 @@ program main
       logical :: rational = .false.
       logical :: has_param = .false.
       integer :: verbosity = 2
+      real(wp), allocatable :: charge
+      real(wp) :: ga = 3.0_wp
+      real(wp) :: gc = 2.0_wp
+      real(wp) :: wf = 6.0_wp
    end type d4_config
    type(d4_config) :: config
 
@@ -50,7 +54,7 @@ program main
    type(rational_damping_param) :: inp
    type(d4_model) :: d4
    type(error_type), allocatable :: error
-   real(wp) :: energy, sigma(3, 3)
+   real(wp) :: energy, sigma(3, 3), charge
    real(wp), allocatable :: gradient(:, :)
    character(len=:), allocatable :: method
    real(wp), allocatable :: s9
@@ -77,13 +81,33 @@ program main
       write(error_unit, '(a)') error%message
       error stop
    end if
+   if (allocated(config%charge)) then
+      mol%charge = config%charge
+   else
+      inquire(file='.CHRG', exist=exist)
+      if (exist) then
+         open(file='.CHRG', newunit=unit)
+         read(unit, *, iostat=stat) charge
+         if (stat == 0) then
+            mol%charge = charge
+            if (config%verbosity > 0) write(output_unit, '(a)') &
+               "[Info] Molecular charge read from .CHRG"
+         else
+            if (config%verbosity > 0) write(output_unit, '(a)') &
+               "[Warn] Could not read molecular charge read from .CHRG"
+         end if
+         close(unit)
+      end if
+   end if
    if (config%wrap) then
       call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
    end if
 
    if (config%mbdscale) s9 = inp%s9
    if (config%rational) then
-      if (.not.config%has_param) then
+      if (config%has_param) then
+         param = inp
+      else
          call get_rational_damping(method, param, s9)
          if (.not.allocated(param)) then
             write(error_unit, '("[Error]", 1x, a)') &
@@ -101,7 +125,7 @@ program main
       allocate(gradient(3, mol%nat))
    end if
 
-   call new_d4_model(d4, mol)
+   call new_d4_model(d4, mol, ga=config%ga, gc=config%gc, wf=config%wf)
 
    if (config%properties) then
       call property_calc(output_unit, mol, d4, config%verbosity)
@@ -196,9 +220,7 @@ subroutine property_calc(unit, mol, disp, verbosity)
 
    if (verbosity > 1) then
       call ascii_atomic_radii(unit, mol, disp)
-      write(unit, '(a)')
       call ascii_atomic_references(unit, mol, disp)
-      write(unit, '(a)')
    end if
 
    mref = maxval(disp%ref)
@@ -211,7 +233,6 @@ subroutine property_calc(unit, mol, disp, verbosity)
 
    if (verbosity > 0) then
       call ascii_system_properties(unit, mol, disp, cn, q, c6)
-      write(unit, '(a)')
    end if
 
 end subroutine property_calc
@@ -225,15 +246,36 @@ subroutine help(unit)
 
    write(unit, '(a)') &
       "", &
+      "Generally Applicable Atomic-Charge Dependent London Dispersion Correction.", &
+      "Takes an geometry input to calculate the D4 dispersion correction.", &
+      "Periodic calculations are performed automatically for periodic input formats.", &
+      "Specify the functional to select the correct parameters.", &
       ""
 
    write(unit, '(2x, a, t25, a)') &
+      "-c, --charge <real>", "Set charge to molecule, overwrites .CHRG file", &
       "-i, --input <format>", "Hint for the format of the input file", &
-      "--grad", "Evaluate molecular gradient and virial", &
-      "--citation", "Print citation information and exit", &
-      "--license", "Print license header and exit", &
-      "--version", "Print program version and exit", &
-      "--help", "Show this help message"
+      "-f, --func <method>", "Use damping parameters for given functional", &
+      "    --param <list>", "Specify parameters for rational damping,", &
+      "", "expected order is s6, s8, a1, a2 (requires four arguments)", &
+      "    --mbdscale <s9>", "Use scaled ATM three-body dispersion", &
+      "    --zeta <list>", "Adjust charge scaling parameters, takes two reals", &
+      "", "expected order is ga, gc (default: 3.0, 2.0)", &
+      "    --wfactor <real>", "Adjust weighting factor for interpolation", &
+      "", "(default: 6.0)", &
+      "-g, --grad", "Evaluate molecular gradient and virial", &
+      "", "write results to file (default: dftd4.txt),", &
+      "", "attempts to add to Turbomole gradient and gradlatt files", &
+      "    --property", "Show dispersion related atomic and system properties", &
+      "    --noedisp", "Disable writing of dispersion energy to .EDISP file", &
+      "    --json [file]", "Dump results to JSON output (default: dftd4.json)", &
+      "    --grad [file]", "Request gradient evaluation,", &
+      "-v, --verbose", "Show more, can be used multiple times", &
+      "-s, --silent", "Show less, use twice to supress all output", &
+      "    --version", "Print program version and exit", &
+      "    --citation", "Print citation information and exit", &
+      "    --license", "Print license header and exit", &
+      "-h, --help", "Show this help message"
 
    write(unit, '(a)')
 
@@ -383,12 +425,20 @@ subroutine get_arguments(input, input_format, config, method, inp, error)
       case("--license")
          call license(output_unit)
          stop
+      case("-v", "--verbose")
+         config%verbosity = config%verbosity + 1
+      case("-s", "--silent")
+         config%verbosity = config%verbosity - 1
       case default
          if (.not.allocated(input)) then
             call move_alloc(arg, input)
             cycle
          end if
-         call fatal_error(error, "Too many positional arguments present")
+         if (arg(1:1) == "-") then
+            call fatal_error(error, "Unknown command option '"//arg//"'")
+         else
+            call fatal_error(error, "Too many positional arguments present")
+         end if
          exit
       case("-i", "--input")
          iarg = iarg + 1
@@ -398,6 +448,11 @@ subroutine get_arguments(input, input_format, config, method, inp, error)
             exit
          end if
          input_format = get_filetype("."//arg)
+      case("-c", "--charge")
+         iarg = iarg + 1
+         allocate(config%charge)
+         call get_argument_as_real(iarg, config%charge, error)
+         if (allocated(error)) exit
       case("--json")
          config%json = .true.
          config%json_output = "dftd4.json"
@@ -433,6 +488,17 @@ subroutine get_arguments(input, input_format, config, method, inp, error)
          call get_argument_as_real(iarg, inp%s9, error)
          if (allocated(error)) exit
          config%mbdscale = .true.
+      case("--zeta")
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, config%ga, error)
+         if (allocated(error)) exit
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, config%gc, error)
+         if (allocated(error)) exit
+      case("--wfactor")
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, config%wf, error)
+         if (allocated(error)) exit
       case("-f", "--func")
          config%rational = .true.
          iarg = iarg + 1
