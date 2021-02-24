@@ -14,20 +14,42 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-# Standalone build for Python-API of DFT-D4, requires a dftd4 library
-# in the PKG_CONFIG_PATH environment variable to work.
-project(
-  'dftd4-python',
-  'c',
-  license: 'LGPL-3.0-or-later',
-  meson_version: '>=0.53',
+# Create mstore as subproject for testing
+mstore_prj = subproject(
+  'mstore',
+  version: '>=0.1',
+  required: not meson.is_subproject(),
   default_options: [
-    'buildtype=debugoptimized',
+    'default_library=static',
   ],
 )
-install = true
+# If we do not find mstore and are a subproject, we just skip testing
+if not mstore_prj.found()
+   subdir_done()
+endif
+mstore_dep = mstore_prj.get_variable('mstore_dep')
 
-dftd4_dep = dependency('dftd4', version: '>=3.0.0')
-dftd4_header = files('..'/'include'/'dftd4.h')
+tests = [
+  'ncoord',
+  'model',
+  'dftd4',
+  'param',
+  'periodic',
+]
 
-subdir('dftd4')
+test_srcs = files(
+  'main.f90',
+)
+foreach t : tests
+  test_srcs += files('test_@0@.f90'.format(t.underscorify()))
+endforeach
+
+tester = executable(
+  'tester',
+  sources: test_srcs,
+  dependencies: [dftd4_dep, mstore_dep],
+)
+
+foreach t : tests
+  test(t, tester, args: t)
+endforeach

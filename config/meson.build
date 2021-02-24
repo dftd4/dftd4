@@ -25,12 +25,6 @@ endif
 
 fc = meson.get_compiler('fortran')
 fc_id = fc.get_id()
-if has_cc
-  has_cc = fc_id == meson.get_compiler('c').get_id()
-endif
-if has_cpp
-  has_cpp = fc_id == meson.get_compiler('cpp').get_id()
-endif
 
 if fc_id == 'gcc'
   add_project_arguments(
@@ -50,78 +44,102 @@ elif fc_id == 'pgi' or fc_id == 'nvidia_hpc'
     '-traceback',
     language: 'fortran',
   )
-elif fc_id == 'flang'
-  add_project_arguments(
-    '-Mbackslash',
-    '-Mallocatable=03',
-    language: 'fortran',
-  )
-endif
-
-
-# Collect dependencies
-gen_deps = []
-
-# Collect the linear algebra backend, possible choices are MKL, OpenBLAS or netlib-BLAS
-la_backend = get_option('la_backend')
-if la_backend == 'mkl'
-  if fc.get_id() == 'intel'
-    libmkl_exe = [fc.find_library('mkl_intel_lp64')]
-    libmkl_exe += fc.find_library('mkl_intel_thread')
-  else
-    libmkl_exe = [fc.find_library('mkl_gf_lp64')]
-    libmkl_exe += fc.find_library('mkl_gnu_thread')
-  endif
-  libmkl_exe += fc.find_library('mkl_core')
-  libmkl_exe += fc.find_library('iomp5')
-  libmkl_sha = fc.find_library('mkl_rt')
-  lib_deps += libmkl_sha
-  exe_deps += libmkl_exe
-elif la_backend == 'openblas'
-  blas_dep = dependency('openblas', required: false)
-  if not blas_dep.found()
-    blas_dep = fc.find_library('openblas', required: true)
-  endif
-  gen_deps += blas_dep
-  openblas_provides_lapack = fc.links(
-    'external dsysv; call dsysv(); end', 
-    dependencies: blas_dep,
-  )
-  if not openblas_provides_lapack
-    lapack_dep = dependency('lapack', required: false)
-    if not lapack_dep.found()
-      lapack_dep = fc.find_library('lapack', required: true)
-    endif
-    gen_deps += lapack_dep
-  endif
-elif la_backend == 'custom'
-  foreach lib: get_option('custom_libraries')
-    gen_deps += fc.find_library(lib)
-  endforeach
-else
-  blas_dep = dependency('blas', required: false)
-  if not blas_dep.found()
-    blas_dep = fc.find_library('blas', required: true)
-  endif
-  gen_deps += blas_dep
-  lapack_dep = dependency('lapack', required: false)
-  if not lapack_dep.found()
-    lapack_dep = fc.find_library('lapack', required: true)
-  endif
-  gen_deps += lapack_dep
 endif
 
 if get_option('openmp')
-  omp_dep = dependency('openmp', required: fc.get_id() != 'intel')
-  if not omp_dep.found()
-    omp_dep = declare_dependency(
-      compile_args: '-qopenmp',
-      link_args: '-qopenmp',
-    )
-  endif
-  gen_deps += omp_dep
+  omp_dep = dependency('openmp')
+  lib_deps += omp_dep
 endif
 
-# distribute dependencies for shared object and static executable
-lib_deps += gen_deps
-exe_deps += gen_deps
+lapack_vendor = get_option('lapack')
+if lapack_vendor == 'auto'
+  if fc_id == 'intel'
+    lapack_vendor = 'mkl'
+  endif
+endif
+
+if lapack_vendor == 'mkl'
+  mkl_dep = []
+  if fc_id == 'intel'
+    mkl_dep += fc.find_library('mkl_intel_lp64')
+    if get_option('openmp')
+      mkl_dep += fc.find_library('mkl_intel_thread')
+    endif
+  elif fc_id == 'gcc'
+    mkl_dep += fc.find_library('mkl_gf_lp64')
+    if get_option('openmp')
+      mkl_dep += fc.find_library('mkl_gnu_thread')
+    endif
+  else
+    error('MKL not supported for this compiler')
+  endif
+  if not get_option('openmp')
+    mkl_dep += fc.find_library('mkl_tbb_thread')
+  endif
+  mkl_dep += fc.find_library('mkl_core')
+  lib_deps += mkl_dep
+
+elif lapack_vendor == 'openblas'
+  openblas_dep = dependency('openblas', required: false)
+  if not openblas_dep.found()
+    openblas_dep = fc.find_library('openblas_dep')
+  endif
+  lib_deps += openblas_dep
+  if not fc.links('external dsytrs; call dsytrs(); end', dependencies: openblas_dep)
+    lapack_dep = dependency('lapack', required: false)
+    if not lapack_dep.found()
+      lapack_dep = fc.find_library('lapack')
+    endif
+    lib_deps += lapack_dep
+  endif
+
+else
+  lapack_dep = dependency('lapack', required: false)
+  if not lapack_dep.found()
+    lapack_dep = fc.find_library('lapack')
+  endif
+  lib_deps += lapack_dep
+  blas_dep = dependency('blas', required: false)
+  if not blas_dep.found()
+    blas_dep = fc.find_library('blas')
+  endif
+  lib_deps += blas_dep
+endif
+
+# Create the tool chain library as subproject
+mctc_prj = subproject(
+  'mctc-lib',
+  version: '>=0.1',
+  default_options: [
+    'default_library=static',
+  ],
+)
+mctc_dep = mctc_prj.get_variable('mctc_dep')
+lib_deps += mctc_dep
+inc_dirs += mctc_prj.get_variable('mctc_inc')
+
+if install
+  install_data(
+    mctc_prj.get_variable('mctc_lic'),
+    install_dir: get_option('datadir')/'licenses'/meson.project_name()/'mctc-lib'
+  )
+endif
+
+# Create the tool chain library as subproject
+multicharge_prj = subproject(
+  'multicharge',
+  version: '>=0.1',
+  default_options: [
+    'default_library=static',
+  ],
+)
+multicharge_dep = multicharge_prj.get_variable('multicharge_dep')
+lib_deps += multicharge_dep
+inc_dirs += multicharge_prj.get_variable('multicharge_inc')
+
+if install
+  install_data(
+    multicharge_prj.get_variable('multicharge_lic'),
+    install_dir: get_option('datadir')/'licenses'/meson.project_name()/'multicharge'
+  )
+endif

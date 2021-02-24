@@ -15,21 +15,32 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 option(
-  'la_backend',
+  'lapack',
   type: 'combo',
-  value: 'mkl',
-  choices: ['mkl', 'openblas', 'netlib', 'custom'],
+  value: 'auto',
+  yield: true,
+  choices: ['auto', 'mkl', 'openblas', 'netlib'],
   description : 'linear algebra backend',
 )
-option(
-  'custom_libraries',
-  type: 'array',
-  value: [],
-  description: 'libraries to load for custom linear algebra backend',
-)
+
 option(
   'openmp',
   type: 'boolean',
   value: true,
+  yield: true,
   description: 'use OpenMP parallelisation',
+)
+
+option(
+  'python',
+  type: 'boolean',
+  value: false,
+  description: 'Build Python extension module',
+)
+
+option(
+  'python_version',
+  type: 'string',
+  value: '3',
+  description: 'Python version to link against.',
 )

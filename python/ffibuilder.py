@@ -14,15 +14,22 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-dftd4_exe = executable(
-  meson.project_name(),
-  sources: files('main.f90'),
-  dependencies: dftd4_dep,
-  install: install,
+import cffi, sys
+
+if len(sys.argv) != 3:
+    raise RuntimeError("Requires two arguments")
+
+header_file = sys.argv[1]
+module_name = sys.argv[2]
+
+ffibuilder = cffi.FFI()
+ffibuilder.set_source(
+    module_name,
+    '#include "dftd4.h"',
 )
 
-test('app-version', dftd4_exe, args: '--version')
-test('app-help', dftd4_exe, args: '--help')
-test('app-license', dftd4_exe, args: '--license')
-test('app-citation', dftd4_exe, args: '--citation')
-test('app-noargs', dftd4_exe, should_fail: true)
+with open(header_file) as f:
+    ffibuilder.cdef(f.read())
+
+if __name__ == '__main__':
+    ffibuilder.distutils_extension('.')
