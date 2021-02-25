@@ -21,8 +21,8 @@ print_creation_date: true
 creation_date: %Y-%m-%d %H:%M %z
 extra_mods: iso_fortran_env:https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html
             multicharge:https://github.com/grimme-lab/multicharge
-            mctc_io:https://grimme-lab.github.io/mctc-lib/modules/mctc_io.html
-            mctc_env:https://grimme-lab.github.io/mctc-lib/modules/mctc_env.html
+            mctc_io:https://grimme-lab.github.io/mctc-lib/module/mctc_io.html
+            mctc_env:https://grimme-lab.github.io/mctc-lib/module/mctc_env.html
 md_extensions: markdown.extensions.toc
                markdown.extensions.smarty
 ---
