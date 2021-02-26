@@ -25,10 +25,10 @@ Supported keywords are
  Keyword                  Default     Description
 ======================== =========== ============================================
  level_hint               None        Dispersion correction level (allowed: "d4")
- param_tweaks             None        Optional dict with the damping parameters
+ params_tweaks            None        Optional dict with the damping parameters
 ======================== =========== ============================================
 
-The param_tweaks dict contains the damping parameters, at least s8, a1 and a2
+The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided
 
 ======================== =========== ============================================
@@ -112,7 +112,7 @@ def run_qcschema(
         _method = "-".join(_method)
 
     # Obtain the parameters for the damping function
-    _input_param = atomic_input.keywords.get("param_tweaks", {})
+    _input_param = atomic_input.keywords.get("params_tweaks", {})
 
     try:
         param = DampingParam(

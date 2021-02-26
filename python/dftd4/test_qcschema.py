@@ -90,7 +90,7 @@ def test_energy_lh20t_d4():
         driver="energy",
         model={"method": ""},
         keywords={
-            "param_tweaks": {
+            "params_tweaks": {
                 "s8": 0.113,
                 "a1": 0.479,
                 "a2": 4.635,
@@ -188,7 +188,7 @@ def test_gradient_tpss_d4():
             "method": "",
         },
         keywords={
-            "param_tweaks": {
+            "params_tweaks": {
                 "s8": 1.76596355,
                 "a1": 0.42822303,
                 "a2": 4.54257102,
