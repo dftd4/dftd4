@@ -114,7 +114,7 @@ def new_rational_damping(s6, s8, s9, a1, a2, alp):
     """Create new dftd4 damping parameter object"""
     _error = new_error()
     param = ffi.gc(
-        lib.dftd4_new_rational_damping(s6, s8, s9, a1, a2, alp),
+        lib.dftd4_new_rational_damping(_error, s6, s8, s9, a1, a2, alp),
         _delete_param,
     )
     handle_error(_error)
