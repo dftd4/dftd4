@@ -18,6 +18,7 @@ jobs:
       CC: gcc
       GCC_V: 9
       OMP_NUM_THREADS: 2,1
+      PYTHON_V: 3.8
 
     steps:
     - name: Checkout code
@@ -25,7 +26,7 @@ jobs:
 
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.x'
+        python-version: ${{ env.PYTHON_V }}
 
     - name: Install GCC (OSX)
       if: contains(matrix.os, 'macos')
@@ -42,17 +43,52 @@ jobs:
         --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${{ env.GCC_V }}
         --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
-    - name: Install meson
-      run: pip3 install meson==0.55.3 ninja
+    - name: Install meson and test dependencies
+      run: pip3 install meson==0.55.3 ninja pytest pytest-cov cffi numpy qcelemental
 
     - name: Configure build
-      run: meson setup ${{ env.BUILD_DIR }} -Dla_backend=netlib --warnlevel=0
+      run: >-
+        meson setup ${{ env.BUILD_DIR }}
+        --prefix=$PWD/_dist
+        --libdir=lib
+        --warnlevel=0
+        -Dlapack=netlib
+        -Dpython=true
 
     - name: Build library
       run: meson compile -C ${{ env.BUILD_DIR }}
 
     - name: Run unit tests
       run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+
+    - name: Install project
+      run: |
+        meson install -C ${{ env.BUILD_DIR }} --no-rebuild
+        echo "DFTD4_PREFIX=$PWD/_dist" >> $GITHUB_ENV
+
+    - name: Test Python API
+      run: pytest --pyargs dftd4 -vv
+      env:
+        LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
+        PYTHONPATH: ${{ env.PYTHONPATH }}:${{ env.DFTD4_PREFIX }}/lib/python${{ env.PYTHON_V }}/site-packages
+
+    - name: Configure out-of-tree build
+      run: >-
+        meson setup ${{ env.BUILD_DIR }}
+        --prefix=$PWD/_dist
+        --libdir=lib
+        --warnlevel=0
+      working-directory: python
+      env:
+        PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD4_PREFIX }}/lib/pkgconfig
+
+    - name: Build Python extension module
+      run: meson compile -C ${{ env.BUILD_DIR }}
+      working-directory: python
+
+    - name: Install Python extension module
+      run: meson install -C ${{ env.BUILD_DIR }} --no-rebuild
+      working-directory: python
 
   # Test native MinGW Windows build
   mingw-build:
@@ -85,7 +121,7 @@ jobs:
           mingw-w64-${{ matrix.arch }}-ninja
 
     - name: Configure build
-      run: meson setup ${{ env.BUILD_DIR }} -Dla_backend=netlib --warnlevel=0
+      run: meson setup ${{ env.BUILD_DIR }} -Dlapack=netlib --warnlevel=0
       env:
         FC: gfortran
         CC: gcc
