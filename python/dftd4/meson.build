@@ -61,8 +61,10 @@ if install
       '__init__.py',
       'interface.py',
       'libdftd4.py',
+      'qcschema.py',
       'test_interface.py',
       'test_libdftd4.py',
+      'test_qcschema.py',
     ),
     subdir: 'dftd4',
   )
