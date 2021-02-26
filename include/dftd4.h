@@ -24,6 +24,7 @@
 #endif
 #define DFTD4_API_CALL
 #define DFTD4_API_SUFFIX__V_3_0
+#define DFTD4_API_SUFFIX__V_3_1
 
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;
@@ -101,6 +102,14 @@ DFTD4_API_ENTRY dftd4_model DFTD4_API_CALL
 dftd4_new_d4_model(dftd4_error /* error */,
                    dftd4_structure /* mol */) DFTD4_API_SUFFIX__V_3_0;
 
+/// Create new D4 dispersion model
+DFTD4_API_ENTRY dftd4_model DFTD4_API_CALL
+dftd4_custom_d4_model(dftd4_error /* error */,
+                      dftd4_structure /* mol */,
+                      double /* ga */,
+                      double /* gc */,
+                      double /* wf */) DFTD4_API_SUFFIX__V_3_1;
+
 /// Delete dispersion model
 DFTD4_API_ENTRY void DFTD4_API_CALL
 dftd4_delete_model(dftd4_model* /* disp */) DFTD4_API_SUFFIX__V_3_0;
@@ -133,6 +142,17 @@ dftd4_delete_param(dftd4_param* /* param */) DFTD4_API_SUFFIX__V_3_0;
  * Perform dispersion calculations
 **/
 
+/// Evaluate properties related to the dispersion model
+DFTD4_API_ENTRY void DFTD4_API_CALL
+dftd4_get_properties(dftd4_error /* error */,
+                     dftd4_structure /* mol */,
+                     dftd4_model /* disp */,
+                     double* /* cn[n] */,
+                     double* /* charges[n] */,
+                     double* /* c6[n*n] */,
+                     double* /* alpha[n] */) DFTD4_API_SUFFIX__V_3_1;
+
+/// Evaluate the dispersion energy and its derivatives
 DFTD4_API_ENTRY void DFTD4_API_CALL
 dftd4_get_dispersion(dftd4_error /* error */,
                      dftd4_structure /* mol */,

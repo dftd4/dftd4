@@ -25,6 +25,7 @@ from .libdftd4 import (
     new_error,
     new_structure,
     new_d4_model,
+    custom_d4_model,
     new_rational_damping,
     load_rational_damping,
     handle_error,
@@ -202,12 +203,21 @@ class DispersionModel(Structure):
         charge: Optional[float] = None,
         lattice: Optional[np.ndarray] = None,
         periodic: Optional[np.ndarray] = None,
+        **kwargs,
     ):
         """Create new dispersion model"""
 
         Structure.__init__(self, numbers, positions, charge, lattice, periodic)
 
-        self._disp = new_d4_model(self._mol)
+        if "ga" in kwargs or "gc" in kwargs or "wf" in kwargs:
+            self._disp = custom_d4_model(
+                self._mol,
+                kwargs.get("ga", 3.0),
+                kwargs.get("gc", 2.0),
+                kwargs.get("wf", 6.0),
+            )
+        else:
+            self._disp = new_d4_model(self._mol)
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> Results:
         """Perform actual evaluation of the dispersion correction"""

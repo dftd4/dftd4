@@ -103,6 +103,14 @@ def new_d4_model(mol):
     return disp
 
 
+def custom_d4_model(mol, ga, gc, wf):
+    """Create new dftd4 dispersion model object"""
+    _error = new_error()
+    disp = ffi.gc(lib.dftd4_custom_d4_model(_error, mol, ga, gc, wf), _delete_model)
+    handle_error(_error)
+    return disp
+
+
 def _delete_param(error) -> None:
     """Delete a dftd4 damping parameter object"""
     ptr = ffi.new("dftd4_param *")

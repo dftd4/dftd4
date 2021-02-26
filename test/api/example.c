@@ -36,6 +36,7 @@ main (void)
    double energy;
    double gradient[21];
    double sigma[9];
+   double c6[49];
 
    assert(dftd4_get_version() > 0);
 
@@ -54,6 +55,10 @@ main (void)
    disp = dftd4_new_d4_model(error, mol);
    if (dftd4_check_error(error)) {return 1;}
    assert(!!disp);
+
+   // C6 coefficients
+   dftd4_get_properties(error, mol, disp, NULL, NULL, c6, NULL);
+   if (dftd4_check_error(error)) {return 1;}
 
    // PBE-D4
    param = dftd4_new_rational_damping(error, 1.0, 0.95948085, 0.0, 0.38574991, 4.80688534, 16.0);
