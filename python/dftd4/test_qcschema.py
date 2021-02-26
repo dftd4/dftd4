@@ -50,9 +50,6 @@ def test_energy_r2scan_d4():
         },
         driver="energy",
         model={
-            "method": "D4",
-        },
-        keywords={
             "method": "r2scan",
         },
     )
@@ -91,13 +88,13 @@ def test_energy_lh20t_d4():
             ],
         },
         driver="energy",
-        model={
-            "method": "D4",
-        },
+        model={"method": ""},
         keywords={
-            "s8": 0.113,
-            "a1": 0.479,
-            "a2": 4.635,
+            "param_tweaks": {
+                "s8": 0.113,
+                "a1": 0.479,
+                "a2": 4.635,
+            },
         },
     )
 
@@ -136,11 +133,9 @@ def test_gradient_b97m_d4():
         },
         driver="gradient",
         model={
-            "method": "D4",
+            "method": "b97m-D4",
         },
-        keywords={
-            "method": "b97m",
-        },
+        keywords={},
     )
     gradient = np.array(
         [
@@ -172,7 +167,7 @@ def test_gradient_b97m_d4():
 
 
 def test_gradient_tpss_d4():
-    thr = 1.0e-7
+    thr = 1.0e-9
 
     atomic_input = qcel.models.AtomicInput(
         molecule={
@@ -190,12 +185,14 @@ def test_gradient_tpss_d4():
         },
         driver="gradient",
         model={
-            "method": "D4",
+            "method": "",
         },
         keywords={
-            "s8": 1.76596355,
-            "a1": 0.42822303,
-            "a2": 4.54257102,
+            "param_tweaks": {
+                "s8": 1.76596355,
+                "a1": 0.42822303,
+                "a2": 4.54257102,
+            },
         },
     )
     gradient = np.array(
@@ -238,9 +235,7 @@ def test_error_noargs():
             ],
         },
         driver="energy",
-        model={
-            "method": "D4",
-        },
+        model={"method": ""},
         keywords={},
     )
     error = qcel.models.ComputeError(
@@ -276,15 +271,55 @@ def test_error_nomethod():
         },
         driver="energy",
         model={
-            "method": "D4",
+            "method": "this-method-does-not-exist",
         },
         keywords={
-            "method": "this-method-does-not-exist",
+            "level_hint": "D4",
         },
     )
     error = qcel.models.ComputeError(
         error_type="input error",
         error_message="Functional 'this-method-does-not-exist' not known",
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert not atomic_result.success
+    assert atomic_result.error == error
+
+
+def test_error_level():
+    thr = 1e-9
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule={
+            "symbols": "C C C C N C S H H H H H".split(),
+            "geometry": [
+                [-2.56745685564671, -0.02509985979910, 0.00000000000000],
+                [-1.39177582455797, +2.27696188880014, 0.00000000000000],
+                [+1.27784995624894, +2.45107479759386, 0.00000000000000],
+                [+2.62801937615793, +0.25927727028120, 0.00000000000000],
+                [+1.41097033661123, -1.99890996077412, 0.00000000000000],
+                [-1.17186102298849, -2.34220576284180, 0.00000000000000],
+                [-2.39505990368378, -5.22635838332362, 0.00000000000000],
+                [+2.41961980455457, -3.62158019253045, 0.00000000000000],
+                [-2.51744374846065, +3.98181713686746, 0.00000000000000],
+                [+2.24269048384775, +4.24389473203647, 0.00000000000000],
+                [+4.66488984573956, +0.17907568006409, 0.00000000000000],
+                [-4.60044244782237, -0.17794734637413, 0.00000000000000],
+            ],
+        },
+        driver="energy",
+        model={
+            "method": "SCAN",
+        },
+        keywords={
+            "level_hint": "D42",
+        },
+    )
+    error = qcel.models.ComputeError(
+        error_type="input error",
+        error_message="Level 'D42' is invalid for this dispersion correction",
     )
 
     atomic_result = run_qcschema(atomic_input)
