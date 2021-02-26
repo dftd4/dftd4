@@ -26,7 +26,7 @@ module dftd4_api
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
-   use dftd4_disp, only : get_dispersion
+   use dftd4_disp, only : get_dispersion, get_properties
    use dftd4_model, only : d4_model, new_d4_model
    use dftd4_param, only : get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell
@@ -43,11 +43,13 @@ module dftd4_api
    public :: new_structure_api, delete_structure_api, update_structure_api
 
    public :: vp_model
-   public :: new_d4_model_api, delete_model_api
+   public :: new_d4_model_api, custom_d4_model_api, delete_model_api
 
    public :: vp_param
-   public :: new_rational_damping_api !, load_rational_damping_api
+   public :: new_rational_damping_api , load_rational_damping_api
    public :: delete_param_api
+
+   public :: get_dispersion_api, get_properties_api
 
    !> Namespace for C routines
    character(len=*), parameter :: namespace = "dftd4_"
@@ -319,6 +321,40 @@ function new_d4_model_api(verror, vmol) &
 end function new_d4_model_api
 
 
+!> Create new D4 dispersion model
+function custom_d4_model_api(verror, vmol, ga, gc, wf) &
+      & result(vdisp) &
+      & bind(C, name=namespace//"custom_d4_model")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr) :: vdisp
+   type(vp_model), pointer :: disp
+   real(c_double), value, intent(in) :: ga
+   real(c_double), value, intent(in) :: gc
+   real(c_double), value, intent(in) :: wf
+
+   if (debug) print'("[Info]",1x, a)', "custom_d4_model"
+
+   vdisp = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   allocate(disp)
+   call new_d4_model(disp%ptr, mol%ptr, ga=ga, gc=gc, wf=wf)
+   vdisp = c_loc(disp)
+
+end function custom_d4_model_api
+
+
 !> Delete dispersion model
 subroutine delete_model_api(vdisp) &
       & bind(C, name=namespace//"delete_model")
@@ -489,6 +525,68 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    endif
 
 end subroutine get_dispersion_api
+
+
+!> Calculate dispersion
+subroutine get_properties_api(verror, vmol, vdisp, &
+      & c_cn, c_charges, c_c6, c_alpha) &
+      & bind(C, name=namespace//"get_properties")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   real(c_double), intent(out), optional :: c_cn(*)
+   real(wp), allocatable :: cn(:)
+   real(c_double), intent(out), optional :: c_charges(*)
+   real(wp), allocatable :: charges(:)
+   real(c_double), intent(out), optional :: c_c6(*)
+   real(wp), allocatable :: c6(:, :)
+   real(c_double), intent(out), optional :: c_alpha(*)
+   real(wp), allocatable :: alpha(:)
+
+   integer :: mref
+   real(wp), allocatable :: gwvec(:, :), lattr(:, :)
+
+   if (debug) print'("[Info]",1x, a)', "get_properties"
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   allocate(cn(mol%ptr%nat), charges(mol%ptr%nat), alpha(mol%ptr%nat), &
+      & c6(mol%ptr%nat, mol%ptr%nat))
+   call get_properties(mol%ptr, disp%ptr, realspace_cutoff(), cn, charges, c6, alpha)
+
+   if (present(c_cn)) then
+      c_cn(:size(cn)) = cn
+   end if
+
+   if (present(c_charges)) then
+      c_charges(:size(charges)) = charges
+   end if
+
+   if (present(c_c6)) then
+      c_c6(:size(c6)) = reshape(c6, [size(c6)])
+   end if
+
+   if (present(c_alpha)) then
+      c_alpha(:size(alpha)) = alpha
+   end if
+
+end subroutine get_properties_api
 
 
 subroutine f_c_character(rhs, lhs, len)

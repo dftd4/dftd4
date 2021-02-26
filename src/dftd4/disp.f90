@@ -29,12 +29,13 @@ module dftd4_disp
    implicit none
    private
 
-   public :: get_dispersion
+   public :: get_dispersion, get_properties
 
 
 contains
 
 
+!> Wrapper to handle the evaluation of dispersion energy and derivatives
 subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    !> Molecular structure data
@@ -120,6 +121,49 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    energy = sum(energies)
 
 end subroutine get_dispersion
+
+
+!> Wrapper to handle the evaluation of properties related to this dispersion model
+subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d4_model), intent(in) :: disp
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Coordination number
+   real(wp), intent(out) :: cn(:)
+
+   !> Atomic partial charges
+   real(wp), intent(out) :: q(:)
+
+   !> C6 coefficients
+   real(wp), intent(out) :: c6(:, :)
+
+   !> Static polarizibilities
+   real(wp), intent(out) :: alpha(:)
+
+   integer :: mref
+   real(wp), allocatable :: gwvec(:, :), lattr(:, :)
+
+   mref = maxval(disp%ref)
+
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
+
+   call get_charges(mol, q)
+
+   allocate(gwvec(mref, mol%nat))
+   call disp%weight_references(mol, cn, q, gwvec)
+
+   call disp%get_atomic_c6(mol, gwvec, c6=c6)
+   call disp%get_polarizibilities(mol, gwvec, alpha=alpha)
+
+end subroutine get_properties
 
 
 end module dftd4_disp

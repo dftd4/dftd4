@@ -82,6 +82,9 @@ module dftd4_model
       !> Evaluate C6 coefficient
       procedure :: get_atomic_c6
 
+      !> Evaluate atomic polarizibilities
+      procedure :: get_polarizibilities
+
    end type d4_model
 
 
@@ -341,7 +344,7 @@ end subroutine weight_references
 
 
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
-!> the coordination number.
+!> the coordination numbers and atomic partial charges.
 subroutine get_atomic_c6(self, mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
 
    !> Instance of the dispersion model
@@ -434,6 +437,81 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
    end if
 
 end subroutine get_atomic_c6
+
+
+!> Calculate atomic polarizibilities and their derivatives w.r.t.
+!> the coordination numbers and atomic partial charges.
+subroutine get_polarizibilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dadq)
+
+   !> Instance of the dispersion model
+   class(d4_model), intent(in) :: self
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Weighting function for the atomic reference systems
+   real(wp), intent(in) :: gwvec(:, :)
+
+   !> Derivative of the weighting function w.r.t. the coordination number
+   real(wp), intent(in), optional :: gwdcn(:, :)
+
+   !> Derivative of the weighting function w.r.t. the partial charge
+   real(wp), intent(in), optional :: gwdq(:, :)
+
+   !> Static polarizibilities for all atoms.
+   real(wp), intent(out) :: alpha(:)
+
+   !> Derivative of the polarizibility w.r.t. the coordination number
+   real(wp), intent(out), optional :: dadcn(:)
+
+   !> Derivative of the polarizibility w.r.t. the partial charge
+   real(wp), intent(out), optional :: dadq(:)
+
+   integer :: iat, izp, iref
+   real(wp) :: refa, da, dadcni, dadqi
+
+   if (present(gwdcn).and.present(dadcn) &
+      & .and.present(gwdq).and.present(dadq)) then
+      alpha(:) = 0.0_wp
+      dadcn(:) = 0.0_wp
+      dadq(:) = 0.0_wp
+
+      !$omp parallel do default(none) schedule(runtime) &
+      !$omp shared(alpha, dadcn, dadq, mol, self, gwvec, gwdcn, gwdq) &
+      !$omp private(iat, izp, iref, refa, da, dadqi, dadcni)
+      do iat = 1, mol%nat
+         izp = mol%id(iat)
+         da = 0.0_wp
+         dadcni = 0.0_wp
+         dadqi = 0.0_wp
+         do iref = 1, self%ref(izp)
+            refa = self%aiw(1, iref, izp)
+            da = da + gwvec(iref, iat) * refa
+            dadcni = dadcni + gwdcn(iref, iat) * refa
+            dadqi = dadqi + gwdq(iref, iat) * refa
+         end do
+         alpha(iat) = da
+         dadcn(iat) = dadcni
+         dadq(iat) = dadqi
+      end do
+
+   else
+
+      alpha(:) = 0.0_wp
+
+      !$omp parallel do default(none) schedule(runtime) &
+      !$omp shared(alpha, mol, self, gwvec) private(iat, izp, iref, refa, da)
+      do iat = 1, mol%nat
+         izp = mol%id(iat)
+         da = 0.0_wp
+         do iref = 1, self%ref(izp)
+            da = da + gwvec(iref, iat) * self%aiw(1, iref, izp)
+         end do
+         alpha(iat) = da
+      end do
+   end if
+
+end subroutine get_polarizibilities
 
 
 elemental function weight_cn(wf,cn,cnref) result(cngw)

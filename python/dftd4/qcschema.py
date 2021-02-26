@@ -24,7 +24,16 @@ Supported keywords are
 ======================== =========== ============================================
  Keyword                  Default     Description
 ======================== =========== ============================================
- method                   None        Name of the method to correct for
+ level_hint               None        Dispersion correction level (allowed: "d4")
+ params_tweaks            None        Optional dict with the damping parameters
+======================== =========== ============================================
+
+The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
+must be provided
+
+======================== =========== ============================================
+ Tweakable parameter      Default     Description
+======================== =========== ============================================
  s6                       1.0         Scaling of the dipole-dipole dispersion
  s8                       None        Scaling of the dipole-quadrupole dispersion
  s9                       1.0         Scaling of the three-body dispersion energy
@@ -34,7 +43,7 @@ Supported keywords are
 ======================== =========== ============================================
 
 Either method or s8, a1 and a2 must be provided, s9 can be used to overwrite
-the ATM scaling if the method keyword is provided.
+the ATM scaling if the method is provided in the model.
 Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
 for damping parameters of a given method and prefers special two-body only
 damping parameters if available!
@@ -49,6 +58,10 @@ import qcelemental as qcel
 _supported_drivers = [
     "energy",
     "gradient",
+]
+
+_available_levels = [
+    "d4",
 ]
 
 
@@ -68,12 +81,44 @@ def run_qcschema(
         "version": get_api_version(),
         "routine": "dftd4.qcschema.run_qcschema",
     }
-
     success = False
     return_result = 0.0
     properties = {}
+
+    # Since it is a level hint we a forgiving if it is not present,
+    # we are much less forgiving if the wrong level is hinted here.
+    _level = atomic_input.keywords.get("level_hint", "d4")
+    if _level.lower() not in _available_levels:
+        ret_data.update(
+            provenance=provenance,
+            success=success,
+            properties=properties,
+            return_result=return_result,
+            error=qcel.models.ComputeError(
+                error_type="input error",
+                error_message="Level '{}' is invalid for this dispersion correction".format(_level),
+            ),
+        )
+        return qcel.models.AtomicResult(**ret_data)
+
+    # Check if the method is provided and strip the “dashlevel” from the method
+    _method = atomic_input.model.method
+    if len(_method) == 0:
+        _method = None
+    else:
+        _method = _method.split("-")
+        if _method[-1].lower() == _level.lower():
+            _method.pop()
+        _method = "-".join(_method)
+
+    # Obtain the parameters for the damping function
+    _input_param = atomic_input.keywords.get("params_tweaks", {})
+
     try:
-        param = DampingParam(**atomic_input.keywords)
+        param = DampingParam(
+            method=_method,
+            **_input_param,
+        )
 
         disp = DispersionModel(
             atomic_input.molecule.atomic_numbers,
@@ -96,7 +141,7 @@ def run_qcschema(
         else:
             ret_data.update(
                 error=qcel.models.ComputeError(
-                    error_type="input_error",
+                    error_type="input error",
                     error_message="Calculation succeeded but invalid driver request provided",
                 ),
             )
