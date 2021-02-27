@@ -4,6 +4,7 @@ DFT-D4 project
 [![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING.LESSER)
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 [![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
+[![docs](https://github.com/dftd4/dftd4/workflows/docs/badge.svg)](https://dftd4.github.io/dftd4/)
 
 Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 
@@ -15,7 +16,8 @@ A statically linked binary distribution for Linux platforms is available at the 
 
 ### Conda package
 
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd4.svg)](https://anaconda.org/conda-forge/dftd4)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd4.svg?label=dftd4)](https://anaconda.org/conda-forge/dftd4)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd4-python.svg?label=dftd4-python)](https://anaconda.org/conda-forge/dftd4-python)
 
 This project is packaged for the *conda* package manager and available on the *conda-forge* channel.
 To install the *conda* package manager we recommend the [miniforge](https://github.com/conda-forge/miniforge/releases) installer.
@@ -29,6 +31,12 @@ Once the *conda-forge* channel has been enabled, this project can be installed w
 
 ```
 conda install dftd4
+```
+
+If you want to enable the Python API as well install
+
+```
+conda install dftd4-python
 ```
 
 It is possible to list all of the versions available on your platform with:
