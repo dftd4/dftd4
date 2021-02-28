@@ -5,6 +5,7 @@ DFT-D4 project
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 [![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
 [![docs](https://github.com/dftd4/dftd4/workflows/docs/badge.svg)](https://dftd4.github.io/dftd4/)
+[![codecov](https://codecov.io/gh/dftd4/dftd4/branch/main/graph/badge.svg?token=IFtEF1Hwqj)](https://codecov.io/gh/dftd4/dftd4)
 
 Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 
@@ -161,6 +162,8 @@ The user is responsible for creating and deleting the objects to avoid memory le
 
 
 ### Python API
+
+[![LGTM](https://img.shields.io/lgtm/grade/python/g/dftd4/dftd4.svg)](https://lgtm.com/projects/g/dftd4/dftd4/context:python)
 
 The Python API is disabled by default and can be built in-tree or out-of-tree.
 The in-tree build is mainly meant for end users and packages.
