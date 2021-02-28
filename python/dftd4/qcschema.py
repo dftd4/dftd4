@@ -47,6 +47,31 @@ the ATM scaling if the method is provided in the model.
 Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
 for damping parameters of a given method and prefers special two-body only
 damping parameters if available!
+
+Example
+-------
+
+>>> from dftd4.qcschema import run_qcschema
+>>> import qcelemental as qcel
+>>> atomic_input = qcel.models.AtomicInput(
+...     molecule = qcel.models.Molecule(
+...         symbols = ["O", "H", "H"],
+...         geometry = [
+...             0.00000000000000,  0.00000000000000, -0.73578586109551,
+...             1.44183152868459,  0.00000000000000,  0.36789293054775,
+...            -1.44183152868459,  0.00000000000000,  0.36789293054775
+...         ],
+...     ),
+...     driver = "energy",
+...     model = {
+...         "method": "TPSS-D4",
+...     },
+...     keywords = {},
+... )
+...
+>>> atomic_result = run_qcschema(atomic_input)
+>>> atomic_result.return_result
+-0.0002667885779142513
 """
 
 from typing import Union

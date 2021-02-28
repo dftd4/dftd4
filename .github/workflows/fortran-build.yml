@@ -44,7 +44,7 @@ jobs:
         --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
     - name: Install meson and test dependencies
-      run: pip3 install meson==0.55.3 ninja pytest pytest-cov cffi numpy qcelemental
+      run: pip3 install meson==0.55.3 ninja pytest pytest-cov cffi numpy qcelemental ase
 
     - name: Configure build
       run: >-

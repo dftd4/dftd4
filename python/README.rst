@@ -41,31 +41,66 @@ QCSchema Integration
 ~~~~~~~~~~~~~~~~~~~~
 
 This Python API natively understands QCSchema and the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
-If the QCElemental package is installed the ``dftd4.qcschema`` module becomes importable and provides the ``run_schema`` function.
+If the QCElemental package is installed the ``dftd4.qcschema`` module becomes importable and provides the ``run_qcschema`` function.
 
 .. code:: python
 
-    >>> from dftd4.qcschema import run_qcschema
-    >>> import qcelemental as qcel
-    >>> atomic_input = qcel.models.AtomicInput(
-    ...     molecule = qcel.models.Molecule(
-    ...         symbols = ["O", "H", "H"],
-    ...         geometry = [
-    ...             0.00000000000000,  0.00000000000000, -0.73578586109551,
-    ...             1.44183152868459,  0.00000000000000,  0.36789293054775,
-    ...            -1.44183152868459,  0.00000000000000,  0.36789293054775
-    ...         ],
-    ...     ),
-    ...     driver = "energy",
-    ...     model = {
-    ...         "method": "TPSS-D4",
-    ...     },
-    ...     keywords = {},
-    ... )
-    ...
-    >>> atomic_result = run_qcschema(atomic_input)
-    >>> atomic_result.return_result
-    -0.0002667885779142513
+   >>> from dftd4.qcschema import run_qcschema
+   >>> import qcelemental as qcel
+   >>> atomic_input = qcel.models.AtomicInput(
+   ...     molecule = qcel.models.Molecule(
+   ...         symbols = ["O", "H", "H"],
+   ...         geometry = [
+   ...             0.00000000000000,  0.00000000000000, -0.73578586109551,
+   ...             1.44183152868459,  0.00000000000000,  0.36789293054775,
+   ...            -1.44183152868459,  0.00000000000000,  0.36789293054775
+   ...         ],
+   ...     ),
+   ...     driver = "energy",
+   ...     model = {
+   ...         "method": "TPSS-D4",
+   ...     },
+   ...     keywords = {},
+   ... )
+   ...
+   >>> atomic_result = run_qcschema(atomic_input)
+   >>> atomic_result.return_result
+   -0.0002667885779142513
+
+
+ASE Integration
+~~~~~~~~~~~~~~~
+
+To integrate with `ASE <https://wiki.fysik.dtu.dk/ase/>`_ this interface implements an ASE Calculator.
+The ``DFTD4`` calculator becomes importable if an ASE installation is available.
+
+.. code:: python
+
+   >>> from ase.build import molecule
+   >>> from dftd4.ase import DFTD4
+   >>> atoms = molecule('H2O')
+   >>> atoms.calc = DFTD4(method="TPSS")
+   >>> atoms.get_potential_energy()
+   -0.007310393443152083
+   >>> atoms.calc.set(method="PBE")
+   {'method': 'PBE'}
+   >>> atoms.get_potential_energy()
+   -0.005358475432239303
+   >>> atoms.get_forces()
+   array([[-0.        , -0.        ,  0.00296845],
+          [-0.        ,  0.00119152, -0.00148423],
+          [-0.        , -0.00119152, -0.00148423]])
+
+To use the ``DFTD4`` calculator as dispersion correction the calculator can be combined using the `SumCalculator <https://wiki.fysik.dtu.dk/ase/ase/calculators/mixing.html>`_ from the ``ase.calculators.mixing`` module.
+
+.. code:: python
+
+   >>> from ase.build import molecule
+   >>> from ase.calculators.mixing import SumCalculator
+   >>> from ase.calculators.nwchem import NWChem
+   >>> from dftd4.ase import DFTD4
+   >>> atoms = molecule('H2O')
+   >>> atoms.calc = SumCalculator([DFTD4(method="PBE"), NWChem(xc="PBE")])
 
 
 Installing
