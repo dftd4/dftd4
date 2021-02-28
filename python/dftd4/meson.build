@@ -59,9 +59,11 @@ if install
   python.install_sources(
     files(
       '__init__.py',
+      'ase.py',
       'interface.py',
       'libdftd4.py',
       'qcschema.py',
+      'test_ase.py',
       'test_interface.py',
       'test_libdftd4.py',
       'test_qcschema.py',
