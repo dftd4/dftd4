@@ -35,7 +35,8 @@ module dftd4_param
          & p_tpssh, p_tpss0, p_x3lyp, p_m06l, p_m06, p_m062x, p_b97d, &
          & p_wb97, p_wb97x, p_b97m, p_wb97m, p_camb3lyp, p_lcblyp, &
          & p_lh07tsvwn, p_lh07ssvwn, p_lh12ctssirpw92, p_lh12ctssifpw92, &
-         & p_lh14tcalpbe, p_b2plyp, p_b2gpplyp, p_mpw2plyp, p_pwpb95, &
+         & p_lh14tcalpbe, p_lh20t, &
+         & p_b2plyp, p_b2gpplyp, p_mpw2plyp, p_pwpb95, &
          & p_dsdblyp, p_dsdpbe, p_dsdpbeb95, p_dsdpbep86, p_dsdsvwn, &
          & p_dodblyp, p_dodpbe, p_dodpbeb95, p_dodpbep86, p_dodsvwn, &
          & p_pbe0_2, p_pbe0_dh, p_hf3c, p_hf3cv, p_pbeh3c, p_b973c, &
@@ -268,6 +269,9 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.28130770_wp, a1=0.38822021_wp, a2=4.92501211_wp )
       !  Fitset: MD= -0.02105 MAD= 0.22968 RMSD= 0.36045
+   case(p_lh20t)
+      param = dftd_param ( & ! (10.1021/acs.jctc.0c00498)
+         & s6=1.000_wp, s8=0.113_wp, a1=0.479_wp, a2=4.635_wp )
    case(p_m06)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=0.16366729_wp, a1=0.53456413_wp, a2=6.06192174_wp )
@@ -401,10 +405,10 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
          &  s6=1.0000_wp, s8=1.46126056_wp, a1=0.62930855_wp, a2=6.31284039_wp )
       !  Fitset: MD= -0.13170 MAD= 0.28640 RMSD= 0.51183
    case(p_rscan)
-      param = dftd_param ( &
+      param = dftd_param ( & ! (10.1063/5.0041008)
          &  s6=1.0000_wp, s8=0.87728975_wp, a1=0.49116966_wp, a2=5.75859346_wp )
    case(p_r2scan)
-      param = dftd_param ( &
+      param = dftd_param ( & ! (10.1063/5.0041008)
          &  s6=1.0000_wp, s8=0.60187490_wp, a1=0.51559235_wp, a2=5.77342911_wp )
    case(p_tpss0)
       param = dftd_param ( & ! (SAW190103)
@@ -612,6 +616,8 @@ pure function get_functional_id(df) result(num)
       num = p_lh12ctssifpw92
    case('lh14tcalpbe', 'lh14t-calpbe')
       num = p_lh14tcalpbe
+   case('lh20t')
+      num = p_lh20t
    case('b2plyp', 'b2-plyp')
       num = p_b2plyp
    case('b2gpplyp', 'b2gp-plyp')

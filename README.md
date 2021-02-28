@@ -113,6 +113,22 @@ dftd4 --property geo.gen
 For an overview over all command line arguments use the ``--help`` argument or checkout the [``dftd4(1)``](man/dftd4.1.adoc) manpage.
 
 
+## Parameters
+
+DFT-D4 is parametrized for plenty of density functionals.
+The available parameters are listed in the [parameters.toml file](./assets/parameters.toml).
+
+You can add new functionals using to the TOML file by adding a new subtable
+
+```toml
+[parameter.name]
+reference.doi = ["<functional reference>"]
+d4.bj-eeq-atm = { s8=1.0, a1=0.4, a2=5.0, doi="<parameter reference>" }
+```
+
+Those parameters are currently only used as reference and not yet usable in the library or executable.
+
+
 ## API access
 
 The DFT-D4 project provides first class API support Fortran, C and Python.
