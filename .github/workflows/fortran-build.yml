@@ -4,6 +4,17 @@ on: [push, pull_request]
 
 env:
   BUILD_DIR: _build
+  PIP_PACKAGES: >-
+    meson==0.55.3
+    ninja
+    gcovr
+  PIP_EXTRAS: >-
+    pytest
+    pytest-cov
+    cffi
+    numpy
+    qcelemental
+    ase
 
 jobs:
   gcc-build:
@@ -44,17 +55,7 @@ jobs:
         --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
     - name: Install meson and test dependencies
-      run: >-
-        pip3 install
-        meson==0.55.3
-        ninja
-        gcovr
-        pytest
-        pytest-cov
-        cffi
-        numpy
-        qcelemental
-        ase
+      run: pip3 install ${{ env.PIP_PACKAGES }} ${{ env.PIP_EXTRAS }}
 
     - name: Configure build
       run: >-
@@ -134,8 +135,11 @@ jobs:
           mingw-w64-${{ matrix.arch }}-gcc-fortran
           mingw-w64-${{ matrix.arch }}-openblas
           mingw-w64-${{ matrix.arch }}-lapack
-          mingw-w64-${{ matrix.arch }}-meson
-          mingw-w64-${{ matrix.arch }}-ninja
+          mingw-w64-${{ matrix.arch }}-python
+          mingw-w64-${{ matrix.arch }}-python-pip
+
+    - name: Install meson
+      run: pip3 install ${{ env.PIP_PACKAGES }}
 
     - name: Configure build
       run: meson setup ${{ env.BUILD_DIR }} -Dlapack=netlib --warnlevel=0
