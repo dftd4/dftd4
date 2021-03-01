@@ -27,7 +27,7 @@ project(
 )
 install = true
 
-dftd4_dep = dependency('dftd4', version: '>=3.0.0')
+dftd4_dep = dependency('dftd4', version: '>=3.1.0')
 dftd4_header = files('..'/'include'/'dftd4.h')
 
 subdir('dftd4')
