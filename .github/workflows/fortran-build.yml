@@ -137,9 +137,10 @@ jobs:
           mingw-w64-${{ matrix.arch }}-lapack
           mingw-w64-${{ matrix.arch }}-python
           mingw-w64-${{ matrix.arch }}-python-pip
+          mingw-w64-${{ matrix.arch }}-ninja
 
     - name: Install meson
-      run: pip3 install ${{ env.PIP_PACKAGES }}
+      run: pip3 install meson==0.55.3
 
     - name: Configure build
       run: meson setup ${{ env.BUILD_DIR }} -Dlapack=netlib --warnlevel=0
