@@ -229,7 +229,10 @@ subroutine ascii_pairwise(unit, mol, pair_disp2, pair_disp3)
    real(wp), intent(in) :: pair_disp3(:, :)
 
    integer :: iat, jat, isp, jsp
-   real(wp) :: disp
+   real(wp) :: disp, e2, e3
+
+   e2 = 0.0_wp
+   e3 = 0.0_wp
 
    write(unit, '(a,":")') "Pairwise representation of dispersion (in kcal/mol)"
    write(unit, '(82("-"))')
@@ -240,6 +243,8 @@ subroutine ascii_pairwise(unit, mol, pair_disp2, pair_disp3)
       isp = mol%id(iat)
       do jat = 1, mol%nat
          jsp = mol%id(jat)
+         e2 = e2 + pair_disp2(jat, iat)
+         e3 = e3 + pair_disp3(jat, iat)
          disp = pair_disp2(jat, iat) + pair_disp3(jat, iat)
          if (abs(disp) < epsilon(disp)) cycle
          write(unit, '(2(i6,1x,i4,1x,a4),*(1x,es10.2:,1x,"(",i4,"%)"))') &
@@ -250,6 +255,13 @@ subroutine ascii_pairwise(unit, mol, pair_disp2, pair_disp3)
             & disp * autokcal
       end do
    end do
+   write(unit, '(82("-"))')
+   disp = e2 + e3
+   write(unit, '(1x, a, t33,*(1x,es10.2:,1x,"(",i4,"%)"))') &
+      & "total dispersion energy", &
+      & e2 * autokcal, nint(e2/disp*100), &
+      & e3 * autokcal, nint(e3/disp*100), &
+      & disp * autokcal
    write(unit, '(82("-"))')
    write(unit, '(a)')
 
