@@ -111,6 +111,12 @@ Dispersion related properties can be calculated as well:
 dftd4 --property geo.gen
 ```
 
+To evaluate pairwise resolved dispersion energies use
+
+```sh
+dftd4 --pair-resolved mol.xyz
+```
+
 For an overview over all command line arguments use the ``--help`` argument or checkout the [``dftd4(1)``](man/dftd4.1.adoc) manpage.
 
 

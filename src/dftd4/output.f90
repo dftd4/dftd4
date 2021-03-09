@@ -27,7 +27,7 @@ module dftd4_output
    private
 
    public :: ascii_atomic_radii, ascii_atomic_references, ascii_system_properties
-   public :: ascii_results, ascii_damping_param
+   public :: ascii_results, ascii_damping_param, ascii_pairwise
    public :: turbomole_gradient, turbomole_gradlatt
    public :: json_results, tagged_result
 
@@ -215,6 +215,45 @@ subroutine ascii_results(unit, mol, energy, gradient, sigma)
    end if
 
 end subroutine ascii_results
+
+
+subroutine ascii_pairwise(unit, mol, pair_disp2, pair_disp3)
+
+   !> Unit for output
+   integer, intent(in) :: unit
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   real(wp), intent(in) :: pair_disp2(:, :)
+   real(wp), intent(in) :: pair_disp3(:, :)
+
+   integer :: iat, jat, isp, jsp
+   real(wp) :: disp
+
+   write(unit, '(a,":")') "Pairwise representation of dispersion (in kcal/mol)"
+   write(unit, '(82("-"))')
+   write(unit, '(2(a6,1x,a4,5x),*(1x,a10:,1x,a7))') &
+      "#", "Z", "#", "Z", "additive", "(rel.)", "non-add.", "(rel.)", "total"
+   write(unit, '(82("-"))')
+   do iat = 1, mol%nat
+      isp = mol%id(iat)
+      do jat = 1, mol%nat
+         jsp = mol%id(jat)
+         disp = pair_disp2(jat, iat) + pair_disp3(jat, iat)
+         if (abs(disp) < epsilon(disp)) cycle
+         write(unit, '(2(i6,1x,i4,1x,a4),*(1x,es10.2:,1x,"(",i4,"%)"))') &
+            & iat, mol%num(isp), mol%sym(isp), &
+            & jat, mol%num(jsp), mol%sym(jsp), &
+            & pair_disp2(jat, iat) * autokcal, nint(pair_disp2(jat, iat)/disp*100), &
+            & pair_disp3(jat, iat) * autokcal, nint(pair_disp3(jat, iat)/disp*100), &
+            & disp * autokcal
+      end do
+   end do
+   write(unit, '(82("-"))')
+   write(unit, '(a)')
+
+end subroutine ascii_pairwise
 
 
 subroutine ascii_damping_param(unit, param, method)
@@ -450,7 +489,8 @@ subroutine getline(unit,line,iostat)
 end subroutine getline
 
 
-subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6)
+subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, &
+      & pairwise_energy2, pairwise_energy3)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
    real(wp), intent(in), optional :: energy
@@ -459,6 +499,8 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6)
    real(wp), intent(in), optional :: cn(:)
    real(wp), intent(in), optional :: q(:)
    real(wp), intent(in), optional :: c6(:, :)
+   real(wp), intent(in), optional :: pairwise_energy2(:, :)
+   real(wp), intent(in), optional :: pairwise_energy3(:, :)
    character(len=:), allocatable :: indent, version_string
    character(len=*), parameter :: jsonkey = "('""',a,'"":',1x)"
    real(wp), allocatable :: array(:)
@@ -510,6 +552,20 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6)
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'c6 coefficients'
       array = reshape(c6, [product(shape(c6))])
+      call write_json_array(unit, array, indent)
+   end if
+   if (present(pairwise_energy2)) then
+      write(unit, '(",")', advance='no')
+      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      write(unit, jsonkey, advance='no') 'additive pairwise energy'
+      array = reshape(pairwise_energy2, [product(shape(pairwise_energy2))])
+      call write_json_array(unit, array, indent)
+   end if
+   if (present(pairwise_energy3)) then
+      write(unit, '(",")', advance='no')
+      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      write(unit, jsonkey, advance='no') 'non-additive pairwise energy'
+      array = reshape(pairwise_energy3, [product(shape(pairwise_energy3))])
       call write_json_array(unit, array, indent)
    end if
    if (allocated(indent)) write(unit, '(/)', advance='no')

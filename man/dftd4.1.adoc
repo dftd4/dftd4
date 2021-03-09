@@ -52,6 +52,9 @@ Specify the functional to select the correct parameters.
 *--property*::
      Print atomic properties and molecular C6-coefficient
 
+*--pair-resolved*::
+     Calculate pairwise representation of dispersion energy
+
 *--version*::
      Prints version number and citation
 

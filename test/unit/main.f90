@@ -23,6 +23,7 @@ program tester
    use test_dftd4, only : collect_dftd4
    use test_model, only : collect_model
    use test_ncoord, only : collect_ncoord
+   use test_pairwise, only : collect_pairwise
    use test_param, only : collect_param
    use test_periodic, only : collect_periodic
    implicit none
@@ -38,7 +39,8 @@ program tester
       & new_testsuite("model", collect_model), &
       & new_testsuite("dftd4", collect_dftd4), &
       & new_testsuite("param", collect_param), &
-      & new_testsuite("periodic", collect_periodic) &
+      & new_testsuite("periodic", collect_periodic), &
+      & new_testsuite("pairwise", collect_pairwise) &
       & ]
 
    call get_argument(1, suite_name)

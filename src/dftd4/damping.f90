@@ -27,6 +27,8 @@ module dftd4_damping
    contains
       procedure(dispersion_interface), deferred :: get_dispersion2
       procedure(dispersion_interface), deferred :: get_dispersion3
+      procedure(pairwise_dispersion_interface), deferred :: get_pairwise_dispersion2
+      procedure(pairwise_dispersion_interface), deferred :: get_pairwise_dispersion3
    end type damping_param
 
 
@@ -75,6 +77,32 @@ module dftd4_damping
          !> Dispersion virial
          real(wp), intent(inout), optional :: sigma(:, :)
       end subroutine dispersion_interface
+
+      !> Evaluation of the pairwise representation of the dispersion energy
+      subroutine pairwise_dispersion_interface(self, mol, trans, cutoff, r4r2, c6, energy)
+         import :: structure_type, damping_param, wp
+
+         !> Damping parameters
+         class(damping_param), intent(in) :: self
+
+         !> Molecular structure data
+         class(structure_type), intent(in) :: mol
+
+         !> Lattice points
+         real(wp), intent(in) :: trans(:, :)
+
+         !> Real space cutoff
+         real(wp), intent(in) :: cutoff
+
+         !> Expectation values for r4 over r2 operator
+         real(wp), intent(in) :: r4r2(:)
+
+         !> C6 coefficients for all atom pairs.
+         real(wp), intent(in) :: c6(:, :)
+
+         !> Pairwise representation of the dispersion energy
+         real(wp), intent(inout) :: energy(:, :)
+      end subroutine pairwise_dispersion_interface
    end interface
 
 
