@@ -26,3 +26,39 @@ test('app-help', dftd4_exe, args: '--help')
 test('app-license', dftd4_exe, args: '--license')
 test('app-citation', dftd4_exe, args: '--citation')
 test('app-noargs', dftd4_exe, should_fail: true)
+
+test(
+  'app-energy',
+  files('tester.py'),
+  args: [
+    dftd4_exe,
+    files('ammonia.tmol'),
+    files('energy.json'),
+    '--noedisp',
+    '--func', 'tpssh'
+  ],
+)
+test(
+  'app-gradient',
+  files('tester.py'),
+  args: [
+    dftd4_exe,
+    files('nitralin.mol'),
+    files('gradient.json'),
+    '--noedisp',
+    '--grad',
+    '--func', 'scan',
+  ],
+)
+test(
+  'app-pair-analysis',
+  files('tester.py'),
+  args: [
+    dftd4_exe,
+    files('caffeine.xyz'),
+    files('pair-analysis.json'),
+    '--noedisp',
+    '--pair-resolved',
+    '--func', 'b3lyp',
+  ],
+)
