@@ -48,7 +48,7 @@ subroutine ascii_atomic_radii(unit, mol, disp)
 
    integer :: isp
 
-   write(unit, '(a,":")') "Atomic data, radii in Ånström"
+   write(unit, '(a,":")') "Atomic data, radii in Ångström"
    write(unit, '(54("-"))')
    write(unit, '(a4,5x,*(1x,a10))') &
       "Z", "R(cov)", "r4/r2", "hardness", "EN"

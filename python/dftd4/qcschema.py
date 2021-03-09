@@ -47,6 +47,10 @@ the ATM scaling if the method is provided in the model.
 Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
 for damping parameters of a given method and prefers special two-body only
 damping parameters if available!
+If input_data.model.method and input_data.keywords["params_tweaks"] are both
+provided, the former "wins" without any consistency checking. Note that with the
+QCEngine QCSchema runner for classic ``dftd3``, the latter "wins" without any
+consistency checking.
 
 Example
 -------
@@ -77,6 +81,7 @@ Example
 from typing import Union
 from .interface import DispersionModel, DampingParam
 from .libdftd4 import get_api_version
+import numpy as np
 import qcelemental as qcel
 
 
@@ -146,8 +151,8 @@ def run_qcschema(
         )
 
         disp = DispersionModel(
-            atomic_input.molecule.atomic_numbers,
-            atomic_input.molecule.geometry,
+            atomic_input.molecule.atomic_numbers[atomic_input.molecule.real],
+            atomic_input.molecule.geometry[atomic_input.molecule.real],
             atomic_input.molecule.molecular_charge,
         )
 
@@ -156,13 +161,21 @@ def run_qcschema(
             grad=atomic_input.driver == "gradient",
         )
 
+        if atomic_input.driver == "gradient":
+            if all(atomic_input.molecule.real):
+                fullgrad = res.get_gradient()
+            else:
+                ireal = np.argwhere(atomic_input.molecule.real).reshape((-1))
+                fullgrad = np.zeros_like(atomic_input.molecule.geometry)
+                fullgrad[ireal, :] = res.get_gradient()
+
         properties.update(return_energy=res.get_energy())
 
         success = atomic_input.driver in _supported_drivers
         if atomic_input.driver == "energy":
             return_result = properties["return_energy"]
         elif atomic_input.driver == "gradient":
-            return_result = res.get_gradient()
+            return_result = fullgrad
         else:
             ret_data.update(
                 error=qcel.models.ComputeError(
