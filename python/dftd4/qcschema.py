@@ -26,6 +26,7 @@ Supported keywords are
 ======================== =========== ============================================
  level_hint               None        Dispersion correction level (allowed: "d4")
  params_tweaks            None        Optional dict with the damping parameters
+ pair_resolved            False       Enable pairwise resolved dispersion energy
 ======================== =========== ============================================
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
@@ -126,7 +127,9 @@ def run_qcschema(
             return_result=return_result,
             error=qcel.models.ComputeError(
                 error_type="input error",
-                error_message="Level '{}' is invalid for this dispersion correction".format(_level),
+                error_message="Level '{}' is invalid for this dispersion correction".format(
+                    _level
+                ),
             ),
         )
         return qcel.models.AtomicResult(**ret_data)
@@ -160,6 +163,7 @@ def run_qcschema(
             param=param,
             grad=atomic_input.driver == "gradient",
         )
+        extras = {"dftd4": res}
 
         if atomic_input.driver == "gradient":
             if all(atomic_input.molecule.real):
@@ -170,6 +174,10 @@ def run_qcschema(
                 fullgrad[ireal, :] = res.get("gradient")
 
         properties.update(return_energy=res.get("energy"))
+
+        if atomic_input.keywords.get("pair_resolved", False):
+            res = disp.get_pairwise_dispersion(param=param)
+            extras["dftd4"].update(res)
 
         success = atomic_input.driver in _supported_drivers
         if atomic_input.driver == "energy":
@@ -183,6 +191,8 @@ def run_qcschema(
                     error_message="Calculation succeeded but invalid driver request provided",
                 ),
             )
+
+        ret_data["extras"].update(extras)
 
     except RuntimeError as e:
         ret_data.update(
