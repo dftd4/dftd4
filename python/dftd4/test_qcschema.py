@@ -193,6 +193,7 @@ def test_gradient_tpss_d4():
                 "a1": 0.42822303,
                 "a2": 4.54257102,
             },
+            "pair_resolved": True,
         },
     )
     gradient = np.array(
@@ -211,6 +212,16 @@ def test_gradient_tpss_d4():
 
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == gradient
+    assert "energy" in atomic_result.extras["dftd4"]
+    assert "gradient" in atomic_result.extras["dftd4"]
+    assert "virial" in atomic_result.extras["dftd4"]
+    assert "additive pairwise energy" in atomic_result.extras["dftd4"]
+    assert "non-additive pairwise energy" in atomic_result.extras["dftd4"]
+    assert (
+        approx(atomic_result.extras["dftd4"]["energy"])
+        == atomic_result.extras["dftd4"]["additive pairwise energy"].sum()
+        + atomic_result.extras["dftd4"]["non-additive pairwise energy"].sum()
+    )
 
 
 def test_error_noargs():

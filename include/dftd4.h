@@ -25,6 +25,7 @@
 #define DFTD4_API_CALL
 #define DFTD4_API_SUFFIX__V_3_0
 #define DFTD4_API_SUFFIX__V_3_1
+#define DFTD4_API_SUFFIX__V_3_2
 
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;
@@ -161,3 +162,12 @@ dftd4_get_dispersion(dftd4_error /* error */,
                      double* /* energy */,
                      double* /* gradient[n][3] */,
                      double* /* sigma[3][3] */) DFTD4_API_SUFFIX__V_3_0;
+
+/// Evaluate the pairwise representation of the dispersion energy
+DFTD4_API_ENTRY void DFTD4_API_CALL
+dftd4_get_pairwise_dispersion(dftd4_error /* error */,
+                              dftd4_structure /* mol */,
+                              dftd4_model /* disp */,
+                              dftd4_param /* param */,
+                              double* /* pair_energy2[n][n] */,
+                              double* /* pair_energy3[n][n] */) DFTD4_API_SUFFIX__V_3_2;

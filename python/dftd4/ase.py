@@ -206,10 +206,10 @@ class DFTD4(Calculator):
             raise CalculationFailed("dftd4 could not evaluate input")
 
         # These properties are garanteed to exist for all implemented calculators
-        self.results["energy"] = _res.get_energy() * Hartree
+        self.results["energy"] = _res.get("energy") * Hartree
         self.results["free_energy"] = self.results["energy"]
-        self.results["forces"] = -_res.get_gradient() * Hartree / Bohr
+        self.results["forces"] = -_res.get("gradient") * Hartree / Bohr
         # stress tensor is only returned for periodic systems
         if self.atoms.pbc.any():
-            _stress = _res.get_virial() * Hartree / self.atoms.get_volume()
+            _stress = _res.get("virial") * Hartree / self.atoms.get_volume()
             self.results["stress"] = _stress.flat[[0, 4, 8, 5, 2, 1]]

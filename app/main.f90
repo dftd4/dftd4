@@ -21,7 +21,7 @@ program main
    use dftd4, only : get_dispersion, d4_model, new_d4_model, &
       realspace_cutoff, get_lattice_points, get_coordination_number, &
       damping_param, rational_damping_param, get_rational_damping, &
-      get_dftd4_version
+      get_dftd4_version, get_pairwise_dispersion
    use dftd4_charge, only : get_charges
    use dftd4_output
    use dftd4_utils
@@ -44,6 +44,7 @@ program main
       real(wp) :: ga = 3.0_wp
       real(wp) :: gc = 2.0_wp
       real(wp) :: wf = 6.0_wp
+      logical :: pair_resolved = .false.
    end type d4_config
    type(d4_config) :: config
 
@@ -55,7 +56,7 @@ program main
    type(d4_model) :: d4
    type(error_type), allocatable :: error
    real(wp) :: energy, sigma(3, 3), charge
-   real(wp), allocatable :: gradient(:, :)
+   real(wp), allocatable :: gradient(:, :), pair_disp2(:, :), pair_disp3(:, :)
    character(len=:), allocatable :: method
    real(wp), allocatable :: s9
    integer :: stat, unit
@@ -134,8 +135,16 @@ program main
    if (allocated(param)) then
       call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, &
          & sigma)
+      if (config%pair_resolved) then
+         allocate(pair_disp2(mol%nat, mol%nat), pair_disp3(mol%nat, mol%nat))
+         call get_pairwise_dispersion(mol, d4, param, realspace_cutoff(), pair_disp2, &
+            & pair_disp3)
+      end if
       if (config%verbosity > 0) then
          call ascii_results(output_unit, mol, energy, gradient, sigma)
+         if (config%pair_resolved) then
+            call ascii_pairwise(output_unit, mol, pair_disp2, pair_disp3)
+         end if
       end if
       if (config%tmer) then
          if (config%verbosity > 0) then
@@ -185,9 +194,11 @@ program main
       if (config%json) then
          open(file=config%json_output, newunit=unit)
          if (config%grad) then
-            call json_results(unit, "  ", energy, gradient, sigma)
+            call json_results(unit, "  ", energy, gradient, sigma, &
+               & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
          else
-            call json_results(unit, "  ", energy)
+            call json_results(unit, "  ", energy, &
+               & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
          end if
          close(unit)
          if (config%verbosity > 0) then
@@ -267,6 +278,7 @@ subroutine help(unit)
       "", "write results to file (default: dftd4.txt),", &
       "", "attempts to add to Turbomole gradient and gradlatt files", &
       "    --property", "Show dispersion related atomic and system properties", &
+      "    --pair-resolved", "Calculate pairwise representation of dispersion energy", &
       "    --noedisp", "Disable writing of dispersion energy to .EDISP file", &
       "    --json [file]", "Dump results to JSON output (default: dftd4.json)", &
       "    --grad [file]", "Request gradient evaluation,", &
@@ -467,6 +479,8 @@ subroutine get_arguments(input, input_format, config, method, inp, error)
          end if
       case("--property")
          config%properties = .true.
+      case("--pair-resolved")
+         config%pair_resolved = .true.
       case("--noedisp")
          config%tmer = .false.
       case("--nowrap")
