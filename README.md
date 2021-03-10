@@ -13,6 +13,7 @@ Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 ## Installing
 
 A statically linked binary distribution for Linux platforms is available at the [latest release](https://github.com/dftd4/dftd4/releases/latest) tag.
+Bleeding edge releases of the latest source from this repository are available on the [continuous release tag](https://github.com/dftd4/dftd4/releases/tag/bleed).
 
 
 ### Conda package
