@@ -163,13 +163,13 @@ def run_qcschema(
 
         if atomic_input.driver == "gradient":
             if all(atomic_input.molecule.real):
-                fullgrad = res.get_gradient()
+                fullgrad = res.get("gradient")
             else:
                 ireal = np.argwhere(atomic_input.molecule.real).reshape((-1))
                 fullgrad = np.zeros_like(atomic_input.molecule.geometry)
-                fullgrad[ireal, :] = res.get_gradient()
+                fullgrad[ireal, :] = res.get("gradient")
 
-        properties.update(return_energy=res.get_energy())
+        properties.update(return_energy=res.get("energy"))
 
         success = atomic_input.driver in _supported_drivers
         if atomic_input.driver == "energy":

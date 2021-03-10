@@ -219,7 +219,7 @@ class DispersionModel(Structure):
         else:
             self._disp = new_d4_model(self._mol)
 
-    def get_dispersion(self, param: DampingParam, grad: bool) -> Results:
+    def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """Perform actual evaluation of the dispersion correction"""
 
         _error = new_error()
@@ -243,7 +243,35 @@ class DispersionModel(Structure):
 
         handle_error(_error)
 
-        return Results(_energy[0], _gradient, _sigma)
+        results = dict(energy=_energy[0])
+        if _gradient is not None:
+            results.update(gradient=_gradient)
+        if _sigma is not None:
+            results.update(virial=_sigma)
+        return results
+
+    def get_pairwise_dispersion(self, param: DampingParam) -> dict:
+        """Evaluate pairwise representation of the dispersion energy"""
+
+        _error = new_error()
+        _pair_disp2 = np.zeros((len(self), len(self)))
+        _pair_disp3 = np.zeros((len(self), len(self)))
+
+        _lib.dftd4_get_pairwise_dispersion(
+            _error,
+            self._mol,
+            self._disp,
+            param._param,
+            _cast("double*", _pair_disp2),
+            _cast("double*", _pair_disp3),
+        )
+
+        handle_error(_error)
+
+        return {
+            "additive pairwise energy": _pair_disp2,
+            "non-additive pairwise energy": _pair_disp3,
+        }
 
 
 def _cast(ctype, array):
