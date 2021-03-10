@@ -43,6 +43,7 @@ dftd4_cffi_srcs = configure_file(
 
 # Actual generation of the Python extension, since the shared_module does not work
 # well with dependency objects, we will trick it by linking a whole static lib
+rpath = get_option('prefix') + '/' + get_option('libdir')
 dftd4_pyext = python.extension_module(
   '_libdftd4',
   link_whole: static_library(
@@ -53,6 +54,7 @@ dftd4_pyext = python.extension_module(
   dependencies: [dftd4_dep, python_dep],
   install: install,
   subdir: 'dftd4',
+  install_rpath: rpath,
 )
 
 if install

@@ -68,6 +68,10 @@ dftd4_header = files(
   'include/dftd4.h',
 )
 
+if get_option('python')
+  subdir('python'/'dftd4')
+endif
+
 if install
   # Distribute the license files in share/licenses/<name>
   install_data(
@@ -99,7 +103,3 @@ endif
 
 # add the testsuite
 subdir('test')
-
-if get_option('python')
-  subdir('python'/'dftd4')
-endif
