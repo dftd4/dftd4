@@ -26,7 +26,7 @@ module dftd4_api
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
-   use dftd4_disp, only : get_dispersion, get_properties
+   use dftd4_disp, only : get_dispersion, get_pairwise_dispersion, get_properties
    use dftd4_model, only : d4_model, new_d4_model
    use dftd4_param, only : get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell
@@ -49,7 +49,7 @@ module dftd4_api
    public :: new_rational_damping_api , load_rational_damping_api
    public :: delete_param_api
 
-   public :: get_dispersion_api, get_properties_api
+   public :: get_dispersion_api, get_pairwise_dispersion_api, get_properties_api
 
    !> Namespace for C routines
    character(len=*), parameter :: namespace = "dftd4_"
@@ -525,6 +525,60 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    endif
 
 end subroutine get_dispersion_api
+
+
+!> Calculate pairwise representation of dispersion energy
+subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
+      & c_pair_energy2, c_pair_energy3) &
+      & bind(C, name=namespace//"get_pairwise_dispersion")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   type(c_ptr), value :: vparam
+   type(vp_param), pointer :: param
+   type(c_ptr), value, intent(in) :: c_pair_energy2
+   real(wp), pointer :: pair_energy2(:, :)
+   type(c_ptr), value, intent(in) :: c_pair_energy3
+   real(wp), pointer :: pair_energy3(:, :)
+
+   if (debug) print'("[Info]",1x, a)', "get_pairwise_dispersion"
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   if (.not.c_associated(vparam)) then
+      call fatal_error(error%ptr, "Damping parameters are missing")
+      return
+   end if
+   call c_f_pointer(vparam, param)
+
+   if (.not.allocated(param%ptr)) then
+      call fatal_error(error%ptr, "Damping parameters are not initialized")
+      return
+   end if
+
+   call c_f_pointer(c_pair_energy2, pair_energy2, [mol%ptr%nat, mol%ptr%nat])
+   call c_f_pointer(c_pair_energy3, pair_energy3, [mol%ptr%nat, mol%ptr%nat])
+
+   call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, realspace_cutoff(), &
+      & pair_energy2, pair_energy3)
+
+end subroutine get_pairwise_dispersion_api
 
 
 !> Calculate dispersion
