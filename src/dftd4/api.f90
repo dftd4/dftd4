@@ -546,9 +546,6 @@ subroutine get_properties_api(verror, vmol, vdisp, &
    real(c_double), intent(out), optional :: c_alpha(*)
    real(wp), allocatable :: alpha(:)
 
-   integer :: mref
-   real(wp), allocatable :: gwvec(:, :), lattr(:, :)
-
    if (debug) print'("[Info]",1x, a)', "get_properties"
 
    if (.not.c_associated(verror)) return

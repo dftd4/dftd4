@@ -264,7 +264,6 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, r4r2, c6, energy)
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:, :)
 
-   logical :: grad
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, cutoff2, r0ij, rrij, c6ij, t6, t8, edisp, dE
 
@@ -329,10 +328,9 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:, :)
 
-   logical :: grad
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
-   real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang
+   real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
    real(wp) :: cutoff2, c9, dE
 
    if (abs(self%s9) < epsilon(1.0_wp)) return

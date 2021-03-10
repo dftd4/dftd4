@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
+"""
+Minimal Python wrapper for testing the dftd4 command line interface.
 
-import subprocess, sys, json, os, pytest
+The wrapper will assume a specific order in the arguments rather than
+providing a generic command line interface by itself since it is
+supposed to be used by meson for testing purposes only.
+"""
+
+try:
+    import subprocess, sys, json, os, pytest
+except ImportError:
+    exit(77)
 
 if len(sys.argv) < 5:
     raise RuntimeError("Requires at least four arguments")
 
+thr = 1.0e-9
 prog = sys.argv[1]
 geom = sys.argv[2]
 outp = sys.argv[3]
@@ -29,4 +40,4 @@ with open(os.path.basename(outp)) as f:
 for key in ref:
     if key not in res:
         raise RuntimeError("Missing '" + key + "' entry in results")
-    assert pytest.approx(res[key], abs=1.0e-9) == ref[key]
+    assert pytest.approx(res[key], abs=thr) == ref[key]
