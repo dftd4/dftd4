@@ -225,7 +225,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         tar cvf dftd4-bleed.tar dftd4-bleed
-        xz --threads=4 dftd4-bleed.tar
+        xz --threads=0 dftd4-bleed.tar
 
     - name: Upload binary
       if: github.event_name == 'push'
