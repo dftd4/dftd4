@@ -14,6 +14,7 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
+# for local install, add `install_rpath: rpath` to executable() below
 rpath = get_option('prefix') + '/' + get_option('libdir')
 
 dftd4_exe = executable(
@@ -21,7 +22,6 @@ dftd4_exe = executable(
   sources: files('main.f90'),
   dependencies: dftd4_dep,
   install: install,
-  install_rpath: rpath,
 )
 
 test('app-version', dftd4_exe, args: '--version')
