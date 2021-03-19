@@ -416,14 +416,26 @@ subroutine get_arguments(input, input_format, config, method, inp, error)
    type(error_type), allocatable, intent(out) :: error
 
    integer :: iarg, narg
+   logical :: getopts
    character(len=:), allocatable :: arg
 
    iarg = 0
+   getopts = .true.
    narg = command_argument_count()
    do while(iarg < narg)
       iarg = iarg + 1
       call get_argument(iarg, arg)
+      if (.not.getopts) then
+         if (.not.allocated(input)) then
+            call move_alloc(arg, input)
+            cycle
+         end if
+         call fatal_error(error, "Too many positional arguments present")
+         exit
+      end if
       select case(arg)
+      case("--")
+         getopts = .false.
       case("-h", "--help")
          call help(output_unit)
          stop

@@ -12,17 +12,16 @@ try:
 except ImportError:
     exit(77)
 
-if len(sys.argv) < 5:
+if len(sys.argv) < 4:
     raise RuntimeError("Requires at least four arguments")
 
 thr = 1.0e-9
 prog = sys.argv[1]
-geom = sys.argv[2]
-outp = sys.argv[3]
-args = sys.argv[4:]
+outp = sys.argv[2]
+args = sys.argv[3:]
 
 stat = subprocess.call(
-    [prog, geom, "--json", os.path.basename(outp)] + args,
+    [prog, "--json", os.path.basename(outp)] + args,
     shell=False,
     stdin=None,
     stderr=subprocess.STDOUT,

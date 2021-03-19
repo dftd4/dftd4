@@ -32,8 +32,8 @@ test(
   files('tester.py'),
   args: [
     dftd4_exe,
-    files('ammonia.tmol'),
     files('energy.json'),
+    files('ammonia.tmol'),
     '--noedisp',
     '--func', 'tpssh'
   ],
@@ -43,11 +43,12 @@ test(
   files('tester.py'),
   args: [
     dftd4_exe,
-    files('nitralin.mol'),
     files('gradient.json'),
     '--noedisp',
-    '--grad',
     '--func', 'scan',
+    '--grad',
+    '--',
+    files('nitralin.mol'),
   ],
 )
 test(
@@ -55,8 +56,8 @@ test(
   files('tester.py'),
   args: [
     dftd4_exe,
-    files('caffeine.xyz'),
     files('pair-analysis.json'),
+    files('caffeine.xyz'),
     '--noedisp',
     '--pair-resolved',
     '--func', 'b3lyp',
