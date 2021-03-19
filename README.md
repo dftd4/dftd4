@@ -103,7 +103,7 @@ In case you want to access the DFT-D4 results from other programs, dump the resu
 (the ``--noedisp`` flag prevents the ``.EDISP`` file generation):
 
 ```sh
-dftd4 --func pbe0 --json --noedisp --grad struct.xyz
+dftd4 --func pbe0 --json --grad --noedisp struct.xyz
 ```
 
 Dispersion related properties can be calculated as well:

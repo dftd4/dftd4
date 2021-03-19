@@ -274,14 +274,13 @@ subroutine help(unit)
       "", "expected order is ga, gc (default: 3.0, 2.0)", &
       "    --wfactor <real>", "Adjust weighting factor for interpolation", &
       "", "(default: 6.0)", &
-      "-g, --grad", "Evaluate molecular gradient and virial", &
+      "-g, --grad [file]", "Evaluate molecular gradient and virial", &
       "", "write results to file (default: dftd4.txt),", &
       "", "attempts to add to Turbomole gradient and gradlatt files", &
       "    --property", "Show dispersion related atomic and system properties", &
       "    --pair-resolved", "Calculate pairwise representation of dispersion energy", &
       "    --noedisp", "Disable writing of dispersion energy to .EDISP file", &
       "    --json [file]", "Dump results to JSON output (default: dftd4.json)", &
-      "    --grad [file]", "Request gradient evaluation,", &
       "-v, --verbose", "Show more, can be used multiple times", &
       "-s, --silent", "Show less, use twice to supress all output", &
       "    --version", "Print program version and exit", &
@@ -485,7 +484,7 @@ subroutine get_arguments(input, input_format, config, method, inp, error)
          config%tmer = .false.
       case("--nowrap")
          config%wrap = .false.
-      case("--grad")
+      case("-g", "--grad")
          config%grad = .true.
          config%grad_output = "dftd4.txt"
          iarg = iarg + 1
