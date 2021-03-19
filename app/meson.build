@@ -43,11 +43,12 @@ test(
   files('tester.py'),
   args: [
     dftd4_exe,
-    files('nitralin.mol'),
     files('gradient.json'),
     '--noedisp',
-    '--grad',
     '--func', 'scan',
+    '--grad',
+    '--',
+    files('nitralin.mol'),
   ],
 )
 test(
