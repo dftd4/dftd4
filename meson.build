@@ -95,6 +95,11 @@ if install
       )
     )
   endif
+
+  install_data(
+    files('assets'/'parameters.toml'),
+    install_dir: get_option('datadir')/meson.project_name(),
+  )
 endif
 
 # add the testsuite

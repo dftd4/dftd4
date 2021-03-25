@@ -45,6 +45,21 @@ A more pythonic interface is provided in the ``dftd4.interface`` module which ca
           23.02494331])
 
 
+Additional features
+~~~~~~~~~~~~~~~~~~~
+
+The ``dftd4.parameters`` module becomes available if a TOML parser is available, either `tomlkit <https://github.com/sdispater/tomlkit>`_ or `toml <https://github.com/uiri/toml>`_ can be used here.
+The returned dict can be used to supply parameters to the constructor of the ``DampingParam`` object.
+
+.. python::
+
+   >>> from dftd4.parameters import get_damping_param
+   >>> get_damping_param("r2scan")
+   {'s6': 1.0, 's9': 1.0, 'alp': 16.0, 'damping': 'bj', 'mbd': 'approx-atm', 's8': 0.6018749, 'a1': 0.51559235, 'a2': 5.77342911, 'doi': '10.1063/5.0041008'}
+   >>> get_damping_param("b97m")
+   {'s6': 1.0, 's9': 1.0, 'alp': 16.0, 'damping': 'bj', 'mbd': 'approx-atm', 's8': 0.6633, 'a1': 0.4288, 'a2': 3.9935, 'doi': '10.1002/jcc.26411'}
+
+
 QCSchema Integration
 ~~~~~~~~~~~~~~~~~~~~
 

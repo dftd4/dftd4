@@ -15,6 +15,7 @@ env:
     numpy
     qcelemental
     ase
+    tomlkit
 
 jobs:
   gcc-build:

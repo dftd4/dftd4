@@ -16,4 +16,4 @@
 
 from setuptools import setup
 
-setup(package_data={"dftd4": ["_libdftd4*.so"]})
+setup(package_data={"dftd4": ["_libdftd4*.so", "*.toml"]})
