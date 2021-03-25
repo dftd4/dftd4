@@ -21,7 +21,7 @@ program main
    use dftd4, only : get_dispersion, d4_model, new_d4_model, &
       realspace_cutoff, get_lattice_points, get_coordination_number, &
       damping_param, rational_damping_param, get_rational_damping, &
-      get_dftd4_version, get_pairwise_dispersion
+      get_dftd4_version, get_properties, get_pairwise_dispersion
    use dftd4_charge, only : get_charges
    use dftd4_output
    use dftd4_utils
@@ -55,8 +55,10 @@ program main
    type(rational_damping_param) :: inp
    type(d4_model) :: d4
    type(error_type), allocatable :: error
-   real(wp) :: energy, sigma(3, 3), charge
-   real(wp), allocatable :: gradient(:, :), pair_disp2(:, :), pair_disp3(:, :)
+   real(wp) :: charge
+   real(wp), allocatable :: energy, gradient(:, :), sigma(:, :)
+   real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
+   real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    character(len=:), allocatable :: method
    real(wp), allocatable :: s9
    integer :: stat, unit
@@ -122,14 +124,26 @@ program main
       call ascii_damping_param(output_unit, param, method)
    end if
 
-   if (config%grad) then
-      allocate(gradient(3, mol%nat))
+   if (allocated(param)) then
+      energy = 0.0_wp
+      if (config%grad) then
+         allocate(gradient(3, mol%nat), sigma(3, 3))
+      end if
    end if
 
    call new_d4_model(d4, mol, ga=config%ga, gc=config%gc, wf=config%wf)
 
    if (config%properties) then
-      call property_calc(output_unit, mol, d4, config%verbosity)
+      if (config%verbosity > 1) then
+         call ascii_atomic_radii(output_unit, mol, d4)
+         call ascii_atomic_references(output_unit, mol, d4)
+      end if
+      allocate(cn(mol%nat), q(mol%nat), c6(mol%nat, mol%nat), alpha(mol%nat))
+      call get_properties(mol, d4, realspace_cutoff(), cn, q, c6, alpha)
+
+      if (config%verbosity > 0) then
+         call ascii_system_properties(output_unit, mol, d4, cn, q, c6)
+      end if
    end if
 
    if (allocated(param)) then
@@ -191,62 +205,22 @@ program main
          end if
       end if
 
-      if (config%json) then
-         open(file=config%json_output, newunit=unit)
-         if (config%grad) then
-            call json_results(unit, "  ", energy, gradient, sigma, &
-               & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
-         else
-            call json_results(unit, "  ", energy, &
-               & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
-         end if
-         close(unit)
-         if (config%verbosity > 0) then
-            write(output_unit, '(a)') &
-               & "[Info] JSON dump of results written to '"//config%json_output//"'"
-         end if
+   end if
+
+   if (config%json) then
+      open(file=config%json_output, newunit=unit)
+      call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma, &
+         & cn=cn, q=q, c6=c6, alpha=alpha, &
+         & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
+      close(unit)
+      if (config%verbosity > 0) then
+         write(output_unit, '(a)') &
+            & "[Info] JSON dump of results written to '"//config%json_output//"'"
       end if
    end if
 
 
 contains
-
-
-subroutine property_calc(unit, mol, disp, verbosity)
-
-   !> Unit for output
-   integer, intent(in) :: unit
-
-   !> Molecular structure data
-   class(structure_type), intent(in) :: mol
-
-   !> Dispersion model
-   class(d4_model), intent(in) :: disp
-
-   !> Printout verbosity
-   integer, intent(in) :: verbosity
-
-   integer :: mref
-   real(wp), allocatable :: cn(:), q(:), gwvec(:, :), c6(:, :), lattr(:, :)
-
-   if (verbosity > 1) then
-      call ascii_atomic_radii(unit, mol, disp)
-      call ascii_atomic_references(unit, mol, disp)
-   end if
-
-   mref = maxval(disp%ref)
-   allocate(cn(mol%nat), q(mol%nat), gwvec(mref, mol%nat), c6(mol%nat, mol%nat))
-   call get_lattice_points(mol%periodic, mol%lattice, 30.0_wp, lattr)
-   call get_coordination_number(mol, lattr, 30.0_wp, disp%rcov, disp%en, cn)
-   call get_charges(mol, q)
-   call disp%weight_references(mol, cn, q, gwvec)
-   call disp%get_atomic_c6(mol, gwvec, c6=c6)
-
-   if (verbosity > 0) then
-      call ascii_system_properties(unit, mol, disp, cn, q, c6)
-   end if
-
-end subroutine property_calc
 
 
 subroutine help(unit)

@@ -501,7 +501,7 @@ subroutine getline(unit,line,iostat)
 end subroutine getline
 
 
-subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, &
+subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, alpha, &
       & pairwise_energy2, pairwise_energy3)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
@@ -511,6 +511,7 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, &
    real(wp), intent(in), optional :: cn(:)
    real(wp), intent(in), optional :: q(:)
    real(wp), intent(in), optional :: c6(:, :)
+   real(wp), intent(in), optional :: alpha(:)
    real(wp), intent(in), optional :: pairwise_energy2(:, :)
    real(wp), intent(in), optional :: pairwise_energy3(:, :)
    character(len=:), allocatable :: indent, version_string
@@ -537,14 +538,14 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, &
       write(unit, '(",")', advance='no')
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'virial'
-      array = reshape(sigma, [product(shape(sigma))])
+      array = reshape(sigma, [size(sigma)])
       call write_json_array(unit, array, indent)
    end if
    if (present(gradient)) then
       write(unit, '(",")', advance='no')
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'gradient'
-      array = reshape(gradient, [product(shape(gradient))])
+      array = reshape(gradient, [size(gradient)])
       call write_json_array(unit, array, indent)
    end if
    if (present(cn)) then
@@ -556,28 +557,34 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, &
    if (present(q)) then
       write(unit, '(",")', advance='no')
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'coordination numbers'
+      write(unit, jsonkey, advance='no') 'partial charges'
       call write_json_array(unit, q, indent)
    end if
    if (present(c6)) then
       write(unit, '(",")', advance='no')
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'c6 coefficients'
-      array = reshape(c6, [product(shape(c6))])
+      array = reshape(c6, [size(c6)])
       call write_json_array(unit, array, indent)
+   end if
+   if (present(alpha)) then
+      write(unit, '(",")', advance='no')
+      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      write(unit, jsonkey, advance='no') 'polarizibilities'
+      call write_json_array(unit, alpha, indent)
    end if
    if (present(pairwise_energy2)) then
       write(unit, '(",")', advance='no')
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'additive pairwise energy'
-      array = reshape(pairwise_energy2, [product(shape(pairwise_energy2))])
+      array = reshape(pairwise_energy2, [size(pairwise_energy2)])
       call write_json_array(unit, array, indent)
    end if
    if (present(pairwise_energy3)) then
       write(unit, '(",")', advance='no')
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'non-additive pairwise energy'
-      array = reshape(pairwise_energy3, [product(shape(pairwise_energy3))])
+      array = reshape(pairwise_energy3, [size(pairwise_energy3)])
       call write_json_array(unit, array, indent)
    end if
    if (allocated(indent)) write(unit, '(/)', advance='no')
