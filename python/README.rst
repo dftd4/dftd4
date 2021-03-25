@@ -49,9 +49,9 @@ Additional features
 ~~~~~~~~~~~~~~~~~~~
 
 The ``dftd4.parameters`` module becomes available if a TOML parser is available, either `tomlkit <https://github.com/sdispater/tomlkit>`_ or `toml <https://github.com/uiri/toml>`_ can be used here.
-The returned dict can be used to supply parameters to the constructor of the ``DampingParam`` object.
+The returned dict can be used to supply parameters to the constructor of the ``DampingParam`` object, only the ``s6``, ``s8``, ``s9``, ``a1``, ``a2`` and ``alp`` entries will be used, the remaining entries are meta data describing the damping parameters.
 
-.. python::
+.. code-block:: python
 
    >>> from dftd4.parameters import get_damping_param
    >>> get_damping_param("r2scan")
