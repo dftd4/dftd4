@@ -155,35 +155,6 @@ class DampingParam:
                 raise RuntimeError("Constructor requires argument for " + str(e))
 
 
-class Results:
-    """Result container to capture quantities from a dispersion correction"""
-
-    def __init__(self, energy, gradient, sigma):
-        """Create new results store"""
-
-        self.energy = energy
-        self.gradient = gradient
-        self.sigma = sigma
-
-    def get_energy(self) -> float:
-        """Query singlepoint results object for energy in Hartree"""
-        if self.energy is None:
-            raise ValueError("No energy evaluated in this results")
-        return self.energy
-
-    def get_gradient(self) -> float:
-        """Query singlepoint results object for gradient in Hartree/Bohr"""
-        if self.gradient is None:
-            raise ValueError("No gradient evaluated in this results")
-        return self.gradient
-
-    def get_virial(self) -> float:
-        """Query singlepoint results object for virial given in Hartree"""
-        if self.sigma is None:
-            raise ValueError("No virial evaluated in this results")
-        return self.sigma
-
-
 class DispersionModel(Structure):
     """
     .. Dispersion model
@@ -249,6 +220,34 @@ class DispersionModel(Structure):
         if _sigma is not None:
             results.update(virial=_sigma)
         return results
+
+    def get_properties(self) -> dict:
+        """Evaluate dispersion related properties"""
+
+        _error = new_error()
+        _c6 = np.zeros((len(self), len(self)))
+        _cn = np.zeros((len(self)))
+        _charges = np.zeros((len(self)))
+        _alpha = np.zeros((len(self)))
+
+        _lib.dftd4_get_properties(
+            _error,
+            self._mol,
+            self._disp,
+            _cast("double*", _cn),
+            _cast("double*", _charges),
+            _cast("double*", _c6),
+            _cast("double*", _alpha),
+        )
+
+        handle_error(_error)
+
+        return {
+            "coordination numbers": _cn,
+            "partial charges": _charges,
+            "c6 coefficients": _c6,
+            "polarizibilities": _alpha,
+        }
 
     def get_pairwise_dispersion(self, param: DampingParam) -> dict:
         """Evaluate pairwise representation of the dispersion energy"""

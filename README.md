@@ -143,6 +143,8 @@ The DFT-D4 project provides first class API support Fortran, C and Python.
 Other programming languages should try to interface with to DFT-D4 via one of those three APIs.
 To provide first class API support for a new language the interface specification should be available as meson build files.
 
+The ``dftd4`` binary provides with the ``--json`` option access to all quantities available from the APIs as well.
+
 
 ### Fortran API
 

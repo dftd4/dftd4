@@ -52,6 +52,15 @@ test(
   ],
 )
 test(
+  'app-properties',
+  files('tester.py'),
+  args: [
+    dftd4_exe,
+    files('properties.json'),
+    files('lenalidomid.gen'),
+  ],
+)
+test(
   'app-pair-analysis',
   files('tester.py'),
   args: [
