@@ -79,6 +79,10 @@ if lapack_vendor == 'mkl'
   mkl_dep += fc.find_library('mkl_core')
   lib_deps += mkl_dep
 
+elif lapack_vendor == 'mkl-rt'
+  mkl_dep = fc.find_library('mkl_rt')
+  lib_deps += mkl_dep
+
 elif lapack_vendor == 'openblas'
   openblas_dep = dependency('openblas', required: false)
   if not openblas_dep.found()
