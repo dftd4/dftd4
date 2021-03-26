@@ -27,6 +27,7 @@ Supported keywords are
  level_hint               None        Dispersion correction level (allowed: "d4")
  params_tweaks            None        Optional dict with the damping parameters
  pair_resolved            False       Enable pairwise resolved dispersion energy
+ property                 False       Evaluate dispersion related properties
 ======================== =========== ============================================
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
@@ -163,6 +164,8 @@ def run_qcschema(
             param=param,
             grad=atomic_input.driver == "gradient",
         )
+        if atomic_input.keywords.get("property", False):
+            res.update(**disp.get_properties())
         extras = {"dftd4": res}
 
         if atomic_input.driver == "gradient":
