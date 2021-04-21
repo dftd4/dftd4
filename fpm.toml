@@ -14,10 +14,10 @@ auto-tests = false
 [dependencies]
 [dependencies.mctc-lib]
 git = "https://github.com/grimme-lab/mctc-lib.git"
-tag = "v0.2.1"
+tag = "v0.2.2"
 [dependencies.multicharge]
 git = "https://github.com/grimme-lab/multicharge.git"
-tag = "v0.1.0"
+tag = "v0.1.1"
 
 [dev-dependencies]
 [dev-dependencies.mstore]
