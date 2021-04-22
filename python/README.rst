@@ -170,6 +170,7 @@ Try to find a ``dftd4`` installation you build against first with
 
 Adjust the ``PKG_CONFIG_PATH`` environment variable to include the correct directories to find the installation if necessary.
 The out-of-tree build requires
+
 - C compiler to test the C-API and compile the extension module
 - `meson <https://mesonbuild.com>`_ version 0.53 or newer
 - a build-system backend, *i.e.* `ninja <https://ninja-build.org>`_ version 1.7 or newer
