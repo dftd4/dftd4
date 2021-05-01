@@ -79,10 +79,17 @@ if install
     dftd4_header,
   )
 
+  module_id = meson.project_name() / fc_id + '-' + fc.version()
+  meson.add_install_script(
+    find_program(files('config'/'install-mod.py')),
+    get_option('includedir') / module_id,
+  )
+
   pkg = import('pkgconfig')
   pkg.generate(
     dftd4_lib,
     description: 'Generally Applicable Atomic-Charge Dependent London Dispersion Correction',
+    subdirs: ['', module_id],
   )
 
   asciidoc = find_program('asciidoctor', required: false)

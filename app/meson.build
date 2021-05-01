@@ -27,9 +27,11 @@ test('app-license', dftd4_exe, args: '--license')
 test('app-citation', dftd4_exe, args: '--citation')
 test('app-noargs', dftd4_exe, should_fail: true)
 
+app_tester = find_program(files('tester.py'))
+
 test(
   'app-energy',
-  files('tester.py'),
+  app_tester,
   args: [
     dftd4_exe,
     files('energy.json'),
@@ -40,7 +42,7 @@ test(
 )
 test(
   'app-gradient',
-  files('tester.py'),
+  app_tester,
   args: [
     dftd4_exe,
     files('gradient.json'),
@@ -53,7 +55,7 @@ test(
 )
 test(
   'app-properties',
-  files('tester.py'),
+  app_tester,
   args: [
     dftd4_exe,
     files('properties.json'),
@@ -62,7 +64,7 @@ test(
 )
 test(
   'app-pair-analysis',
-  files('tester.py'),
+  app_tester,
   args: [
     dftd4_exe,
     files('pair-analysis.json'),
