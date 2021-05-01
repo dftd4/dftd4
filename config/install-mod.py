@@ -15,7 +15,6 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-import os, sys, shutil
 from os import environ, listdir, makedirs
 from os.path import join, isdir, exists
 from sys import argv
@@ -27,7 +26,7 @@ if "MESON_INSTALL_DESTDIR_PREFIX" in environ:
 else:
     install_dir = environ["MESON_INSTALL_PREFIX"]
 
-include_dir = sys.argv[1] if len(sys.argv) > 1 else "include"
+include_dir = argv[1] if len(argv) > 1 else "include"
 module_dir = join(install_dir, include_dir)
 
 modules = []
