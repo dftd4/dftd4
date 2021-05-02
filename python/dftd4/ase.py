@@ -34,8 +34,29 @@ Supported keywords are
  Keyword                  Default      Description
 ======================== ============ ============================================
  method                   None         Method to calculate dispersion for
+ params_tweaks            None        Optional dict with the damping parameters
  cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
+
+The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
+must be provided
+
+======================== =========== ============================================
+ Tweakable parameter      Default     Description
+======================== =========== ============================================
+ s6                       1.0         Scaling of the dipole-dipole dispersion
+ s8                       None        Scaling of the dipole-quadrupole dispersion
+ s9                       1.0         Scaling of the three-body dispersion energy
+ a1                       None        Scaling of the critical radii
+ a2                       None        Offset of the critical radii
+ alp                      16.0        Exponent of the zero damping (ATM only)
+======================== =========== ============================================
+
+Either method or s8, a1 and a2 must be provided, s9 can be used to overwrite
+the ATM scaling if the method is provided in the model.
+Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
+for damping parameters of a given method and prefers special two-body only
+damping parameters if available!
 
 Example
 -------
