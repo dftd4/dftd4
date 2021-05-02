@@ -125,7 +125,7 @@ To use the ``DFTD4`` calculator as dispersion correction the calculator can be c
    >>> atoms = molecule('H2O')
    >>> atoms.calc = SumCalculator([DFTD4(method="PBE"), NWChem(xc="PBE")])
 
-For convenience ``DFTD4`` allows to combine itself with another calculator by using the add operation which returns a SumCalculator:
+For convenience ``DFTD4`` allows to combine itself with another calculator by using the ``add_calculator`` method which returns a SumCalculator:
 
 .. code:: python
 
@@ -133,14 +133,14 @@ For convenience ``DFTD4`` allows to combine itself with another calculator by us
    >>> from ase.calculators.emt import EMT
    >>> from dftd4.ase import DFTD4
    >>> atoms = molecule("C60")
-   >>> atoms.calc = DFTD4(method="pbe") + EMT()
+   >>> atoms.calc = DFTD4(method="pbe").add_calculator(EMT())
    >>> atoms.get_potential_energy()
    6.348142387048062
    >>> [calc.get_potential_energy() for calc in atoms.calc.calcs]
    [-6.015477436263984, 12.363619823312046]
 
 The individual contributions are available by iterating over the list of calculators in ``calc.calcs``.
-Note that ``DFTD4`` will always place itself as first calculator in the list, regardless of the actual order of addition.
+Note that ``DFTD4`` will always place itself as first calculator in the list.
 
 
 Installing

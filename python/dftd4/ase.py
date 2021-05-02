@@ -124,10 +124,7 @@ class DFTD4(Calculator):
 
         Calculator.__init__(self, atoms=atoms, **kwargs)
 
-    def __add__(self, other: Calculator) -> Calculator:
-        return SumCalculator([self, other])
-
-    def __radd__(self, other: Calculator) -> Calculator:
+    def add_calculator(self, other: Calculator) -> Calculator:
         return SumCalculator([self, other])
 
     def set(self, **kwargs) -> dict:
