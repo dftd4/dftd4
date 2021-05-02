@@ -36,7 +36,7 @@ dftd4_pp = configure_file(
 
 # This is the actual out-of-line API processing of the ffibuilder
 dftd4_cffi_srcs = configure_file(
-  command: [python, files('..'/'ffibuilder.py'), '@INPUT@', '@BASENAME@'],
+  command: [python, files('..'/'build.py'), '@INPUT@', '@BASENAME@'],
   input: dftd4_pp,
   output: '@BASENAME@.c',
 )

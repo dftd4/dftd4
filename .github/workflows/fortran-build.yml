@@ -9,6 +9,7 @@ env:
     ninja
     gcovr
   PIP_EXTRAS: >-
+    pkgconfig
     pytest
     pytest-cov
     cffi
@@ -24,11 +25,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        gcc_v: [9]
 
     env:
       FC: gfortran
       CC: gcc
-      GCC_V: 9
+      GCC_V: ${{ matrix.gcc_v }}
       OMP_NUM_THREADS: 2,1
       PYTHON_V: 3.8
 
@@ -82,6 +84,20 @@ jobs:
         meson install -C ${{ env.BUILD_DIR }} --no-rebuild
         echo "DFTD4_PREFIX=$PWD/_dist" >> $GITHUB_ENV
 
+    - name: Create package
+      run: |
+        tar cvf ${{ env.OUTPUT }} _dist
+        xz -T0 ${{ env.OUTPUT }}
+        echo "DFTD4_OUTPUT=${{ env.OUTPUT }}.xz" >> $GITHUB_ENV
+      env:
+        OUTPUT: dftd4-gcc-${{ matrix.gcc_v }}-${{ matrix.os }}.tar
+
+    - name: Upload package
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.DFTD4_OUTPUT }}
+        path: ${{ env.DFTD4_OUTPUT }}
+
     - name: Test Python API
       run: pytest --pyargs dftd4 --cov=dftd4 -vv
       env:
@@ -105,9 +121,84 @@ jobs:
       run: meson compile -C ${{ env.BUILD_DIR }}
       working-directory: python
 
-    - name: Install Python extension module
+    - name: Install Python extension module (meson)
       run: meson install -C ${{ env.BUILD_DIR }} --no-rebuild
       working-directory: python
+
+
+  python-build:
+    needs:
+      - gcc-build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        gcc_v: [9]
+        python_v: ['3.6', '3.7', '3.8']
+
+    env:
+      FC: gfortran
+      CC: gcc
+      GCC_V: ${{ matrix.gcc_v }}
+      PYTHON_V: ${{ matrix.python_v }}
+      OMP_NUM_THREADS: 2,1
+      DFTD4_OUTPUT: dftd4-gcc-${{ matrix.gcc_v }}-${{ matrix.os }}.tar.xz
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python_v }}
+
+    - name: Install GCC (OSX)
+      if: contains(matrix.os, 'macos')
+      run: |
+        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
+        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
+        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+
+    - name: Install GCC (Linux)
+      if: contains(matrix.os, 'ubuntu')
+      run: >-
+        sudo update-alternatives
+        --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_V }} 100
+        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${{ env.GCC_V }}
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
+
+    - name: Install meson and test dependencies
+      run: pip3 install ${{ env.PIP_EXTRAS }}
+
+    - name: Download package
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ env.DFTD4_OUTPUT }}
+
+    - name: Unpack package
+      run: |
+        tar xvf ${{ env.DFTD4_OUTPUT }}
+        echo "DFTD4_PREFIX=$PWD/_dist" >> $GITHUB_ENV
+
+    - name: Copy parameter file
+      run: |
+        cp assets/parameters.toml python/dftd4
+
+    - name: Install Python extension module (pip)
+      run: pip3 install . --user
+      working-directory: python
+      env:
+        PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD4_PREFIX }}/lib/pkgconfig
+
+    - name: Test Python API
+      run: pytest --pyargs dftd4 --cov=dftd4 -vv
+      env:
+        LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
+
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v1
+
 
   # Test native MinGW Windows build
   mingw-build:
