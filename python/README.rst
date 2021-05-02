@@ -160,7 +160,6 @@ Now you are ready to use ``dftd4``, check if you can import it with
 Building the extension module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This directory contains a separate meson build file to allow the out-of-tree build of the CFFI extension module.
 To perform an out-of-tree build some version of ``dftd4`` has to be available on your system and preferably findable by ``pkg-config``.
 Try to find a ``dftd4`` installation you build against first with
 
@@ -169,12 +168,51 @@ Try to find a ``dftd4`` installation you build against first with
    pkg-config --modversion dftd4
 
 Adjust the ``PKG_CONFIG_PATH`` environment variable to include the correct directories to find the installation if necessary.
+
+
+Using pip
+^^^^^^^^^
+
+This project support installation with pip as an easy way to build the Python API.
+
+- C compiler to build the C-API and compile the extension module (the compiler name should be exported in the ``CC`` environment variable)
+- Python 3.6 or newer
+- The following Python packages are required additionally
+
+  - `cffi <https://cffi.readthedocs.io/>`_
+  - `numpy <https://numpy.org/>`_
+  - `pkgconfig <https://pypi.org/project/pkgconfig/>`_ (setup only)
+
+Make sure to have your C compiler set to the ``CC`` environment variable
+
+.. code:: sh
+
+   export CC=gcc
+
+Install the project with pip
+
+.. code:: sh
+
+   pip install .
+
+To install extra dependencies as well use
+
+.. code:: sh
+
+   pip install '.[parameters,ase,qcschema]'
+
+
+
+Using meson
+^^^^^^^^^^^
+
+This directory contains a separate meson build file to allow the out-of-tree build of the CFFI extension module.
 The out-of-tree build requires
 
-- C compiler to test the C-API and compile the extension module
+- C compiler to build the C-API and compile the extension module
 - `meson <https://mesonbuild.com>`_ version 0.53 or newer
 - a build-system backend, *i.e.* `ninja <https://ninja-build.org>`_ version 1.7 or newer
-- Python 3.6 or newer with the CFFI package installed
+- Python 3.6 or newer with the `CFFI <https://cffi.readthedocs.io/>`_ package installed
 
 Setup a build with
 
@@ -198,18 +236,3 @@ You can install as usual with
 
    meson configure _build --prefix=/path/to/install
    meson install -C _build
-
-Alternatively, copy the compiled extension module into the Python module tree with
-
-.. code:: sh
-
-   cp _build/dftd4/_libdftd4.*.so dftd4/
-
-Copying the extension module usually works best if the ``dftd4`` version was linked statically into the extension module.
-The copying strategy is *only* recommended if you plan to develop locally at the Python API.
-
-Finally, you can install this project with ``pip`` in development mode
-
-.. code:: sh
-
-   pip install -e .
