@@ -69,6 +69,7 @@ from ase.calculators.calculator import (
     CalculationFailed,
     all_changes,
 )
+from ase.calculators.mixing import SumCalculator
 from ase.atoms import Atoms
 from ase.units import Hartree, Bohr
 
@@ -101,6 +102,12 @@ class DFTD4(Calculator):
         """Construct the dftd4 dispersion model object."""
 
         Calculator.__init__(self, atoms=atoms, **kwargs)
+
+    def __add__(self, other: Calculator) -> Calculator:
+        return SumCalculator([self, other])
+
+    def __radd__(self, other: Calculator) -> Calculator:
+        return SumCalculator([self, other])
 
     def set(self, **kwargs) -> dict:
         """Set new parameters to dftd4"""
