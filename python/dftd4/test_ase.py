@@ -16,6 +16,7 @@
 
 from dftd4.ase import DFTD4
 from ase.build import molecule
+from ase.calculators.emt import EMT
 from pytest import approx, raises
 import numpy as np
 
@@ -41,9 +42,13 @@ def test_ase_scand4():
     atoms = molecule("methylenecyclopropane")
     atoms.calc = DFTD4(method="SCAN")
 
-    print(atoms.get_forces())
     assert approx(atoms.get_potential_energy(), abs=thr) == -0.021665446836610567
     assert approx(atoms.get_forces(), abs=thr) == forces
+
+    atoms.calc = DFTD4(method="SCAN").add_calculator(EMT())
+    assert approx(atoms.get_potential_energy(), abs=thr) == 3.6624398683434225
+    energies = [calc.get_potential_energy() for calc in atoms.calc.calcs]
+    assert approx(energies, abs=thr) == [-0.021665446836610563, 3.684105315180033]
 
 
 def test_ase_tpssd4():
@@ -69,6 +74,10 @@ def test_ase_tpssd4():
     atoms = molecule("C2H6CHOH")
     atoms.calc = DFTD4(method="TPSS")
 
-    print(atoms.get_forces())
     assert approx(atoms.get_potential_energy(), abs=thr) == -0.24206732765720423
     assert approx(atoms.get_forces(), abs=thr) == forces
+
+    atoms.calc = DFTD4(method="TPSS").add_calculator(EMT())
+    assert approx(atoms.get_potential_energy(), abs=thr) == 4.864016486351274
+    energies = [calc.get_potential_energy() for calc in atoms.calc.calcs]
+    assert approx(energies, abs=thr) == [-0.24206732765720396, 5.106083814008478]

@@ -17,7 +17,7 @@
 project(
   'dftd4',
   'fortran',
-  version: '3.1.0',
+  version: '3.2.0',
   license: 'LGPL-3.0-or-later',
   meson_version: '>=0.53',
   default_options: [

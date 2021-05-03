@@ -25,7 +25,7 @@ Example
 -------
 >>> from dftd4.libdftd4 import get_api_version
 >>> get_api_version()
-'3.0.0'
+'3.2.0'
 """
 
 try:
