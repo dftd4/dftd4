@@ -59,22 +59,22 @@ class Structure:
             raise ValueError("Dimension missmatch between numbers and positions")
 
         self._natoms = len(numbers)
-        _numbers = np.array(numbers, dtype="i4")
-        _positions = np.array(positions, dtype=float)
+        _numbers = np.ascontiguousarray(numbers, dtype="i4")
+        _positions = np.ascontiguousarray(positions, dtype=float)
 
         _charge = _ref("double", charge)
 
         if lattice is not None:
             if lattice.size != 9:
                 raise ValueError("Invalid lattice provided")
-            _lattice = np.array(lattice, dtype="float")
+            _lattice = np.ascontiguousarray(lattice, dtype="float")
         else:
             _lattice = None
 
         if periodic is not None:
             if periodic.size != 3:
                 raise ValueError("Invalid periodicity provided")
-            _periodic = np.array(periodic, dtype="bool")
+            _periodic = np.ascontiguousarray(periodic, dtype="bool")
         else:
             _periodic = None
 
@@ -107,12 +107,12 @@ class Structure:
 
         if 3 * len(self) != positions.size:
             raise ValueError("Dimension missmatch for positions")
-        _positions = np.array(positions, dtype="float")
+        _positions = np.ascontiguousarray(positions, dtype="float")
 
         if lattice is not None:
             if lattice.size != 9:
                 raise ValueError("Invalid lattice provided")
-            _lattice = np.array(lattice, dtype="float")
+            _lattice = np.ascontiguousarray(lattice, dtype="float")
         else:
             _lattice = None
 
