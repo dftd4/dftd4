@@ -26,7 +26,7 @@ module dftd4_model
    implicit none
    private
 
-   public :: d4_model, new_d4_model
+   public :: d4_model, new_d4_model, d4_ref
 
 
    !> Base D4 dispersion model to evaluate C6 coefficients
@@ -98,11 +98,26 @@ module dftd4_model
    real(wp), parameter :: wf_default = 6.0_wp
 
 
+   !> Possible reference charges for D4
+   type :: enum_ref
+
+      !> Electronegativity equilibration charges
+      integer :: eeq = 1
+
+      !> GFN2-xTB Mulliken partial charges
+      integer :: gfn2 = 2
+
+   end type enum_ref
+
+   !> Actual enumerator for D4 reference charges
+   type(enum_ref), parameter :: d4_ref = enum_ref()
+
+
 contains
 
 
 !> Create new dispersion model from molecular structure input
-subroutine new_d4_model(self, mol, ga, gc, wf)
+subroutine new_d4_model(self, mol, ga, gc, wf, ref)
 
    !> Instance of the dispersion model
    type(d4_model), intent(out) :: self
@@ -119,10 +134,19 @@ subroutine new_d4_model(self, mol, ga, gc, wf)
    !> Weighting factor for coordination number interpolation
    real(wp), intent(in), optional :: wf
 
+   !> Reference charge selection
+   integer, intent(in), optional :: ref
+
    integer :: isp, izp, iref, jsp, jzp, jref
-   integer :: mref
+   integer :: mref, ref_charge
    real(wp) :: aiw(23), c6
    real(wp), parameter :: thopi = 3.0_wp/pi
+
+   if (present(ref)) then
+      ref_charge = ref
+   else
+      ref_charge = d4_ref%eeq
+   end if
 
    if (present(ga)) then
       self%ga = ga
@@ -186,10 +210,18 @@ subroutine new_d4_model(self, mol, ga, gc, wf)
    end do
 
    allocate(self%q(mref, mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      call set_refq(self%q(:, isp), izp)
-   end do
+   select case(ref_charge)
+   case default
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refq_eeq(self%q(:, isp), izp)
+      end do
+   case(d4_ref%gfn2)
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refq_gfn2(self%q(:, isp), izp)
+      end do
+   end select
 
    allocate(self%ngw(mref, mol%nid))
    do isp = 1, mol%nid
@@ -198,10 +230,18 @@ subroutine new_d4_model(self, mol, ga, gc, wf)
    end do
 
    allocate(self%aiw(23, mref, mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      call set_refalpha(self%aiw(:, :, isp), self%ga, self%gc, izp)
-   end do
+   select case(ref_charge)
+   case default
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refalpha_eeq(self%aiw(:, :, isp), self%ga, self%gc, izp)
+      end do
+   case(d4_ref%gfn2)
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refalpha_gfn2(self%aiw(:, :, isp), self%ga, self%gc, izp)
+      end do
+   end select
 
    allocate(self%c6(mref, mref, mol%nid, mol%nid))
    do isp = 1, mol%nid

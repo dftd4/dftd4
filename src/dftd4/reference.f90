@@ -21,7 +21,8 @@ module dftd4_reference
    implicit none
    private
 
-   public :: get_nref, set_refcn, set_refgw, set_refq, set_refalpha
+   public :: get_nref, set_refcn, set_refgw
+   public :: set_refq_eeq, set_refalpha_eeq, set_refq_gfn2, set_refalpha_gfn2
 
    interface get_nref
       module procedure :: get_nref_sym
@@ -38,15 +39,25 @@ module dftd4_reference
       module procedure :: set_refgw_num
    end interface set_refgw
 
-   interface set_refq
-      module procedure :: set_refq_sym
-      module procedure :: set_refq_num
-   end interface set_refq
+   interface set_refq_eeq
+      module procedure :: set_refq_eeq_sym
+      module procedure :: set_refq_eeq_num
+   end interface set_refq_eeq
 
-   interface set_refalpha
-      module procedure :: set_refalpha_sym
-      module procedure :: set_refalpha_num
-   end interface set_refalpha
+   interface set_refalpha_eeq
+      module procedure :: set_refalpha_eeq_sym
+      module procedure :: set_refalpha_eeq_num
+   end interface set_refalpha_eeq
+
+   interface set_refq_gfn2
+      module procedure :: set_refq_gfn2_sym
+      module procedure :: set_refq_gfn2_num
+   end interface set_refq_gfn2
+
+   interface set_refalpha_gfn2
+      module procedure :: set_refalpha_gfn2_sym
+      module procedure :: set_refalpha_gfn2_num
+   end interface set_refalpha_gfn2
 
    integer, parameter :: max_elem = 118
 
@@ -183,7 +194,7 @@ end subroutine set_refgw_num
 
 
 !> Set the reference partial charges for an element symbol
-pure subroutine set_refq_sym(q, sym)
+pure subroutine set_refq_eeq_sym(q, sym)
 
    !> Reference partial charge
    real(wp), intent(out) :: q(:)
@@ -191,13 +202,13 @@ pure subroutine set_refq_sym(q, sym)
    !> Element symbol
    character(len=*), intent(in) :: sym
 
-   call set_refq(q, to_number(sym))
+   call set_refq_eeq(q, to_number(sym))
 
-end subroutine set_refq_sym
+end subroutine set_refq_eeq_sym
 
 
 !> Set the reference partial charges for an atomic number
-pure subroutine set_refq_num(q, num)
+pure subroutine set_refq_eeq_num(q, num)
 
    !> Reference partial charge
    real(wp), intent(out) :: q(:)
@@ -213,11 +224,45 @@ pure subroutine set_refq_num(q, num)
       q(:ref) = clsq(:ref, num)
    end if
 
-end subroutine set_refq_num
+end subroutine set_refq_eeq_num
+
+
+!> Set the reference partial charges for an element symbol
+pure subroutine set_refq_gfn2_sym(q, sym)
+
+   !> Reference partial charge
+   real(wp), intent(out) :: q(:)
+
+   !> Element symbol
+   character(len=*), intent(in) :: sym
+
+   call set_refq_gfn2(q, to_number(sym))
+
+end subroutine set_refq_gfn2_sym
+
+
+!> Set the reference partial charges for an atomic number
+pure subroutine set_refq_gfn2_num(q, num)
+
+   !> Reference partial charge
+   real(wp), intent(out) :: q(:)
+
+   !> Atomic number
+   integer, intent(in) :: num
+
+   integer :: ref
+
+   q(:) = 0.0_wp
+   if (num > 0 .and. num <= size(refn)) then
+      ref = get_nref(num)
+      q(:ref) = refq(:ref, num)
+   end if
+
+end subroutine set_refq_gfn2_num
 
 
 !> Set the reference polarizibility for an element symbol
-pure subroutine set_refalpha_sym(alpha, ga, gc, sym)
+pure subroutine set_refalpha_eeq_sym(alpha, ga, gc, sym)
 
    !> Reference polarizibility
    real(wp), intent(out) :: alpha(:, :)
@@ -231,13 +276,13 @@ pure subroutine set_refalpha_sym(alpha, ga, gc, sym)
    !> Element symbol
    character(len=*), intent(in) :: sym
 
-   call set_refalpha(alpha, ga, gc, to_number(sym))
+   call set_refalpha_eeq(alpha, ga, gc, to_number(sym))
 
-end subroutine set_refalpha_sym
+end subroutine set_refalpha_eeq_sym
 
 
 !> Set the reference polarizibility for an atomic number
-pure subroutine set_refalpha_num(alpha, ga, gc, num)
+pure subroutine set_refalpha_eeq_num(alpha, ga, gc, num)
 
    !> Reference polarizibility
    real(wp), intent(out) :: alpha(:, :)
@@ -269,7 +314,63 @@ pure subroutine set_refalpha_num(alpha, ga, gc, num)
       end do
    end if
 
-end subroutine set_refalpha_num
+end subroutine set_refalpha_eeq_num
+
+
+!> Set the reference polarizibility for an element symbol
+pure subroutine set_refalpha_gfn2_sym(alpha, ga, gc, sym)
+
+   !> Reference polarizibility
+   real(wp), intent(out) :: alpha(:, :)
+
+   !> Maximum charge scaling height
+   real(wp), intent(in) :: ga
+
+   !> Charge scaling steepness
+   real(wp), intent(in) :: gc
+
+   !> Element symbol
+   character(len=*), intent(in) :: sym
+
+   call set_refalpha_eeq(alpha, ga, gc, to_number(sym))
+
+end subroutine set_refalpha_gfn2_sym
+
+
+!> Set the reference polarizibility for an atomic number
+pure subroutine set_refalpha_gfn2_num(alpha, ga, gc, num)
+
+   !> Reference polarizibility
+   real(wp), intent(out) :: alpha(:, :)
+
+   !> Maximum charge scaling height
+   real(wp), intent(in) :: ga
+
+   !> Charge scaling steepness
+   real(wp), intent(in) :: gc
+
+   !> Atomic number
+   integer, intent(in) :: num
+
+   integer :: ref
+   integer :: ir, is
+   real(wp) :: iz
+   real(wp) :: aiw(23)
+
+   alpha(:, :) = 0.0_wp
+   if (num > 0 .and. num <= size(refn)) then
+      ref = get_nref(num)
+      do ir = 1, ref
+         is = refsys(ir, num)
+         iz = get_effective_charge(is)
+         aiw = sscale(is)*secaiw(:, is) &
+            &    * zeta(ga, get_hardness(is)*gc, iz, refh(ir, num)+iz)
+         alpha(:, ir) = max(ascale(ir, num)*(alphaiw(:, ir, num) &
+            &            - hcount(ir, num)*aiw), 0.0_wp)
+      end do
+   end if
+
+end subroutine set_refalpha_gfn2_num
 
 
 !> charge scaling function

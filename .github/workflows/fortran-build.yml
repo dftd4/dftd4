@@ -76,7 +76,7 @@ jobs:
 
     - name: Run unit tests
       run: |
-         meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+         meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild --num-processes 2 -t 2
          ninja -C ${{ env.BUILD_DIR }} coverage
 
     - name: Install project
