@@ -135,7 +135,7 @@ subroutine new_d4_model(self, mol, ga, gc, wf, ref)
    real(wp), intent(in), optional :: wf
 
    !> Reference charge selection
-   real(wp), intent(in), optional :: ref
+   integer, intent(in), optional :: ref
 
    integer :: isp, izp, iref, jsp, jzp, jref
    integer :: mref, ref_charge

@@ -49,7 +49,9 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-mb03", test_gw_mb03), &
       & new_unittest("dgw-mb04", test_dgw_mb04), &
       & new_unittest("dgw-mb05", test_dgw_mb05), &
-      & new_unittest("dgw-mb06", test_dgw_mb06) &
+      & new_unittest("dgw-mb06", test_dgw_mb06), &
+      & new_unittest("gw-gfn2", test_gw_mb07), &
+      & new_unittest("dgw-gfn2", test_dgw_mb08) &
       & ]
 
 end subroutine collect_model
@@ -364,6 +366,173 @@ subroutine test_dgw_mb06(error)
    call test_dgw_gen(error, mol, with_cn=.true., with_q=.true.)
 
 end subroutine test_dgw_mb06
+
+
+subroutine test_gw_mb07(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: qat(16) = [&
+      &-1.57324183192355E-1_wp, 1.65228028672395E-1_wp, 3.22320366812437E-1_wp, &
+      & 3.63579860576008E-2_wp, 4.85677294229959E-2_wp,-3.59193331069774E-1_wp, &
+      &-1.93844259127416E-1_wp,-3.86492630088218E-1_wp, 3.10104713332147E-1_wp, &
+      & 8.34803229863654E-2_wp,-3.62667644019899E-1_wp, 3.64142434058147E-1_wp, &
+      & 3.34644499696670E-1_wp,-4.69889877462762E-1_wp,-1.89224201365947E-1_wp, &
+      & 4.53790045287620E-1_wp]
+   real(wp), parameter :: ref(7, 16) = reshape([&
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 4.0696276249573E-09_wp, &
+      & 4.1017933802195E-02_wp, 1.0950334442720E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 8.2493287561538E-08_wp, &
+      & 6.2778573148766E-02_wp, 7.1426028532379E-01_wp, 9.0944312586520E-07_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 2.7678546474024E-03_wp, &
+      & 4.5688574836408E-01_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 4.8156277971682E-03_wp, 5.0705021767586E-01_wp, 2.6271362332948E-03_wp, &
+      & 3.8726296026747E-01_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 6.2942218738658E-13_wp, 1.0411557228148E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 4.9030037605503E-05_wp, &
+      & 3.4343632271501E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 1.0798558970910E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 2.3113431982261E-02_wp, 3.8190728854670E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 5.2050837196991E-08_wp, &
+      & 4.0261222021330E-02_wp, 9.1473844350972E-01_wp, 6.4613328643664E-04_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 1.2249494480500E-09_wp, 1.0367677493893E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 4.1505840413994E-02_wp, 3.4418284274292E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 2.5562886172976E-03_wp, &
+      & 4.2019468075114E-01_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 2.6236623287431E-03_wp, 4.4567473574759E-01_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 2.9601157716485E-05_wp, 5.4850578977952E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 8.5241970390889E-09_wp, 1.5557325390935E-02_wp, &
+      & 9.9022169633399E-01_wp, 3.7155741362071E-02_wp, 0.0000000000000E+00_wp, &
+      & 7.0489201281527E-06_wp, 3.5717430460362E-01_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp], shape(ref))
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   real(wp), allocatable :: cn(:), gwvec(:, :)
+   real(wp), parameter :: cutoff = 30.0_wp
+   real(wp), allocatable :: lattr(:, :)
+
+   call get_structure(mol, "MB16-43", "06")
+   call new_d4_model(d4, mol, ref=d4_ref%gfn2)
+
+   allocate(cn(mol%nat), gwvec(maxval(d4%ref), mol%nat))
+   cn(:) = 0.0_wp
+
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+   call get_coordination_number(mol, lattr, cutoff, d4%rcov, d4%en, cn)
+
+   call d4%weight_references(mol, cn, qat, gwvec)
+
+   if (any(abs(gwvec - ref) > thr2)) then
+      call test_failed(error, "Gaussian weights do not match")
+      where(abs(gwvec) < thr) gwvec = 0.0_wp
+      print'(3(es20.13,"_wp,"), " &")', gwvec
+   end if
+
+end subroutine test_gw_mb07
+
+
+subroutine test_dgw_mb08(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: qat(16) = [&
+      &-2.05667914412001E-1_wp,-3.99554326663093E-1_wp, 3.29243862111419E-1_wp, &
+      &-3.11738256025803E-1_wp, 3.58849862618190E-2_wp, 3.21889825709581E-1_wp, &
+      & 4.14746199807777E-2_wp, 2.95730046338104E-2_wp,-5.06348926564523E-1_wp, &
+      & 3.43067357217139E-1_wp, 6.88375720293390E-1_wp, 7.03350634832100E-2_wp, &
+      &-9.62426987152087E-2_wp,-1.32210876939567E-1_wp, 9.79003738112971E-2_wp, &
+      &-3.05981814182260E-1_wp]
+
+   type(structure_type) :: mol
+   integer :: iat, mref
+   type(d4_model) :: d4
+   real(wp), allocatable :: cn(:), q(:), gwvec(:, :), gwdcn(:, :), gwdq(:, :)
+   real(wp), allocatable :: gwr(:, :), gwl(:, :), numdcn(:, :), numdq(:, :)
+   real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
+   real(wp), parameter :: step = 1.0e-6_wp
+
+   call get_structure(mol, "MB16-43", "08")
+   call new_d4_model(d4, mol, ref=d4_ref%gfn2)
+
+   mref = maxval(d4%ref)
+   allocate(cn(mol%nat), q(mol%nat), gwvec(mref, mol%nat), &
+      & gwdcn(mref, mol%nat), gwdq(mref, mol%nat), &
+      & gwr(mref, mol%nat), gwl(mref, mol%nat), &
+      & numdcn(mref, mol%nat), numdq(mref, mol%nat))
+   cn(:) = 0.0_wp
+   q(:) = qat
+
+   call get_coordination_number(mol, lattr, cutoff, d4%rcov, d4%en, cn)
+
+   do iat = 1, mol%nat
+      cn(iat) = cn(iat) + step
+      call d4%weight_references(mol, cn, q, gwr)
+      cn(iat) = cn(iat) - 2*step
+      call d4%weight_references(mol, cn, q, gwl)
+      cn(iat) = cn(iat) + step
+      gwdcn(:, :) = 0.5_wp*(gwr - gwl)/step
+      numdcn(:, iat) = gwdcn(:, iat)
+      gwdcn(:, iat) = 0.0_wp
+      if (any(abs(gwdcn) > thr)) then
+         call test_failed(error, "Unexpected non-zero gradient element found")
+         exit
+      end if
+   end do
+   if (allocated(error)) return
+
+   do iat = 1, mol%nat
+      q(iat) = q(iat) + step
+      call d4%weight_references(mol, cn, q, gwr)
+      q(iat) = q(iat) - 2*step
+      call d4%weight_references(mol, cn, q, gwl)
+      q(iat) = q(iat) + step
+      gwdq(:, :) = 0.5_wp*(gwr - gwl)/step
+      numdq(:, iat) = gwdq(:, iat)
+      gwdq(:, iat) = 0.0_wp
+      if (any(abs(gwdq) > thr)) then
+         call test_failed(error, "Unexpected non-zero gradient element found")
+         exit
+      end if
+   end do
+   if (allocated(error)) return
+
+   call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+
+   if (any(abs(gwdcn - numdcn) > thr2)) then
+      call test_failed(error, "Gaussian weights derivatives do not match")
+      print'(3es21.14)', gwdcn
+      print'("---")'
+      print'(3es21.14)', numdcn
+      print'("---")'
+      print'(3es21.14)', gwdcn - numdcn
+   end if
+
+   if (any(abs(gwdq - numdq) > thr2)) then
+      call test_failed(error, "Gaussian weights derivatives do not match")
+      print'(3es21.14)', gwdq
+      print'("---")'
+      print'(3es21.14)', numdq
+      print'("---")'
+      print'(3es21.14)', gwdq - numdq
+   end if
+
+end subroutine test_dgw_mb08
 
 
 end module test_model
