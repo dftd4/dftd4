@@ -22,7 +22,7 @@ module dftd4_reference
    private
 
    public :: get_nref, set_refcn, set_refgw
-   public :: set_eeq_refq, set_eeq_refalpha, set_gfn2_refq, set_gfn2_refalpha
+   public :: set_refq_eeq, set_refalpha_eeq, set_refq_gfn2, set_refalpha_gfn2
 
    interface get_nref
       module procedure :: get_nref_sym
