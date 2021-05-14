@@ -92,7 +92,7 @@ This might require administrator access depending on the chosen install prefix.
 
 ## Usage
 
-DFT-D4 calculations can be performed with the ``s-dftd4`` executable.
+DFT-D4 calculations can be performed with the ``dftd4`` executable.
 To calculate the dispersion correction for PBE0-D4 run:
 
 ```sh
