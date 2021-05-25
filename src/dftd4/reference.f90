@@ -307,10 +307,10 @@ pure subroutine set_refq_eeqbc_num(q, num)
 end subroutine set_refq_eeqbc_num
 
 
-!> Set the reference polarizibility for an element symbol
+!> Set the reference polarizability for an element symbol
 pure subroutine set_refalpha_eeq_sym(alpha, ga, gc, sym)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -327,10 +327,10 @@ pure subroutine set_refalpha_eeq_sym(alpha, ga, gc, sym)
 end subroutine set_refalpha_eeq_sym
 
 
-!> Set the reference polarizibility for an atomic number
+!> Set the reference polarizability for an atomic number
 pure subroutine set_refalpha_eeq_num(alpha, ga, gc, num)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -365,10 +365,10 @@ pure subroutine set_refalpha_eeq_num(alpha, ga, gc, num)
 end subroutine set_refalpha_eeq_num
 
 
-!> Set the reference polarizibility for an element symbol
+!> Set the reference polarizability for an element symbol
 pure subroutine set_refalpha_gfn2_sym(alpha, ga, gc, sym)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -385,10 +385,10 @@ pure subroutine set_refalpha_gfn2_sym(alpha, ga, gc, sym)
 end subroutine set_refalpha_gfn2_sym
 
 
-!> Set the reference polarizibility for an atomic number
+!> Set the reference polarizability for an atomic number
 pure subroutine set_refalpha_gfn2_num(alpha, ga, gc, num)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -423,10 +423,10 @@ pure subroutine set_refalpha_gfn2_num(alpha, ga, gc, num)
 end subroutine set_refalpha_gfn2_num
 
 
-!> Set the reference polarizibility for an element symbol
+!> Set the reference polarizability for an element symbol
 pure subroutine set_refalpha_eeqbc_sym(alpha, ga, gc, sym)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -443,10 +443,10 @@ pure subroutine set_refalpha_eeqbc_sym(alpha, ga, gc, sym)
 end subroutine set_refalpha_eeqbc_sym
 
 
-!> Set the reference polarizibility for an atomic number
+!> Set the reference polarizability for an atomic number
 pure subroutine set_refalpha_eeqbc_num(alpha, ga, gc, num)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height

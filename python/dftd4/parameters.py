@@ -73,7 +73,7 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
 def _get_params(
     entry: dict, base: dict, defaults: list, keep_meta=False
 ) -> dict:
-    """Retrive the parameters from the data base, make sure the default
+    """Retrieve the parameters from the data base, make sure the default
     values are applied correctly in the process. In case we have multiple
     defaults search for the first of the list defined for this method."""
 

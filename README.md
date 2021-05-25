@@ -389,7 +389,7 @@ To evaluate a dispersion correction in C four objects are available:
 1. the error handler:
 
    Simple error handler to carry runtime exceptions created by the library.
-   Exceptions can be handled and/or transfered to the downstream error handling system by this means.
+   Exceptions can be handled and/or transferred to the downstream error handling system by this means.
 
 2. the molecular structure data:
 

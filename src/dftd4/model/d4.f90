@@ -494,10 +494,10 @@ subroutine get_polarizabilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dad
    !> Static polarizabilities for all atoms.
    real(wp), intent(out) :: alpha(:)
 
-   !> Derivative of the polarizibility w.r.t. the coordination number
+   !> Derivative of the polarizability w.r.t. the coordination number
    real(wp), intent(out), optional :: dadcn(:)
 
-   !> Derivative of the polarizibility w.r.t. the partial charge
+   !> Derivative of the polarizability w.r.t. the partial charge
    real(wp), intent(out), optional :: dadq(:)
 
    integer :: iat, izp, iref
