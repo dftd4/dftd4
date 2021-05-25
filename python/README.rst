@@ -227,7 +227,7 @@ This directory contains a separate meson build file to allow the out-of-tree bui
 The out-of-tree build requires
 
 - C compiler to build the C-API and compile the extension module
-- `meson <https://mesonbuild.com>`_ version 0.53 or newer
+- `meson <https://mesonbuild.com>`_ version 0.55 or newer
 - a build-system backend, *i.e.* `ninja <https://ninja-build.org>`_ version 1.7 or newer
 - Python 3.6 or newer with the `CFFI <https://cffi.readthedocs.io/>`_ package installed
 

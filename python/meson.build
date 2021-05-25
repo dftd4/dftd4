@@ -20,7 +20,7 @@ project(
   'dftd4-python',
   'c',
   license: 'LGPL-3.0-or-later',
-  meson_version: '>=0.53',
+  meson_version: '>=0.55',
   default_options: [
     'buildtype=debugoptimized',
   ],

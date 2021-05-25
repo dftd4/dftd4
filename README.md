@@ -57,7 +57,7 @@ To compile this version of DFT-D4 the following programs are needed
 
 To build this project from the source code in this repository you need to have
 - a Fortran compiler supporting Fortran 2008
-- [meson](https://mesonbuild.com) version 0.53 or newer
+- [meson](https://mesonbuild.com) version 0.55 or newer
 - a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
 - a LAPACK / BLAS provider, like MKL or OpenBLAS
 
