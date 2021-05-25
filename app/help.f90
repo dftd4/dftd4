@@ -50,7 +50,7 @@ module dftd4_help
       "   --noedisp             Disable writing of dispersion energy to .EDISP file"//nl//&
       "   --json [file]         Dump results to JSON output (default: dftd4.json)"//nl//&
       "-v,--verbose             Show more, can be used multiple times"//nl//&
-      "-s,--silent              Show less, use twice to supress all output"//nl//&
+      "-s,--silent              Show less, use twice to suppress all output"//nl//&
       "   --version             Print program version and exit"//nl//&
       "   --citation            Print citation information and exit"//nl//&
       "   --license             Print license header and exit"//nl//&

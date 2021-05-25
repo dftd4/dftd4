@@ -21,7 +21,7 @@ program driver
    use dftd4_cli, only : cli_config, get_arguments
    use dftd4_driver, only : main
    implicit none
-   !> Configuration data deteriming the driver behaviour
+   !> Configuration data determining the driver behaviour
    class(cli_config), allocatable :: config
    !> Error handling
    type(error_type), allocatable :: error

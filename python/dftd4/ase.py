@@ -296,7 +296,7 @@ class DFTD4(Calculator):
         except RuntimeError:
             raise CalculationFailed("dftd4 could not evaluate input")
 
-        # These properties are garanteed to exist for all implemented calculators
+        # These properties are guaranteed to exist for all implemented calculators
         self.results["energy"] = _res.get("energy") * Hartree
         self.results["free_energy"] = self.results["energy"]
         self.results["forces"] = -_res.get("gradient") * Hartree / Bohr

@@ -16,7 +16,7 @@
 """Thin wrapper around the CFFI extension module.
 
 This module mainly acts as a guard for importing the libdftd4 extension and
-also provides some FFI based wappers for memory handling.
+also provides some FFI based wrappers for memory handling.
 
 To check for API compatibility use the provided wrapper around the API version
 getter.

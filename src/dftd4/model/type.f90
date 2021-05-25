@@ -146,9 +146,9 @@ module dftd4_model_type
          real(wp), intent(in), optional :: gwdq(:, :, :)
          !> Static polarizabilities for all atoms.
          real(wp), intent(out) :: alpha(:)
-         !> Derivative of the polarizibility w.r.t. the coordination number
+         !> Derivative of the polarizability w.r.t. the coordination number
          real(wp), intent(out), optional :: dadcn(:)
-         !> Derivative of the polarizibility w.r.t. the partial charge
+         !> Derivative of the polarizability w.r.t. the partial charge
          real(wp), intent(out), optional :: dadq(:)
       end subroutine
 
@@ -164,7 +164,7 @@ module dftd4_model_type
       !> GFN2-xTB Mulliken partial charges
       integer :: gfn2 = 2
 
-      !> Bond-Capcity Electronegativity equilibration charges
+      !> Bond-Capacity Electronegativity equilibration charges
       integer :: eeqbc = 3
 
    end type enum_qmod
