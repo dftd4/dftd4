@@ -47,7 +47,7 @@ It is possible to list all of the versions available on your platform with:
 conda search dftd4 --channel conda-forge
 ```
 
-Now you are ready to use ``dftd4``.
+Now you are ready to use `dftd4`.
 
 
 ### Building from Source
@@ -92,7 +92,7 @@ This might require administrator access depending on the chosen install prefix.
 
 ## Usage
 
-DFT-D4 calculations can be performed with the ``dftd4`` executable.
+DFT-D4 calculations can be performed with the `dftd4` executable.
 To calculate the dispersion correction for PBE0-D4 run:
 
 ```sh
@@ -100,7 +100,7 @@ dftd4 --func pbe0 coord
 ```
 
 In case you want to access the DFT-D4 results from other programs, dump the results to JSON with
-(the ``--noedisp`` flag prevents the ``.EDISP`` file generation):
+(the `--noedisp` flag prevents the `.EDISP` file generation):
 
 ```sh
 dftd4 --func pbe0 --json --grad --noedisp struct.xyz
@@ -118,13 +118,13 @@ To evaluate pairwise resolved dispersion energies use
 dftd4 --pair-resolved mol.xyz
 ```
 
-For an overview over all command line arguments use the ``--help`` argument or checkout the [``dftd4(1)``](man/dftd4.1.adoc) manpage.
+For an overview over all command line arguments use the `--help` argument or checkout the [`dftd4(1)`](https://github.com/dftd4/dftd4/blob/main/man/dftd4.1.adoc) manpage.
 
 
 ## Parameters
 
 DFT-D4 is parametrized for plenty of density functionals.
-The available parameters are listed in the [parameters.toml file](./assets/parameters.toml).
+The available parameters are listed in the [parameters.toml file](https://github.com/dftd4/dftd4/blob/main/assets/parameters.toml).
 
 You can add new functionals using to the TOML file by adding a new subtable
 
@@ -143,24 +143,24 @@ The DFT-D4 project provides first class API support Fortran, C and Python.
 Other programming languages should try to interface with to DFT-D4 via one of those three APIs.
 To provide first class API support for a new language the interface specification should be available as meson build files.
 
-The ``dftd4`` binary provides with the ``--json`` option access to all quantities available from the APIs as well.
+The `dftd4` binary provides with the `--json` option access to all quantities available from the APIs as well.
 
 
 ### Fortran API
 
-The recommended way to access the Fortran module API is by using ``dftd4`` as a meson subproject.
+The recommended way to access the Fortran module API is by using `dftd4` as a meson subproject.
 Alternatively, the project is accessible by the Fortran package manager ([fpm](https://github.com/fortran-lang/fpm)).
 
-The complete API is available from ``dftd4`` module, the individual modules are available to the user as well but are not part of the public API and therefore not guaranteed to remain stable.
+The complete API is available from `dftd4` module, the individual modules are available to the user as well but are not part of the public API and therefore not guaranteed to remain stable.
 ABI compatibility is only guaranteed for the same minor version.
 
-The communication with the Fortran API uses the ``error_type`` and ``structure_type`` of the modular computation tool chain library (mctc-lib) to handle errors and represent geometries, respectively.
+The communication with the Fortran API uses the `error_type` and `structure_type` of the modular computation tool chain library (mctc-lib) to handle errors and represent geometries, respectively.
 
 
 ### C API
 
 The C API provides access to the basic Fortran objects and their most important methods to interact with them.
-All Fortran objects are available as opaque ``void*`` in C and can only be manipulated with the correct API calls.
+All Fortran objects are available as opaque `void*` in C and can only be manipulated with the correct API calls.
 To evaluate a dispersion correction in C four objects are available:
 
 1. the error handler:
@@ -192,7 +192,7 @@ The user is responsible for creating and deleting the objects to avoid memory le
 
 The Python API is disabled by default and can be built in-tree or out-of-tree.
 The in-tree build is mainly meant for end users and packages.
-To build the Python API with the normal project set the ``python`` option in the configuration step with
+To build the Python API with the normal project set the `python` option in the configuration step with
 
 ```sh
 meson setup _build -Dpython=true -Dpython_version=3
@@ -203,7 +203,7 @@ Python 2 is not supported with this project, the Python version key is meant to 
 
 Proceed with the build as described before and install the projects to make the Python API available in the selected prefix.
 
-For the out-of-tree build see the instructions in the [``python``](./python) directory.
+For the out-of-tree build see the instructions in the [`python`](https://github.com/dftd4/dftd4/blob/main/python) directory.
 
 
 ## Citation
