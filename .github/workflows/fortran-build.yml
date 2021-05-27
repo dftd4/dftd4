@@ -3,10 +3,12 @@ name: CI
 on: [push, pull_request]
 
 env:
-  BUILD_DIR: _build
+  M_BUILD_DIR: _build_meson
+  C_BUILD_DIR: _build_cmake
   PIP_PACKAGES: >-
     meson==0.55.3
     ninja
+    cmake
     gcovr
   PIP_EXTRAS: >-
     pkgconfig
@@ -62,7 +64,7 @@ jobs:
 
     - name: Configure build
       run: >-
-        meson setup ${{ env.BUILD_DIR }}
+        meson setup ${{ env.M_BUILD_DIR }}
         --buildtype=debug
         --prefix=$PWD/_dist
         --libdir=lib
@@ -72,17 +74,34 @@ jobs:
         -Dpython=true
 
     - name: Build library
-      run: meson compile -C ${{ env.BUILD_DIR }}
+      run: meson compile -C ${{ env.M_BUILD_DIR }}
 
     - name: Run unit tests
       run: |
-         meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild --num-processes 2 -t 2
-         ninja -C ${{ env.BUILD_DIR }} coverage
+         meson test -C ${{ env.M_BUILD_DIR }} --print-errorlogs --no-rebuild --num-processes 2 -t 2
+         ninja -C ${{ env.M_BUILD_DIR }} coverage
 
     - name: Install project
       run: |
-        meson install -C ${{ env.BUILD_DIR }} --no-rebuild
+        meson install -C ${{ env.M_BUILD_DIR }} --no-rebuild
         echo "DFTD4_PREFIX=$PWD/_dist" >> $GITHUB_ENV
+
+    - name: Configure CMake build
+      run: >-
+        cmake
+        -B ${{ env.C_BUILD_DIR }}
+        -G Ninja
+        -DCMAKE_INSTALL_PREFIX=$PWD/_cdist
+
+    - name: Build project (CMake)
+      run: cmake --build ${{ env.C_BUILD_DIR }}
+
+    - name: Run unit tests (CTest)
+      run: ctest
+      working-directory: ${{ env.C_BUILD_DIR }}
+
+    - name: Install project (CMake)
+      run: cmake --install ${{ env.C_BUILD_DIR }}
 
     - name: Create package
       run: |
@@ -109,7 +128,7 @@ jobs:
 
     - name: Configure out-of-tree build
       run: >-
-        meson setup ${{ env.BUILD_DIR }}
+        meson setup ${{ env.M_BUILD_DIR }}
         --prefix=$PWD/_dist
         --libdir=lib
         --warnlevel=0
@@ -118,11 +137,11 @@ jobs:
         PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD4_PREFIX }}/lib/pkgconfig
 
     - name: Build Python extension module
-      run: meson compile -C ${{ env.BUILD_DIR }}
+      run: meson compile -C ${{ env.M_BUILD_DIR }}
       working-directory: python
 
     - name: Install Python extension module (meson)
-      run: meson install -C ${{ env.BUILD_DIR }} --no-rebuild
+      run: meson install -C ${{ env.M_BUILD_DIR }} --no-rebuild
       working-directory: python
 
 
@@ -225,6 +244,7 @@ jobs:
         install: >-
           git
           mingw-w64-${{ matrix.arch }}-gcc-fortran
+          mingw-w64-${{ matrix.arch }}-cmake
           mingw-w64-${{ matrix.arch }}-openblas
           mingw-w64-${{ matrix.arch }}-lapack
           mingw-w64-${{ matrix.arch }}-python
@@ -235,16 +255,28 @@ jobs:
       run: pip3 install meson==0.55.3
 
     - name: Configure build
-      run: meson setup ${{ env.BUILD_DIR }} -Dlapack=netlib --warnlevel=0
+      run: meson setup ${{ env.M_BUILD_DIR }} -Dlapack=netlib --warnlevel=0
       env:
         FC: gfortran
         CC: gcc
 
     - name: Build project
-      run: meson compile -C ${{ env.BUILD_DIR }}
+      run: meson compile -C ${{ env.M_BUILD_DIR }}
 
     - name: Run unit tests
-      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+      run: meson test -C ${{ env.M_BUILD_DIR }} --print-errorlogs --no-rebuild
+      env:
+        OMP_NUM_THREADS: 2,1
+
+    - name: Configure cmake build
+      run: cmake -B ${{ env.C_BUILD_DIR }} -G Ninja -DWITH_BLAS=FALSE
+
+    - name: Build project (CMake)
+      run: cmake --build ${{ env.C_BUILD_DIR }}
+
+    - name: Run unit tests (CTest)
+      run: ctest
+      working-directory: ${{ env.C_BUILD_DIR }}
       env:
         OMP_NUM_THREADS: 2,1
 
@@ -290,28 +322,38 @@ jobs:
         printenv >> $GITHUB_ENV
 
     - name: Install meson
-      run: pip3 install meson==0.57.1 ninja
+      run: pip3 install meson==0.57.1 ninja cmake
 
     - name: Configure meson build
       run: >-
-        meson setup ${{ env.BUILD_DIR }}
+        meson setup ${{ env.M_BUILD_DIR }}
         --prefix=/
         --libdir=lib
         --default-library=static
         -Dfortran_link_args="-static -qopenmp"
 
     - name: Build library
-      run: meson compile -C ${{ env.BUILD_DIR }}
+      run: meson compile -C ${{ env.M_BUILD_DIR }}
 
     - name: Run unit tests
-      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+      run: meson test -C ${{ env.M_BUILD_DIR }} --print-errorlogs --no-rebuild
       env:
         OMP_NUM_THREADS: 2,1
 
     - name: Install package
-      run: meson install -C ${{ env.BUILD_DIR }} --no-rebuild
+      run: meson install -C ${{ env.M_BUILD_DIR }} --no-rebuild
       env:
         DESTDIR: ${{ env.PWD }}/dftd4-bleed
+
+    - name: Configure cmake build
+      run: cmake -B ${{ env.C_BUILD_DIR }} -G Ninja
+
+    - name: Build library (CMake)
+      run: cmake --build ${{ env.C_BUILD_DIR }}
+
+    - name: Run unit tests (CTest)
+      run: ctest
+      working-directory: ${{ env.C_BUILD_DIR }}
 
     - name: Create package
       if: github.event_name == 'push'
