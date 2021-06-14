@@ -21,7 +21,6 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
-  "${dir}/api.f90"
   "${dir}/blas.f90"
   "${dir}/charge.f90"
   "${dir}/cutoff.f90"
@@ -36,5 +35,8 @@ list(
   "${dir}/utils.f90"
   "${dir}/version.f90"
 )
+if(WITH_API)
+  list(APPEND srcs "${dir}/api.f90")
+endif()
 
 set(srcs "${srcs}" PARENT_SCOPE)
