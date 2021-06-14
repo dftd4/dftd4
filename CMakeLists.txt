@@ -70,6 +70,7 @@ target_include_directories(
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
 )
 
 # Add example application
@@ -97,8 +98,15 @@ install(
 install(
   DIRECTORY
   "${CMAKE_CURRENT_BINARY_DIR}/include/"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
 )
+if(WITH_API)
+  install(
+    DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  )
+endif()
 # Package license files
 install(
   FILES

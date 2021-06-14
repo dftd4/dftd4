@@ -268,17 +268,18 @@ jobs:
       env:
         OMP_NUM_THREADS: 2,1
 
-    - name: Configure cmake build
-      run: cmake -B ${{ env.C_BUILD_DIR }} -G Ninja -DWITH_BLAS=FALSE
+    # FIXME: CMake 3.20.3 broken due to wrong internal usage of git command
+    #- name: Configure cmake build
+    #  run: cmake -B ${{ env.C_BUILD_DIR }} -G Ninja -DWITH_BLAS=FALSE
 
-    - name: Build project (CMake)
-      run: cmake --build ${{ env.C_BUILD_DIR }}
+    #- name: Build project (CMake)
+    #  run: cmake --build ${{ env.C_BUILD_DIR }}
 
-    - name: Run unit tests (CTest)
-      run: ctest
-      working-directory: ${{ env.C_BUILD_DIR }}
-      env:
-        OMP_NUM_THREADS: 2,1
+    #- name: Run unit tests (CTest)
+    #  run: ctest
+    #  working-directory: ${{ env.C_BUILD_DIR }}
+    #  env:
+    #    OMP_NUM_THREADS: 2,1
 
   # Build with Intel toolchain
   intel-build:

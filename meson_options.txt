@@ -32,6 +32,13 @@ option(
 )
 
 option(
+  'api',
+  type: 'boolean',
+  value: true,
+  description: 'Build C API using iso_c_binding module',
+)
+
+option(
   'python',
   type: 'boolean',
   value: false,

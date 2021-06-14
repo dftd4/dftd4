@@ -26,7 +26,7 @@ project(
   ],
 )
 install = not (meson.is_subproject() and get_option('default_library') == 'static')
-has_cc = add_languages('c', required: get_option('python'))
+has_cc = add_languages('c', required: get_option('api') or get_option('python'))
 
 # General configuration information
 inc_dirs = []
@@ -75,9 +75,11 @@ if install
     install_dir: get_option('datadir')/'licenses'/meson.project_name()
   )
 
-  install_headers(
-    dftd4_header,
-  )
+  if get_option('api')
+    install_headers(
+      dftd4_header,
+    )
+  endif
 
   module_id = meson.project_name() / fc_id + '-' + fc.version()
   meson.add_install_script(
