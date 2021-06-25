@@ -72,6 +72,11 @@ target_include_directories(
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
 )
+target_include_directories(
+  "${PROJECT_NAME}-lib"
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/dftd4
+)
 
 # Add example application
 add_subdirectory("app")
