@@ -35,3 +35,6 @@ srcs += files(
 if get_option('api') or get_option('python')
   srcs += files('api.f90')
 endif
+if get_option('api_v2')
+  srcs += files('compat.f90')
+endif
