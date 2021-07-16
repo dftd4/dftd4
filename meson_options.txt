@@ -51,3 +51,10 @@ option(
   value: '3',
   description: 'Python version to link against.',
 )
+
+option(
+  'api_v2',
+  type: 'boolean',
+  value: false,
+  description: 'Enable the compatibility layer for the dftd4 2.5.x API',
+)

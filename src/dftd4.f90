@@ -15,6 +15,7 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd4
+   use mctc_io, only : structure_type, new
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_disp, only : get_dispersion, get_properties, get_pairwise_dispersion
    use dftd4_ncoord, only : get_coordination_number

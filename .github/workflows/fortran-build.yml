@@ -72,6 +72,7 @@ jobs:
         -Db_coverage=true
         -Dlapack=netlib
         -Dpython=true
+        -Dapi_v2=true
 
     - name: Build library
       run: meson compile -C ${{ env.M_BUILD_DIR }}

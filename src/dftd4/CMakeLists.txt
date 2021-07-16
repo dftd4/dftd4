@@ -38,5 +38,8 @@ list(
 if(WITH_API)
   list(APPEND srcs "${dir}/api.f90")
 endif()
+if(WITH_API_V2)
+  list(APPEND srcs "${dir}/compat.f90")
+endif()
 
 set(srcs "${srcs}" PARENT_SCOPE)
