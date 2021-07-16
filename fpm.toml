@@ -27,7 +27,3 @@ tag = "v0.1.2"
 [[test]]
 name = "tester"
 source-dir = "test/unit"
-
-[[test]]
-name = "vasp-compat"
-source-dir = "test/vasp"
