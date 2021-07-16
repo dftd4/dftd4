@@ -32,10 +32,16 @@ ourselves using pkg-config.
 import os
 import cffi
 
+library = "dftd4"
+include_header = '#include "' + library + '.h"'
+prefix_var = library.upper() + "_PREFIX"
+if prefix_var not in os.environ:
+    prefix_var = "CONDA_PREFIX"
+
 if __name__ == "__main__":
     import sys
 
-    kwargs = dict(libraries=["dftd4"])
+    kwargs = dict(libraries=[library])
 
     header_file = sys.argv[1]
     module_name = sys.argv[2]
@@ -44,24 +50,35 @@ if __name__ == "__main__":
         cdefs = f.read()
 else:
     import subprocess
-    import pkgconfig
 
-    if not pkgconfig.exists("dftd4"):
-        raise Exception("Unable to find pkg-config package 'dftd4'")
-    if pkgconfig.installed("dftd4", "< 3.0"):
-        raise Exception(
-            "Installed 'dftd4' version is too old, 3.0 or newer is required"
-        )
+    try:
+        import pkgconfig
 
-    kwargs = pkgconfig.parse("dftd4")
+        if not pkgconfig.exists(library):
+            raise ModuleNotFoundError("Unable to find pkg-config package 'dftd4'")
+        if pkgconfig.installed(library, "< 3.0"):
+            raise Exception(
+                "Installed 'dftd4' version is too old, 3.0 or newer is required"
+            )
 
-    if "CC" not in os.environ:
-        raise Exception("This build script requires to set a C compiler in CC")
-    cc = os.environ["CC"]
+        kwargs = pkgconfig.parse(library)
+        cflags = pkgconfig.cflags(library).split()
 
-    cflags = pkgconfig.cflags("dftd4").split()
+    except ModuleNotFoundError:
+        kwargs = dict(libraries=[library])
+        cflags = []
+        if prefix_var in os.environ:
+            prefix = os.environ[prefix_var]
+            kwargs.update(
+                include_dirs=[os.path.join(prefix, "include")],
+                library_dirs=[os.path.join(prefix, "lib")],
+                runtime_library_dirs=[os.path.join(prefix, "lib")],
+            )
+            cflags.append("-I" + os.path.join(prefix, "include"))
 
-    module_name = "dftd4._libdftd4"
+    cc = os.environ["CC"] if "CC" in os.environ else "cc"
+
+    module_name = library + "._lib" + library
 
     p = subprocess.Popen(
         [cc, *cflags, "-E", "-"],
@@ -69,12 +86,12 @@ else:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    out, err = p.communicate(b'#include "dftd4.h"')
+    out, err = p.communicate(include_header.encode())
 
     cdefs = out.decode()
 
 ffibuilder = cffi.FFI()
-ffibuilder.set_source(module_name, '#include "dftd4.h"', **kwargs)
+ffibuilder.set_source(module_name, include_header, **kwargs)
 ffibuilder.cdef(cdefs)
 
 if __name__ == "__main__":

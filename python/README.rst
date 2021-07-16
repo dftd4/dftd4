@@ -218,6 +218,12 @@ To install extra dependencies as well use
 
    pip install '.[parameters,ase,qcschema]'
 
+If you already have a ``dftd4`` installation, *e.g.* from conda-forge, you can build the Python extension module directly without cloning this repository
+
+.. code:: sh
+
+   pip install "https://github.com/dftd4/dftd4/archive/refs/heads/main#egg=dftd4-python&subdirectory=python"
+
 
 
 Using meson
