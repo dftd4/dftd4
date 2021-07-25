@@ -103,7 +103,7 @@ else
 endif
 
 # Create the tool chain library as subproject
-mctc_dep = dependency('mctc-lib', fallback: ['mctc-lib', 'multicharge_dep'])
+mctc_dep = dependency('mctc-lib', fallback: ['mctc-lib', 'mctc_dep'])
 lib_deps += mctc_dep
 
 # Create the electronegativity equilibration library as subproject
