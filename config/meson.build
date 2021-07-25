@@ -103,9 +103,43 @@ else
 endif
 
 # Create the tool chain library as subproject
-mctc_dep = dependency('mctc-lib', fallback: ['mctc-lib', 'mctc_dep'])
+mctc_dep = dependency('mctc-lib', required: false)
+if not mctc_dep.found()
+  mctc_prj = subproject(
+    'mctc-lib',
+    version: '>=0.2',
+    default_options: [
+      'default_library=static',
+    ],
+  )
+  mctc_dep = mctc_prj.get_variable('mctc_dep')
+
+  if install
+    install_data(
+      mctc_prj.get_variable('mctc_lic'),
+      install_dir: get_option('datadir')/'licenses'/meson.project_name()/'mctc-lib'
+    )
+  endif
+endif
 lib_deps += mctc_dep
 
-# Create the electronegativity equilibration library as subproject
-multicharge_dep = dependency('multicharge', fallback: ['multicharge', 'multicharge_dep'])
+# Create the tool chain library as subproject
+multicharge_dep = dependency('multicharge', required: false)
+if not multicharge_dep.found()
+  multicharge_prj = subproject(
+    'multicharge',
+    version: '>=0.1',
+    default_options: [
+      'default_library=static',
+    ],
+  )
+  multicharge_dep = multicharge_prj.get_variable('multicharge_dep')
+
+  if install
+    install_data(
+      multicharge_prj.get_variable('multicharge_lic'),
+      install_dir: get_option('datadir')/'licenses'/meson.project_name()/'multicharge'
+    )
+  endif
+endif
 lib_deps += multicharge_dep
