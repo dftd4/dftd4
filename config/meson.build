@@ -78,7 +78,7 @@ elif lapack_vendor == 'mkl-rt'
 elif lapack_vendor == 'openblas'
   openblas_dep = dependency('openblas', required: false)
   if not openblas_dep.found()
-    openblas_dep = fc.find_library('openblas_dep')
+    openblas_dep = fc.find_library('openblas')
   endif
   lib_deps += openblas_dep
   if not fc.links('external dsytrs; call dsytrs(); end', dependencies: openblas_dep)
@@ -88,6 +88,11 @@ elif lapack_vendor == 'openblas'
     endif
     lib_deps += lapack_dep
   endif
+
+elif lapack_vendor == 'custom'
+  foreach lib: get_option('custom_libraries')
+    lib_deps += fc.find_library(lib)
+  endforeach
 
 else
   lapack_dep = dependency('lapack', required: false)
