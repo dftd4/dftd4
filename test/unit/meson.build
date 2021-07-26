@@ -25,7 +25,7 @@ mstore_prj = subproject(
 )
 # If we do not find mstore and are a subproject, we just skip testing
 if not mstore_prj.found()
-   subdir_done()
+  subdir_done()
 endif
 mstore_dep = mstore_prj.get_variable('mstore_dep')
 

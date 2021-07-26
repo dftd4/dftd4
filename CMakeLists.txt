@@ -26,10 +26,6 @@ project(
 # Follow GNU conventions for installing directories
 include(GNUInstallDirs)
 
-# Collect subprojects
-set(lib-deps)
-add_subdirectory("subprojects" EXCLUDE_FROM_ALL)
-
 # General configuration information
 add_subdirectory("config")
 
@@ -38,14 +34,30 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
 endif()
 
 if(NOT TARGET "BLAS::BLAS")
-  find_package("BLAS" REQUIRED)
+  find_package("custom-blas" REQUIRED)
 endif()
+
+# Collect subprojects
+if(NOT TARGET "mctc-lib::mctc-lib")
+  find_package("mctc-lib")
+endif()
+if(NOT TARGET "mstore::mstore")
+  find_package("mstore")
+endif()
+if(NOT TARGET "multicharge::multicharge")
+  find_package("multicharge")
+endif()
+set(
+  lib-deps
+  "mctc-lib::mctc-lib"
+  "multicharge::multicharge"
+)
 
 # Collect source of the project
 set(srcs)
 add_subdirectory("src")
 
-# multicharge library target
+# DFT-D4 library target
 add_library(
   "${PROJECT_NAME}-lib"
   "${srcs}"
@@ -68,6 +80,7 @@ target_link_libraries(
 target_include_directories(
   "${PROJECT_NAME}-lib"
   PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
