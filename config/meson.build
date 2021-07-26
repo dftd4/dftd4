@@ -89,7 +89,12 @@ elif lapack_vendor == 'openblas'
     lib_deps += lapack_dep
   endif
 
-elif lapack_vendor == 'netlib'
+elif lapack_vendor == 'custom'
+  foreach lib: get_option('custom_libraries')
+    lib_deps += fc.find_library(lib)
+  endforeach
+
+else
   lapack_dep = dependency('lapack', required: false)
   if not lapack_dep.found()
     lapack_dep = fc.find_library('lapack')
@@ -100,11 +105,6 @@ elif lapack_vendor == 'netlib'
     blas_dep = fc.find_library('blas')
   endif
   lib_deps += blas_dep
-
-else
-  foreach lib: get_option('custom_libraries')
-    lib_deps += fc.find_library(lib)
-  endforeach
 endif
 
 # Create the tool chain library as subproject
