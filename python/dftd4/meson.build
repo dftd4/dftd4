@@ -60,10 +60,12 @@ if install
     files(
       '__init__.py',
       'ase.py',
+      'data.py',
       'interface.py',
       'libdftd4.py',
       'parameters.py',
       'qcschema.py',
+      'references.json',
       'test_ase.py',
       'test_interface.py',
       'test_libdftd4.py',
