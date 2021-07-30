@@ -50,6 +50,21 @@ conda search dftd4 --channel conda-forge
 Now you are ready to use `dftd4`.
 
 
+### Spack package
+
+[![Spack](https://img.shields.io/spack/v/dftd4)](https://spack.readthedocs.io/en/latest/package_list.html#dftd4)
+
+This project is available with [spack](https://spack.io) in its develop version.
+You can install and load `dftd4` with
+
+```
+spack install dftd4
+spack load dftd4
+```
+
+The Python API can be enabled by adding `+python` to the command.
+
+
 ### Building from Source
 
 To compile this version of DFT-D4 the following programs are needed
