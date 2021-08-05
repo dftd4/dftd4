@@ -17,7 +17,7 @@
 project(
   'dftd4',
   'fortran',
-  version: '3.2.0',
+  version: '3.3.0',
   license: 'LGPL-3.0-or-later',
   meson_version: '>=0.55',
   default_options: [
@@ -26,7 +26,7 @@ project(
   ],
 )
 install = not (meson.is_subproject() and get_option('default_library') == 'static')
-has_cc = add_languages('c', required: get_option('api') or get_option('python'))
+has_cc = add_languages('c', required: get_option('api') or get_option('python'), native: false)
 
 # General configuration information
 inc_dirs = []
