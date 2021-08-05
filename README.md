@@ -183,7 +183,7 @@ After you completed the installation of ``dftd4``, make sure it is findable by `
 pkg-config --modversion dftd4
 ```
 
-If you ``dftd4`` installation is not findable, you have to update your environment variables.
+If your ``dftd4`` installation is not findable, you have to update your environment variables.
 One option is to provide a module file for your ``dftd4`` installation.
 The example module file below can be placed in your ``MODULEPATH`` to provide access to an installation in ``~/opt/dftd4/3.3.0``.
 Retry the above comment after loading the ``dftd4`` module and adjust the module file until ``pkg-config`` finds your installation.
