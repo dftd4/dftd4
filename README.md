@@ -177,20 +177,21 @@ The communication with the Fortran API uses the `error_type` and `structure_type
 To use ``dftd4`` in Vasp the compatibility layer for the 2.5.x API has to be enable with ``-Dapi_v2=true`` (meson) or ``-DAPI_V2=ON`` (CMake).
 It is important to build ``dftd4`` with the same Fortran compiler you build Vasp with.
 
-After you completed the installation of ``dftd4`, make sure it is findable by ``pkg-config``, you can check by running:
+After you completed the installation of ``dftd4``, make sure it is findable by ``pkg-config``, you can check by running:
 
 ```
 pkg-config --modversion dftd4
 ```
 
-If you ``dftd4`` installation is not findable, you have to update your environment variables.
+If your ``dftd4`` installation is not findable, you have to update your environment variables.
 One option is to provide a module file for your ``dftd4`` installation.
-The example module file below can be placed in your ``MODULEPATH`` to provide access to an installation in ``~/opt/dftd4/3.2.0``.
-Retry the above comment after loading the ``dftd4`` and adjust the module file until ``pkg-config`` finds your installation.
+The example module file below can be placed in your ``MODULEPATH`` to provide access to an installation in ``~/opt/dftd4/3.3.0``.
+Retry the above comment after loading the ``dftd4`` module and adjust the module file until ``pkg-config`` finds your installation.
 
 ```lua
+-- dftd4/3.3.0.lua
 local name = "dftd4"
-local version = "3.2.0"
+local version = "3.3.0"
 local prefix = pathJoin(os.getenv("HOME"), "opt", name, version)
 local libdir = "lib"  -- or lib64
 
