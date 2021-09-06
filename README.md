@@ -174,7 +174,7 @@ The communication with the Fortran API uses the `error_type` and `structure_type
 
 #### Building Vasp with support for D4
 
-To use ``dftd4`` in Vasp the compatibility layer for the 2.5.x API has to be enable with ``-Dapi_v2=true`` (meson) or ``-DAPI_V2=ON`` (CMake).
+To use ``dftd4`` in Vasp the compatibility layer for the 2.5.x API has to be enable with ``-Dapi_v2=true`` (meson) or ``-DWITH_API_V2=ON`` (CMake).
 It is important to build ``dftd4`` with the same Fortran compiler you build Vasp with.
 
 After you completed the installation of ``dftd4``, make sure it is findable by ``pkg-config``, you can check by running:
