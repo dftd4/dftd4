@@ -67,7 +67,20 @@ The Python API can be enabled by adding `+python` to the command.
 
 ### Building from Source
 
-To compile this version of DFT-D4 the following programs are needed
+To build this project from the source code in this repository you need to have
+a Fortran compiler supporting Fortran 2008 and one of the supported build systems:
+- [meson](https://mesonbuild.com) version 0.55 or newer, with
+  a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
+- [cmake](https://cmake.org) version 3.14 or newer, with
+  a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.10 or newer
+- [fpm](https://github.com/fortran-lang/fpm) version 0.2.0 or newer
+
+Currently this project supports GCC and Intel compilers.
+
+
+#### Building with meson
+
+To compile this version of DFT-D4 with meson the following programs are needed
 (the number in parentheses specifies the tested versions).
 
 To build this project from the source code in this repository you need to have
@@ -103,6 +116,66 @@ meson install -C _build
 ```
 
 This might require administrator access depending on the chosen install prefix.
+
+
+#### Building with CMake
+
+Alternatively, this project can be build with CMake (in this case ninja 1.10 or newer is required):
+
+```
+cmake -B _build -G Ninja -DCMAKE_INSTALL_PREFIX=$HOME/.local
+```
+
+To compile the project with CMake run
+
+```
+cmake --build _build
+```
+
+You can run the project testsuite with
+
+```
+ctest --test-dir _build --parallel --output-on-failure
+```
+
+Finally, you can install the project to the selected prefix
+
+```
+cmake --install _build
+```
+
+Note that the CMake build does not support to build the Python extension module as part of the main build.
+
+
+#### Building with fpm
+
+This project support the Fortran package manager (fpm).
+Invoke fpm in the project root with
+
+```
+fpm build
+```
+
+To run the testsuite use
+
+```
+fpm test
+```
+
+You can access the ``dftd4`` program using the run subcommand
+
+```
+fpm run -- --help
+```
+
+To use ``dftd4`` for testing include it as dependency in your package manifest
+
+```toml
+[dependencies]
+dftd4.git = "https://github.com/dftd4/dftd4"
+```
+
+Note that the fpm build does not support exporting the C-API, it only provides access to the standalone binary.
 
 
 ## Usage
