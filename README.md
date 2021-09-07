@@ -78,7 +78,7 @@ a Fortran compiler supporting Fortran 2008 and one of the supported build system
 Currently this project supports GCC and Intel compilers.
 
 
-#### Meson
+#### Building with meson
 
 To compile this version of DFT-D4 with meson the following programs are needed
 (the number in parentheses specifies the tested versions).
@@ -118,7 +118,7 @@ meson install -C _build
 This might require administrator access depending on the chosen install prefix.
 
 
-### Building with CMake
+#### Building with CMake
 
 Alternatively, this project can be build with CMake (in this case ninja 1.10 or newer is required):
 
@@ -147,7 +147,7 @@ cmake --install _build
 Note that the CMake build does not support to build the Python extension module as part of the main build.
 
 
-### Building with fpm
+#### Building with fpm
 
 This project support the Fortran package manager (fpm).
 Invoke fpm in the project root with
