@@ -6,6 +6,10 @@ d4.bj-eeq-two = { s6=1.0, s9=0.0, alp=16.0, damping="bj", mbd="none" }
 d4.bj-eeq-atm = { s6=1.0, s9=1.0, alp=16.0, damping="bj", mbd="approx-atm" }
 d4.bj-eeq-mbd = { s6=1.0, s9=1.0, alp=16.0, damping="bj", mbd="rpa-like" }
 
+[parameter.am05]
+reference.doi = ["10.1103/PhysRevB.72.085108", "10.1063/1.2835596"]
+d4.bj-eeq-atm = { s8=1.71885838, a1=0.47901431, a2=5.96771581 }
+
 [parameter.b1b95]
 reference.doi = ["10.1063/1.470829"]
 d4.bj-eeq-atm = { s8=1.27701162, a1=0.40554715, a2=4.63323074, doi="10.1063/1.5090222" }
@@ -175,6 +179,10 @@ reference.doi = ["10.1063/1.2370993"]
 d4.bj-eeq-atm = { s8=0.59493760, a1=0.71422359, a2=6.35314182, doi="10.1063/1.5090222" }
 d4.bj-eeq-mbd = { s8=0.40077779, a1=0.69611405, a2=6.29092087, doi="10.1063/1.5090222" }
 
+[parameter.mn12sx]
+reference.doi = ["10.1039/C2CP42576A"]
+d4.bj-eeq-atm = { s8=0.85964873, a1=0.62662681, a2=5.62088906 }
+
 [parameter.mpw1b95]
 reference.doi = ["10.1021/jp048147q"]
 d4.bj-eeq-atm = { s8=0.50093024, a1=0.41585097, a2=4.99154869, doi="10.1063/1.5090222" }
@@ -234,6 +242,10 @@ d4.bj-eeq-mbd = { s6=0.8750, s8=1.19306002, a1=0.46106784, a2=5.25210480, doi="1
 reference.doi = ["10.1103/PhysRevLett.77.3865"]
 d4.bj-eeq-atm = { s8=0.95948085, a1=0.38574991, a2=4.80688534, doi="10.1063/1.5090222" }
 d4.bj-eeq-mbd = { s8=0.99924614, a1=0.38142528, a2=4.81839284, doi="10.1063/1.5090222" }
+
+[parameter.pbesol]
+reference.doi = ["10.1063/1.3691197"]
+d4.bj-eeq-atm = { s8=1.71885698, a1=0.47901421, a2=5.96771589 }
 
 [parameter.pw1pw]
 d4.bj-eeq-atm = { s8=0.96850170, a1=0.42427511, a2=5.02060636, doi="10.1063/1.5090222" }
