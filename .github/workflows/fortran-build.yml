@@ -69,10 +69,12 @@ jobs:
         --prefix=$PWD/_dist
         --libdir=lib
         --warnlevel=0
-        -Db_coverage=true
+        -Db_coverage=${{ env.COVERAGE }}
         -Dlapack=netlib
         -Dpython=true
         -Dapi_v2=true
+      env:
+        COVERAGE: ${{ contains(matrix.os, 'ubuntu') && 'true' || 'false' }}
 
     - name: Build library
       run: meson compile -C ${{ env.M_BUILD_DIR }}
@@ -80,6 +82,10 @@ jobs:
     - name: Run unit tests
       run: |
          meson test -C ${{ env.M_BUILD_DIR }} --print-errorlogs --no-rebuild --num-processes 2 -t 2
+
+    - name: Create coverage report
+      if: contains(matrix.os, 'ubuntu')
+      run: |
          ninja -C ${{ env.M_BUILD_DIR }} coverage
 
     - name: Install project
