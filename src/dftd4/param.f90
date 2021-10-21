@@ -50,7 +50,7 @@ module dftd4_param
          & p_m05, p_m052x, p_m08hx, p_lcwhpbe, p_mn12l, p_tauhcthhyb, &
          & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, p_bop, &
          & p_mpw1b95, p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
-         & p_revdsdblyp, p_revdodpbep86
+         & p_revdsdblyp, p_revdodpbep86, p_am05
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -280,6 +280,10 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=0.59493760_wp, a1=0.71422359_wp, a2=6.35314182_wp )
       !  Fitset: MD= 0.08395 MAD= 0.24888 RMSD= 0.34879
+   case(p_mn12sx)
+      param = dftd_param ( & ! (SAW211021)
+         &  s6=1.0000_wp, s8=0.85964873_wp, a1=0.62662681_wp, a2=5.62088906_wp )
+      !  Fitset: MD= 0.16131 MAD= 0.34142 RMSD= 0.47113
    case(p_mpw1b95)
       param = dftd_param ( & ! (SAW190107)
          &  s6=1.0000_wp, s8=0.50093024_wp, a1=0.41585097_wp, a2=4.99154869_wp )
@@ -336,6 +340,14 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp )
       !  Fitset: MD= -0.20544 MAD= 0.33635 RMSD= 0.51168
+   case(p_pbesol)
+      param = dftd_param ( & ! (SAW211021)
+         &  s6=1.0000_wp, s8=1.71885698_wp, a1=0.47901421_wp, a2=5.96771589_wp )
+      !  Fitset: MD= -0.28899 MAD= 0.52215 RMSD= 0.93584
+   case(p_am05)
+      param = dftd_param ( & ! (SAW211021)
+         &  s6=1.0000_wp, s8=1.71885838_wp, a1=0.47901431_wp, a2=5.96771581_wp )
+      !  Fitset: MD= -0.28899 MAD= 0.52215 RMSD= 0.93584
    case(p_pw1pw)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=0.96850170_wp, a1=0.42427511_wp, a2=5.02060636_wp )
@@ -772,6 +784,8 @@ pure function get_functional_id(df) result(num)
       num = p_b97m
    case('wb97m', 'ωb97m', 'omegab97m')
       num = p_wb97m
+   case('am05')
+      num = p_am05
    end select
 end function get_functional_id
 
