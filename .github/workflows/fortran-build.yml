@@ -161,7 +161,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         gcc_v: [9]
-        python_v: ['3.6', '3.7', '3.8']
+        python_v: ['3.7', '3.8', '3.9', '3.10']
 
     env:
       FC: gfortran
