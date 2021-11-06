@@ -23,14 +23,18 @@ module dftd4_cli
    implicit none
    private
 
-   public :: run_config, get_run_arguments
-   public :: prog_name, help, license, version, citation, header
+   public :: cli_config, run_config, get_arguments
+   public :: prog_name, header
 
    !> The name of the program
    character(len=*), parameter :: prog_name = "dftd4"
 
+   !> Base command line configuration
+   type, abstract :: cli_config
+   end type cli_config
+
    !> Configuration data for running single point calculations
-   type :: run_config
+   type, extends(cli_config) :: run_config
       character(len=:), allocatable :: input
       integer, allocatable :: input_format
       type(rational_damping_param) :: inp
@@ -55,6 +59,23 @@ module dftd4_cli
 
 
 contains
+
+
+subroutine get_arguments(config, error)
+
+   !> Configuation data
+   class(cli_config), allocatable, intent(out) :: config
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   block
+      type(run_config), allocatable :: tmp
+      allocate(tmp)
+      call get_run_arguments(tmp, error)
+      call move_alloc(tmp, config)
+   end block
+end subroutine get_arguments
 
 
 !> Read configuration for the single point driver

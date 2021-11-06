@@ -19,7 +19,7 @@ dftd4_exe = executable(
   sources: files(
     'main.f90',
     'cli.f90',
-    'driver_run.f90',
+    'driver.f90',
   ),
   dependencies: dftd4_dep,
   install: install,

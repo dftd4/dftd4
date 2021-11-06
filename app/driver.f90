@@ -15,7 +15,7 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 !> Entry point for running single point calculations with dftd4
-module dftd4_driver_run
+module dftd4_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type, read_structure, filetype
@@ -26,21 +26,34 @@ module dftd4_driver_run
    use dftd4_charge, only : get_charges
    use dftd4_output
    use dftd4_utils
-   use dftd4_cli, only : run_config
+   use dftd4_cli, only : cli_config, run_config, header
    implicit none
    private
 
    public :: main
 
-   !> Exported entry point for running single point calculations
-   interface main
-      module procedure :: run_main
-   end interface main
-
 contains
 
 
 !> Main entry point for the driver
+subroutine main(config, error)
+
+   !> Configuration for this driver
+   class(cli_config), intent(in) :: config
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select type(config)
+   class default
+      call fatal_error(error, "Unknown runtime selected")
+   type is(run_config)
+      call run_main(config, error)
+   end select
+end subroutine main
+
+
+!> Entry point for the single point driver
 subroutine run_main(config, error)
 
    !> Configuration for this driver
@@ -211,4 +224,4 @@ subroutine run_main(config, error)
 end subroutine run_main
 
 
-end module dftd4_driver_run
+end module dftd4_driver
