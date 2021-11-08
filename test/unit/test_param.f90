@@ -95,7 +95,8 @@ subroutine test_rational_damping(error)
       & 'dodpbep86', 'dodsvwn', 'pbe02', 'pbe0dh', 'dftb(3ob)', 'dftb(mio)', &
       & 'dftb(pbc)', 'dftb(matsci)', 'dftb(ob2)', 'b1b95', 'glyp', 'revpbe0dh', &
       & 'revtpss0', 'revdsd-pbep86', 'revdsd-pbe', 'revdsd-blyp', &
-      & 'revdod-pbep86', 'b97m', 'wb97m', 'pbesol', 'am05', 'mn12sx']
+      & 'revdod-pbep86', 'b97m', 'wb97m', 'pbesol', 'am05', 'mn12sx', &
+      & 'hse03', 'hse06', 'hse12', 'hse12s', 'hsesol']
    real(wp), parameter :: ref(*) = [&
       &-2.82477943738524E-1_wp,-1.83931932418458E-1_wp,-1.67883732655799E-1_wp, &
       &-1.19260344932822E-1_wp,-1.73553644083274E-1_wp,-4.64187011491173E-1_wp, &
@@ -126,7 +127,9 @@ subroutine test_rational_damping(error)
       &-1.02702213711187E-1_wp,-8.21356035564771E-2_wp,-5.65853022691401E-2_wp, &
       &-8.56296238144821E-2_wp,-8.91479952796072E-2_wp,-6.13524150208560E-2_wp, &
       &-1.24018193150396E-1_wp,-1.05459213596423E-1_wp,-3.62056545113500E-2_wp, &
-      &-3.62056561428035E-2_wp,-2.40058303330640E-2_wp]
+      &-3.62056561428035E-2_wp,-2.40058303330640E-2_wp,-6.96544056298022E-2_wp, &
+      &-7.14846530839187E-2_wp,-6.94907084631183E-2_wp,-6.20062460023045E-2_wp, &
+      &-5.03611953456781E-2_wp]
    class(damping_param), allocatable :: param
    type(structure_type) :: mol
    integer :: ii
@@ -137,6 +140,7 @@ subroutine test_rational_damping(error)
       call check(error, allocated(param))
       if (allocated(error)) exit
       call test_dftd4_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
    end do
 
 end subroutine test_rational_damping

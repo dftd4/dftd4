@@ -50,7 +50,7 @@ module dftd4_param
          & p_m05, p_m052x, p_m08hx, p_lcwhpbe, p_mn12l, p_tauhcthhyb, &
          & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, p_bop, &
          & p_mpw1b95, p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
-         & p_revdsdblyp, p_revdodpbep86, p_am05
+         & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -493,6 +493,21 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_dftb_pbc)
       param = dftd_param( & ! (SAW191202)
          &  s6=1.0_wp, s8=2.1667394_wp, a1=0.5646391_wp, a2=4.9576353_wp)
+   case(p_hse03)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.19812280_wp, a1=0.38662939_wp, a2=5.22925796_wp)
+   case(p_hse06)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.19528249_wp, a1=0.38663183_wp, a2=5.19133469_wp)
+   case(p_hse12)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.23500792_wp, a1=0.39226921_wp, a2=5.22036266_wp)
+   case(p_hse12s)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.23767762_wp, a1=0.39989137_wp, a2=5.34809245_wp)
+   case(p_hsesol)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.82207807_wp, a1=0.45646268_wp, a2=5.59662251_wp)
    end select
 
 contains
@@ -670,8 +685,6 @@ pure function get_functional_id(df) result(num)
       num = p_pbeh3c
    case('b973c', 'b97-3c')
       num = p_b973c
-   case('hsesol')
-      num = p_hsesol
    case('pwgga')
       num = p_pwgga
    case('dftb3', 'dftb(3ob)')
@@ -704,8 +717,6 @@ pure function get_functional_id(df) result(num)
       num = p_revssb
    case('pbesol')
       num = p_pbesol
-   case('hse06')
-      num = p_hse06
    case('pbexalpha')
       num = p_pbexalpha
    case('pbehpbe')
@@ -742,6 +753,14 @@ pure function get_functional_id(df) result(num)
       num = p_hiss
    case('hse03')
       num = p_hse03
+   case('hse06')
+      num = p_hse06
+   case('hse12')
+      num = p_hse12
+   case('hse12s')
+      num = p_hse12s
+   case('hsesol')
+      num = p_hsesol
    case('revtpssh')
       num = p_revtpssh
    case('tpss1kcis')
