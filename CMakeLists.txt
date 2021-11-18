@@ -75,7 +75,7 @@ target_link_libraries(
   "${PROJECT_NAME}-lib"
   PUBLIC
   "${lib-deps}"
-  "OpenMP::OpenMP_Fortran"
+  "$<$<BOOL:${WITH_OpenMP}>:OpenMP::OpenMP_Fortran>"
 )
 target_include_directories(
   "${PROJECT_NAME}-lib"
