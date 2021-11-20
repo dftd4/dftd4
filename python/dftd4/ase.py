@@ -96,9 +96,18 @@ from ase.units import Hartree, Bohr
 
 
 class DFTD4(Calculator):
-    """ASE calculator for DFT-D4 related methods.
-
+    """
+    ASE calculator for DFT-D4 related methods.
     The DFTD4 class can access all methods exposed by the ``dftd4`` API.
+
+    Example
+    -------
+    >>> from ase.build import molecule
+    >>> from ase.calculators.mixing import SumCalculator
+    >>> from ase.calculators.nwchem import NWChem
+    >>> from dftd4.ase import DFTD4
+    >>> atoms = molecule('H2O')
+    >>> atoms.calc = SumCalculator([DFTD4(method="PBE"), NWChem(xc="PBE")])
     """
 
     implemented_properties = [
@@ -125,6 +134,22 @@ class DFTD4(Calculator):
         Calculator.__init__(self, atoms=atoms, **kwargs)
 
     def add_calculator(self, other: Calculator) -> Calculator:
+        """
+        Convenience function to allow DFTD4 to combine itself with another calculator
+        by returning a SumCalculator:
+
+        Example
+        -------
+        >>> from ase.build import molecule
+        >>> from ase.calculators.emt import EMT
+        >>> from dftd4.ase import DFTD4
+        >>> atoms = molecule("C60")
+        >>> atoms.calc = DFTD4(method="pbe").add_calculator(EMT())
+        >>> atoms.get_potential_energy()
+        6.348142387048062
+        >>> [calc.get_potential_energy() for calc in atoms.calc.calcs]
+        [-6.015477436263984, 12.363619823312046]
+        """
         return SumCalculator([self, other])
 
     def set(self, **kwargs) -> dict:

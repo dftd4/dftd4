@@ -5,7 +5,7 @@ Python interface for the generally applicable atomic-charge dependent London dis
 This Python project is targeted at developers who want to interface their project via Python with ``dftd4``.
 
 This interface provides access to the C-API of ``dftd4`` via the CFFI module.
-The low-level CFFI interface is available in the ``dftd4.libdftd4`` module and only required for implementing other interfaces.
+The low-level CFFI interface is available in the ``dftd4.library`` module and only required for implementing other interfaces.
 A more pythonic interface is provided in the ``dftd4.interface`` module which can be used to build more specific interfaces.
 
 .. code:: python
@@ -54,10 +54,10 @@ The returned dict can be used to supply parameters to the constructor of the ``D
 .. code-block:: python
 
    >>> from dftd4.parameters import get_damping_param
-   >>> get_damping_param("r2scan")
-   {'s6': 1.0, 's9': 1.0, 'alp': 16.0, 'damping': 'bj', 'mbd': 'approx-atm', 's8': 0.6018749, 'a1': 0.51559235, 'a2': 5.77342911, 'doi': '10.1063/5.0041008'}
    >>> get_damping_param("b97m")
-   {'s6': 1.0, 's9': 1.0, 'alp': 16.0, 'damping': 'bj', 'mbd': 'approx-atm', 's8': 0.6633, 'a1': 0.4288, 'a2': 3.9935, 'doi': '10.1002/jcc.26411'}
+   {'s6': 1.0, 's9': 1.0, 'alp': 16.0, 's8': 0.6633, 'a1': 0.4288, 'a2': 3.9935}
+   >>> get_damping_param("r2scan", keep_meta=True)
+   {'s6': 1.0, 's9': 1.0, 'alp': 16.0, 'damping': 'bj', 'mbd': 'approx-atm', 's8': 0.6018749, 'a1': 0.51559235, 'a2': 5.77342911, 'doi': '10.1063/5.0041008'}
 
 
 QCSchema Integration
