@@ -22,17 +22,20 @@ import numpy as np
 def test_rational_damping_noargs():
     """Check constructor of damping parameters for insufficient arguments"""
 
-    with raises(RuntimeError):
+    with raises(TypeError):
         DampingParam()
 
-    with raises(RuntimeError, match="s8"):
+    with raises(TypeError, match="s8"):
         DampingParam(a1=0.4, a2=5.0)
 
-    with raises(RuntimeError, match="a1"):
+    with raises(TypeError, match="a1"):
         DampingParam(s8=1.0, a2=5.0)
 
-    with raises(RuntimeError, match="a2"):
+    with raises(TypeError, match="a2"):
         DampingParam(s8=1.0, a1=0.4)
+
+    with raises(TypeError):
+        DampingParam(s8=1.0, a1=0.4, a2=5.0, method="abc")
 
 
 def test_structure():
