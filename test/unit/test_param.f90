@@ -96,7 +96,8 @@ subroutine test_rational_damping(error)
       & 'dftb(pbc)', 'dftb(matsci)', 'dftb(ob2)', 'b1b95', 'glyp', 'revpbe0dh', &
       & 'revtpss0', 'revdsd-pbep86', 'revdsd-pbe', 'revdsd-blyp', &
       & 'revdod-pbep86', 'b97m', 'wb97m', 'pbesol', 'am05', 'mn12sx', &
-      & 'hse03', 'hse06', 'hse12', 'hse12s', 'hsesol']
+      & 'hse03', 'hse06', 'hse12', 'hse12s', 'hsesol', 'r2scanh', 'r2scan0', &
+      & 'r2scan50']
    real(wp), parameter :: ref(*) = [&
       &-2.82477943738524E-1_wp,-1.83931932418458E-1_wp,-1.67883732655799E-1_wp, &
       &-1.19260344932822E-1_wp,-1.73553644083274E-1_wp,-4.64187011491173E-1_wp, &
@@ -129,7 +130,8 @@ subroutine test_rational_damping(error)
       &-1.24018193150396E-1_wp,-1.05459213596423E-1_wp,-3.62056545113500E-2_wp, &
       &-3.62056561428035E-2_wp,-2.40058303330640E-2_wp,-6.96544056298022E-2_wp, &
       &-7.14846530839187E-2_wp,-6.94907084631183E-2_wp,-6.20062460023045E-2_wp, &
-      &-5.03611953456781E-2_wp]
+      &-5.03611953456781E-2_wp,-2.92623319798973E-2_wp,-3.16651213971901E-2_wp, &
+      &-3.45136901370079E-2_wp]
    class(damping_param), allocatable :: param
    type(structure_type) :: mol
    integer :: ii
