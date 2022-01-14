@@ -50,7 +50,8 @@ module dftd4_param
          & p_m05, p_m052x, p_m08hx, p_lcwhpbe, p_mn12l, p_tauhcthhyb, &
          & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, p_bop, &
          & p_mpw1b95, p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
-         & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s
+         & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
+         & p_r2scanh, p_r2scan0, p_r2scan50
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -422,6 +423,12 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_r2scan)
       param = dftd_param ( & ! (10.1063/5.0041008)
          &  s6=1.0000_wp, s8=0.60187490_wp, a1=0.51559235_wp, a2=5.77342911_wp )
+   case(p_r2scanh)
+      param = dftd_param (s6=1.0_wp, s8=0.8324_wp, a1=0.4944_wp, a2=5.9019_wp)
+   case(p_r2scan0)
+      param = dftd_param (s6=1.0_wp, s8=0.8992_wp, a1=0.4778_wp, a2=5.8779_wp)
+   case(p_r2scan50)
+      param = dftd_param (s6=1.0_wp, s8=1.0471_wp, a1=0.4574_wp, a2=5.8969_wp)
    case(p_tpss0)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.62438102_wp, a1=0.40329022_wp, a2=4.80537871_wp )
@@ -581,6 +588,12 @@ pure function get_functional_id(df) result(num)
       num = p_rscan
    case('r2scan', 'r²scan')
       num = p_r2scan
+   case('r2scanh', 'r²scanh')
+      num = p_r2scanh
+   case('r2scan0', 'r²scan0')
+      num = p_r2scan0
+   case('r2scan50', 'r²scan50')
+      num = p_r2scan50
    case('b1lyp', 'b1-lyp')
       num = p_b1lyp
    case('b3-lyp', 'b3lyp')
