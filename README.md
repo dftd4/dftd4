@@ -65,6 +65,21 @@ spack load dftd4
 The Python API can be enabled by adding `+python` to the command.
 
 
+### FreeBSD Port
+
+[![FreeBSD port](https://repology.org/badge/version-for-repo/freebsd/dftd4.svg)](https://www.freshports.org/science/dftd4/)
+
+A port for FreeBSD is available and can be installed using
+
+```
+cd /usr/ports/science/dftd4
+make install clean
+```
+
+For more information see the [dftd4 port details](https://www.freshports.org/science/dftd4/).
+
+
+
 ### Building from Source
 
 To build this project from the source code in this repository you need to have
