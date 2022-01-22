@@ -241,9 +241,9 @@ Setup a build with
 
 .. code:: sh
 
-   meson setup _build -Dpython_version=3
+   meson setup _build -Dpython_version=$(which python3)
 
-The Python version can be used to select a different Python version, it defaults to ``'3'``.
+The Python version can be used to select a different Python version, it defaults to ``'python3'``.
 Python 2 is not supported with this project, the Python version key is meant to select between several local Python 3 versions.
 
 Compile the project with
