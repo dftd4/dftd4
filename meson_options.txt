@@ -56,7 +56,7 @@ option(
 option(
   'python_version',
   type: 'string',
-  value: '3',
+  value: 'python3',
   description: 'Python version to link against.',
 )
 

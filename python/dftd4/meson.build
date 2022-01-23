@@ -18,7 +18,7 @@ cc = meson.get_compiler('c')
 
 pymod = import('python')
 python = pymod.find_installation(
-  'python@0@'.format(get_option('python_version')),
+  get_option('python_version'),
   modules: [
     'cffi',
   ],
