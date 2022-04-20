@@ -330,7 +330,7 @@ jobs:
         printenv >> $GITHUB_ENV
 
     - name: Install meson
-      run: pip3 install meson==0.57.1 ninja cmake
+      run: pip3 install meson ninja cmake
 
     - name: Configure meson build
       run: >-
