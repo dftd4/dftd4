@@ -338,6 +338,7 @@ To evaluate a dispersion correction in C four objects are available:
    Standard damping parameters like the rational damping are independent of the molecular structure and can easily be reused for several structures or easily exchanged.
 
 The user is responsible for creating and deleting the objects to avoid memory leaks.
+For convenience the type-generic macro ``dftd4_delete`` is available to free any memory allocation made in the library.
 
 
 ### Python API
