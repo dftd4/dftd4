@@ -72,7 +72,7 @@ main (void)
    if (dftd4_check_error(error)) {return 1;}
    dftd4_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
    if (dftd4_check_error(error)) {return 1;}
-   dftd4_delete_param(&param);
+   dftd4_delete(param);
 
    // DSD-BLYP-D4-ATM
    param = dftd4_load_rational_damping(error, "dsdblyp", true);
@@ -82,11 +82,11 @@ main (void)
    if (dftd4_check_error(error)) {return 1;}
    dftd4_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
    if (dftd4_check_error(error)) {return 1;}
-   dftd4_delete_param(&param);
+   dftd4_delete(param);
 
-   dftd4_delete_model(&disp);
-   dftd4_delete_structure(&mol);
-   dftd4_delete_error(&error);
+   dftd4_delete(disp);
+   dftd4_delete(mol);
+   dftd4_delete(error);
 
    assert(!param);
    assert(!disp);
