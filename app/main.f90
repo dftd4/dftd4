@@ -15,7 +15,7 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 !> Entry point for the command line interface of dftd4
-program dftd4
+program driver
    use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_env, only : error_type
    use dftd4_cli, only : cli_config, get_arguments
@@ -38,4 +38,4 @@ program dftd4
       error stop
    end if
 
-end program dftd4
+end program driver
