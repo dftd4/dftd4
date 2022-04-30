@@ -1,0 +1,15 @@
+[build-system]
+requires = ["mesonpep517"]
+build-backend = "mesonpep517.buildapi"
+
+[tool.mesonpep517.metadata]
+author = "Sebastian Ehlert"
+author-email = "awvwgk@disroot.org"
+summary = "Python API of the DFT-D4 project"
+description-file = "README.rst"
+home-page = "https://github.com/dftd4/dftd4"
+requires = [
+   "cffi",
+   "numpy",
+]
+requires-python = ">=3.6"

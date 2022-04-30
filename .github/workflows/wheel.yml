@@ -1,0 +1,47 @@
+name: wheel
+
+on: [push, workflow_dispatch]
+
+jobs:
+  manylinux:
+    runs-on: ubuntu-latest
+    container: condaforge/linux-anvil-cos7-x86_64
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.6', '3.7', '3.8', '3.9', '3.10']
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell || 'bash -l {0}' }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        path: python/subprojects/dftd4
+    - name: Create environment
+      run: >-
+        mamba create -n wheel
+        --yes
+        c-compiler
+        fortran-compiler
+        python=${{ matrix.python }}
+        auditwheel
+        --file assets/ci/wheel-req.txt
+    - name: Build wheel
+      run: |
+        conda activate wheel
+        set -ex
+        cp ../assets/parameters.toml dftd4
+        cp {mesonpep517,pyproject}.toml
+        python -m build . --wheel
+        auditwheel show dist/*.whl
+        auditwheel repair -w dist dist/*.whl --plat ${{ env.plat }}
+        rm dist/*-linux_x86_64.whl
+      env:
+        plat: manylinux${{ matrix.python == '3.6' && '2010' || '_2_12' }}_x86_64
+      working-directory: python
+    - uses: actions/upload-artifact@v3
+      with:
+        path: python/dist/*.whl
