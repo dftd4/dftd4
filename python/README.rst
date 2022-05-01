@@ -143,6 +143,72 @@ The individual contributions are available by iterating over the list of calcula
 Note that ``DFTD4`` will always place itself as first calculator in the list.
 
 
+PySCF support
+~~~~~~~~~~~~~
+
+Integration with `PySCF <https://pyscf.org>`_ is possible by using the ``dftd4.pyscf`` module.
+The module provides a ``DFTD4Dispersion`` class to construct a PySCF compatible calculator for evaluating the dispersion energy and gradients.
+
+.. code:: python
+
+   >>> from pyscf import gto
+   >>> import dftd4.pyscf as disp
+   >>> mol = gto.M(
+   ...     atom="""
+   ...          C   -0.755422531  -0.796459123  -1.023590391
+   ...          C    0.634274834  -0.880017014  -1.075233285
+   ...          C    1.406955202   0.199695367  -0.653144334
+   ...          C    0.798863737   1.361204515  -0.180597909
+   ...          C   -0.593166787   1.434312023  -0.133597923
+   ...          C   -1.376239198   0.359205222  -0.553258516
+   ...          I   -1.514344238   3.173268101   0.573601106
+   ...          H    1.110906949  -1.778801728  -1.440619836
+   ...          H    1.399172302   2.197767355   0.147412751
+   ...          H    2.486417780   0.142466525  -0.689380574
+   ...          H   -2.454252250   0.422581120  -0.512807958
+   ...          H   -1.362353593  -1.630564523  -1.348743149
+   ...          S   -3.112683203   6.289227834   1.226984439
+   ...          H   -4.328789697   5.797771251   0.973373089
+   ...          C   -2.689135032   6.703163830  -0.489062886
+   ...          H   -1.684433029   7.115457372  -0.460265708
+   ...          H   -2.683867206   5.816530502  -1.115183775
+   ...          H   -3.365330613   7.451201412  -0.890098894
+   ...          """
+   ... )
+   >>> d4 = disp.DFTD4Dispersion(mol, xc="r2SCAN")
+   >>> d4.kernel()[0]
+   array(-0.0050011)
+
+To make use of the dispersion correction together with other calculators, the ``energy`` method allows to apply a dispersion correction to an existing calculator.
+
+.. code:: python
+
+   >>> from pyscf import gto, scf
+   >>> import dftd4.pyscf as disp
+   >>> mol = gto.M(
+   ...     atom="""
+   ...          O  -1.65542061  -0.12330038   0.00000000
+   ...          O   1.24621244   0.10268870   0.00000000
+   ...          H  -0.70409026   0.03193167   0.00000000
+   ...          H  -2.03867273   0.75372294   0.00000000
+   ...          H   1.57598558  -0.38252146  -0.75856129
+   ...          H   1.57598558  -0.38252146   0.75856129
+   ...          """
+   ... )
+   >>> mf = disp.energy(scf.RHF(mol)).run()
+   converged SCF energy = -149.939098424774
+   >>> grad = mf.nuc_grad_method().kernel()
+   --------------- DFTD4 gradients ---------------
+            x                y                z
+   0 O     0.0172438133     0.0508406920     0.0000000000
+   1 O     0.0380018285    -0.0460223790    -0.0000000000
+   2 H    -0.0305058266    -0.0126478132    -0.0000000000
+   3 H     0.0069233858    -0.0382898692    -0.0000000000
+   4 H    -0.0158316004     0.0230596847     0.0218908543
+   5 H    -0.0158316004     0.0230596847    -0.0218908543
+   ----------------------------------------------
+
+
 Installing
 ~~~~~~~~~~
 
