@@ -156,7 +156,7 @@ class DampingParam:
     There are two main ways provided to generate a new damping parameter object:
 
     1. a method name is passed to the constructor, the library will load the
-       required data from the *s-dftd3* shared library.
+       required data from the *dftd4* shared library.
 
     2. all required parameters are passed to the constructor and the library will
        generate an object from the given parameters.
@@ -330,7 +330,7 @@ class DispersionModel(Structure):
             in case the calculation fails in the library
         """
 
-        _energy = library.ffi.new("double *")
+        _energy = np.array(0.0)
         if grad:
             _gradient = np.zeros((len(self), 3))
             _sigma = np.zeros((3, 3))
@@ -342,12 +342,12 @@ class DispersionModel(Structure):
             self._mol,
             self._disp,
             param._param,
-            _energy,
+            _cast("double*", _energy),
             _cast("double*", _gradient),
             _cast("double*", _sigma),
         )
 
-        results = dict(energy=_energy[0])
+        results = dict(energy=_energy)
         if _gradient is not None:
             results.update(gradient=_gradient)
         if _sigma is not None:

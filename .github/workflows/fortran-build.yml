@@ -18,7 +18,8 @@ env:
     numpy
     qcelemental
     ase
-    tomlkit
+    tomli
+    pyscf
 
 jobs:
   gcc-build:
