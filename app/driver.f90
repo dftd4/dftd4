@@ -22,7 +22,7 @@ module dftd4_driver
    use dftd4, only : get_dispersion, d4_model, new_d4_model, &
       realspace_cutoff, get_lattice_points, get_coordination_number, &
       damping_param, rational_damping_param, get_rational_damping, &
-      get_properties, get_pairwise_dispersion
+      get_properties, get_pairwise_dispersion, get_dispersion_hessian
    use dftd4_charge, only : get_charges
    use dftd4_output
    use dftd4_utils
@@ -66,7 +66,7 @@ subroutine run_main(config, error)
    class(damping_param), allocatable :: param
    type(d4_model) :: d4
    real(wp) :: charge
-   real(wp), allocatable :: energy, gradient(:, :), sigma(:, :)
+   real(wp), allocatable :: energy, gradient(:, :), sigma(:, :), hessian(:, :, :, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    real(wp), allocatable :: s9
@@ -131,6 +131,9 @@ subroutine run_main(config, error)
       if (config%grad) then
          allocate(gradient(3, mol%nat), sigma(3, 3))
       end if
+      if (config%hessian) then
+         allocate(hessian(3, mol%nat, 3, mol%nat))
+      end if
    end if
 
    call new_d4_model(d4, mol, ga=config%ga, gc=config%gc, wf=config%wf)
@@ -156,6 +159,9 @@ subroutine run_main(config, error)
          call get_pairwise_dispersion(mol, d4, param, realspace_cutoff(), pair_disp2, &
             & pair_disp3)
       end if
+      if (config%hessian) then
+         call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian)
+      end if
       if (config%verbosity > 0) then
          call ascii_results(output_unit, mol, energy, gradient, sigma)
          if (config%pair_resolved) then
@@ -172,7 +178,7 @@ subroutine run_main(config, error)
       end if
       if (config%grad) then
          open(file=config%grad_output, newunit=unit)
-         call tagged_result(unit, energy, gradient, sigma)
+         call tagged_result(unit, energy, gradient, sigma, hessian)
          close(unit)
          if (config%verbosity > 0) then
             write(output_unit, '(a)') &
@@ -212,6 +218,7 @@ subroutine run_main(config, error)
    if (config%json) then
       open(file=config%json_output, newunit=unit)
       call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma, &
+         & hessian=hessian, &
          & cn=cn, q=q, c6=c6, alpha=alpha, &
          & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
       close(unit)
