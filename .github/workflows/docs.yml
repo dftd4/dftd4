@@ -6,6 +6,11 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+    - id: deploy-on-push
+      run:
+        echo "::set-output name=result::${{ env.DEPLOY_BRANCH }}"
+      env:
+        DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH && contains(github.ref, secrets.DEPLOY_BRANCH) && 1 || 0 }}
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
@@ -14,10 +19,11 @@ jobs:
       run: pip install ford
     - name: Build Documentation
       run: ford ford.md
-    - uses: JamesIves/github-pages-deploy-action@3.7.1
-      if: github.event_name == 'push' && github.repository == 'dftd4/dftd4' && ( startsWith( github.ref, 'refs/tags/' ) || github.ref == 'refs/heads/main' )
+    - uses: JamesIves/github-pages-deploy-action@4.1.6
+      if: ${{ github.event_name == 'push' && steps.deploy-on-push.outputs.result != 0 }}
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: _docs
-        CLEAN: true
+        branch: gh-pages
+        folder: _docs
+        single-commit: true
+        git-config-email: 49320512+dftd4@users.noreply.github.com
+        git-config-name: DFT-D4

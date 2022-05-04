@@ -13,7 +13,11 @@
 #
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
-"""`ASE calculator <https://wiki.fysik.dtu.dk/ase/>`_ implementation
+"""
+ASE Support
+-----------
+
+`ASE calculator <https://wiki.fysik.dtu.dk/ase/>`_ implementation
 for the ``dftd4`` program.
 
 This module provides a basic single point calculator implementations
