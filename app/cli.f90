@@ -46,6 +46,7 @@ module dftd4_cli
       logical :: properties = .false.
       logical :: mbdscale = .false.
       logical :: grad = .false.
+      logical :: hessian = .false.
       character(len=:), allocatable :: grad_output
       logical :: rational = .false.
       logical :: has_param = .false.
@@ -170,7 +171,6 @@ subroutine get_run_arguments(config, error)
          config%wrap = .false.
       case("-g", "--grad")
          config%grad = .true.
-         config%grad_output = "dftd4.txt"
          iarg = iarg + 1
          call get_argument(iarg, arg)
          if (allocated(arg)) then
@@ -180,6 +180,9 @@ subroutine get_run_arguments(config, error)
             end if
             call move_alloc(arg, config%grad_output)
          end if
+      case("--hessian")
+         config%grad = .true.
+         config%hessian = .true.
       case("--mbdscale")
          iarg = iarg + 1
          call get_argument_as_real(iarg, config%inp%s9, error)
@@ -226,6 +229,10 @@ subroutine get_run_arguments(config, error)
 
    if (.not.config%has_param .and. .not.allocated(config%method)) then
       config%properties = .true.
+   end if
+
+   if (.not.allocated(config%grad_output)) then
+      config%grad_output = "dftd4.txt"
    end if
 
    if (.not.allocated(config%input)) then
@@ -292,6 +299,7 @@ subroutine help(unit)
       "    --wfactor <real>", "Adjust weighting factor for interpolation", &
       "", "(default: 6.0)", &
       "-g, --grad [file]", "Evaluate molecular gradient and virial", &
+      "    --hessian", "Evaluate molecular hessian", &
       "", "write results to file (default: dftd4.txt),", &
       "", "attempts to add to Turbomole gradient and gradlatt files", &
       "    --property", "Show dispersion related atomic and system properties", &

@@ -501,13 +501,14 @@ subroutine getline(unit,line,iostat)
 end subroutine getline
 
 
-subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, alpha, &
-      & pairwise_energy2, pairwise_energy3)
+subroutine json_results(unit, indentation, energy, gradient, sigma, hessian, &
+      & cn, q, c6, alpha, pairwise_energy2, pairwise_energy3)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
    real(wp), intent(in), optional :: energy
    real(wp), intent(in), optional :: gradient(:, :)
    real(wp), intent(in), optional :: sigma(:, :)
+   real(wp), intent(in), optional :: hessian(:, :, :, :)
    real(wp), intent(in), optional :: cn(:)
    real(wp), intent(in), optional :: q(:)
    real(wp), intent(in), optional :: c6(:, :)
@@ -546,6 +547,13 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, q, c6, a
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
       write(unit, jsonkey, advance='no') 'gradient'
       array = reshape(gradient, [size(gradient)])
+      call write_json_array(unit, array, indent)
+   end if
+   if (present(hessian)) then
+      write(unit, '(",")', advance='no')
+      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      write(unit, jsonkey, advance='no') 'hessian'
+      array = reshape(hessian, [size(hessian)])
       call write_json_array(unit, array, indent)
    end if
    if (present(cn)) then
@@ -609,11 +617,12 @@ subroutine write_json_array(unit, array, indent)
 end subroutine write_json_array
 
 
-subroutine tagged_result(unit, energy, gradient, sigma)
+subroutine tagged_result(unit, energy, gradient, sigma, hessian)
    integer, intent(in) :: unit
    real(wp), intent(in), optional :: energy
    real(wp), intent(in), optional :: gradient(:, :)
    real(wp), intent(in), optional :: sigma(:, :)
+   real(wp), intent(in), optional :: hessian(:, :, :, :)
    character(len=*), parameter :: tag_header = &
       & '(a,t20,":",a,":",i0,":",*(i0:,","))'
 
@@ -622,12 +631,16 @@ subroutine tagged_result(unit, energy, gradient, sigma)
       write(unit, '(3es24.16)') energy
    end if
    if (present(gradient)) then
-      write(unit, tag_header) "gradient", "real", 2, 3, size(gradient, 2)
+      write(unit, tag_header) "gradient", "real", 2, shape(gradient)
       write(unit, '(3es24.16)') gradient
    end if
    if (present(sigma)) then
-      write(unit, tag_header) "virial", "real", 2, 3, 3
+      write(unit, tag_header) "virial", "real", 2, shape(sigma)
       write(unit, '(3es24.16)') sigma
+   end if
+   if (present(hessian)) then
+      write(unit, tag_header) "hessian", "real", 4, shape(hessian)
+      write(unit, '(3es24.16)') hessian
    end if
 
 end subroutine tagged_result

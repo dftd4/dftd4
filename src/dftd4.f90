@@ -19,6 +19,7 @@ module dftd4
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_disp, only : get_dispersion, get_properties, get_pairwise_dispersion
    use dftd4_ncoord, only : get_coordination_number
+   use dftd4_numdiff, only : get_dispersion_hessian
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
    use dftd4_model, only : d4_model, new_d4_model
