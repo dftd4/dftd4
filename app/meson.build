@@ -23,6 +23,7 @@ dftd4_exe = executable(
   ),
   dependencies: dftd4_dep,
   install: install,
+  link_language: 'fortran',
 )
 
 test('app-version', dftd4_exe, args: '--version')
