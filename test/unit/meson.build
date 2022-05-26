@@ -46,6 +46,7 @@ tester = executable(
   'tester',
   sources: test_srcs,
   dependencies: [dftd4_dep, mstore_dep],
+  link_language: 'fortran',
 )
 
 foreach t : tests
