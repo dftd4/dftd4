@@ -30,7 +30,7 @@ install = true
 
 dftd4_dep = dependency(
   'dftd4',
-  version: '>=3.4.0',
+  version: '>=@0@'.format(meson.project_version()),
   fallback: ['dftd4', 'dftd4_dep'],
   default_options: [
     'default_library=static',
@@ -38,6 +38,6 @@ dftd4_dep = dependency(
     'python=false',
   ],
 )
-dftd4_header = files('..'/'include'/'dftd4.h')
+dftd4_header = files('include'/'_dftd4.h')
 
 subdir('dftd4')
