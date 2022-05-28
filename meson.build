@@ -54,6 +54,7 @@ dftd4_dep = declare_dependency(
   link_with: dftd4_lib,
   include_directories: dftd4_inc,
   dependencies: lib_deps,
+  variables: {'includedir': meson.current_source_dir() / 'include'},
 )
 
 # Add applications
