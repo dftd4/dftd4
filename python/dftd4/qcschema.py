@@ -13,7 +13,11 @@
 #
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
-"""Integration with the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
+"""
+QCSchema Support
+----------------
+
+Integration with the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
 
 This module provides a way to translate QCSchema or QCElemental Atomic Input
 into a format understandable by the ``dftd4`` API which in turn provides the

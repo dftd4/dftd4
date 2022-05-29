@@ -14,6 +14,9 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 """
+PySCF Support
+-------------
+
 Compatibility layer for supporting DFT-D4 in `pyscf <https://pyscf.org/>`_.
 """
 
@@ -150,7 +153,6 @@ def energy(mf):
 
     Examples
     --------
-    The dispersion correction can be applied by using the `energy` method
     >>> from pyscf import gto, scf
     >>> import dftd4.pyscf as disp
     >>> mol = gto.M(
@@ -239,8 +241,6 @@ def grad(mfgrad):
 
     Examples
     --------
-    For gradient calculations the energy expression can be constructed
-    and than queried for producing a nuclear gradient method as in
     >>> from pyscf import gto, scf
     >>> import dftd4.pyscf as disp
     >>> mol = gto.M(

@@ -4,6 +4,7 @@ DFT-D4 project
 [![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING.LESSER)
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 [![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
+[![Documentation Status](https://readthedocs.org/projects/dftd4/badge/?version=latest)](https://dftd4.readthedocs.io/en/latest/?badge=latest)
 [![docs](https://github.com/dftd4/dftd4/workflows/docs/badge.svg)](https://dftd4.github.io/dftd4/)
 [![codecov](https://codecov.io/gh/dftd4/dftd4/branch/main/graph/badge.svg?token=IFtEF1Hwqj)](https://codecov.io/gh/dftd4/dftd4)
 
