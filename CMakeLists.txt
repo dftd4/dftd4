@@ -33,8 +33,10 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
-if(WITH_ILP64)
+if(WITH_ILP64 AND BLAS_LIBRARIES)
   message(STATUS "Using LAPACK/BLAS ILP64 interface")
+elseif(WITH_ILP64)
+  message(FATAL_ERROR "ILP64 support needs BLAS_LIBRARIES")
 endif()
 
 if(NOT TARGET "BLAS::BLAS")
