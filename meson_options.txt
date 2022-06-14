@@ -66,3 +66,11 @@ option(
   value: false,
   description: 'Enable the compatibility layer for the dftd4 2.5.x API',
 )
+
+option(
+  'ilp64',
+  type: 'boolean',
+  value: false,
+  yield: true,
+  description: 'Enable BLAS/LAPACK ilp64 support',
+)
