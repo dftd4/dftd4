@@ -123,7 +123,7 @@ elif lapack_vendor == 'custom'
   lib_deps += custom_deps
 
 else
-  lapack_dep = dependency(ilp64 ? 'lapack64' : 'lapack', required: False)
+  lapack_dep = dependency(ilp64 ? 'lapack64' : 'lapack', required: false)
   if not lapack_dep.found()
     lapack_dep = fc.find_library(ilp64 ? 'lapack64' : 'lapack')
   endif
