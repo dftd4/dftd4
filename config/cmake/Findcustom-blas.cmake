@@ -15,6 +15,11 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 if(NOT BLAS_FOUND)
+  if("${BLA_VENDOR}" MATCHES "^Intel" OR DEFINED ENV{MKLROOT})
+    # C must be enabled to use MKL
+    # https://cmake.org/cmake/help/v3.14/module/FindBLAS.html#result-variables
+    enable_language("C")
+  endif()
   find_package("BLAS")
   if(NOT TARGET "BLAS::BLAS")
     add_library("BLAS::BLAS" INTERFACE IMPORTED)
