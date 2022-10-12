@@ -193,16 +193,22 @@ class DampingParam:
             self._param = self.new_param(**kwargs)
 
     @staticmethod
-    def load_param(method, atm=True):
+    def load_param(method, mbd=True):
         """
         Create damping function API object from internal library storage by searching
-        for the provided method name. The method name is case insensitive and hyphens
-        are ignored. In case the method name is unknown an exception is raised.
+        for the provided method name.
+
+        Parameters
+        ----------
+        method : str
+            The method name. Case insensitve and hyphens are ignored.
+        mbd : bool
+            Whether to use many-body dispersion parameters.
 
         Example
         -------
         >>> from dftd4.interface import DampingParam
-        >>> param = DampingParam(method="pbe", atm=True)
+        >>> param = DampingParam(method="pbe", mbd=True)
 
         Raises
         ------
@@ -210,7 +216,7 @@ class DampingParam:
             failed to construct damping parameter object in API
         """
         _method = library.ffi.new("char[]", method.encode())
-        return library.load_rational_damping(_method, atm)
+        return library.load_rational_damping(_method, mbd)
 
     @staticmethod
     def new_param(*, s6=1.0, s8, s9=1.0, a1, a2, alp=16.0):
