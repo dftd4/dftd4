@@ -58,6 +58,7 @@ contains
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion2(self, mol, trans, cutoff, r4r2, c6, dc6dcn, dc6dq, &
       & energy, dEdcn, dEdq, gradient, sigma)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion2
 
    !> Damping parameters
    class(rational_damping_param), intent(in) :: self
@@ -278,6 +279,7 @@ end subroutine get_dispersion_derivs
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion3(self, mol, trans, cutoff, r4r2, c6, dc6dcn, dc6dq, &
       & energy, dEdcn, dEdq, gradient, sigma)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion3
 
    !> Damping parameters
    class(rational_damping_param), intent(in) :: self
@@ -327,6 +329,7 @@ end subroutine get_dispersion3
 
 !> Evaluation of the dispersion energy expression projected on atomic pairs
 subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, r4r2, c6, energy)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_pairwise_dispersion2
 
    !> Damping parameters
    class(rational_damping_param), intent(in) :: self
@@ -391,6 +394,7 @@ end subroutine get_pairwise_dispersion2
 
 !> Evaluation of the dispersion energy expression
 subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_pairwise_dispersion3
 
    !> Damping parameters
    class(rational_damping_param), intent(in) :: self

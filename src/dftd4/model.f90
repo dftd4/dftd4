@@ -118,6 +118,7 @@ contains
 
 !> Create new dispersion model from molecular structure input
 subroutine new_d4_model(self, mol, ga, gc, wf, ref)
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model
 
    !> Instance of the dispersion model
    type(d4_model), intent(out) :: self
@@ -265,6 +266,7 @@ end subroutine new_d4_model
 !> Calculate the weights of the reference system and the derivatives w.r.t.
 !> coordination number for later use.
 subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
+   !DEC$ ATTRIBUTES DLLEXPORT :: weight_references
 
    !> Instance of the dispersion model
    class(d4_model), intent(in) :: self
@@ -394,6 +396,7 @@ end function is_exceptional
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
 !> the coordination numbers and atomic partial charges.
 subroutine get_atomic_c6(self, mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_atomic_c6
 
    !> Instance of the dispersion model
    class(d4_model), intent(in) :: self
@@ -490,7 +493,7 @@ end subroutine get_atomic_c6
 !> Calculate atomic polarizibilities and their derivatives w.r.t.
 !> the coordination numbers and atomic partial charges.
 subroutine get_polarizibilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dadq)
-
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_polarizibilities
    !> Instance of the dispersion model
    class(d4_model), intent(in) :: self
 

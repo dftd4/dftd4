@@ -58,6 +58,7 @@ module dftd4_param
 contains
 
 subroutine get_rational_damping(functional, param, s9)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping
    character(len=*), intent(in) :: functional
    class(damping_param), allocatable, intent(out) :: param
    real(wp), intent(in), optional :: s9

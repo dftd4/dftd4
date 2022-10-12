@@ -26,6 +26,7 @@ contains
 
 
 subroutine wrap_to_central_cell(xyz, lattice, periodic)
+   !DEC$ ATTRIBUTES DLLEXPORT :: wrap_to_central_cell
    real(wp), intent(inout) :: xyz(:, :)
    real(wp), intent(in) :: lattice(:, :)
    logical, intent(in) :: periodic(:)
