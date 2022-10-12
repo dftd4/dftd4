@@ -14,7 +14,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-if(WITH_API)
-  add_subdirectory("api")
-endif()
-add_subdirectory("unit")
+add_executable(
+  "${PROJECT_NAME}-api-tester"
+  "example.c"
+)
+target_include_directories(
+  "${PROJECT_NAME}-api-tester"
+  PRIVATE
+  "${PROJECT_SOURCE_DIR}/include"
+)
+target_link_libraries(
+  "${PROJECT_NAME}-api-tester"
+  PRIVATE
+  "${PROJECT_NAME}-lib"
+)
+add_test(NAME "api" COMMAND "${PROJECT_NAME}-api-tester")

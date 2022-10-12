@@ -135,6 +135,7 @@ install(
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
 )
 if(WITH_API)
+  enable_language("C")
   install(
     DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/include/"
