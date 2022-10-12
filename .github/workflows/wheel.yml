@@ -3,23 +3,41 @@ name: wheel
 on: [push, workflow_dispatch]
 
 jobs:
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Reorganize repository
+      run: |
+        git config user.email ""
+        git config user.name "dummy"
+        git subtree add --prefix python/subprojects/dftd4 . HEAD
+        git mv {assets,python/dftd4}/parameters.toml
+        git mv python/{mesonpep517,pyproject}.toml
+        git commit -m "Python dist"
+    - run: |
+        pipx run build python/ --sdist --outdir .
+    - uses: actions/upload-artifact@v3
+      with:
+        name: dftd4-python-sdist
+        path: ./*.tar.gz
+        retention-days: 5
+
   manylinux:
+    needs:
+      - sdist
     runs-on: ubuntu-latest
     container: condaforge/linux-anvil-cos7-x86_64
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        python: ['3.7', '3.8', '3.9', '3.10']
 
     defaults:
       run:
         shell: ${{ matrix.shell || 'bash -l {0}' }}
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/checkout@v2
-      with:
-        path: python/subprojects/dftd4
     - name: Create environment
       run: >-
         mamba create -n wheel
@@ -28,20 +46,33 @@ jobs:
         fortran-compiler
         python=${{ matrix.python }}
         auditwheel
-        --file assets/ci/wheel-req.txt
+        git
+        python
+        pip
+        python-build
+        pkgconfig
+        patchelf
+        cffi
+        numpy
+        meson
+        unzip
+        wheel
+    - name: Download sdist
+      uses: actions/download-artifact@v2
+      with:
+        name: dftd4-python-sdist
     - name: Build wheel
       run: |
         conda activate wheel
         set -ex
-        cp ../assets/parameters.toml dftd4
-        cp {mesonpep517,pyproject}.toml
-        python -m build . --wheel
-        auditwheel show dist/*.whl
-        auditwheel repair -w dist dist/*.whl --plat ${{ env.plat }}
-        rm dist/*-linux_x86_64.whl
+        tar xvf dftd4-*.tar.gz
+        python -m build dftd4-*/ --wheel
+        auditwheel show dftd4-*/dist/*.whl
+        auditwheel repair -w . dftd4-*/dist/*.whl --plat ${{ env.plat }}
       env:
         plat: manylinux${{ matrix.python == '3.6' && '2010' || '_2_12' }}_x86_64
-      working-directory: python
     - uses: actions/upload-artifact@v3
       with:
-        path: python/dist/*.whl
+        name: dftd4-python-${{ matrix.python }}
+        path: ./*.whl
+        retention-days: 5

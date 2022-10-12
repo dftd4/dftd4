@@ -20,12 +20,16 @@
 #define DFTD4_API_ENTRY extern "C"
 #else
 #define DFTD4_API_ENTRY extern
+#ifndef DFTD4_CFFI
 #include <stdbool.h>
+#endif
 #endif
 #define DFTD4_API_CALL
 #define DFTD4_API_SUFFIX__V_3_0
 #define DFTD4_API_SUFFIX__V_3_1
 #define DFTD4_API_SUFFIX__V_3_2
+#define DFTD4_API_SUFFIX__V_3_3
+#define DFTD4_API_SUFFIX__V_3_4
 
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;

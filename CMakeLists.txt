@@ -33,6 +33,12 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
+if(WITH_ILP64 AND BLAS_LIBRARIES)
+  message(STATUS "Using LAPACK/BLAS ILP64 interface")
+elseif(WITH_ILP64)
+  message(FATAL_ERROR "ILP64 support needs BLAS_LIBRARIES")
+endif()
+
 if(NOT TARGET "BLAS::BLAS")
   find_package("custom-blas" REQUIRED)
 endif()
@@ -91,6 +97,16 @@ target_include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/dftd4
 )
 
+if(WITH_ILP64)
+  target_compile_definitions(
+    "${PROJECT_NAME}-lib"
+    PUBLIC -DIK=i8)
+else()
+  target_compile_definitions(
+    "${PROJECT_NAME}-lib"
+    PUBLIC -DIK=i4)
+endif()
+
 # Add example application
 add_subdirectory("app")
 
@@ -119,6 +135,7 @@ install(
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
 )
 if(WITH_API)
+  enable_language("C")
   install(
     DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/include/"

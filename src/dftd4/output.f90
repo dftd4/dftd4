@@ -36,6 +36,7 @@ contains
 
 
 subroutine ascii_atomic_radii(unit, mol, disp)
+   !DEC$ ATTRIBUTES DLLEXPORT :: ascii_atomic_radii
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -68,6 +69,7 @@ end subroutine ascii_atomic_radii
 
 
 subroutine ascii_atomic_references(unit, mol, disp)
+   !DEC$ ATTRIBUTES DLLEXPORT :: ascii_atomic_references
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -116,6 +118,7 @@ end subroutine ascii_atomic_references
 
 
 subroutine ascii_system_properties(unit, mol, disp, cn, q, c6)
+   !DEC$ ATTRIBUTES DLLEXPORT :: ascii_system_properties
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -167,6 +170,7 @@ end subroutine ascii_system_properties
 
 
 subroutine ascii_results(unit, mol, energy, gradient, sigma)
+   !DEC$ ATTRIBUTES DLLEXPORT :: ascii_results
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -218,6 +222,7 @@ end subroutine ascii_results
 
 
 subroutine ascii_pairwise(unit, mol, pair_disp2, pair_disp3)
+   !DEC$ ATTRIBUTES DLLEXPORT :: ascii_pairwise
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -269,6 +274,7 @@ end subroutine ascii_pairwise
 
 
 subroutine ascii_damping_param(unit, param, method)
+   !DEC$ ATTRIBUTES DLLEXPORT :: ascii_damping_param
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -303,6 +309,7 @@ end subroutine ascii_damping_param
 
 
 subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
+   !DEC$ ATTRIBUTES DLLEXPORT :: turbomole_gradlatt
    type(structure_type),intent(in) :: mol
    character(len=*),intent(in) :: fname
    real(wp),intent(in) :: energy
@@ -392,6 +399,7 @@ end subroutine turbomole_gradlatt
 
 
 subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
+   !DEC$ ATTRIBUTES DLLEXPORT :: turbomole_gradient
    type(structure_type),intent(in) :: mol
    character(len=*),intent(in) :: fname
    real(wp),intent(in) :: energy
@@ -501,8 +509,11 @@ subroutine getline(unit,line,iostat)
 end subroutine getline
 
 
+
 subroutine json_results(unit, indentation, energy, gradient, sigma, hessian, &
       & cn, q, c6, alpha, pairwise_energy2, pairwise_energy3)
+   !DEC$ ATTRIBUTES DLLEXPORT :: json_results
+
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
    real(wp), intent(in), optional :: energy
@@ -617,7 +628,10 @@ subroutine write_json_array(unit, array, indent)
 end subroutine write_json_array
 
 
+
 subroutine tagged_result(unit, energy, gradient, sigma, hessian)
+   !DEC$ ATTRIBUTES DLLEXPORT :: tagged_result
+
    integer, intent(in) :: unit
    real(wp), intent(in), optional :: energy
    real(wp), intent(in), optional :: gradient(:, :)

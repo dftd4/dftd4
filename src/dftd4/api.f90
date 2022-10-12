@@ -88,6 +88,7 @@ contains
 !> Obtain library version as major * 10000 + minor + 100 + patch
 function get_version_api() result(version) &
       & bind(C, name=namespace//"get_version")
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_version_api
    integer(c_int) :: version
    integer :: major, minor, patch
 
@@ -101,6 +102,7 @@ end function get_version_api
 function new_error_api() &
       & result(verror) &
       & bind(C, name=namespace//"new_error")
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_error_api
    type(vp_error), pointer :: error
    type(c_ptr) :: verror
 
@@ -115,6 +117,7 @@ end function new_error_api
 !> Delete error handle object
 subroutine delete_error_api(verror) &
       & bind(C, name=namespace//"delete_error")
+   !DEC$ ATTRIBUTES DLLEXPORT :: delete_error_api
    type(c_ptr), intent(inout) :: verror
    type(vp_error), pointer :: error
 
@@ -133,6 +136,7 @@ end subroutine delete_error_api
 !> Check error handle status
 function check_error_api(verror) result(status) &
       & bind(C, name=namespace//"check_error")
+   !DEC$ ATTRIBUTES DLLEXPORT :: check_error_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    integer(c_int) :: status
@@ -157,6 +161,7 @@ end function check_error_api
 !> Get error message from error handle
 subroutine get_error_api(verror, charptr, buffersize) &
       & bind(C, name=namespace//"get_error")
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_error_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    character(kind=c_char), intent(inout) :: charptr(*)
@@ -186,6 +191,7 @@ end subroutine get_error_api
 function new_structure_api(verror, natoms, numbers, positions, c_charge, &
       & c_lattice, c_periodic) result(vmol) &
       & bind(C, name=namespace//"new_structure")
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_structure_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    integer(c_int), value, intent(in) :: natoms
@@ -234,6 +240,7 @@ end function new_structure_api
 !> Delete molecular structure data
 subroutine delete_structure_api(vmol) &
       & bind(C, name=namespace//"delete_structure")
+   !DEC$ ATTRIBUTES DLLEXPORT :: delete_structure_api
    type(c_ptr), intent(inout) :: vmol
    type(vp_structure), pointer :: mol
 
@@ -252,6 +259,7 @@ end subroutine delete_structure_api
 !> Update coordinates and lattice parameters (quantities in Bohr)
 subroutine update_structure_api(verror, vmol, positions, lattice) &
       & bind(C, name=namespace//"update_structure")
+   !DEC$ ATTRIBUTES DLLEXPORT :: update_structure_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
@@ -294,6 +302,7 @@ end subroutine update_structure_api
 function new_d4_model_api(verror, vmol) &
       & result(vdisp) &
       & bind(C, name=namespace//"new_d4_model")
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
@@ -325,6 +334,7 @@ end function new_d4_model_api
 function custom_d4_model_api(verror, vmol, ga, gc, wf) &
       & result(vdisp) &
       & bind(C, name=namespace//"custom_d4_model")
+   !DEC$ ATTRIBUTES DLLEXPORT :: custom_d4_model_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
@@ -358,6 +368,7 @@ end function custom_d4_model_api
 !> Delete dispersion model
 subroutine delete_model_api(vdisp) &
       & bind(C, name=namespace//"delete_model")
+   !DEC$ ATTRIBUTES DLLEXPORT :: delete_model_api
    type(c_ptr), intent(inout) :: vdisp
    type(vp_model), pointer :: disp
 
@@ -377,6 +388,7 @@ end subroutine delete_model_api
 function new_rational_damping_api(verror, s6, s8, s9, a1, a2, alp) &
       & result(vparam) &
       & bind(C, name=namespace//"new_rational_damping")
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_rational_damping_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    real(c_double), value, intent(in) :: s6
@@ -410,6 +422,7 @@ end function new_rational_damping_api
 function load_rational_damping_api(verror, charptr, atm) &
       & result(vparam) &
       & bind(C, name=namespace//"load_rational_damping")
+   !DEC$ ATTRIBUTES DLLEXPORT :: load_rational_damping_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    character(kind=c_char), intent(in) :: charptr(*)
@@ -444,6 +457,7 @@ end function load_rational_damping_api
 !> Delete damping parameters
 subroutine delete_param_api(vparam) &
       & bind(C, name=namespace//"delete_param")
+   !DEC$ ATTRIBUTES DLLEXPORT :: delete_param_api
    type(c_ptr), intent(inout) :: vparam
    type(vp_param), pointer :: param
 
@@ -463,6 +477,7 @@ end subroutine delete_param_api
 subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       & energy, c_gradient, c_sigma) &
       & bind(C, name=namespace//"get_dispersion")
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
@@ -531,6 +546,7 @@ end subroutine get_dispersion_api
 subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
       & c_pair_energy2, c_pair_energy3) &
       & bind(C, name=namespace//"get_pairwise_dispersion")
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_pairwise_dispersion_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
@@ -585,6 +601,7 @@ end subroutine get_pairwise_dispersion_api
 subroutine get_properties_api(verror, vmol, vdisp, &
       & c_cn, c_charges, c_c6, c_alpha) &
       & bind(C, name=namespace//"get_properties")
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_properties_api
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol

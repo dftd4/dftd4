@@ -69,6 +69,7 @@ contains
 
 !> Get covalent radius for a given element symbol
 elemental function get_covalent_rad_sym(sym) result(rad)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_covalent_rad_sym
 
    !> Element symbol
    character(len=*), intent(in) :: sym
@@ -83,6 +84,7 @@ end function get_covalent_rad_sym
 
 !> Get covalent radius for a given atomic number
 elemental function get_covalent_rad_num(num) result(rad)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_covalent_rad_num
 
    !> Atomic number
    integer, intent(in) :: num

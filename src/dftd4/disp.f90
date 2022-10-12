@@ -37,6 +37,7 @@ contains
 
 !> Wrapper to handle the evaluation of dispersion energy and derivatives
 subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -125,6 +126,7 @@ end subroutine get_dispersion
 
 !> Wrapper to handle the evaluation of properties related to this dispersion model
 subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_properties
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -168,6 +170,7 @@ end subroutine get_properties
 
 !> Wrapper to handle the evaluation of pairwise representation of the dispersion energy
 subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_pairwise_dispersion
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol

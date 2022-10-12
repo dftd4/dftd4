@@ -35,6 +35,7 @@ contains
 
 !> Getter function to retrieve dftd4 version
 subroutine get_dftd4_version(major, minor, patch, string)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dftd4_version
 
    !> Major version number of the dftd4 version
    integer, intent(out), optional :: major
