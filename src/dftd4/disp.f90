@@ -59,7 +59,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    !> Dispersion virial
    real(wp), intent(out), contiguous, optional :: sigma(:, :)
-
+ 
    logical :: grad
    integer :: mref
    real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
@@ -70,7 +70,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    real(wp), allocatable :: lattr(:, :)
 
    mref = maxval(disp%ref)
-   grad = present(gradient).and.present(sigma)
+   grad = present(gradient).or.present(sigma)
 
    allocate(cn(mol%nat))
    if (grad) allocate(dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat))

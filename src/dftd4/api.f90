@@ -28,6 +28,7 @@ module dftd4_api
    use dftd4_damping_rational, only : rational_damping_param
    use dftd4_disp, only : get_dispersion, get_pairwise_dispersion, get_properties
    use dftd4_model, only : d4_model, new_d4_model
+   use dftd4_numdiff, only: get_dispersion_hessian
    use dftd4_param, only : get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell
    use dftd4_version, only : get_dftd4_version
@@ -491,6 +492,8 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    real(wp), allocatable :: gradient(:, :)
    real(c_double), intent(out), optional :: c_sigma(3, 3)
    real(wp), allocatable :: sigma(:, :)
+   logical :: has_grad, has_sigma
+
 
    if (debug) print'("[Info]",1x, a)', "get_dispersion"
 
@@ -520,27 +523,92 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       return
    end if
 
-   if (present(c_gradient)) then
+   has_grad = present(c_gradient) 
+   if (has_grad) then
       gradient = c_gradient(:3, :mol%ptr%nat)
    endif
 
-   if (present(c_gradient)) then
+   has_sigma = present(c_sigma) 
+   if (has_sigma) then
       sigma = c_sigma(:3, :3)
+   ! Still needs to be passed into dispersion subroutines,
+   ! just won't be returned through the API. 
+   ! Would need to refactor disperision
+   ! subroutines to make sigma truly optional. 
+   else if (has_grad) then
+      allocate(sigma(3,3)) 
    endif
 
+   ! Evaluate energy, gradient (optional), and 
+   ! sigma (optional) analytically
    call get_dispersion(mol%ptr, disp%ptr, param%ptr, realspace_cutoff(), &
       & energy, gradient, sigma)
 
-   if (present(c_gradient)) then
+   if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
    endif
 
-   if (present(c_gradient)) then
+   if (has_sigma) then
       c_sigma(:3, :3) = sigma
    endif
 
 end subroutine get_dispersion_api
 
+!> Calculate hessian numerically
+subroutine get_numerical_hessian_api(verror, vmol, vdisp, & 
+                                   & vparam, c_hessian) &
+      & bind(C, name=namespace//"get_numerical_hessian")
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_numerical_hessian_api
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   type(c_ptr), value :: vparam
+   type(vp_param), pointer :: param
+   real(c_double), intent(out) :: c_hessian(*)
+   real(wp), allocatable :: hessian(:, :, :, :)
+   integer :: nat_sq
+
+
+   if (debug) print'("[Info]",1x, a)', "get_numerical_hessian"
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+   nat_sq = mol%ptr%nat*mol%ptr%nat
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   if (.not.c_associated(vparam)) then
+      call fatal_error(error%ptr, "Damping parameters are missing")
+      return
+   end if
+   call c_f_pointer(vparam, param)
+
+   if (.not.allocated(param%ptr)) then
+      call fatal_error(error%ptr, "Damping parameters are not initialized")
+      return
+   end if
+
+   ! Evaluate hessian numerically 
+   hessian = reshape(c_hessian(:9*nat_sq), &
+                    &(/3, mol%ptr%nat, 3, mol%ptr%nat/))
+   call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
+    & realspace_cutoff(), hessian)
+   c_hessian(:9*nat_sq) = reshape(hessian, (/9*nat_sq/))
+
+end subroutine get_numerical_hessian_api
 
 !> Calculate pairwise representation of dispersion energy
 subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &

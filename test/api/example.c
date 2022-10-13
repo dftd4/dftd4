@@ -20,10 +20,12 @@
 
 #include "dftd4.h"
 
-int
-main (void)
+int main (void)
 {
    int const natoms = 7;
+   int const nat_sq = natoms * natoms;
+   int const nat3 = natoms * 3;
+   int const nat3_sq = nat3 * nat3;
    int const attyp[7] = {6,6,6,1,1,1,1};
    double const coord[21] =
       {0.00000000000000, 0.00000000000000,-1.79755622305860,
@@ -34,12 +36,21 @@ main (void)
        1.92825631079613, 0.00000000000000,-2.53624948351102,
        0.00000000000000, 0.00000000000000, 5.23010455462158};
    double energy;
-   double pair_disp2[49];
-   double pair_disp3[49];
-   double gradient[21];
    double sigma[9];
-   double c6[49];
+   double* pair_disp2;
+   double* pair_disp3;
+   double* gradient;
+   double* hessian;
+   double* c6;
 
+   
+   pair_disp2 = (double*) malloc(nat_sq * sizeof(double));
+   pair_disp3 = (double*) malloc(nat_sq * sizeof(double));
+   gradient = (double*) malloc(nat3 * sizeof(double));
+   hessian = (double*) malloc(nat3_sq * sizeof(double));
+   c6 = (double*) malloc(nat_sq * sizeof(double));
+
+   
    if (dftd4_get_version() <= 0) {return 1;}
 
    dftd4_error error;
@@ -66,10 +77,14 @@ main (void)
    param = dftd4_new_rational_damping(error, 1.0, 0.95948085, 0.0, 0.38574991, 4.80688534, 16.0);
    if (dftd4_check_error(error)) {return 1;}
    if (!param) {return 1;}
+
    dftd4_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
    if (dftd4_check_error(error)) {return 1;}
    dftd4_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
    if (dftd4_check_error(error)) {return 1;}
+   dftd4_get_numerical_hessian(error, mol, disp, param, hessian);
+   if (dftd4_check_error(error)) {return 1;}
+
    dftd4_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
    if (dftd4_check_error(error)) {return 1;}
    dftd4_delete(param);
@@ -78,15 +93,24 @@ main (void)
    param = dftd4_load_rational_damping(error, "dsdblyp", true);
    if (dftd4_check_error(error)) {return 1;}
    if (!param) {return 1;}
+
    dftd4_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
    if (dftd4_check_error(error)) {return 1;}
    dftd4_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
+   if (dftd4_check_error(error)) {return 1;}
+   dftd4_get_numerical_hessian(error, mol, disp, param, hessian);
    if (dftd4_check_error(error)) {return 1;}
    dftd4_delete(param);
 
    dftd4_delete(disp);
    dftd4_delete(mol);
    dftd4_delete(error);
+
+   free(pair_disp2);
+   free(pair_disp3);
+   free(gradient);
+   free(hessian);
+   free(c6);
 
    if (param) {return 1;}
    if (disp) {return 1;}
