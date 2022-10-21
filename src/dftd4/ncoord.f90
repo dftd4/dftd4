@@ -42,6 +42,7 @@ contains
 
 !> Geometric fractional coordination number, supports error function counting.
 subroutine get_coordination_number(mol, trans, cutoff, rcov, en, cn, dcndr, dcndL)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_coordination_number
 
    !> Molecular structure data
    type(structure_type), intent(in) :: mol

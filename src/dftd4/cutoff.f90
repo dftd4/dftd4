@@ -118,6 +118,7 @@ end subroutine get_lattice_points_rep_3d
 
 !> Create lattice points within a given cutoff
 subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_lattice_points_cutoff
 
    !> Periodic dimensions
    logical, intent(in) :: periodic(:)

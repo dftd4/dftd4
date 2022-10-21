@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This file is part of dftd4.
 # SPDX-Identifier: LGPL-3.0-or-later
 #

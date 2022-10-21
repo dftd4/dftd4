@@ -17,16 +17,17 @@
 project(
   'dftd4',
   'fortran',
-  version: '3.2.0',
+  version: '3.4.0',
   license: 'LGPL-3.0-or-later',
   meson_version: '>=0.55',
   default_options: [
     'buildtype=debugoptimized',
     'default_library=both',
+    'c_std=c11',
   ],
 )
 install = not (meson.is_subproject() and get_option('default_library') == 'static')
-has_cc = add_languages('c', required: get_option('api') or get_option('python'))
+has_cc = add_languages('c', required: get_option('api') or get_option('python'), native: false)
 
 # General configuration information
 inc_dirs = []
@@ -53,6 +54,7 @@ dftd4_dep = declare_dependency(
   link_with: dftd4_lib,
   include_directories: dftd4_inc,
   dependencies: lib_deps,
+  variables: {'includedir': meson.current_source_dir() / 'include'},
 )
 
 # Add applications

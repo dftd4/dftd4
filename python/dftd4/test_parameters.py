@@ -16,7 +16,7 @@
 
 
 from pytest import approx
-from dftd4.parameters import get_damping_param
+from dftd4.parameters import get_damping_param, get_all_damping_params
 
 
 def get_data_file_name() -> str:
@@ -76,3 +76,12 @@ def test_get_pw6b95():
 
     for key in expected.keys():
         assert approx(actual[key]) == expected[key]
+
+
+def test_all_parameters():
+
+    params = get_all_damping_params()
+
+    assert "b3lyp" in params
+    assert "b2plyp" in params
+    assert "pw6b95" in params

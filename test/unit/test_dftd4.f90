@@ -189,7 +189,7 @@ subroutine test_pbed4_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call test_dftd4_gen(error, mol, param, -1.8578753219012211E-002_wp)
+   call test_dftd4_gen(error, mol, param, -1.8578752883363366E-002_wp)
 
 end subroutine test_pbed4_mb01
 
@@ -205,7 +205,7 @@ subroutine test_b97d4_mb02(error)
       & s8 = 1.69460052_wp, a1 = 0.28904684_wp, a2 = 4.13407323_wp)
 
    call get_structure(mol, "MB16-43", "02")
-   call test_dftd4_gen(error, mol, param, -8.9181173342164036E-002_wp)
+   call test_dftd4_gen(error, mol, param, -8.9181168937810723E-002_wp)
 
 end subroutine test_b97d4_mb02
 
@@ -221,7 +221,7 @@ subroutine test_tpssd4_mb03(error)
       & s8 = 1.91130849_wp, a1 = 0.43332851_wp, a2 = 4.56986797_wp)
 
    call get_structure(mol, "MB16-43", "03")
-   call test_dftd4_gen(error, mol, param, -2.4695639395318839E-002_wp)
+   call test_dftd4_gen(error, mol, param, -2.4695638764787930E-002_wp)
 
 end subroutine test_tpssd4_mb03
 
@@ -237,7 +237,7 @@ subroutine test_pwpb95d4_mb04(error)
       & s8 = -0.34639127_wp, a1 = 0.41080636_wp, a2 = 3.83878274_wp)
 
    call get_structure(mol, "MB16-43", "04")
-   call test_dftd4_gen(error, mol, param, -9.5128112314629594E-003_wp)
+   call test_dftd4_gen(error, mol, param, -9.5128100471706181E-003_wp)
 
 end subroutine test_pwpb95d4_mb04
 
@@ -317,7 +317,7 @@ subroutine test_rpbed4atm_mb09(error)
       & s8 = 1.31183787_wp, a1 = 0.46169493_wp, a2 = 3.15711757_wp)
 
    call get_structure(mol, "MB16-43", "09")
-   call test_dftd4_gen(error, mol, param, -4.5140425128109063E-002_wp)
+   call test_dftd4_gen(error, mol, param, -4.5140422485299259E-002_wp)
 
 end subroutine test_rpbed4atm_mb09
 
@@ -333,7 +333,7 @@ subroutine test_b2gpplypd4atm_mb10(error)
       & s8 = 0.94633372_wp, a1 = 0.42907301_wp, a2 = 5.18802602_wp)
 
    call get_structure(mol, "MB16-43", "10")
-   call test_dftd4_gen(error, mol, param, -9.6812432116404404E-003_wp)
+   call test_dftd4_gen(error, mol, param, -9.6812427202205668E-003_wp)
 
 end subroutine test_b2gpplypd4atm_mb10
 
@@ -349,7 +349,7 @@ subroutine test_lh14tcalpbed4atm_mb11(error)
       & s8 = 1.27677253_wp, a1 = 0.38128670_wp, a2 = 4.91698883_wp)
 
    call get_structure(mol, "MB16-43", "11")
-   call test_dftd4_gen(error, mol, param, -1.7460016519743701E-002_wp)
+   call test_dftd4_gen(error, mol, param, -1.7460015867914524E-002_wp)
 
 end subroutine test_lh14tcalpbed4atm_mb11
 
@@ -365,7 +365,7 @@ subroutine test_b1b95d4atm_mb12(error)
       & s8 = 1.27701162_wp, a1 = 0.40554715_wp, a2 = 4.63323074_wp)
 
    call get_structure(mol, "MB16-43", "12")
-   call test_dftd4_gen(error, mol, param, -2.5712178866818459E-002_wp)
+   call test_dftd4_gen(error, mol, param, -2.5712178361964221E-002_wp)
 
 end subroutine test_b1b95d4atm_mb12
 

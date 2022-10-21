@@ -250,7 +250,8 @@ def test_error_noargs():
         keywords={},
     )
     error = qcel.models.ComputeError(
-        error_type="input error", error_message="Constructor requires argument for 's8'"
+        error_type="input error",
+        error_message="Method name or complete damping parameter set required",
     )
 
     atomic_result = run_qcschema(atomic_input)

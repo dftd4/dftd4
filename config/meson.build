@@ -16,6 +16,10 @@
 
 os = host_machine.system()
 fc = meson.get_compiler('fortran')
+cc = fc
+if has_cc
+  cc = meson.get_compiler('c')
+endif
 fc_id = fc.get_id()
 
 if fc_id == 'gcc'
@@ -50,25 +54,33 @@ if lapack_vendor == 'auto'
   endif
 endif
 
+if get_option('ilp64')
+  ilp64 = true
+  add_project_arguments('-DIK=i8', language:'fortran')
+else
+  add_project_arguments('-DIK=i4', language:'fortran')
+  ilp64 = false
+endif
+
 if lapack_vendor == 'mkl'
   mkl_dep = []
   if fc_id == 'intel'
-    mkl_dep += fc.find_library('mkl_intel_lp64')
+    mkl_dep += cc.find_library(ilp64 ? 'mkl_intel_ilp64' : 'mkl_intel_lp64') 
     if get_option('openmp')
-      mkl_dep += fc.find_library('mkl_intel_thread')
+      mkl_dep += cc.find_library('mkl_intel_thread')
     endif
   elif fc_id == 'gcc'
-    mkl_dep += fc.find_library('mkl_gf_lp64')
+    mkl_dep += cc.find_library(ilp64 ? 'mkl_gf_ilp64' : 'mkl_gf_lp64')
     if get_option('openmp')
-      mkl_dep += fc.find_library('mkl_gnu_thread')
+      mkl_dep += cc.find_library('mkl_gnu_thread')
     endif
   else
     error('MKL not supported for this compiler')
   endif
   if not get_option('openmp')
-    mkl_dep += fc.find_library('mkl_tbb_thread')
+    mkl_dep += cc.find_library('mkl_tbb_thread')
   endif
-  mkl_dep += fc.find_library('mkl_core')
+  mkl_dep += cc.find_library('mkl_core')
   lib_deps += mkl_dep
 
 elif lapack_vendor == 'mkl-rt'
@@ -76,75 +88,66 @@ elif lapack_vendor == 'mkl-rt'
   lib_deps += mkl_dep
 
 elif lapack_vendor == 'openblas'
-  openblas_dep = dependency('openblas', required: false)
+  openblas_dep = dependency( ilp64 ? 'openblas64' : 'openblas', required: false)
   if not openblas_dep.found()
-    openblas_dep = fc.find_library('openblas')
+    openblas_dep = fc.find_library( ilp64 ? 'openblas64' : 'openblas')
   endif
   lib_deps += openblas_dep
   if not fc.links('external dsytrs; call dsytrs(); end', dependencies: openblas_dep)
-    lapack_dep = dependency('lapack', required: false)
+    lapack_dep = dependency(ilp64 ? 'lapack64' : 'lapack', required: false)
     if not lapack_dep.found()
-      lapack_dep = fc.find_library('lapack')
+      lapack_dep = fc.find_library(ilp64 ? 'lapack64' : 'lapack')
     endif
     lib_deps += lapack_dep
   endif
 
 elif lapack_vendor == 'custom'
-  foreach lib: get_option('custom_libraries')
-    lib_deps += fc.find_library(lib)
-  endforeach
+  custom_deps = []
+  libs = get_option('custom_libraries')
+  if libs[0].startswith('-L')
+    foreach lib: libs
+      if lib != libs[0]
+        custom_deps += fc.find_library(lib, dirs: libs[0].substring(2))
+      endif
+    endforeach
+  else
+    foreach lib: libs
+      custom_deps += fc.find_library(lib)
+    endforeach
+  endif
+  if (not fc.links('external dsytrs; call dsytrs(); end', dependencies: [custom_deps,omp_dep]))
+    error('Custom LAPACK libraries do not link')
+  elif (not fc.links('external dsytrs; call dgemm(); end', dependencies: [custom_deps,omp_dep]))
+    error('Custom BLAS libraries do not link')
+  endif
+  lib_deps += custom_deps
 
 else
-  lapack_dep = dependency('lapack', required: false)
+  lapack_dep = dependency(ilp64 ? 'lapack64' : 'lapack', required: false)
   if not lapack_dep.found()
-    lapack_dep = fc.find_library('lapack')
+    lapack_dep = fc.find_library(ilp64 ? 'lapack64' : 'lapack')
   endif
   lib_deps += lapack_dep
-  blas_dep = dependency('blas', required: false)
+  blas_dep = fc.find_library(ilp64 ? 'blas64' : 'blas', required: false)
   if not blas_dep.found()
-    blas_dep = fc.find_library('blas')
+    blas_dep = fc.find_library(ilp64 ? 'blas64' : 'blas')
   endif
   lib_deps += blas_dep
 endif
 
 # Create the tool chain library as subproject
-mctc_dep = dependency('mctc-lib', required: false)
-if not mctc_dep.found()
-  mctc_prj = subproject(
-    'mctc-lib',
-    version: '>=0.2',
-    default_options: [
-      'default_library=static',
-    ],
-  )
-  mctc_dep = mctc_prj.get_variable('mctc_dep')
-
-  if install
-    install_data(
-      mctc_prj.get_variable('mctc_lic'),
-      install_dir: get_option('datadir')/'licenses'/meson.project_name()/'mctc-lib'
-    )
-  endif
-endif
+mctc_dep = dependency(
+  'mctc-lib',
+  version: '>=0.3.0',
+  fallback: ['mctc-lib', 'mctc_dep'],
+  default_options: ['default_library=static'],
+)
 lib_deps += mctc_dep
 
-# Create the tool chain library as subproject
-multicharge_dep = dependency('multicharge', required: false)
-if not multicharge_dep.found()
-  multicharge_prj = subproject(
-    'multicharge',
-    version: '>=0.1',
-    default_options: [
-      'default_library=static',
-    ],
-  )
-  multicharge_dep = multicharge_prj.get_variable('multicharge_dep')
-
-  if install
-    install_data(
-      multicharge_prj.get_variable('multicharge_lic'),
-      install_dir: get_option('datadir')/'licenses'/meson.project_name()/'multicharge'
-    )
-  endif
-endif
+# Create the electrostatic library as subproject
+multicharge_dep = dependency(
+  'multicharge',
+  fallback: ['multicharge', 'multicharge_dep'],
+  default_options: ['default_library=static'],
+)
 lib_deps += multicharge_dep

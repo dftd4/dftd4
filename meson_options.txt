@@ -56,7 +56,7 @@ option(
 option(
   'python_version',
   type: 'string',
-  value: '3',
+  value: 'python3',
   description: 'Python version to link against.',
 )
 
@@ -65,4 +65,12 @@ option(
   type: 'boolean',
   value: false,
   description: 'Enable the compatibility layer for the dftd4 2.5.x API',
+)
+
+option(
+  'ilp64',
+  type: 'boolean',
+  value: false,
+  yield: true,
+  description: 'Enable BLAS/LAPACK ilp64 support',
 )

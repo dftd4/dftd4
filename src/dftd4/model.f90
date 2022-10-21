@@ -118,6 +118,7 @@ contains
 
 !> Create new dispersion model from molecular structure input
 subroutine new_d4_model(self, mol, ga, gc, wf, ref)
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model
 
    !> Instance of the dispersion model
    type(d4_model), intent(out) :: self
@@ -265,6 +266,7 @@ end subroutine new_d4_model
 !> Calculate the weights of the reference system and the derivatives w.r.t.
 !> coordination number for later use.
 subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
+   !DEC$ ATTRIBUTES DLLEXPORT :: weight_references
 
    !> Instance of the dispersion model
    class(d4_model), intent(in) :: self
@@ -323,7 +325,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                expd = expd + 2*wf * (self%cn(iref, izp) - cn(iat)) * gw
             end do
             gwk = expw * norm
-            if (ieee_is_nan(gwk)) then
+            if (is_exceptional(gwk)) then
                if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
                   gwk = 1.0_wp
                else
@@ -334,7 +336,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
             gwdq(iref, iat) = gwk * dzeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
 
             dgwk = norm * (expd - expw * dnorm * norm)
-            if (ieee_is_nan(dgwk)) then
+            if (is_exceptional(dgwk)) then
                dgwk = 0.0_wp
             end if
             gwdcn(iref, iat) = dgwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
@@ -368,7 +370,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                expw = expw + weight_cn(wf, cn(iat), self%cn(iref, izp))
             end do
             gwk = expw * norm
-            if (ieee_is_nan(gwk)) then
+            if (is_exceptional(gwk)) then
                if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
                   gwk = 1.0_wp
                else
@@ -383,9 +385,18 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 end subroutine weight_references
 
 
+!> Check whether we are dealing with an exceptional value, NaN or Inf
+elemental function is_exceptional(val)
+   real(wp), intent(in) :: val
+   logical :: is_exceptional
+   is_exceptional = ieee_is_nan(val) .or. abs(val) > huge(val)
+end function is_exceptional
+
+
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
 !> the coordination numbers and atomic partial charges.
 subroutine get_atomic_c6(self, mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_atomic_c6
 
    !> Instance of the dispersion model
    class(d4_model), intent(in) :: self
@@ -482,7 +493,7 @@ end subroutine get_atomic_c6
 !> Calculate atomic polarizibilities and their derivatives w.r.t.
 !> the coordination numbers and atomic partial charges.
 subroutine get_polarizibilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dadq)
-
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_polarizibilities
    !> Instance of the dispersion model
    class(d4_model), intent(in) :: self
 

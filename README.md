@@ -4,6 +4,7 @@ DFT-D4 project
 [![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING.LESSER)
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 [![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
+[![Documentation Status](https://readthedocs.org/projects/dftd4/badge/?version=latest)](https://dftd4.readthedocs.io/en/latest/?badge=latest)
 [![docs](https://github.com/dftd4/dftd4/workflows/docs/badge.svg)](https://dftd4.github.io/dftd4/)
 [![codecov](https://codecov.io/gh/dftd4/dftd4/branch/main/graph/badge.svg?token=IFtEF1Hwqj)](https://codecov.io/gh/dftd4/dftd4)
 
@@ -50,9 +51,58 @@ conda search dftd4 --channel conda-forge
 Now you are ready to use `dftd4`.
 
 
+### Spack package
+
+[![Spack](https://img.shields.io/spack/v/dftd4)](https://spack.readthedocs.io/en/latest/package_list.html#dftd4)
+
+This project is available with [spack](https://spack.io) in its develop version.
+You can install and load `dftd4` with
+
+```
+spack install dftd4
+spack load dftd4
+```
+
+The Python API can be enabled by adding `+python` to the command.
+
+
+### FreeBSD Port
+
+[![FreeBSD port](https://repology.org/badge/version-for-repo/freebsd/dftd4.svg)](https://www.freshports.org/science/dftd4/)
+
+A port for FreeBSD is available and can be installed using
+
+```
+pkg install science/dftd4
+```
+
+In case no package is available build the port using
+
+```
+cd /usr/ports/science/dftd4
+make install clean
+```
+
+For more information see the [dftd4 port details](https://www.freshports.org/science/dftd4/).
+
+
+
 ### Building from Source
 
-To compile this version of DFT-D4 the following programs are needed
+To build this project from the source code in this repository you need to have
+a Fortran compiler supporting Fortran 2008 and one of the supported build systems:
+- [meson](https://mesonbuild.com) version 0.55 or newer, with
+  a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
+- [cmake](https://cmake.org) version 3.14 or newer, with
+  a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.10 or newer
+- [fpm](https://github.com/fortran-lang/fpm) version 0.2.0 or newer
+
+Currently this project supports GCC and Intel compilers.
+
+
+#### Building with meson
+
+To compile this version of DFT-D4 with meson the following programs are needed
 (the number in parentheses specifies the tested versions).
 
 To build this project from the source code in this repository you need to have
@@ -88,6 +138,66 @@ meson install -C _build
 ```
 
 This might require administrator access depending on the chosen install prefix.
+
+
+#### Building with CMake
+
+Alternatively, this project can be build with CMake (in this case ninja 1.10 or newer is required):
+
+```
+cmake -B _build -G Ninja -DCMAKE_INSTALL_PREFIX=$HOME/.local
+```
+
+To compile the project with CMake run
+
+```
+cmake --build _build
+```
+
+You can run the project testsuite with
+
+```
+ctest --test-dir _build --parallel --output-on-failure
+```
+
+Finally, you can install the project to the selected prefix
+
+```
+cmake --install _build
+```
+
+Note that the CMake build does not support to build the Python extension module as part of the main build.
+
+
+#### Building with fpm
+
+This project support the Fortran package manager (fpm).
+Invoke fpm in the project root with
+
+```
+fpm build
+```
+
+To run the testsuite use
+
+```
+fpm test
+```
+
+You can access the ``dftd4`` program using the run subcommand
+
+```
+fpm run -- --help
+```
+
+To use ``dftd4`` for testing include it as dependency in your package manifest
+
+```toml
+[dependencies]
+dftd4.git = "https://github.com/dftd4/dftd4"
+```
+
+Note that the fpm build does not support exporting the C-API, it only provides access to the standalone binary.
 
 
 ## Usage
@@ -159,23 +269,24 @@ The communication with the Fortran API uses the `error_type` and `structure_type
 
 #### Building Vasp with support for D4
 
-To use ``dftd4`` in Vasp the compatibility layer for the 2.5.x API has to be enable with ``-Dapi_v2=true`` (meson) or ``-DAPI_V2=ON`` (CMake).
+To use ``dftd4`` in Vasp the compatibility layer for the 2.5.x API has to be enable with ``-Dapi_v2=true`` (meson) or ``-DWITH_API_V2=ON`` (CMake).
 It is important to build ``dftd4`` with the same Fortran compiler you build Vasp with.
 
-After you completed the installation of ``dftd4`, make sure it is findable by ``pkg-config``, you can check by running:
+After you completed the installation of ``dftd4``, make sure it is findable by ``pkg-config``, you can check by running:
 
 ```
 pkg-config --modversion dftd4
 ```
 
-If you ``dftd4`` installation is not findable, you have to update your environment variables.
+If your ``dftd4`` installation is not findable, you have to update your environment variables.
 One option is to provide a module file for your ``dftd4`` installation.
-The example module file below can be placed in your ``MODULEPATH`` to provide access to an installation in ``~/opt/dftd4/3.2.0``.
-Retry the above comment after loading the ``dftd4`` and adjust the module file until ``pkg-config`` finds your installation.
+The example module file below can be placed in your ``MODULEPATH`` to provide access to an installation in ``~/opt/dftd4/3.4.0``.
+Retry the above comment after loading the ``dftd4`` module and adjust the module file until ``pkg-config`` finds your installation.
 
 ```lua
+-- dftd4/3.4.0.lua
 local name = "dftd4"
-local version = "3.2.0"
+local version = "3.4.0"
 local prefix = pathJoin(os.getenv("HOME"), "opt", name, version)
 local libdir = "lib"  -- or lib64
 
@@ -228,6 +339,7 @@ To evaluate a dispersion correction in C four objects are available:
    Standard damping parameters like the rational damping are independent of the molecular structure and can easily be reused for several structures or easily exchanged.
 
 The user is responsible for creating and deleting the objects to avoid memory leaks.
+For convenience the type-generic macro ``dftd4_delete`` is available to free any memory allocation made in the library.
 
 
 ### Python API
@@ -239,10 +351,10 @@ The in-tree build is mainly meant for end users and packages.
 To build the Python API with the normal project set the `python` option in the configuration step with
 
 ```sh
-meson setup _build -Dpython=true -Dpython_version=3
+meson setup _build -Dpython=true -Dpython_version=$(which python3)
 ```
 
-The Python version can be used to select a different Python version, it defaults to `'3'`.
+The Python version can be used to select a different Python version, it defaults to `'python3'`.
 Python 2 is not supported with this project, the Python version key is meant to select between several local Python 3 versions.
 
 Proceed with the build as described before and install the projects to make the Python API available in the selected prefix.

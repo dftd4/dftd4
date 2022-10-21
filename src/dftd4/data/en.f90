@@ -63,6 +63,7 @@ contains
 
 !> Get electronegativity for a given element symbol
 elemental function get_electronegativity_sym(sym) result(en)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_electronegativity_sym
 
    !> Element symbol
    character(len=*), intent(in) :: sym
@@ -77,6 +78,7 @@ end function get_electronegativity_sym
 
 !> Get electronegativity for a given atomic number
 elemental function get_electronegativity_num(num) result(en)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_electronegativity_num
 
    !> Atomic number
    integer, intent(in) :: num

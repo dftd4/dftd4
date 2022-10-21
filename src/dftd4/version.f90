@@ -24,10 +24,10 @@ module dftd4_version
 
 
    !> String representation of the dftd4 version
-   character(len=*), parameter :: dftd4_version_string = "3.2.0"
+   character(len=*), parameter :: dftd4_version_string = "3.4.0"
 
    !> Numeric representation of the dftd4 version
-   integer, parameter :: dftd4_version_compact(3) = [3, 2, 0]
+   integer, parameter :: dftd4_version_compact(3) = [3, 4, 0]
 
 
 contains
@@ -35,6 +35,7 @@ contains
 
 !> Getter function to retrieve dftd4 version
 subroutine get_dftd4_version(major, minor, patch, string)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dftd4_version
 
    !> Major version number of the dftd4 version
    integer, intent(out), optional :: major

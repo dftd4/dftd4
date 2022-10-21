@@ -23,10 +23,12 @@ getter.
 
 Example
 -------
->>> from dftd4.libdftd4 import get_api_version
+>>> from dftd4.library import get_api_version
 >>> get_api_version()
-'3.2.0'
+'3.4.0'
 """
+
+import functools
 
 try:
     from ._libdftd4 import ffi, lib
@@ -62,6 +64,23 @@ def new_error():
     return ffi.gc(lib.dftd4_new_error(), _delete_error)
 
 
+def error_check(func):
+    """Handle errors for library functions that require an error handle"""
+
+    @functools.wraps(func)
+    def handle_error(*args, **kwargs):
+        """Run function and than compare context"""
+        _err = new_error()
+        value = func(_err, *args, **kwargs)
+        if lib.dftd4_check_error(_err):
+            _message = ffi.new("char[]", 512)
+            lib.dftd4_get_error(_err, _message, ffi.NULL)
+            raise RuntimeError(ffi.string(_message).decode())
+        return value
+
+    return handle_error
+
+
 def _delete_structure(mol) -> None:
     """Delete molecular structure data"""
     ptr = ffi.new("dftd4_structure *")
@@ -71,10 +90,8 @@ def _delete_structure(mol) -> None:
 
 def new_structure(natoms, numbers, positions, charge, lattice, periodic):
     """Create new molecular structure data"""
-    _error = new_error()
-    mol = ffi.gc(
-        lib.dftd4_new_structure(
-            _error,
+    return ffi.gc(
+        error_check(lib.dftd4_new_structure)(
             natoms,
             numbers,
             positions,
@@ -84,8 +101,6 @@ def new_structure(natoms, numbers, positions, charge, lattice, periodic):
         ),
         _delete_structure,
     )
-    handle_error(_error)
-    return mol
 
 
 def _delete_model(error) -> None:
@@ -97,18 +112,14 @@ def _delete_model(error) -> None:
 
 def new_d4_model(mol):
     """Create new dftd4 dispersion model object"""
-    _error = new_error()
-    disp = ffi.gc(lib.dftd4_new_d4_model(_error, mol), _delete_model)
-    handle_error(_error)
-    return disp
+    return ffi.gc(error_check(lib.dftd4_new_d4_model)(mol), _delete_model)
 
 
 def custom_d4_model(mol, ga, gc, wf):
     """Create new dftd4 dispersion model object"""
-    _error = new_error()
-    disp = ffi.gc(lib.dftd4_custom_d4_model(_error, mol, ga, gc, wf), _delete_model)
-    handle_error(_error)
-    return disp
+    return ffi.gc(
+        error_check(lib.dftd4_custom_d4_model)(mol, ga, gc, wf), _delete_model
+    )
 
 
 def _delete_param(error) -> None:
@@ -120,32 +131,24 @@ def _delete_param(error) -> None:
 
 def new_rational_damping(s6, s8, s9, a1, a2, alp):
     """Create new dftd4 damping parameter object"""
-    _error = new_error()
-    param = ffi.gc(
-        lib.dftd4_new_rational_damping(_error, s6, s8, s9, a1, a2, alp),
+    return ffi.gc(
+        error_check(lib.dftd4_new_rational_damping)(s6, s8, s9, a1, a2, alp),
         _delete_param,
     )
-    handle_error(_error)
-    return param
 
 
 def load_rational_damping(method, mbd):
     """Create new dftd4 damping parameter object by loading it from the database"""
-    _error = new_error()
-    param = ffi.gc(
-        lib.dftd4_load_rational_damping(_error, method, mbd),
+    return ffi.gc(
+        error_check(lib.dftd4_load_rational_damping)(method, mbd),
         _delete_param,
     )
-    handle_error(_error)
-    return param
 
 
-def handle_error(error) -> None:
-    """Helper to transform error objects into exceptions"""
-    if lib.dftd4_check_error(error):
-        _message = ffi.new("char[]", 512)
-        lib.dftd4_get_error(error, _message, _ref("int", 512))
-        raise RuntimeError(ffi.string(_message).decode())
+update_structure = error_check(lib.dftd4_update_structure)
+get_dispersion = error_check(lib.dftd4_get_dispersion)
+get_pairwise_dispersion = error_check(lib.dftd4_get_pairwise_dispersion)
+get_properties = error_check(lib.dftd4_get_properties)
 
 
 def _ref(ctype, value):

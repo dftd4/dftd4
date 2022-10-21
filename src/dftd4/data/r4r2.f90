@@ -40,6 +40,7 @@ module dftd4_data_r4r2
    !  not replaced but recalculated (PBE0/cc-pVQZ) were
    !   H: 8.0589 ->10.9359, Li:29.0974 ->39.7226, Be:14.8517 ->17.7460
    !  also new super heavies Cn,Nh,Fl,Lv,Og
+   !  Am-Rg calculated at 4c-PBE/Dyall-AE4Z (Dirac 2022)
    real(wp), parameter :: r4_over_r2(max_elem) = [  &
       &  8.0589_wp, 3.4698_wp, & ! H,He
       & 29.0974_wp,14.8517_wp,11.8799_wp, 7.8715_wp, 5.5588_wp, 4.7566_wp, 3.8025_wp, 3.1036_wp, & ! Li-Ne
@@ -59,10 +60,10 @@ module dftd4_data_r4r2
       &            10.2671_wp, 8.3549_wp, 7.8496_wp, 7.3278_wp, 7.4820_wp, & ! -Hg
       &                       13.5124_wp,11.6554_wp,10.0959_wp, 9.7340_wp, 8.8584_wp, 8.0125_wp, & ! Tl-Rn
       & 29.8135_wp,26.3157_wp, & ! Fr,Ra
-      &            19.1885_wp,15.8542_wp,16.1305_wp,15.6161_wp,15.1226_wp,16.1576_wp, 0.0000_wp, & ! Ac-Am
-      &             0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, & ! Cm-No
-      &             0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, & ! Lr-
-      &             0.0000_wp, 0.0000_wp, 0.0000_wp, 0.0000_wp, 5.4929_wp, & ! -Cn
+      &            19.1885_wp,15.8542_wp,16.1305_wp,15.6161_wp,15.1226_wp,16.1576_wp,14.6510_wp, & ! Ac-Am
+      &            14.7178_wp,13.9108_wp,13.5623_wp,13.2326_wp,12.9189_wp,12.6133_wp,12.3142_wp, & ! Cm-No
+      &            14.8326_wp,12.3771_wp,10.6378_wp, 9.3638_wp, 8.2297_wp, & ! Lr-
+      &             7.5667_wp, 6.9456_wp, 6.3946_wp, 5.9159_wp, 5.4929_wp, & ! -Cn
       &                        6.7286_wp, 6.5144_wp,10.9169_wp,10.3600_wp, 9.4723_wp, 8.6641_wp ] ! Nh-Og
 
    integer :: idum

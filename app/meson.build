@@ -16,9 +16,14 @@
 
 dftd4_exe = executable(
   meson.project_name(),
-  sources: files('main.f90'),
+  sources: files(
+    'main.f90',
+    'cli.f90',
+    'driver.f90',
+  ),
   dependencies: dftd4_dep,
   install: install,
+  link_language: 'fortran',
 )
 
 test('app-version', dftd4_exe, args: '--version')
@@ -34,8 +39,8 @@ test(
   app_tester,
   args: [
     dftd4_exe,
-    files('energy.json'),
-    files('ammonia.tmol'),
+    files('01-energy.json'),
+    files('01-ammonia.tmol'),
     '--noedisp',
     '--func', 'tpssh'
   ],
@@ -45,12 +50,12 @@ test(
   app_tester,
   args: [
     dftd4_exe,
-    files('gradient.json'),
+    files('02-gradient.json'),
     '--noedisp',
     '--func', 'scan',
     '--grad',
     '--',
-    files('nitralin.mol'),
+    files('02-nitralin.mol'),
   ],
 )
 test(
@@ -58,8 +63,8 @@ test(
   app_tester,
   args: [
     dftd4_exe,
-    files('properties.json'),
-    files('lenalidomid.gen'),
+    files('03-properties.json'),
+    files('03-lenalidomid.gen'),
   ],
 )
 test(
@@ -67,8 +72,8 @@ test(
   app_tester,
   args: [
     dftd4_exe,
-    files('pair-analysis.json'),
-    files('caffeine.xyz'),
+    files('04-pair-analysis.json'),
+    files('04-caffeine.xyz'),
     '--noedisp',
     '--pair-resolved',
     '--func', 'b3lyp',

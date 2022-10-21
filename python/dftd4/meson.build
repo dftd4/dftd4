@@ -18,7 +18,7 @@ cc = meson.get_compiler('c')
 
 pymod = import('python')
 python = pymod.find_installation(
-  'python@0@'.format(get_option('python_version')),
+  get_option('python_version'),
   modules: [
     'cffi',
   ],
@@ -28,7 +28,19 @@ python_dep = python.dependency(required: true)
 # Python's CFFI is horrible in working with preprocessor statements,
 # therefore, we have to preprocess the header before passing it to the ffibuilder
 dftd4_pp = configure_file(
-  command: [cc, '-E', '@INPUT@'],
+  command: [
+    cc,
+    '-I@0@'.format(
+      dftd4_dep.get_variable(
+        pkgconfig: 'includedir',
+        cmake: 'dftd4_INCLUDE_DIRS',
+        internal: 'includedir',
+      ).split().get(0)
+    ),
+    '-DDFTD4_CFFI',
+    '-E',
+    '@INPUT@',
+  ],
   input: dftd4_header,
   output: '_libdftd4.h',
   capture: true,
@@ -36,7 +48,7 @@ dftd4_pp = configure_file(
 
 # This is the actual out-of-line API processing of the ffibuilder
 dftd4_cffi_srcs = configure_file(
-  command: [python, files('..'/'build.py'), '@INPUT@', '@BASENAME@'],
+  command: [python, files('..'/'ffibuilder.py'), '@INPUT@', '@BASENAME@'],
   input: dftd4_pp,
   output: '@BASENAME@.c',
 )
@@ -55,24 +67,31 @@ dftd4_pyext = python.extension_module(
   subdir: 'dftd4',
 )
 
+pysrcs = files(
+  '__init__.py',
+  'ase.py',
+  'data.py',
+  'interface.py',
+  'library.py',
+  'parameters.py',
+  'pyscf.py',
+  'qcschema.py',
+  'references.json',
+  'test_ase.py',
+  'test_interface.py',
+  'test_library.py',
+  'test_parameters.py',
+  'test_pyscf.py',
+  'test_qcschema.py',
+)
+fs = import('fs')
+if fs.exists('parameters.toml')
+  pysrcs += files('parameters.toml')
+endif
+
 if install
   python.install_sources(
-    files(
-      '__init__.py',
-      'ase.py',
-      'data.py',
-      'interface.py',
-      'libdftd4.py',
-      'parameters.py',
-      'qcschema.py',
-      'references.json',
-      'test_ase.py',
-      'test_interface.py',
-      'test_libdftd4.py',
-      'test_parameters.py',
-      'test_qcschema.py',
-      '..'/'..'/'assets'/'parameters.toml',
-    ),
+    pysrcs,
     subdir: 'dftd4',
   )
 endif

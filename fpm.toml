@@ -1,5 +1,5 @@
 name = "dftd4"
-version = "3.2.0"
+version = "3.4.0"
 license = "LGPL-3.0-or-later"
 maintainer = ["@awvwgk"]
 author = ["Eike Caldeweyher", "Sebastian Ehlert", "Stefan Grimme"]
@@ -12,17 +12,12 @@ link = ["lapack", "blas"]
 auto-tests = false
 
 [dependencies]
-[dependencies.mctc-lib]
-git = "https://github.com/grimme-lab/mctc-lib.git"
-tag = "v0.2.2"
-[dependencies.multicharge]
-git = "https://github.com/grimme-lab/multicharge.git"
-tag = "v0.1.1"
+mctc-lib.git = "https://github.com/grimme-lab/mctc-lib.git"
+mctc-lib.tag = "v0.3.0"
+multicharge.git = "https://github.com/grimme-lab/multicharge.git"
 
 [dev-dependencies]
-[dev-dependencies.mstore]
-git = "https://github.com/grimme-lab/mstore.git"
-tag = "v0.1.2"
+mstore.git = "https://github.com/grimme-lab/mstore.git"
 
 [[test]]
 name = "tester"

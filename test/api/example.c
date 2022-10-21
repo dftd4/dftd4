@@ -15,8 +15,8 @@
  * along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
+#include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 #include "dftd4.h"
 
@@ -40,7 +40,7 @@ main (void)
    double sigma[9];
    double c6[49];
 
-   assert(dftd4_get_version() > 0);
+   if (dftd4_get_version() <= 0) {return 1;}
 
    dftd4_error error;
    dftd4_structure mol;
@@ -48,15 +48,15 @@ main (void)
    dftd4_param param;
 
    error = dftd4_new_error();
-   assert(!!error);
+   if (!error) {return 1;}
 
    mol = dftd4_new_structure(error, natoms, attyp, coord, NULL, NULL, NULL);
    if (dftd4_check_error(error)) {return 1;};
-   assert(!!mol);
+   if (!mol) {return 1;}
 
    disp = dftd4_new_d4_model(error, mol);
    if (dftd4_check_error(error)) {return 1;}
-   assert(!!disp);
+   if (!disp) {return 1;}
 
    // C6 coefficients
    dftd4_get_properties(error, mol, disp, NULL, NULL, c6, NULL);
@@ -65,33 +65,33 @@ main (void)
    // PBE-D4
    param = dftd4_new_rational_damping(error, 1.0, 0.95948085, 0.0, 0.38574991, 4.80688534, 16.0);
    if (dftd4_check_error(error)) {return 1;}
-   assert(!!param);
+   if (!param) {return 1;}
    dftd4_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
    if (dftd4_check_error(error)) {return 1;}
    dftd4_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
    if (dftd4_check_error(error)) {return 1;}
    dftd4_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
    if (dftd4_check_error(error)) {return 1;}
-   dftd4_delete_param(&param);
+   dftd4_delete(param);
 
    // DSD-BLYP-D4-ATM
    param = dftd4_load_rational_damping(error, "dsdblyp", true);
    if (dftd4_check_error(error)) {return 1;}
-   assert(!!param);
+   if (!param) {return 1;}
    dftd4_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
    if (dftd4_check_error(error)) {return 1;}
    dftd4_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
    if (dftd4_check_error(error)) {return 1;}
-   dftd4_delete_param(&param);
+   dftd4_delete(param);
 
-   dftd4_delete_model(&disp);
-   dftd4_delete_structure(&mol);
-   dftd4_delete_error(&error);
+   dftd4_delete(disp);
+   dftd4_delete(mol);
+   dftd4_delete(error);
 
-   assert(!param);
-   assert(!disp);
-   assert(!mol);
-   assert(!error);
+   if (param) {return 1;}
+   if (disp) {return 1;}
+   if (mol) {return 1;}
+   if (error) {return 1;}
 
    return 0;
 }

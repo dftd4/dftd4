@@ -17,16 +17,19 @@
 from os.path import join, dirname, exists
 from typing import Optional
 
-# We prefer tomlkit here, because it is 1.0.0 compliant, while toml is not yet
+# We prefer tomli and tomlkit here, because they are 1.0.0 compliant, while toml is not yet
 try:
-    import tomlkit as toml_impl
+    import tomli as toml_impl
 except ModuleNotFoundError:
     try:
-        import toml as toml_impl
+        import tomlkit as toml_impl
     except ModuleNotFoundError:
-        raise ModuleNotFoundError(
-            "No TOML parser implementation found, install tomlkit or toml"
-        )
+        try:
+            import toml as toml_impl
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "No TOML parser implementation found, install tomli, tomlkit or toml"
+            )
 
 _data_base = None
 
@@ -55,8 +58,30 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
     return data_file
 
 
+def _get_params(entry: dict, base: dict, defaults: list, keep_meta=False) -> dict:
+    """Retrive the parameters from the data base, make sure the default
+    values are applied correctly in the process. In case we have multiple
+    defaults search for the first of the list defined for this method."""
+
+    for default in defaults:
+        try:
+            params = base[default].copy()
+            params.update(**entry[default])
+            if not keep_meta:
+                for key in ("mbd", "damping", "doi"):
+                    if key in params: del params[key]
+            return params
+        except KeyError:
+            continue
+
+    raise KeyError("No entry for " + method + " in parameter data base")
+
+
 def get_damping_param(
-    method: str, defaults: Optional[list] = None, data_file: Optional[str] = None
+    method: str,
+    defaults: Optional[list] = None,
+    data_file: Optional[str] = None,
+    keep_meta=False,
 ) -> dict:
     """Obtain damping parameters from a data base file."""
     global _data_base
@@ -77,12 +102,38 @@ def get_damping_param(
     _base = _data_base["default"]["parameter"]["d4"]
     _entry = _data_base["parameter"][method.lower()]["d4"]
 
-    for default in defaults:
+    return _get_params(_entry, _base, defaults, keep_meta)
+
+
+def get_all_damping_params(
+    defaults: Optional[list] = None, data_file: Optional[str] = None, keep_meta=False
+) -> dict:
+    """Provide dictionary with all damping parameters available from parameter file"""
+    global _data_base
+
+    if _data_base is None:
+
+        if data_file is None:
+            data_file = get_data_file_name()
+
+        _data_base = load_data_base(data_file)
+
+    try:
+        if defaults is None:
+            defaults = _data_base["default"]["d4"]
+        _base = _data_base["default"]["parameter"]["d4"]
+        _parameters = _data_base["parameter"]
+    except KeyError:
+        return {}
+
+    definitions = {}
+
+    for method in _parameters:
         try:
-            param = _base[default].copy()
-            param.update(**_entry[default])
-            return param
+            _entry = _parameters[method]["d4"]
+            params = _get_params(_entry, _base, defaults, keep_meta)
+            definitions[method] = params
         except KeyError:
             continue
 
-    raise KeyError("No entry for " + method + " in parameter data base")
+    return definitions

@@ -32,6 +32,7 @@ contains
 
 !> Obtain charges from electronegativity equilibration model
 subroutine get_charges(mol, qvec, dqdr, dqdL)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_charges
 
    !> Molecular structure data
    type(structure_type), intent(in) :: mol

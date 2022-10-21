@@ -13,7 +13,11 @@
 #
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
-"""Integration with the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
+"""
+QCSchema Support
+----------------
+
+Integration with the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
 
 This module provides a way to translate QCSchema or QCElemental Atomic Input
 into a format understandable by the ``dftd4`` API which in turn provides the
@@ -49,10 +53,12 @@ the ATM scaling if the method is provided in the model.
 Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
 for damping parameters of a given method and prefers special two-body only
 damping parameters if available!
-If input_data.model.method and input_data.keywords["params_tweaks"] are both
-provided, the former "wins" without any consistency checking. Note that with the
-QCEngine QCSchema runner for classic ``dftd3``, the latter "wins" without any
-consistency checking.
+
+.. note::
+
+    input_data.model.method with a full method name and input_data.keywords["params_tweaks"]
+    cannot be provided at the same time. It is an error to provide both options at the
+    same time.
 
 Example
 -------
@@ -82,7 +88,7 @@ Example
 
 from typing import Union
 from .interface import DispersionModel, DampingParam
-from .libdftd4 import get_api_version
+from .library import get_api_version
 import numpy as np
 import qcelemental as qcel
 
@@ -95,6 +101,8 @@ _supported_drivers = [
 _available_levels = [
     "d4",
 ]
+
+_clean_dashlevel = str.maketrans("", "", "()")
 
 
 def run_qcschema(
@@ -136,23 +144,18 @@ def run_qcschema(
         return qcel.models.AtomicResult(**ret_data)
 
     # Check if the method is provided and strip the “dashlevel” from the method
-    _method = atomic_input.model.method
+    _method = atomic_input.model.method.split("-")
+    if _method[-1].lower().translate(_clean_dashlevel) == _level.lower():
+        _method.pop()
+    _method = "-".join(_method)
     if len(_method) == 0:
         _method = None
-    else:
-        _method = _method.split("-")
-        if _method[-1].lower() == _level.lower():
-            _method.pop()
-        _method = "-".join(_method)
 
     # Obtain the parameters for the damping function
-    _input_param = atomic_input.keywords.get("params_tweaks", {})
+    _input_param = atomic_input.keywords.get("params_tweaks", {"method": _method})
 
     try:
-        param = DampingParam(
-            method=_method,
-            **_input_param,
-        )
+        param = DampingParam(**_input_param)
 
         disp = DispersionModel(
             atomic_input.molecule.atomic_numbers[atomic_input.molecule.real],
@@ -197,7 +200,7 @@ def run_qcschema(
 
         ret_data["extras"].update(extras)
 
-    except RuntimeError as e:
+    except (RuntimeError, TypeError) as e:
         ret_data.update(
             error=qcel.models.ComputeError(
                 error_type="input error", error_message=str(e)

@@ -184,7 +184,7 @@ subroutine test_pbed4_acetic(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp )
 
    call get_structure(mol, "X23", "acetic")
-   call test_dftd4_gen(error, mol, param, -6.6969773469601340E-002_wp)
+   call test_dftd4_gen(error, mol, param, -6.6969773229895183E-002_wp)
 
 end subroutine test_pbed4_acetic
 
@@ -200,7 +200,7 @@ subroutine test_blypd4_adaman(error)
       & s8 = 2.34076671_wp, a1 = 0.44488865_wp, a2 = 4.09330090_wp )
 
    call get_structure(mol, "X23", "adaman")
-   call test_dftd4_gen(error, mol, param, -0.23629687781721179_wp)
+   call test_dftd4_gen(error, mol, param, -0.23629687693703993_wp)
 
 end subroutine test_blypd4_adaman
 

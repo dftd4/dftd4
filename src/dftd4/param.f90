@@ -50,13 +50,15 @@ module dftd4_param
          & p_m05, p_m052x, p_m08hx, p_lcwhpbe, p_mn12l, p_tauhcthhyb, &
          & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, p_bop, &
          & p_mpw1b95, p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
-         & p_revdsdblyp, p_revdodpbep86
+         & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
+         & p_r2scanh, p_r2scan0, p_r2scan50
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
 contains
 
 subroutine get_rational_damping(functional, param, s9)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping
    character(len=*), intent(in) :: functional
    class(damping_param), allocatable, intent(out) :: param
    real(wp), intent(in), optional :: s9
@@ -280,6 +282,10 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=0.59493760_wp, a1=0.71422359_wp, a2=6.35314182_wp )
       !  Fitset: MD= 0.08395 MAD= 0.24888 RMSD= 0.34879
+   case(p_mn12sx)
+      param = dftd_param ( & ! (SAW211021)
+         &  s6=1.0000_wp, s8=0.85964873_wp, a1=0.62662681_wp, a2=5.62088906_wp )
+      !  Fitset: MD= 0.16131 MAD= 0.34142 RMSD= 0.47113
    case(p_mpw1b95)
       param = dftd_param ( & ! (SAW190107)
          &  s6=1.0000_wp, s8=0.50093024_wp, a1=0.41585097_wp, a2=4.99154869_wp )
@@ -336,6 +342,14 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp )
       !  Fitset: MD= -0.20544 MAD= 0.33635 RMSD= 0.51168
+   case(p_pbesol)
+      param = dftd_param ( & ! (SAW211021)
+         &  s6=1.0000_wp, s8=1.71885698_wp, a1=0.47901421_wp, a2=5.96771589_wp )
+      !  Fitset: MD= -0.28899 MAD= 0.52215 RMSD= 0.93584
+   case(p_am05)
+      param = dftd_param ( & ! (SAW211021)
+         &  s6=1.0000_wp, s8=1.71885838_wp, a1=0.47901431_wp, a2=5.96771581_wp )
+      !  Fitset: MD= -0.28899 MAD= 0.52215 RMSD= 0.93584
    case(p_pw1pw)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=0.96850170_wp, a1=0.42427511_wp, a2=5.02060636_wp )
@@ -410,6 +424,12 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_r2scan)
       param = dftd_param ( & ! (10.1063/5.0041008)
          &  s6=1.0000_wp, s8=0.60187490_wp, a1=0.51559235_wp, a2=5.77342911_wp )
+   case(p_r2scanh)
+      param = dftd_param (s6=1.0_wp, s8=0.8324_wp, a1=0.4944_wp, a2=5.9019_wp)
+   case(p_r2scan0)
+      param = dftd_param (s6=1.0_wp, s8=0.8992_wp, a1=0.4778_wp, a2=5.8779_wp)
+   case(p_r2scan50)
+      param = dftd_param (s6=1.0_wp, s8=1.0471_wp, a1=0.4574_wp, a2=5.8969_wp)
    case(p_tpss0)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.62438102_wp, a1=0.40329022_wp, a2=4.80537871_wp )
@@ -481,6 +501,21 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_dftb_pbc)
       param = dftd_param( & ! (SAW191202)
          &  s6=1.0_wp, s8=2.1667394_wp, a1=0.5646391_wp, a2=4.9576353_wp)
+   case(p_hse03)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.19812280_wp, a1=0.38662939_wp, a2=5.22925796_wp)
+   case(p_hse06)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.19528249_wp, a1=0.38663183_wp, a2=5.19133469_wp)
+   case(p_hse12)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.23500792_wp, a1=0.39226921_wp, a2=5.22036266_wp)
+   case(p_hse12s)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.23767762_wp, a1=0.39989137_wp, a2=5.34809245_wp)
+   case(p_hsesol)
+      param = dftd_param( & ! (SAW211107)
+         &  s6=1.0_wp, s8=1.82207807_wp, a1=0.45646268_wp, a2=5.59662251_wp)
    end select
 
 contains
@@ -554,6 +589,12 @@ pure function get_functional_id(df) result(num)
       num = p_rscan
    case('r2scan', 'r²scan')
       num = p_r2scan
+   case('r2scanh', 'r²scanh')
+      num = p_r2scanh
+   case('r2scan0', 'r²scan0')
+      num = p_r2scan0
+   case('r2scan50', 'r²scan50')
+      num = p_r2scan50
    case('b1lyp', 'b1-lyp')
       num = p_b1lyp
    case('b3-lyp', 'b3lyp')
@@ -658,8 +699,6 @@ pure function get_functional_id(df) result(num)
       num = p_pbeh3c
    case('b973c', 'b97-3c')
       num = p_b973c
-   case('hsesol')
-      num = p_hsesol
    case('pwgga')
       num = p_pwgga
    case('dftb3', 'dftb(3ob)')
@@ -692,8 +731,6 @@ pure function get_functional_id(df) result(num)
       num = p_revssb
    case('pbesol')
       num = p_pbesol
-   case('hse06')
-      num = p_hse06
    case('pbexalpha')
       num = p_pbexalpha
    case('pbehpbe')
@@ -730,6 +767,14 @@ pure function get_functional_id(df) result(num)
       num = p_hiss
    case('hse03')
       num = p_hse03
+   case('hse06')
+      num = p_hse06
+   case('hse12')
+      num = p_hse12
+   case('hse12s')
+      num = p_hse12s
+   case('hsesol')
+      num = p_hsesol
    case('revtpssh')
       num = p_revtpssh
    case('tpss1kcis')
@@ -772,6 +817,8 @@ pure function get_functional_id(df) result(num)
       num = p_b97m
    case('wb97m', 'ωb97m', 'omegab97m')
       num = p_wb97m
+   case('am05')
+      num = p_am05
    end select
 end function get_functional_id
 
