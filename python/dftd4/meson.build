@@ -70,11 +70,13 @@ dftd4_pyext = python.extension_module(
 pysrcs = files(
   '__init__.py',
   'ase.py',
+  'data.py',
   'interface.py',
   'library.py',
   'parameters.py',
   'pyscf.py',
   'qcschema.py',
+  'references.json',
   'test_ase.py',
   'test_interface.py',
   'test_library.py',
