@@ -30,6 +30,7 @@
 #define DFTD4_API_SUFFIX__V_3_2
 #define DFTD4_API_SUFFIX__V_3_3
 #define DFTD4_API_SUFFIX__V_3_4
+#define DFTD4_API_SUFFIX__V_3_5
 
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;
@@ -168,7 +169,7 @@ dftd4_get_properties(dftd4_error /* error */,
                      double* /* c6[n*n] */,
                      double* /* alpha[n] */) DFTD4_API_SUFFIX__V_3_1;
 
-/// Evaluate the dispersion energy and its derivatives
+/// Evaluate the dispersion energy and its derivative
 DFTD4_API_ENTRY void DFTD4_API_CALL
 dftd4_get_dispersion(dftd4_error /* error */,
                      dftd4_structure /* mol */,
@@ -177,6 +178,14 @@ dftd4_get_dispersion(dftd4_error /* error */,
                      double* /* energy */,
                      double* /* gradient[n][3] */,
                      double* /* sigma[3][3] */) DFTD4_API_SUFFIX__V_3_0;
+
+/// Evaluate the dispersion hessian numerically
+DFTD4_API_ENTRY void DFTD4_API_CALL
+dftd4_get_numerical_hessian(dftd4_error /* error */,
+                            dftd4_structure /* mol */,
+                            dftd4_model /* disp */,
+                            dftd4_param /* param */,
+                            double* /* hess[n][3][n][3] */) DFTD4_API_SUFFIX__V_3_5;
 
 /// Evaluate the pairwise representation of the dispersion energy
 DFTD4_API_ENTRY void DFTD4_API_CALL
