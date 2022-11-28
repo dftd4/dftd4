@@ -111,6 +111,7 @@ module dftd4_model
 
    !> Actual enumerator for D4 reference charges
    type(enum_ref), parameter :: d4_ref = enum_ref()
+   !DEC$ ATTRIBUTES DLLEXPORT :: d4_ref
 
 
 contains

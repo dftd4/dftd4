@@ -33,6 +33,7 @@ contains
 
 !> Evaluate hessian matrix by numerical differention
 subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_hessian
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
