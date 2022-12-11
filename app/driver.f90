@@ -63,6 +63,7 @@ subroutine run_main(config, error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   character(len=:), allocatable :: filename
    class(damping_param), allocatable :: param
    type(d4_model) :: d4
    real(wp) :: charge
@@ -87,24 +88,26 @@ subroutine run_main(config, error)
       call read_structure(mol, config%input, error, config%input_format)
    end if
    if (allocated(error)) return
+
    if (allocated(config%charge)) then
       mol%charge = config%charge
    else
-      inquire(file='.CHRG', exist=exist)
-      if (exist) then
-         open(file='.CHRG', newunit=unit)
+      filename = join(dirname(config%input), ".CHRG")
+      if (exists(filename)) then
+         open(file=filename, newunit=unit)
          read(unit, *, iostat=stat) charge
          if (stat == 0) then
             mol%charge = charge
             if (config%verbosity > 0) write(output_unit, '(a)') &
-               "[Info] Molecular charge read from .CHRG"
+               "[Info] Molecular charge read from '"//filename//"'"
          else
             if (config%verbosity > 0) write(output_unit, '(a)') &
-               "[Warn] Could not read molecular charge read from .CHRG"
+               "[Warn] Could not read molecular charge read from '"//filename//"'"
          end if
          close(unit)
       end if
    end if
+
    if (config%wrap) then
       call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
    end if
@@ -229,6 +232,41 @@ subroutine run_main(config, error)
    end if
 
 end subroutine run_main
+
+
+!> Construct path by joining strings with os file separator
+function join(a1, a2) result(path)
+   use mctc_env_system, only : is_windows
+   character(len=*), intent(in) :: a1, a2
+   character(len=:), allocatable :: path
+   character :: filesep
+
+   if (is_windows()) then
+      filesep = '\'
+   else
+      filesep = '/'
+   end if
+
+   path = a1 // filesep // a2
+end function join
+
+
+!> test if pathname already exists
+function exists(filename)
+    character(len=*), intent(in) :: filename
+    logical :: exists
+    inquire(file=filename, exist=exists)
+end function exists
+
+
+!> Extract dirname from path
+function dirname(filename)
+   character(len=*), intent(in) :: filename
+   character(len=:), allocatable :: dirname
+
+   dirname = filename(1:scan(filename, "/\", back=.true.))
+   if (len_trim(dirname) == 0) dirname = "."
+end function dirname
 
 
 end module dftd4_driver

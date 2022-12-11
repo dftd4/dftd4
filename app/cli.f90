@@ -284,6 +284,7 @@ subroutine help(unit)
       "Generally Applicable Atomic-Charge Dependent London Dispersion Correction.", &
       "Takes an geometry input to calculate the D4 dispersion correction.", &
       "Periodic calculations are performed automatically for periodic input formats.", &
+      "Reads .CHRG file (if present) from the same directory as the input.", &      
       "Specify the functional to select the correct parameters.", &
       ""
 
