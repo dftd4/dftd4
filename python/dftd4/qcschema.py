@@ -46,6 +46,9 @@ must be provided
  a1                       None        Scaling of the critical radii
  a2                       None        Offset of the critical radii
  alp                      16.0        Exponent of the zero damping (ATM only)
+ ga                       3.0         Charge scaling limiting value
+ gc                       2.0         Charge scaling steepness
+ wf                       6.0         Coordination number weighting
 ======================== =========== ============================================
 
 Either method or s8, a1 and a2 must be provided, s9 can be used to overwrite
@@ -153,6 +156,14 @@ def run_qcschema(
 
     # Obtain the parameters for the damping function
     _input_param = atomic_input.keywords.get("params_tweaks", {"method": _method})
+    _model_param = {
+        key: _input_param.pop(key, default)
+        for key, default in (
+            ("ga", 3.0),
+            ("gc", 2.0),
+            ("wf", 6.0),
+        )
+    }
 
     try:
         param = DampingParam(**_input_param)
@@ -161,6 +172,7 @@ def run_qcschema(
             atomic_input.molecule.atomic_numbers[atomic_input.molecule.real],
             atomic_input.molecule.geometry[atomic_input.molecule.real],
             atomic_input.molecule.molecular_charge,
+            **_model_param,
         )
 
         res = disp.get_dispersion(
