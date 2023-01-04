@@ -18,4 +18,4 @@
 # make sure we have a CFFI available
 import cffi
 
-__version__ = "3.4.0"
+__version__ = "3.5.0"

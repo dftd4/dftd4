@@ -4,7 +4,7 @@ build-backend = "mesonpy"
 
 [project]
 name = "dftd4"
-version = "3.4.0"
+version = "3.5.0"
 description = "Python API of the DFT-D4 project"
 readme = "README.rst"
 license.text = "LGPL-3.0-or-later"
@@ -17,6 +17,7 @@ classifiers = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Topic :: Scientific/Engineering :: Chemistry",
   "Topic :: Scientific/Engineering :: Physics",
 ]
