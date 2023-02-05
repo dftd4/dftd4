@@ -20,7 +20,7 @@ module dftd4_model
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_effective_charge, &
       get_electronegativity, get_hardness
    use dftd4_reference
-   use mctc_env, only : wp
+   use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
    implicit none
@@ -118,7 +118,7 @@ contains
 
 
 !> Create new dispersion model from molecular structure input
-subroutine new_d4_model(self, mol, ga, gc, wf, ref)
+subroutine new_d4_model(self, mol, error, ga, gc, wf, ref)
    !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model
 
    !> Instance of the dispersion model
@@ -126,6 +126,9 @@ subroutine new_d4_model(self, mol, ga, gc, wf, ref)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
    !> Charge scaling height
    real(wp), intent(in), optional :: ga
@@ -143,6 +146,14 @@ subroutine new_d4_model(self, mol, ga, gc, wf, ref)
    integer :: mref, ref_charge
    real(wp) :: aiw(23), c6
    real(wp), parameter :: thopi = 3.0_wp/pi
+
+   ! check for unsupported elements (87 (Fr) - 111 (Rg))
+   do isp = 1, mol%nid
+      if (mol%num(isp) > 86 .and. mol%num(isp) < 112) then
+         call fatal_error(error, "Structure contains unsupported element '"//trim(mol%sym(isp))//"'")
+         return
+      end if
+   end do
 
    if (present(ref)) then
       ref_charge = ref
@@ -359,8 +370,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
          do iref = 1, self%ref(izp)
             do igw = 1, self%ngw(iref, izp)
                wf = igw * self%wf
-               gw = weight_cn(wf, cn(iat), self%cn(iref, izp))
-               norm = norm + gw
+               norm = norm + weight_cn(wf, cn(iat), self%cn(iref, izp))
             end do
          end do
          norm = 1.0_wp / norm

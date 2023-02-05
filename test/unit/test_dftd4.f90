@@ -78,7 +78,7 @@ subroutine test_dftd4_gen(error, mol, param, ref)
    type(d4_model) :: d4
    real(wp) :: energy
 
-   call new_d4_model(d4, mol)
+   call new_d4_model(d4, mol, error)
    call get_dispersion(mol, d4, param, realspace_cutoff(), energy)
 
    call check(error, energy, ref, thr=thr)
@@ -107,7 +107,7 @@ subroutine test_numgrad(error, mol, param)
    real(wp), parameter :: step = 1.0e-6_wp
 
    allocate(gradient(3, mol%nat), numgrad(3, mol%nat))
-   call new_d4_model(d4, mol)
+   call new_d4_model(d4, mol, error)
 
    do iat = 1, mol%nat
       do ic = 1, 3
@@ -150,7 +150,7 @@ subroutine test_numsigma(error, mol, param)
    real(wp), parameter :: step = 1.0e-6_wp
 
    allocate(gradient(3, mol%nat), xyz(3, mol%nat))
-   call new_d4_model(d4, mol)
+   call new_d4_model(d4, mol, error)
 
    eps(:, :) = unity
    xyz(:, :) = mol%xyz

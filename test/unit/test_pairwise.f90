@@ -67,7 +67,7 @@ subroutine test_dftd4_pairwise(error, mol, param)
    real(wp), allocatable :: energy2(:, :), energy3(:, :)
 
    allocate(energy2(mol%nat, mol%nat), energy3(mol%nat, mol%nat))
-   call new_d4_model(d4, mol)
+   call new_d4_model(d4, mol, error)
    call get_dispersion(mol, d4, param, cutoff, energy)
    call get_pairwise_dispersion(mol, d4, param, cutoff, energy2, energy3)
 
