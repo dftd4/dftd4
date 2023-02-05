@@ -17,7 +17,6 @@
 from math import sqrt
 import numpy as np
 
-references = None
 try:
     from os.path import join, dirname
     from ase.collections import Collection
@@ -28,7 +27,7 @@ try:
     references.filename = join(dirname(__file__), references.name + '.json')
 
 except ModuleNotFoundError:
-    pass
+    references = None
 
 
 # covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197),
