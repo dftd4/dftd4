@@ -223,16 +223,22 @@ subroutine new_d4_model(self, mol, error, ga, gc, wf, ref)
    end do
 
    allocate(self%q(mref, mol%nid))
+   allocate(self%aiw(23, mref, mol%nid))
    select case(ref_charge)
    case default
+      call fatal_error(error, "Unsupported option for reference charges")
+      return
+   case(d4_ref%eeq)
       do isp = 1, mol%nid
          izp = mol%num(isp)
          call set_refq_eeq(self%q(:, isp), izp)
+         call set_refalpha_eeq(self%aiw(:, :, isp), self%ga, self%gc, izp)
       end do
    case(d4_ref%gfn2)
       do isp = 1, mol%nid
          izp = mol%num(isp)
          call set_refq_gfn2(self%q(:, isp), izp)
+         call set_refalpha_gfn2(self%aiw(:, :, isp), self%ga, self%gc, izp)
       end do
    end select
 
@@ -241,20 +247,6 @@ subroutine new_d4_model(self, mol, error, ga, gc, wf, ref)
       izp = mol%num(isp)
       call set_refgw(self%ngw(:, isp), izp)
    end do
-
-   allocate(self%aiw(23, mref, mol%nid))
-   select case(ref_charge)
-   case default
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         call set_refalpha_eeq(self%aiw(:, :, isp), self%ga, self%gc, izp)
-      end do
-   case(d4_ref%gfn2)
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         call set_refalpha_gfn2(self%aiw(:, :, isp), self%ga, self%gc, izp)
-      end do
-   end select
 
    allocate(self%c6(mref, mref, mol%nid, mol%nid))
    do isp = 1, mol%nid
