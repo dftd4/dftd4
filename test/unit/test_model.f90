@@ -18,7 +18,7 @@ module test_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed
-   use mctc_io_structure, only : structure_type
+   use mctc_io_structure, only : new, structure_type
    use mstore, only : get_structure
    use dftd4_charge, only : get_charges
    use dftd4_cutoff, only : get_lattice_points
@@ -51,7 +51,8 @@ subroutine collect_model(testsuite)
       & new_unittest("dgw-mb05", test_dgw_mb05), &
       & new_unittest("dgw-mb06", test_dgw_mb06), &
       & new_unittest("gw-gfn2", test_gw_mb07), &
-      & new_unittest("dgw-gfn2", test_dgw_mb08) &
+      & new_unittest("dgw-gfn2", test_dgw_mb08), &
+      & new_unittest("model-error", test_model_error, should_fail=.true.) &
       & ]
 
 end subroutine collect_model
@@ -76,7 +77,7 @@ subroutine test_gw_gen(error, mol, ref, with_cn, with_q)
    real(wp), parameter :: cutoff = 30.0_wp
    real(wp), allocatable :: lattr(:, :)
 
-   call new_d4_model(d4, mol, error)
+   call new_d4_model(error, d4, mol)
 
    allocate(cn(mol%nat), q(mol%nat), gwvec(maxval(d4%ref), mol%nat))
    cn(:) = 0.0_wp
@@ -119,7 +120,7 @@ subroutine test_dgw_gen(error, mol, with_cn, with_q)
    real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
    real(wp), parameter :: step = 1.0e-6_wp
 
-   call new_d4_model(d4, mol, error)
+   call new_d4_model(d4, mol)
 
    mref = maxval(d4%ref)
    allocate(cn(mol%nat), q(mol%nat), gwvec(mref, mol%nat), &
@@ -427,7 +428,7 @@ subroutine test_gw_mb07(error)
    real(wp), allocatable :: lattr(:, :)
 
    call get_structure(mol, "MB16-43", "06")
-   call new_d4_model(d4, mol, error, ref=d4_ref%gfn2)
+   call new_d4_model(d4, mol, ref=d4_ref%gfn2)
 
    allocate(cn(mol%nat), gwvec(maxval(d4%ref), mol%nat))
    cn(:) = 0.0_wp
@@ -468,7 +469,7 @@ subroutine test_dgw_mb08(error)
    real(wp), parameter :: step = 1.0e-6_wp
 
    call get_structure(mol, "MB16-43", "08")
-   call new_d4_model(d4, mol, error, ref=d4_ref%gfn2)
+   call new_d4_model(d4, mol, ref=d4_ref%gfn2)
 
    mref = maxval(d4%ref)
    allocate(cn(mol%nat), q(mol%nat), gwvec(mref, mol%nat), &
@@ -534,5 +535,24 @@ subroutine test_dgw_mb08(error)
 
 end subroutine test_dgw_mb08
 
+
+subroutine test_model_error(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+
+   integer, parameter :: nat = 2
+   character(len=*), parameter :: sym(nat) = [character(len=4) :: "Ra", "Fr"]
+   real(wp), parameter :: xyz(3, nat) = reshape([&
+      & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp],&
+      & shape(xyz))
+
+   call new(mol, sym, xyz)
+   call new_d4_model(error, d4, mol)
+  
+end subroutine test_model_error
 
 end module test_model

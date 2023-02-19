@@ -325,7 +325,7 @@ function new_d4_model_api(verror, vmol) &
    call c_f_pointer(vmol, mol)
 
    allocate(disp)
-   call new_d4_model(disp%ptr, mol%ptr, error%ptr)
+   call new_d4_model(error%ptr, disp%ptr, mol%ptr)
    if (allocated(error%ptr)) then
       deallocate(disp)
    else
@@ -364,7 +364,7 @@ function custom_d4_model_api(verror, vmol, ga, gc, wf) &
    call c_f_pointer(vmol, mol)
 
    allocate(disp)
-   call new_d4_model(disp%ptr, mol%ptr, error%ptr, ga=ga, gc=gc, wf=wf)
+   call new_d4_model(error%ptr, disp%ptr, mol%ptr, ga=ga, gc=gc, wf=wf)
    if (allocated(error%ptr)) then
       deallocate(disp)
    else
