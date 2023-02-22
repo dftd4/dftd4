@@ -71,10 +71,11 @@ jobs:
     - name: Install GCC (OSX)
       if: ${{ contains(matrix.os, 'macos') && matrix.compiler == 'gnu' }}
       run: |
-        brew install gcc@${{ env.GCC_V }}
+        brew install gcc@${{ env.GCC_V }} openblas
         ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
         ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
         ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+        echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
 
     - name: Install GCC (Linux)
       if: ${{ contains(matrix.os, 'ubuntu') && matrix.compiler == 'gnu' }}
@@ -269,10 +270,11 @@ jobs:
     - name: Install GCC (OSX)
       if: ${{ contains(matrix.os, 'macos') }}
       run: |
-        brew install gcc@${{ env.GCC_V }}
+        brew install gcc@${{ env.GCC_V }} openblas
         ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
         ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
         ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+        echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
 
     - name: Install GCC (Linux)
       if: ${{ contains(matrix.os, 'ubuntu') }}
