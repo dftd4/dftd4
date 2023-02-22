@@ -209,7 +209,9 @@ def energy(mf):
         def energy_nuc(self) -> float:
             enuc = mf.__class__.energy_nuc(self)
             if self.with_dftd4:
-                enuc += self.with_dftd4.kernel()[0]
+                edisp = self.with_dftd4.kernel()[0]
+                self.scf_summary["dispersion"] = edisp
+                enuc += edisp
             return enuc
 
         def reset(self, mol=None) -> "DFTD4":
