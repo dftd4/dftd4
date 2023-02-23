@@ -119,13 +119,14 @@ module dftd4_model
       module procedure :: new_d4_model_no_checks
       module procedure :: new_d4_model_with_checks
    end interface new_d4_model
-   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model
 
 contains
 
 
 !> Create new dispersion model from molecular structure input
 subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_with_checks
+
    !> Instance of the dispersion model
    type(d4_model), intent(out) :: d4
 
@@ -274,7 +275,9 @@ end subroutine new_d4_model_with_checks
 !> Create new dispersion model from molecular structure input without
 !> checking for supported elements (old/compatibility version)
 subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
-  !> Instance of the dispersion model
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_no_checks
+
+   !> Instance of the dispersion model
    type(d4_model), intent(out) :: d4
 
    !> Molecular structure data
