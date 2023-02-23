@@ -16,11 +16,11 @@
 
 import numpy as np
 import pytest
-from pytest import approx, raises
+from pytest import approx
 
 try:
     import pyscf
-    from pyscf import lib, gto, scf
+    from pyscf import gto, scf
     import dftd4.pyscf as disp
 except ModuleNotFoundError:
     pyscf = None

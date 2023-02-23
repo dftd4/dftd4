@@ -17,7 +17,7 @@
 from dftd4.ase import DFTD4
 from ase.build import molecule
 from ase.calculators.emt import EMT
-from pytest import approx, raises
+from pytest import approx
 import numpy as np
 
 

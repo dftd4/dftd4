@@ -139,7 +139,8 @@ subroutine run_main(config, error)
       end if
    end if
 
-   call new_d4_model(d4, mol, ga=config%ga, gc=config%gc, wf=config%wf)
+   call new_d4_model(error, d4, mol, ga=config%ga, gc=config%gc, wf=config%wf)
+   if (allocated(error)) return
 
    if (config%properties) then
       if (config%verbosity > 1) then

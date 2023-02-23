@@ -16,11 +16,12 @@
 
 !> Definition of the D4 dispersion model for the evaluation of C6 coefficients.
 module dftd4_model
+   use, intrinsic :: iso_fortran_env, only : output_unit
    use ieee_arithmetic, only : ieee_is_nan
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_effective_charge, &
       get_electronegativity, get_hardness
    use dftd4_reference
-   use mctc_env, only : wp
+   use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
    implicit none
@@ -113,16 +114,171 @@ module dftd4_model
    type(enum_ref), parameter :: d4_ref = enum_ref()
    !DEC$ ATTRIBUTES DLLEXPORT :: d4_ref
 
+   !> Create new dispersion model from molecular structure input
+   interface new_d4_model
+      module procedure :: new_d4_model_no_checks
+      module procedure :: new_d4_model_with_checks
+   end interface new_d4_model
 
 contains
 
 
 !> Create new dispersion model from molecular structure input
-subroutine new_d4_model(self, mol, ga, gc, wf, ref)
-   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model
+subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_with_checks
 
    !> Instance of the dispersion model
-   type(d4_model), intent(out) :: self
+   type(d4_model), intent(out) :: d4
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Charge scaling height
+   real(wp), intent(in), optional :: ga
+
+   !> Charge scaling steepness
+   real(wp), intent(in), optional :: gc
+
+   !> Weighting factor for coordination number interpolation
+   real(wp), intent(in), optional :: wf
+
+   !> Reference charge selection
+   integer, intent(in), optional :: ref
+
+   integer :: isp, izp, iref, jsp, jzp, jref
+   integer :: mref, ref_charge
+   real(wp) :: aiw(23), c6
+   real(wp), parameter :: thopi = 3.0_wp/pi
+
+   ! check for unsupported elements (87 (Fr) - 111 (Rg))
+   do isp = 1, mol%nid
+      if (mol%num(isp) > 86 .and. mol%num(isp) < 112) then
+         call fatal_error(error, "Structure contains unsupported element '"//trim(mol%sym(isp))//"'")
+         return
+      end if
+   end do
+
+   if (present(ref)) then
+      ref_charge = ref
+   else
+      ref_charge = d4_ref%eeq
+   end if
+
+   if (present(ga)) then
+      d4%ga = ga
+   else
+      d4%ga = ga_default
+   end if
+
+   if (present(gc)) then
+      d4%gc = gc
+   else
+      d4%gc = gc_default
+   end if
+
+   if (present(wf)) then
+      d4%wf = wf
+   else
+      d4%wf = wf_default
+   end if
+
+   allocate(d4%rcov(mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      d4%rcov(isp) = get_covalent_rad(izp)
+   end do
+
+   allocate(d4%en(mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      d4%en(isp) = get_electronegativity(izp)
+   end do
+
+   allocate(d4%zeff(mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      d4%zeff(isp) = get_effective_charge(izp)
+   end do
+
+   allocate(d4%eta(mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      d4%eta(isp) = get_hardness(izp)
+   end do
+
+   allocate(d4%r4r2(mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      d4%r4r2(isp) = get_r4r2_val(izp)
+   end do
+
+   allocate(d4%ref(mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      d4%ref(isp) = get_nref(izp)
+   end do
+
+   mref = maxval(d4%ref)
+   allocate(d4%cn(mref, mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      call set_refcn(d4%cn(:, isp), izp)
+   end do
+
+   allocate(d4%q(mref, mol%nid))
+   allocate(d4%aiw(23, mref, mol%nid))
+   select case(ref_charge)
+   case default
+      call fatal_error(error, "Unsupported option for reference charges")
+      return
+   case(d4_ref%eeq)
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refq_eeq(d4%q(:, isp), izp)
+         call set_refalpha_eeq(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
+      end do
+   case(d4_ref%gfn2)
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refq_gfn2(d4%q(:, isp), izp)
+         call set_refalpha_gfn2(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
+      end do
+   end select
+
+   allocate(d4%ngw(mref, mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      call set_refgw(d4%ngw(:, isp), izp)
+   end do
+
+   allocate(d4%c6(mref, mref, mol%nid, mol%nid))
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      do jsp = 1, isp
+         jzp = mol%num(jsp)
+         do iref = 1, d4%ref(isp)
+            do jref = 1, d4%ref(jsp)
+               aiw(:) = d4%aiw(:, iref, isp) * d4%aiw(:, jref, jsp)
+               c6 = thopi * trapzd(aiw)
+               d4%c6(jref, iref, jsp, isp) = c6
+               d4%c6(iref, jref, isp, jsp) = c6
+            end do
+         end do
+      end do
+   end do
+
+end subroutine new_d4_model_with_checks
+
+!> Create new dispersion model from molecular structure input without
+!> checking for supported elements (old/compatibility version)
+subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_no_checks
+
+   !> Instance of the dispersion model
+   type(d4_model), intent(out) :: d4
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -151,117 +307,108 @@ subroutine new_d4_model(self, mol, ga, gc, wf, ref)
    end if
 
    if (present(ga)) then
-      self%ga = ga
+      d4%ga = ga
    else
-      self%ga = ga_default
+      d4%ga = ga_default
    end if
 
    if (present(gc)) then
-      self%gc = gc
+      d4%gc = gc
    else
-      self%gc = gc_default
+      d4%gc = gc_default
    end if
 
    if (present(wf)) then
-      self%wf = wf
+      d4%wf = wf
    else
-      self%wf = wf_default
+      d4%wf = wf_default
    end if
 
-   allocate(self%rcov(mol%nid))
+   allocate(d4%rcov(mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      self%rcov(isp) = get_covalent_rad(izp)
+      d4%rcov(isp) = get_covalent_rad(izp)
    end do
 
-   allocate(self%en(mol%nid))
+   allocate(d4%en(mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      self%en(isp) = get_electronegativity(izp)
+      d4%en(isp) = get_electronegativity(izp)
    end do
 
-   allocate(self%zeff(mol%nid))
+   allocate(d4%zeff(mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      self%zeff(isp) = get_effective_charge(izp)
+      d4%zeff(isp) = get_effective_charge(izp)
    end do
 
-   allocate(self%eta(mol%nid))
+   allocate(d4%eta(mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      self%eta(isp) = get_hardness(izp)
+      d4%eta(isp) = get_hardness(izp)
    end do
 
-   allocate(self%r4r2(mol%nid))
+   allocate(d4%r4r2(mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      self%r4r2(isp) = get_r4r2_val(izp)
+      d4%r4r2(isp) = get_r4r2_val(izp)
    end do
 
-   allocate(self%ref(mol%nid))
+   allocate(d4%ref(mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      self%ref(isp) = get_nref(izp)
+      d4%ref(isp) = get_nref(izp)
    end do
 
-   mref = maxval(self%ref)
-   allocate(self%cn(mref, mol%nid))
+   mref = maxval(d4%ref)
+   allocate(d4%cn(mref, mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      call set_refcn(self%cn(:, isp), izp)
+      call set_refcn(d4%cn(:, isp), izp)
    end do
 
-   allocate(self%q(mref, mol%nid))
-   select case(ref_charge)
-   case default
+   allocate(d4%q(mref, mol%nid))
+   allocate(d4%aiw(23, mref, mol%nid))
+   if (ref_charge == d4_ref%gfn2) then
       do isp = 1, mol%nid
          izp = mol%num(isp)
-         call set_refq_eeq(self%q(:, isp), izp)
+         call set_refq_gfn2(d4%q(:, isp), izp)
+         call set_refalpha_gfn2(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
-   case(d4_ref%gfn2)
+   else
+      if (ref_charge /= d4_ref%eeq) then
+         write(output_unit, '(a)') "[Info] Unsupported option for reference charge. Defaulting to EEQ charges."
+      end if
       do isp = 1, mol%nid
          izp = mol%num(isp)
-         call set_refq_gfn2(self%q(:, isp), izp)
+         call set_refq_eeq(d4%q(:, isp), izp)
+         call set_refalpha_eeq(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
-   end select
+   end if
 
-   allocate(self%ngw(mref, mol%nid))
+   allocate(d4%ngw(mref, mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
-      call set_refgw(self%ngw(:, isp), izp)
+      call set_refgw(d4%ngw(:, isp), izp)
    end do
 
-   allocate(self%aiw(23, mref, mol%nid))
-   select case(ref_charge)
-   case default
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         call set_refalpha_eeq(self%aiw(:, :, isp), self%ga, self%gc, izp)
-      end do
-   case(d4_ref%gfn2)
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         call set_refalpha_gfn2(self%aiw(:, :, isp), self%ga, self%gc, izp)
-      end do
-   end select
-
-   allocate(self%c6(mref, mref, mol%nid, mol%nid))
+   allocate(d4%c6(mref, mref, mol%nid, mol%nid))
    do isp = 1, mol%nid
       izp = mol%num(isp)
       do jsp = 1, isp
          jzp = mol%num(jsp)
-         do iref = 1, self%ref(isp)
-            do jref = 1, self%ref(jsp)
-               aiw(:) = self%aiw(:, iref, isp) * self%aiw(:, jref, jsp)
+         do iref = 1, d4%ref(isp)
+            do jref = 1, d4%ref(jsp)
+               aiw(:) = d4%aiw(:, iref, isp) * d4%aiw(:, jref, jsp)
                c6 = thopi * trapzd(aiw)
-               self%c6(jref, iref, jsp, isp) = c6
-               self%c6(iref, jref, isp, jsp) = c6
+               d4%c6(jref, iref, jsp, isp) = c6
+               d4%c6(iref, jref, isp, jsp) = c6
             end do
          end do
       end do
    end do
 
-end subroutine new_d4_model
+end subroutine new_d4_model_no_checks
 
 
 !> Calculate the weights of the reference system and the derivatives w.r.t.
@@ -359,8 +506,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
          do iref = 1, self%ref(izp)
             do igw = 1, self%ngw(iref, izp)
                wf = igw * self%wf
-               gw = weight_cn(wf, cn(iat), self%cn(iref, izp))
-               norm = norm + gw
+               norm = norm + weight_cn(wf, cn(iat), self%cn(iref, izp))
             end do
          end do
          norm = 1.0_wp / norm
