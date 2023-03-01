@@ -440,6 +440,7 @@ function load_rational_damping_api(verror, charptr, atm) &
    type(c_ptr) :: vparam
    type(vp_param), pointer :: param
    real(wp), allocatable :: s9
+   class(damping_param), allocatable :: tmp
 
    if (debug) print'("[Info]",1x, a)', "load_rational_damping"
 
@@ -451,13 +452,14 @@ function load_rational_damping_api(verror, charptr, atm) &
    call c_f_character(charptr, method)
 
    if (atm) s9 = 1.0_wp
-   allocate(param)
-   call get_rational_damping(method, param%ptr, s9)
-   if (.not.allocated(param%ptr)) then
+   call get_rational_damping(method, tmp, s9)
+   if (.not.allocated(tmp)) then
       call fatal_error(error%ptr, "Functional '"//method//"' not known")
       return
    end if
 
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
    vparam = c_loc(param)
 
 end function load_rational_damping_api
