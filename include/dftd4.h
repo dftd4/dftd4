@@ -61,7 +61,7 @@ typedef struct _dftd4_param* dftd4_param;
 
 /// Obtain library version as major * 10000 + minor + 100 + patch
 DFTD4_API_ENTRY int DFTD4_API_CALL
-dftd4_get_version() DFTD4_API_SUFFIX__V_3_0;
+dftd4_get_version(void) DFTD4_API_SUFFIX__V_3_0;
 
 /*
  * Error handle class
@@ -69,7 +69,7 @@ dftd4_get_version() DFTD4_API_SUFFIX__V_3_0;
 
 /// Create new error handle object
 DFTD4_API_ENTRY dftd4_error DFTD4_API_CALL
-dftd4_new_error() DFTD4_API_SUFFIX__V_3_0;
+dftd4_new_error(void) DFTD4_API_SUFFIX__V_3_0;
 
 /// Check error handle status
 DFTD4_API_ENTRY int DFTD4_API_CALL
