@@ -89,11 +89,12 @@ int test_example(void)
     hessian = (double*)malloc(nat3_sq * sizeof(double));
     c6 = (double*)malloc(nat_sq * sizeof(double));
 
+    dftd4_error error = NULL;
+
     if (dftd4_get_version() <= 0) {
         goto err;
     }
 
-    dftd4_error error;
     dftd4_structure mol;
     dftd4_model disp;
     dftd4_param param;
