@@ -56,6 +56,9 @@ Specify the functional to select the correct parameters.
 *--pair-resolved*::
      Calculate pairwise representation of dispersion energy
 
+*--list-func*::
+     List all available functionals (keywords for *-f, --func*)
+
 *--version*::
      Prints version number and citation
 
