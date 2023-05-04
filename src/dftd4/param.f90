@@ -67,7 +67,8 @@ subroutine get_rational_damping(functional, param, s9)
    integer :: is, id
    logical :: mbd
 
-   mbd = merge(s9 /= 0.0_wp, .true., present(s9))
+   mbd = .false.
+   if (present(s9) .and. s9 /= 0.0_wp) mbd = .true.
 
    is = index(functional, '/')
    if (is == 0) is = len_trim(functional) + 1
@@ -117,11 +118,20 @@ contains
       real(wp), intent(in) :: s8, a1, a2
       real(wp), intent(in), optional :: s6, alp
       type(rational_damping_param) :: param
+      real(wp) :: s6_local, alp_local, s9_local
+
+      s6_local = 1.0_wp
+      if (present(s6)) s6_local = s6
+      s9_local = 1.0_wp
+      if (present(s9)) s9_local = s9
+      alp_local = 16.0_wp
+      if (present(alp)) alp_local = alp
+
       param = rational_damping_param(&
-         & s6=merge(s6, 1.0_wp, present(s6)), &
+         & s6=s6_local, &
          & s8=s8, a1=a1, a2=a2, &
-         & s9=merge(s9, 0.0_wp, present(s9)), &
-         & alp=merge(alp, 16.0_wp, present(alp)))
+         & s9=s9_local, &
+         & alp=alp_local)
    end function dftd_param
 
 end subroutine get_d4eeq_bj_parameter
@@ -524,11 +534,20 @@ contains
       real(wp), intent(in) :: s8, a1, a2
       real(wp), intent(in), optional :: s6, alp
       type(rational_damping_param) :: param
+      real(wp) :: s6_local, alp_local, s9_local
+
+      s6_local = 1.0_wp
+      if (present(s6)) s6_local = s6
+      s9_local = 1.0_wp
+      if (present(s9)) s9_local = s9
+      alp_local = 16.0_wp
+      if (present(alp)) alp_local = alp
+
       param = rational_damping_param(&
-         & s6=merge(s6, 1.0_wp, present(s6)), &
+         & s6=s6_local, &
          & s8=s8, a1=a1, a2=a2, &
-         & s9=merge(s9, 1.0_wp, present(s9)), &
-         & alp=merge(alp, 16.0_wp, present(alp)))
+         & s9=s9_local, &
+         & alp=alp_local)
    end function dftd_param
 
 end subroutine get_d4eeq_bjatm_parameter
