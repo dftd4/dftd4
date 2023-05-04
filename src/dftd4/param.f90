@@ -68,7 +68,7 @@ subroutine get_rational_damping(functional, param, s9)
    logical :: mbd
 
    mbd = .false.
-   if (present(s9) .and. s9 /= 0.0_wp) mbd = .true.
+   if (present(s9)) mbd = s9 /= 0.0_wp
 
    is = index(functional, '/')
    if (is == 0) is = len_trim(functional) + 1
