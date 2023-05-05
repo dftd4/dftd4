@@ -67,7 +67,7 @@ subroutine get_rational_damping(functional, param, s9)
    integer :: is, id
    logical :: mbd
 
-   mbd = .false.
+   mbd = .true.
    if (present(s9)) mbd = s9 /= 0.0_wp
 
    is = index(functional, '/')
