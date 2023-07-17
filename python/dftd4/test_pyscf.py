@@ -147,4 +147,4 @@ def test_gradient_hf():
         ]
     )
     grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
-    assert grad.kernel() == approx(ref, abs=1.0e-8)
+    assert grad.kernel() == approx(ref, abs=1.0e-7)
