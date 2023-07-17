@@ -93,6 +93,7 @@ if install
   python.install_sources(
     pysrcs,
     subdir: 'dftd4',
+    pure: false,
   )
 endif
 
