@@ -13,7 +13,6 @@ jobs:
         git config user.name "dummy"
         git subtree add --prefix python/subprojects/dftd4 . HEAD
         git mv {assets,python/dftd4}/parameters.toml
-        git mv python/{mesonpep517,pyproject}.toml
         git commit -m "Python dist"
     - run: |
         pipx run build python/ --sdist --outdir .

@@ -8,7 +8,7 @@ import dftd4
 
 project = "DFT-D4"
 author = "Grimme group"
-copyright = f"2017–2022 {author}"
+copyright = f"2017–2023 {author}"
 
 extensions = [
     "sphinx_copybutton",
