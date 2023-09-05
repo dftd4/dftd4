@@ -30,6 +30,9 @@ dftd4_exe = executable(
 
 test('app-version', dftd4_exe, args: '--version')
 test('app-help', dftd4_exe, args: '--help')
+test('app-help-run', dftd4_exe, args: ['run', '--help'])
+test('app-help-param', dftd4_exe, args: ['param', '--help'])
+test('app-param-list', dftd4_exe, args: ['param', '--list'])
 test('app-license', dftd4_exe, args: '--license')
 test('app-citation', dftd4_exe, args: '--citation')
 test('app-noargs', dftd4_exe, should_fail: true)
