@@ -5,7 +5,7 @@
 dftd4 - Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 
 == Synopsis
-*dftd4* [_options_] _input_
+*dftd4* [run|param] [_options_] _input_
 
 
 == Description
@@ -16,7 +16,18 @@ Reads .CHRG file (if present) from the same directory as the input.
 Specify the functional to select the correct parameters.
 
 
-== Options
+== Commands
+
+*run*::
+     Evaluate dispersion correction on the provided input structure.
+     Periodic calculations are performed automatically for periodic inputs
+     If no command is specified run is selected by default.
+
+*param*::
+     Inspect damping parameters.
+
+
+== Options: run
 
 *-c, --charge* _integer_::
      Set charge to molecule,
@@ -56,9 +67,6 @@ Specify the functional to select the correct parameters.
 *--pair-resolved*::
      Calculate pairwise representation of dispersion energy
 
-*--list-func*::
-     List all available functionals (keywords for *-f, --func*)
-
 *--version*::
      Prints version number and citation
 
@@ -76,3 +84,9 @@ Specify the functional to select the correct parameters.
 
 *-h, --help*::
      Show this message
+
+
+== Options: param
+
+*--list-func*::
+     List all available functionals (keywords for *-f, --func*)
