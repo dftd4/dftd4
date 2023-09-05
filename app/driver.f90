@@ -26,7 +26,9 @@ module dftd4_driver
    use dftd4_charge, only : get_charges
    use dftd4_output
    use dftd4_utils
-   use dftd4_cli, only : cli_config, run_config, header
+   use dftd4_cli, only : cli_config, param_config, run_config
+   use dftd4_help, only : header
+   use dftd4_param, only : functional_group, get_functionals
    implicit none
    private
 
@@ -49,6 +51,8 @@ subroutine main(config, error)
       call fatal_error(error, "Unknown runtime selected")
    type is(run_config)
       call run_main(config, error)
+   type is(param_config)
+      call run_param(config, error)
    end select
 end subroutine main
 
@@ -234,6 +238,111 @@ subroutine run_main(config, error)
 
 end subroutine run_main
 
+
+subroutine run_param(config, error)
+
+   !> Configuration for this driver
+   type(param_config), intent(in) :: config
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   if (config%list) then
+      block
+         type(functional_group), allocatable :: funcs(:)
+         character(len=:), allocatable :: temp_names(:)
+    
+         integer :: i, j, nfuncs
+ 
+         call get_functionals(funcs)
+         nfuncs = size(funcs)
+         
+         ! Bubble sort based on the first name in each group of funcs
+         do i = 1, nfuncs - 1
+            do j = 1, nfuncs - i
+               if (funcs(j)%names(1) > funcs(j+1)%names(1)) then
+                  ! Swap only the names for simplicity
+                  temp_names = funcs(j)%names
+                  funcs(j)%names = funcs(j+1)%names
+                  funcs(j+1)%names = temp_names
+               end if
+            end do
+         end do
+         
+         write(output_unit, '(a)') "List of available functionals:"
+         
+         do i = 1, size(funcs)
+            associate(names => funcs(i)%names)
+               do j = 1, size(names)
+                  if (len_trim(names(j)) > 0) then
+                     write(output_unit, '(a)', advance='no') trim(names(j)) // " "
+                     
+                     ! new line if last in list
+                     if (size(names) == j) then
+                        write(output_unit, *)
+                     end if
+                  end if
+               end do
+            end associate
+         end do
+
+      end block
+   end if
+
+end subroutine run_param
+
+
+subroutine list_funcs(unit)
+   integer, intent(in) :: unit
+
+   character(len=*), parameter :: func(*) = [character(len=32)::&
+      & 'am05', 'b1-lyp', 'b1-p', 'b1-pw', 'b1pw', 'b1pw91', 'b1p', 'b1p86', &
+      & 'b1lyp', 'b2-plyp', 'b2gp-plyp', 'b2plyp', 'b3-lyp', 'b3-p', 'b3-pw', &
+      & 'b3lyp', 'b3p', 'b3p86', 'b3pw', 'b3pw91', 'b6k', 'bh-lyp', 'bhpbe', &
+      & 'bmk', 'bp', 'bp86', 'bpbe', 'bpw', 'bwb6k', 'cam-b3lyp', 'dftb(3ob)', &
+      & 'dftb(matsci)', 'dftb(mio)', 'dftb(ob2)', 'dftb(pbc)', 'dsd-blyp', &
+      & 'dsd-pbe', 'dsd-pbep86', 'dsd-pbeb95', 'dsd-svwn', 'dodblyp', &
+      & 'dod-pbe', 'dod-pbep86', 'dod-pbeb95', 'dod-svwn', 'dsdblyp', &
+      & 'dsdpbe', 'dsdpbep86', 'dsdpbeb95', 'dsdsvwn', 'g-lyp', 'glyp', &
+      & 'hcth120', 'hcth407', 'hcthhyb', 'hf', 'hf-3c', 'hf-3cv', 'hf3c', &
+      & 'hf3cv', 'hiss', 'hse03', 'hse06', 'hse12', 'hse12s', 'hsesol', &
+      & 'lb94', 'lc-blyp', 'lc-dftb', 'lc-wpbe', 'lc-whpbe', 'lh07ssvwn', &
+      & 'lh07s-svwn', 'lh07tsvwn', 'lh07t-svwn', 'lh12ctssifpw92', &
+      & 'lh12ct-ssifpw92', 'lh12ctssirpw92', 'lh12ct-ssirpw92', 'lh14tcalpbe', &
+      & 'lh14t-calpbe', 'lh20t', 'lcwpbe', 'm05', 'm052x', 'm05-2x', 'm06', &
+      & 'm06-2x', 'm06l', 'm08hx', 'm08-hx', 'm11l', 'mn12l', 'mn12sx', &
+      & 'mn15', 'mn15l', 'mpw-lyp', 'mpw1-lyp', 'mpw1-pw', 'mpw1-pw91', &
+      & 'mpw1-pw', 'mpw1lyp', 'mpw1pw', 'mpw1pw91', 'mpw2plyp', 'mpwkcis1k', &
+      & 'mpwlyp', 'mpw-pw', 'mpwpw', 'mpwpw91', 'mpw1kcis', 'mpwb1k', 'n12', &
+      & 'n12sx', 'o-lyp', 'o3-lyp', 'o3lyp', 'olyp', 'omegab97', 'omegab97m', &
+      & 'opbe', 'otpss', 'pbe', 'pbe0', 'pbe02', 'pbe0-2', 'pbe0dh', &
+      & 'pbe0-dh', 'pbexalpha', 'pbeh1pbe', 'pbeh-3c', 'pbep86', 'pbepbeb95', &
+      & 'pbepbe', 'pbesol', 'pwp', 'pwp1', 'pw1-pw', 'pw1pw', 'pw1pw91', &
+      & 'pw6b95', 'pw86pbe', 'pw91', 'pw91p86', 'pwgga', 'revdsd-blyp', &
+      & 'revdsdblyp', 'revdsd-pbe', 'revdsdpbe', 'revdsd-pbepbe', &
+      & 'revdsdpbepbe', 'revdsdpbep86', 'revdsdpbeb95', 'revdsd-svwn', &
+      & 'revdod-pbep86', 'revdodpbep86', 'revdod-pbeb95', 'revdodpbepb95', &
+      & 'revdod-svwn', 'revpbe', 'revpbe0', 'revpbe0-dh', 'revpbe38', &
+      & 'revtpss', 'revtpss0', 'r2scan', 'r²scan', 'r2scan0', 'r²scan0', &
+      & 'r2scan50', 'r²scan50', 'r2scanh', 'r²scanh', 'rscan', 'scan', 'ssb', &
+      & 'tauhctc', 'tauhcthhyb', 'thcth', 'tpss', 'tpss0', 'tpssh', 'wb97', &
+      & 'wb97m', 'ωb97', 'ωb97m', 'x-lyp', 'x3-lyp', 'x3lyp']
+
+   character(len=1) :: current_letter = ''
+   integer :: i
+   
+   write(unit, '(a)') &
+      & 'The following functionals are available (keywords for --func):'
+  
+   do i = 1, size(func)
+      if (func(i)(1:1) /= current_letter) then
+         write(unit, '(a)') ''
+         current_letter = func(i)(1:1)
+      end if
+        
+      write(unit, '(a)') func(i)
+   end do
+end subroutine list_funcs
 
 !> Construct path by joining strings with os file separator
 function join(a1, a2) result(path)

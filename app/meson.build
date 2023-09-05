@@ -18,8 +18,10 @@ dftd4_exe = executable(
   meson.project_name(),
   sources: files(
     'main.f90',
+    'argument.f90',
     'cli.f90',
     'driver.f90',
+    'help.f90',
   ),
   dependencies: dftd4_dep,
   install: install,
