@@ -271,7 +271,7 @@ subroutine run_param(config, error)
          
          write(output_unit, '(a)') "List of available functionals:"
          
-         do i = 1, size(funcs)
+         do i = 1, nfuncs
             associate(names => funcs(i)%names)
                do j = 1, size(names)
                   if (len_trim(names(j)) > 0) then

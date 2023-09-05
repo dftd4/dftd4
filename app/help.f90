@@ -66,8 +66,7 @@ module dftd4_help
       ""
 
    character(len=*), parameter :: param_options_text = &
-      "-l,--list                 List all supported functionals"//nl//&
-      "   --funcs                List all supported functionals"
+      "-l,--list,--funcs         List all supported functionals"
 
    character(len=*), parameter :: help_text_param = &
       "Usage: "//prog_name//" param [options]"//nl//&

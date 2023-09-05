@@ -45,11 +45,11 @@ module dftd4_param
          & p_bmk, p_b1b95, p_pwb6k, p_otpss, p_ssb, p_revssb, &
          & p_pbesol, p_hse06, p_pbexalpha, p_pbehpbe, p_hcth407, &
          & p_n12, p_pkzb, p_thcth, p_m11l, p_mn15l, p_mpwb1k, &
-         & p_mpw1kcis, p_mpwkcis1k, p_pbeh1pbe, p_pbe1kcis, p_b97_1, &
-         & p_b97_2, p_b98, p_hiss, p_hse03, p_revtpssh, p_tpss1kcis, &
+         & p_mpw1kcis, p_mpwkcis1k, p_mpw1b95, p_pbeh1pbe, p_pbe1kcis, &
+         & p_b97_1, p_b97_2, p_b98, p_hiss, p_hse03, p_revtpssh, p_tpss1kcis, &
          & p_m05, p_m052x, p_m08hx, p_lcwhpbe, p_mn12l, p_tauhcthhyb, &
-         & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, p_bop, &
-         & p_mpw1b95, p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
+         & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, &
+         & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
          & p_r2scanh, p_r2scan0, p_r2scan50, p_last
    end enum
@@ -139,6 +139,7 @@ subroutine get_functionals(funcs)
    call funcs(p_m06l)%set_names([character(len=20) :: 'm06l'])
    call funcs(p_m06)%set_names([character(len=20) :: 'm06'])
    call funcs(p_m062x)%set_names([character(len=20) :: 'm06-2x', 'm062x'])
+   call funcs(p_b97d)%set_names([character(len=20) :: 'b97d'])
    call funcs(p_wb97)%set_names([character(len=20) :: 'wb97', 'ωb97', 'omegab97'])
    call funcs(p_wb97x)%set_names([character(len=20) :: 'wb97x', 'ωb97x', 'omegab97x'])
    call funcs(p_camb3lyp)%set_names([character(len=20) :: 'cam-b3lyp'])
@@ -196,6 +197,7 @@ subroutine get_functionals(funcs)
    call funcs(p_mpwb1k)%set_names([character(len=20) :: 'mpwb1k'])
    call funcs(p_mpw1kcis)%set_names([character(len=20) :: 'mpw1kcis'])
    call funcs(p_mpwkcis1k)%set_names([character(len=20) :: 'mpwkcis1k'])
+   call funcs(p_mpw1b95)%set_names([character(len=20) :: 'mpw1b95'])
    call funcs(p_pbeh1pbe)%set_names([character(len=20) :: 'pbeh1pbe'])
    call funcs(p_pbe1kcis)%set_names([character(len=20) :: 'pbe1kcis'])
    call funcs(p_b97_1)%set_names([character(len=20) :: 'b97-1'])
@@ -948,6 +950,8 @@ pure function get_functional_id(df) result(num)
       num = p_mpw1kcis
    case('mpwkcis1k')
       num = p_mpwkcis1k
+   case('mpw1b95')
+      num = p_mpw1b95
    case('pbeh1pbe')
       num = p_pbeh1pbe
    case('pbe1kcis')
@@ -956,6 +960,8 @@ pure function get_functional_id(df) result(num)
       num = p_b97_1
    case('b97-2')
       num = p_b97_2
+   case('b97d')
+      num = p_b97d
    case('b98')
       num = p_b98
    case('hiss')
