@@ -44,11 +44,11 @@ module dftd4_param
          & p_dftb_matsci, p_dftb_pbc, p_hcth120, p_ptpss, p_lcwpbe, &
          & p_bmk, p_b1b95, p_pwb6k, p_otpss, p_ssb, p_revssb, &
          & p_pbesol, p_hse06, p_pbexalpha, p_pbehpbe, p_hcth407, &
-         & p_n12, p_pkzb, p_thcth, p_m11l, p_mn15l, p_mpwb1k, &
+         & p_n12, p_pkzb, p_thcth, p_m11l, p_mpwb1k, &
          & p_mpw1kcis, p_mpwkcis1k, p_mpw1b95, p_pbeh1pbe, p_pbe1kcis, &
          & p_b97_1, p_b97_2, p_b98, p_hiss, p_hse03, p_revtpssh, p_tpss1kcis, &
          & p_m05, p_m052x, p_m08hx, p_lcwhpbe, p_mn12l, p_tauhcthhyb, &
-         & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, &
+         & p_sogga11x, p_n12sx, p_mn12sx, p_glyp, &
          & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
          & p_r2scanh, p_r2scan0, p_r2scan50, p_last
@@ -202,7 +202,6 @@ subroutine get_functionals(funcs)
    funcs(p_pkzb) = new_funcgroup([character(len=20) :: 'pkzb'])
    funcs(p_thcth) = new_funcgroup([character(len=20) :: 'thcth', 'tauhctc'])
    funcs(p_m11l) = new_funcgroup([character(len=20) :: 'm11l'])
-   funcs(p_mn15l) = new_funcgroup([character(len=20) :: 'mn15l'])
    funcs(p_mpwb1k) = new_funcgroup([character(len=20) :: 'mpwb1k'])
    funcs(p_mpw1kcis) = new_funcgroup([character(len=20) :: 'mpw1kcis'])
    funcs(p_mpwkcis1k) = new_funcgroup([character(len=20) :: 'mpwkcis1k'])
@@ -229,7 +228,6 @@ subroutine get_functionals(funcs)
    funcs(p_sogga11x) = new_funcgroup([character(len=20) :: 'sogga11x'])
    funcs(p_n12sx) = new_funcgroup([character(len=20) :: 'n12sx'])
    funcs(p_mn12sx) = new_funcgroup([character(len=20) :: 'mn12sx'])
-   funcs(p_mn15) = new_funcgroup([character(len=20) :: 'mn15'])
    funcs(p_glyp) = new_funcgroup([character(len=20) :: 'glyp', 'g-lyp'])
    funcs(p_revpbe0dh) = new_funcgroup([character(len=20) :: 'revpbe0dh', 'revpbe0-dh'])
    funcs(p_revtpss0) = new_funcgroup([character(len=20) :: 'revtpss0'])
@@ -951,8 +949,6 @@ pure function get_functional_id(df) result(num)
       num = p_thcth
    case('m11l')
       num = p_m11l
-   case('mn15l')
-      num = p_mn15l
    case('mpwb1k')
       num = p_mpwb1k
    case('mpw1kcis')
@@ -1007,8 +1003,6 @@ pure function get_functional_id(df) result(num)
       num = p_n12sx
    case('mn12sx')
       num = p_mn12sx
-   case('mn15')
-      num = p_mn15
    case('glyp', 'g-lyp')
       num = p_glyp
    case('revpbe0dh', 'revpbe0-dh')
