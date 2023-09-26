@@ -40,7 +40,7 @@ module dftd4_param
          & p_dodblyp, p_dodpbe, p_dodpbeb95, p_dodpbep86, p_dodsvwn, &
          & p_pbe0_2, p_pbe0_dh, p_hsesol, p_dftb_3ob, p_dftb_mio, p_dftb_ob2, &
          & p_dftb_matsci, p_dftb_pbc, p_b1b95, p_pbesol, p_hse06, p_mpwb1k, &
-         & p_hse03, p_revtpssh, p_mn12sx, p_glyp, p_bop, p_mpw1b95, &
+         & p_hse03, p_revtpssh, p_mn12sx, p_glyp, p_mpw1b95, &
          & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
          & p_r2scanh, p_r2scan0, p_r2scan50, p_last
@@ -50,7 +50,7 @@ module dftd4_param
 
    ! Group different spellings/names of functionals
    type functional_group
-       character(len=:), allocatable :: names(:)
+      character(len=:), allocatable :: names(:)
    end type functional_group
 
 contains
@@ -71,13 +71,13 @@ function new_funcgroup(input_names) result(group)
    ! Determine the length of the longest name
    max_len = 0
    do i = 1, n
-       max_len = max(max_len, len_trim(input_names(i)))
+      max_len = max(max_len, len_trim(input_names(i)))
    end do
 
    ! Allocate based on the longest name's length
    allocate(character(len=max_len) :: group%names(n))
    do i = 1, n
-       group%names(i) = trim(input_names(i))
+      group%names(i) = trim(input_names(i))
    end do
 end function new_funcgroup
 
@@ -737,6 +737,8 @@ pure function get_functional_id(df) result(num)
       num = p_xlyp
    case('b97')
       num = p_b97
+   case('b97d')
+      num = p_b97d
    case('tpss')
       num = p_tpss
    case('revtpss')
@@ -879,6 +881,8 @@ pure function get_functional_id(df) result(num)
       num = p_mn12sx
    case('glyp', 'g-lyp')
       num = p_glyp
+   case('mpw1b95')
+      num = p_mpw1b95
    case('revpbe0dh', 'revpbe0-dh')
       num = p_revpbe0dh
    case('revtpss0')
