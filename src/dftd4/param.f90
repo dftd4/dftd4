@@ -21,7 +21,7 @@ module dftd4_param
    implicit none
    private
 
-   public :: get_rational_damping
+   public :: get_rational_damping, get_functionals, functional_group
 
 
    enum, bind(C)
@@ -32,30 +32,169 @@ module dftd4_param
          & p_scan, p_rscan, p_r2scan, p_b1lyp, p_b3lyp, p_bhlyp, p_b1p, &
          & p_b3p, p_b1pw, p_b3pw, p_o3lyp, p_revpbe0, p_revpbe38, &
          & p_pbe0, p_pwp1, p_pw1pw, p_mpw1pw, p_mpw1lyp, p_pw6b95, &
-         & p_tpssh, p_tpss0, p_x3lyp, p_m06l, p_m06, p_m062x, p_b97d, &
+         & p_tpssh, p_tpss0, p_x3lyp, p_m06l, p_m06, p_b97d, &
          & p_wb97, p_wb97x, p_b97m, p_wb97m, p_camb3lyp, p_lcblyp, &
          & p_lh07tsvwn, p_lh07ssvwn, p_lh12ctssirpw92, p_lh12ctssifpw92, &
-         & p_lh14tcalpbe, p_lh20t, &
-         & p_b2plyp, p_b2gpplyp, p_mpw2plyp, p_pwpb95, &
+         & p_lh14tcalpbe, p_lh20t, p_b2plyp, p_b2gpplyp, p_mpw2plyp, p_pwpb95, &
          & p_dsdblyp, p_dsdpbe, p_dsdpbeb95, p_dsdpbep86, p_dsdsvwn, &
          & p_dodblyp, p_dodpbe, p_dodpbeb95, p_dodpbep86, p_dodsvwn, &
-         & p_pbe0_2, p_pbe0_dh, p_hf3c, p_hf3cv, p_pbeh3c, p_b973c, &
-         & p_hsesol, p_pwgga, p_dftb_3ob, p_dftb_mio, p_dftb_ob2, &
-         & p_dftb_matsci, p_dftb_pbc, p_hcth120, p_ptpss, p_lcwpbe, &
-         & p_bmk, p_b1b95, p_pwb6k, p_otpss, p_ssb, p_revssb, &
-         & p_pbesol, p_hse06, p_pbexalpha, p_pbehpbe, p_hcth407, &
-         & p_n12, p_pkzb, p_thcth, p_m11l, p_mn15l, p_mpwb1k, &
-         & p_mpw1kcis, p_mpwkcis1k, p_pbeh1pbe, p_pbe1kcis, p_b97_1, &
-         & p_b97_2, p_b98, p_hiss, p_hse03, p_revtpssh, p_tpss1kcis, &
-         & p_m05, p_m052x, p_m08hx, p_lcwhpbe, p_mn12l, p_tauhcthhyb, &
-         & p_sogga11x, p_n12sx, p_mn12sx, p_mn15, p_glyp, p_bop, &
-         & p_mpw1b95, p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
+         & p_pbe0_2, p_pbe0_dh, p_hsesol, p_dftb_3ob, p_dftb_mio, p_dftb_ob2, &
+         & p_dftb_matsci, p_dftb_pbc, p_b1b95, p_pbesol, p_hse06, p_mpwb1k, &
+         & p_hse03, p_revtpssh, p_mn12sx, p_glyp, p_mpw1b95, &
+         & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
-         & p_r2scanh, p_r2scan0, p_r2scan50
+         & p_r2scanh, p_r2scan0, p_r2scan50, p_last
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
+
+   ! Group different spellings/names of functionals
+   type functional_group
+      character(len=:), allocatable :: names(:)
+   end type functional_group
+
 contains
+
+
+!> Create a new group of functional names
+function new_funcgroup(input_names) result(group)
+
+   !> List of spellings/names of the functional
+   character(len=*), intent(in) :: input_names(:)
+
+   !> Functional with possibly different spellings
+   type(functional_group) :: group
+   
+   integer :: n, i, max_len
+   n = size(input_names)
+
+   ! Determine the length of the longest name
+   max_len = 0
+   do i = 1, n
+      max_len = max(max_len, len_trim(input_names(i)))
+   end do
+
+   ! Allocate based on the longest name's length
+   allocate(character(len=max_len) :: group%names(n))
+   do i = 1, n
+      group%names(i) = trim(input_names(i))
+   end do
+end function new_funcgroup
+
+
+!> Collect all supported functionals
+subroutine get_functionals(funcs)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_functionals
+
+   !> Collection of functionals with possibly different spellings/names
+   type(functional_group), allocatable, intent(out) :: funcs(:)
+
+   allocate(funcs(p_last - 1))
+
+   funcs(p_hf) = new_funcgroup([character(len=20) :: 'hf'])
+   funcs(p_blyp) = new_funcgroup([character(len=20) :: 'b-lyp', 'blyp'])
+   funcs(p_bpbe) = new_funcgroup([character(len=20) :: 'bpbe'])
+   funcs(p_bp) = new_funcgroup([character(len=20) :: 'b-p', 'bp86', 'bp', 'b-p86'])
+   funcs(p_bpw) = new_funcgroup([character(len=20) :: 'bpw', 'b-pw'])
+   funcs(p_lb94) = new_funcgroup([character(len=20) :: 'lb94'])
+   funcs(p_mpwlyp) = new_funcgroup([character(len=20) :: 'mpwlyp', 'mpw-lyp'])
+   funcs(p_mpwpw) = new_funcgroup([character(len=20) :: 'mpwpw', 'mpw-pw', 'mpwpw91'])
+   funcs(p_olyp) = new_funcgroup([character(len=20) :: 'o-lyp', 'olyp'])
+   funcs(p_opbe) = new_funcgroup([character(len=20) :: 'opbe'])
+   funcs(p_pbe) = new_funcgroup([character(len=20) :: 'pbe'])
+   funcs(p_rpbe) = new_funcgroup([character(len=20) :: 'rpbe'])
+   funcs(p_revpbe) = new_funcgroup([character(len=20) :: 'revpbe'])
+   funcs(p_pw86pbe) = new_funcgroup([character(len=20) :: 'pw86pbe'])
+   funcs(p_rpw86pbe) = new_funcgroup([character(len=20) :: 'rpw86pbe'])
+   funcs(p_pw91) = new_funcgroup([character(len=20) :: 'pw91'])
+   funcs(p_pwp) = new_funcgroup([character(len=20) :: 'pwp', 'pw-p', 'pw91p86'])
+   funcs(p_xlyp) = new_funcgroup([character(len=20) :: 'x-lyp', 'xlyp'])
+   funcs(p_b97) = new_funcgroup([character(len=20) :: 'b97'])
+   funcs(p_tpss) = new_funcgroup([character(len=20) :: 'tpss'])
+   funcs(p_revtpss) = new_funcgroup([character(len=20) :: 'revtpss'])
+   funcs(p_scan) = new_funcgroup([character(len=20) :: 'scan'])
+   funcs(p_rscan) = new_funcgroup([character(len=20) :: 'rscan'])
+   funcs(p_r2scan) = new_funcgroup([character(len=20) :: 'r2scan', 'r²scan'])
+   funcs(p_r2scanh) = new_funcgroup([character(len=20) :: 'r2scanh', 'r²scanh'])
+   funcs(p_r2scan0) = new_funcgroup([character(len=20) :: 'r2scan0', 'r²scan0'])
+   funcs(p_r2scan50) = new_funcgroup([character(len=20) :: 'r2scan50', 'r²scan50'])
+   funcs(p_b1lyp) = new_funcgroup([character(len=20) :: 'b1lyp', 'b1-lyp'])
+   funcs(p_b3lyp) = new_funcgroup([character(len=20) :: 'b3-lyp', 'b3lyp'])
+   funcs(p_bhlyp) = new_funcgroup([character(len=20) :: 'bh-lyp', 'bhlyp'])
+   funcs(p_b1p) = new_funcgroup([character(len=20) :: 'b1p', 'b1-p', 'b1p86'])
+   funcs(p_b3p) = new_funcgroup([character(len=20) :: 'b3p', 'b3-p', 'b3p86'])
+   funcs(p_b1pw) = new_funcgroup([character(len=20) :: 'b1pw', 'b1-pw', 'b1pw91'])
+   funcs(p_b3pw) = new_funcgroup([character(len=20) :: 'b3pw', 'b3-pw', 'b3pw91'])
+   funcs(p_o3lyp) = new_funcgroup([character(len=20) :: 'o3-lyp', 'o3lyp'])
+   funcs(p_revpbe0) = new_funcgroup([character(len=20) :: 'revpbe0'])
+   funcs(p_revpbe38) = new_funcgroup([character(len=20) :: 'revpbe38'])
+   funcs(p_pbe0) = new_funcgroup([character(len=20) :: 'pbe0'])
+   funcs(p_pwp1) = new_funcgroup([character(len=20) :: 'pwp1'])
+   funcs(p_pw1pw) = new_funcgroup([character(len=20) :: 'pw1pw', 'pw1-pw'])
+   funcs(p_mpw1pw) = new_funcgroup([character(len=20) :: 'mpw1pw', 'mpw1-pw', 'mpw1pw91'])
+   funcs(p_mpw1lyp) = new_funcgroup([character(len=20) :: 'mpw1lyp', 'mpw1-lyp'])
+   funcs(p_pw6b95) = new_funcgroup([character(len=20) :: 'pw6b95'])
+   funcs(p_tpssh) = new_funcgroup([character(len=20) :: 'tpssh'])
+   funcs(p_tpss0) = new_funcgroup([character(len=20) :: 'tpss0'])
+   funcs(p_x3lyp) = new_funcgroup([character(len=20) :: 'x3-lyp', 'x3lyp'])
+   funcs(p_m06l) = new_funcgroup([character(len=20) :: 'm06l'])
+   funcs(p_m06) = new_funcgroup([character(len=20) :: 'm06'])
+   funcs(p_b97d) = new_funcgroup([character(len=20) :: 'b97d'])
+   funcs(p_wb97) = new_funcgroup([character(len=20) :: 'wb97', 'ωb97', 'omegab97'])
+   funcs(p_wb97x) = new_funcgroup([character(len=20) :: 'wb97x', 'ωb97x', 'omegab97x'])
+   funcs(p_camb3lyp) = new_funcgroup([character(len=20) :: 'cam-b3lyp'])
+   funcs(p_lcblyp) = new_funcgroup([character(len=20) :: 'lc-blyp'])
+   funcs(p_lh07tsvwn) = new_funcgroup([character(len=20) :: 'lh07tsvwn', 'lh07t-svwn'])
+   funcs(p_lh07ssvwn) = new_funcgroup([character(len=20) :: 'lh07ssvwn', 'lh07s-svwn'])
+   funcs(p_lh12ctssirpw92) = new_funcgroup([character(len=20) :: 'lh12ctssirpw92', 'lh12ct-ssirpw92'])
+   funcs(p_lh12ctssifpw92) = new_funcgroup([character(len=20) :: 'lh12ctssifpw92', 'lh12ct-ssifpw92'])
+   funcs(p_lh14tcalpbe) = new_funcgroup([character(len=20) :: 'lh14tcalpbe', 'lh14t-calpbe'])
+   funcs(p_lh20t) = new_funcgroup([character(len=20) :: 'lh20t'])
+   funcs(p_b2plyp) = new_funcgroup([character(len=20) :: 'b2plyp', 'b2-plyp'])
+   funcs(p_b2gpplyp) = new_funcgroup([character(len=20) :: 'b2gpplyp', 'b2gp-plyp'])
+   funcs(p_mpw2plyp) = new_funcgroup([character(len=20) :: 'mpw2plyp'])
+   funcs(p_pwpb95) = new_funcgroup([character(len=20) :: 'pwpb95'])
+   funcs(p_dsdblyp) = new_funcgroup([character(len=20) :: 'dsdblyp', 'dsd-blyp'])
+   funcs(p_dsdpbe) = new_funcgroup([character(len=20) :: 'dsdpbe', 'dsd-pbe'])
+   funcs(p_dsdpbeb95) = new_funcgroup([character(len=20) :: 'dsdpbeb95', 'dsd-pbeb95'])
+   funcs(p_dsdpbep86) = new_funcgroup([character(len=20) :: 'dsdpbep86', 'dsd-pbep86'])
+   funcs(p_dsdsvwn) = new_funcgroup([character(len=20) :: 'dsdsvwn', 'dsd-svwn'])
+   funcs(p_dodblyp) = new_funcgroup([character(len=20) :: 'dodblyp', 'dod-blyp'])
+   funcs(p_dodpbe) = new_funcgroup([character(len=20) :: 'dodpbe', 'dod-pbe'])
+   funcs(p_dodpbeb95) = new_funcgroup([character(len=20) :: 'dodpbeb95', 'dod-pbeb95'])
+   funcs(p_dodpbep86) = new_funcgroup([character(len=20) :: 'dodpbep86', 'dod-pbep86'])
+   funcs(p_dodsvwn) = new_funcgroup([character(len=20) :: 'dodsvwn', 'dod-svwn'])
+   funcs(p_pbe0_2) = new_funcgroup([character(len=20) :: 'pbe02', 'pbe0-2'])
+   funcs(p_pbe0_dh) = new_funcgroup([character(len=20) :: 'pbe0dh', 'pbe0-dh'])
+   funcs(p_dftb_3ob) = new_funcgroup([character(len=20) :: 'dftb3', 'dftb(3ob)'])
+   funcs(p_dftb_mio) = new_funcgroup([character(len=20) :: 'dftb(mio)'])
+   funcs(p_dftb_pbc) = new_funcgroup([character(len=20) :: 'dftb(pbc)'])
+   funcs(p_dftb_matsci) = new_funcgroup([character(len=20) :: 'dftb(matsci)'])
+   funcs(p_dftb_ob2) = new_funcgroup([character(len=20) :: 'lc-dftb', 'dftb(ob2)'])
+   funcs(p_b1b95) = new_funcgroup([character(len=20) :: 'b1b95'])
+   funcs(p_pbesol) = new_funcgroup([character(len=20) :: 'pbesol'])
+   funcs(p_mpwb1k) = new_funcgroup([character(len=20) :: 'mpwb1k'])
+   funcs(p_mpw1b95) = new_funcgroup([character(len=20) :: 'mpw1b95'])
+   funcs(p_hse03) = new_funcgroup([character(len=20) :: 'hse03'])
+   funcs(p_hse06) = new_funcgroup([character(len=20) :: 'hse06'])
+   funcs(p_hse12) = new_funcgroup([character(len=20) :: 'hse12'])
+   funcs(p_hse12s) = new_funcgroup([character(len=20) :: 'hse12s'])
+   funcs(p_hsesol) = new_funcgroup([character(len=20) :: 'hsesol'])
+   funcs(p_revtpssh) = new_funcgroup([character(len=20) :: 'revtpssh'])
+   funcs(p_mn12sx) = new_funcgroup([character(len=20) :: 'mn12sx'])
+   funcs(p_glyp) = new_funcgroup([character(len=20) :: 'glyp', 'g-lyp'])
+   funcs(p_revpbe0dh) = new_funcgroup([character(len=20) :: 'revpbe0dh', 'revpbe0-dh'])
+   funcs(p_revtpss0) = new_funcgroup([character(len=20) :: 'revtpss0'])
+   funcs(p_revdsdpbep86) = new_funcgroup([character(len=20) :: 'revdsd-pbep86', 'revdsdpbep86'])
+   funcs(p_revdsdpbe) = new_funcgroup([character(len=20) :: 'revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe'])
+   funcs(p_revdsdblyp) = new_funcgroup([character(len=20) :: 'revdsd-blyp', 'revdsdblyp'])
+   funcs(p_revdodpbep86) = new_funcgroup([character(len=20) :: 'revdod-pbep86', 'revdodpbep86'])
+   funcs(p_b97m) = new_funcgroup([character(len=20) :: 'b97m'])
+   funcs(p_wb97m) = new_funcgroup([character(len=20) :: 'wb97m', 'ωb97m', 'omegab97m'])
+   funcs(p_am05) = new_funcgroup([character(len=20) :: 'am05'])
+
+end subroutine get_functionals
+
 
 subroutine get_rational_damping(functional, param, s9)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping
@@ -114,10 +253,10 @@ subroutine get_d4eeq_bj_parameter(dfnum, param, s9)
 
 contains
 
-   pure function dftd_param(s6, s8, a1, a2, alp) result(param)
+   pure function dftd_param(s6, s8, a1, a2, alp) result(par)
       real(wp), intent(in) :: s8, a1, a2
       real(wp), intent(in), optional :: s6, alp
-      type(rational_damping_param) :: param
+      type(rational_damping_param) :: par
       real(wp) :: s6_, alp_, s9_
 
       s6_ = 1.0_wp
@@ -127,7 +266,7 @@ contains
       alp_ = 16.0_wp
       if (present(alp)) alp_ = alp
 
-      param = rational_damping_param(&
+      par = rational_damping_param(&
          & s6=s6_, &
          & s8=s8, a1=a1, a2=a2, &
          & s9=s9_, &
@@ -530,10 +669,10 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
 
 contains
 
-   pure function dftd_param(s6, s8, a1, a2, alp) result(param)
+   pure function dftd_param(s6, s8, a1, a2, alp) result(par)
       real(wp), intent(in) :: s8, a1, a2
       real(wp), intent(in), optional :: s6, alp
-      type(rational_damping_param) :: param
+      type(rational_damping_param) :: par
       real(wp) :: s6_, alp_, s9_
 
       s6_ = 1.0_wp
@@ -543,7 +682,7 @@ contains
       alp_ = 16.0_wp
       if (present(alp)) alp_ = alp
 
-      param = rational_damping_param(&
+      par = rational_damping_param(&
          & s6=s6_, &
          & s8=s8, a1=a1, a2=a2, &
          & s9=s9_, &
@@ -598,6 +737,8 @@ pure function get_functional_id(df) result(num)
       num = p_xlyp
    case('b97')
       num = p_b97
+   case('b97d')
+      num = p_b97d
    case('tpss')
       num = p_tpss
    case('revtpss')
@@ -656,8 +797,6 @@ pure function get_functional_id(df) result(num)
       num = p_m06l
    case('m06')
       num = p_m06
-   case('m06-2x', 'm062x')
-      num = p_m062x
    case('wb97', 'ωb97', 'omegab97')
       num = p_wb97
    case('wb97x', 'ωb97x', 'omegab97x')
@@ -710,16 +849,6 @@ pure function get_functional_id(df) result(num)
       num = p_pbe0_2
    case('pbe0dh', 'pbe0-dh')
       num = p_pbe0_dh
-   case('hf-3c', 'hf3c')
-      num = p_hf3c
-   case('hf-3cv', 'hf3cv')
-      num = p_hf3cv
-   case('pbeh3c', 'pbeh-3c')
-      num = p_pbeh3c
-   case('b973c', 'b97-3c')
-      num = p_b973c
-   case('pwgga')
-      num = p_pwgga
    case('dftb3', 'dftb(3ob)')
       num = p_dftb_3ob
    case('dftb(mio)')
@@ -730,60 +859,12 @@ pure function get_functional_id(df) result(num)
       num = p_dftb_matsci
    case('lc-dftb', 'dftb(ob2)')
       num = p_dftb_ob2
-   case('hcth120')
-      num = p_hcth120
-   case('ptpss')
-      num = p_ptpss
-   case('lc-wpbe', 'lcwpbe')
-      num = p_lcwpbe
-   case('bmk')
-      num = p_bmk
    case('b1b95')
       num = p_b1b95
-   case('bwb6k')
-      num = p_pwb6k
-   case('otpss')
-      num = p_otpss
-   case('ssb')
-      num = p_ssb
-   case('revssb')
-      num = p_revssb
    case('pbesol')
       num = p_pbesol
-   case('pbexalpha')
-      num = p_pbexalpha
-   case('pbehpbe')
-      num = p_pbehpbe
-   case('hcth407')
-      num = p_hcth407
-   case('n12')
-      num = p_n12
-   case('pkzb')
-      num = p_pkzb
-   case('thcth', 'tauhctc')
-      num = p_thcth
-   case('m11l')
-      num = p_m11l
-   case('mn15l')
-      num = p_mn15l
    case('mpwb1k')
       num = p_mpwb1k
-   case('mpw1kcis')
-      num = p_mpw1kcis
-   case('mpwkcis1k')
-      num = p_mpwkcis1k
-   case('pbeh1pbe')
-      num = p_pbeh1pbe
-   case('pbe1kcis')
-      num = p_pbe1kcis
-   case('b97-1')
-      num = p_b97_1
-   case('b97-2')
-      num = p_b97_2
-   case('b98')
-      num = p_b98
-   case('hiss')
-      num = p_hiss
    case('hse03')
       num = p_hse03
    case('hse06')
@@ -796,30 +877,12 @@ pure function get_functional_id(df) result(num)
       num = p_hsesol
    case('revtpssh')
       num = p_revtpssh
-   case('tpss1kcis')
-      num = p_tpss1kcis
-   case('m05')
-      num = p_m05
-   case('m052x', 'm05-2x')
-      num = p_m052x
-   case('m08hx', 'm08-hx')
-      num = p_m08hx
-   case('lcwhpbe', 'lc-whpbe')
-      num = p_lcwhpbe
-   case('mn12l')
-      num = p_mn12l
-   case('tauhcthhyb')
-      num = p_tauhcthhyb
-   case('sogga11x')
-      num = p_sogga11x
-   case('n12sx')
-      num = p_n12sx
    case('mn12sx')
       num = p_mn12sx
-   case('mn15')
-      num = p_mn15
    case('glyp', 'g-lyp')
       num = p_glyp
+   case('mpw1b95')
+      num = p_mpw1b95
    case('revpbe0dh', 'revpbe0-dh')
       num = p_revpbe0dh
    case('revtpss0')
