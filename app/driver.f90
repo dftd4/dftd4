@@ -26,7 +26,9 @@ module dftd4_driver
    use dftd4_charge, only : get_charges
    use dftd4_output
    use dftd4_utils
-   use dftd4_cli, only : cli_config, run_config, header
+   use dftd4_cli, only : cli_config, param_config, run_config
+   use dftd4_help, only : header
+   use dftd4_param, only : functional_group, get_functionals
    implicit none
    private
 
@@ -49,6 +51,8 @@ subroutine main(config, error)
       call fatal_error(error, "Unknown runtime selected")
    type is(run_config)
       call run_main(config, error)
+   type is(param_config)
+      call run_param(config, error)
    end select
 end subroutine main
 
@@ -233,6 +237,59 @@ subroutine run_main(config, error)
    end if
 
 end subroutine run_main
+
+
+subroutine run_param(config, error)
+
+   !> Configuration for this driver
+   type(param_config), intent(in) :: config
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   if (config%list) then
+      block
+         type(functional_group), allocatable :: funcs(:)
+         character(len=:), allocatable :: temp_names(:)
+    
+         integer :: i, j, nfuncs
+ 
+         call get_functionals(funcs)
+         nfuncs = size(funcs)
+         
+         ! Bubble sort based on the first name in each group of funcs
+         do i = 1, nfuncs - 1
+            do j = 1, nfuncs - i
+               if (funcs(j)%names(1) > funcs(j+1)%names(1)) then
+                  ! Swap only the names for simplicity
+                  temp_names = funcs(j)%names
+                  funcs(j)%names = funcs(j+1)%names
+                  funcs(j+1)%names = temp_names
+               end if
+            end do
+         end do
+         
+         write(output_unit, '(a)') "List of available functionals:"
+         
+         do i = 1, nfuncs
+            associate(names => funcs(i)%names)
+               do j = 1, size(names)
+                  if (len_trim(names(j)) > 0) then
+                     write(output_unit, '(a)', advance='no') trim(names(j)) // " "
+                     
+                     ! new line if last in list
+                     if (size(names) == j) then
+                        write(output_unit, *)
+                     end if
+                  end if
+               end do
+            end associate
+         end do
+
+      end block
+   end if
+
+end subroutine run_param
 
 
 !> Construct path by joining strings with os file separator
