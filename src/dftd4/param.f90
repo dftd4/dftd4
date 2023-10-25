@@ -43,7 +43,8 @@ module dftd4_param
          & p_hse03, p_revtpssh, p_mn12sx, p_glyp, p_mpw1b95, &
          & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
-         & p_r2scanh, p_r2scan0, p_r2scan50, p_last
+         & p_r2scanh, p_r2scan0, p_r2scan50, p_camqtp01, p_lcwpbe, p_lcwpbeh, &
+         & p_wb97x_rev, p_wb97m_rev, p_last
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -92,6 +93,7 @@ subroutine get_functionals(funcs)
    allocate(funcs(p_last - 1))
 
    funcs(p_hf) = new_funcgroup([character(len=20) :: 'hf'])
+   funcs(p_am05) = new_funcgroup([character(len=20) :: 'am05'])
    funcs(p_blyp) = new_funcgroup([character(len=20) :: 'b-lyp', 'blyp'])
    funcs(p_bpbe) = new_funcgroup([character(len=20) :: 'bpbe'])
    funcs(p_bp) = new_funcgroup([character(len=20) :: 'b-p', 'bp86', 'bp', 'b-p86'])
@@ -140,10 +142,6 @@ subroutine get_functionals(funcs)
    funcs(p_m06l) = new_funcgroup([character(len=20) :: 'm06l'])
    funcs(p_m06) = new_funcgroup([character(len=20) :: 'm06'])
    funcs(p_b97d) = new_funcgroup([character(len=20) :: 'b97d'])
-   funcs(p_wb97) = new_funcgroup([character(len=20) :: 'wb97', 'ωb97', 'omegab97'])
-   funcs(p_wb97x) = new_funcgroup([character(len=20) :: 'wb97x', 'ωb97x', 'omegab97x'])
-   funcs(p_camb3lyp) = new_funcgroup([character(len=20) :: 'cam-b3lyp'])
-   funcs(p_lcblyp) = new_funcgroup([character(len=20) :: 'lc-blyp'])
    funcs(p_lh07tsvwn) = new_funcgroup([character(len=20) :: 'lh07tsvwn', 'lh07t-svwn'])
    funcs(p_lh07ssvwn) = new_funcgroup([character(len=20) :: 'lh07ssvwn', 'lh07s-svwn'])
    funcs(p_lh12ctssirpw92) = new_funcgroup([character(len=20) :: 'lh12ctssirpw92', 'lh12ct-ssirpw92'])
@@ -189,9 +187,23 @@ subroutine get_functionals(funcs)
    funcs(p_revdsdpbe) = new_funcgroup([character(len=20) :: 'revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe'])
    funcs(p_revdsdblyp) = new_funcgroup([character(len=20) :: 'revdsd-blyp', 'revdsdblyp'])
    funcs(p_revdodpbep86) = new_funcgroup([character(len=20) :: 'revdod-pbep86', 'revdodpbep86'])
+
    funcs(p_b97m) = new_funcgroup([character(len=20) :: 'b97m'])
    funcs(p_wb97m) = new_funcgroup([character(len=20) :: 'wb97m', 'ωb97m', 'omegab97m'])
-   funcs(p_am05) = new_funcgroup([character(len=20) :: 'am05'])
+   funcs(p_wb97m_rev) = new_funcgroup([character(len=20) :: 'wb97m-rev', &
+    & 'ωb97m-rev', 'omegab97m-rev', 'wb97m_rev', 'ωb97m_rev', 'omegab97m_rev'])
+   funcs(p_wb97) = new_funcgroup([character(len=20) :: 'wb97', 'ωb97', 'omegab97'])
+   funcs(p_wb97x) = new_funcgroup([character(len=20) :: 'wb97x', 'ωb97x', 'omegab97x'])
+   funcs(p_wb97x_rev) = new_funcgroup([character(len=20) :: 'wb97x-rev', &
+    & 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev'])
+
+   funcs(p_camb3lyp) = new_funcgroup([character(len=20) :: 'cam-b3lyp', 'camb3lyp'])
+   funcs(p_camqtp01) = new_funcgroup([character(len=20) :: 'cam-qtp01', 'camqtp01', 'camqtp(01)'])
+   funcs(p_lcblyp) = new_funcgroup([character(len=20) :: 'lc-blyp', 'lcblyp'])
+   funcs(p_lcwpbe) = new_funcgroup([character(len=20) :: 'lc-wpbe', &
+    & 'lcwpbe', 'lc-ωpbe', 'lcωpbe', 'lc-omegapbe', 'lcomegapbe'])
+   funcs(p_lcwpbeh) = new_funcgroup([character(len=20) :: 'lc-wpbeh', &
+    & 'lcwpbeh', 'lc-ωpbeh', 'lcωpbeh', 'lc-omegapbeh', 'lcomegapbeh'])
 
 end subroutine get_functionals
 
@@ -344,6 +356,9 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.66041301_wp, a1=0.40267156_wp, a2=5.17432195_wp )
       !  Fitset: MD= -0.19675 MAD= 0.34901 RMSD= 0.59087
+   case(p_camqtp01)
+      param = dftd_param ( & ! (MF231024)
+         &  s6=1.0000_wp, s8=1.156_wp, a1=0.461_wp, a2=6.375_wp )
    case(p_dodblyp)
       param = dftd_param ( & ! (SAW190103)
          &  s6=0.4700_wp, s8=1.31146043_wp, a1=0.43407294_wp, a2=4.27914360_wp )
@@ -400,6 +415,12 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.60344180_wp, a1=0.45769839_wp, a2=7.86924893_wp )
       !  Fitset: MD= -0.39724 MAD= 0.72327 RMSD= 1.18218
+   case(p_lcwpbe)
+      param = dftd_param ( & ! (MS231024)
+         &  s6=1.0000_wp, s8=1.170_wp, a1=0.378_wp, a2=4.816_wp )
+   case(p_lcwpbeh)
+      param = dftd_param ( & ! (MS231024)
+         &  s6=1.0000_wp, s8=1.318_wp, a1=0.386_wp, a2=5.010_wp )
    case(p_lh07ssvwn)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=3.16675531_wp, a1=0.35965552_wp, a2=4.31947614_wp )
@@ -605,6 +626,9 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       !  S22x5: MD= 0.05 MAD= 0.16 RMSD= 0.22
       !  S66x8: MD= 0.06 MAD= 0.16 RMSD= 0.21
       !  NCI10: MD= 0.08 MAD= 0.15 RMSD= 0.25
+   case(p_wb97x_rev)
+      param = dftd_param ( & ! (10.1063/5.0133026)
+         &  s6=1.0000_wp, s8=0.4485_wp, a1=0.3306_wp, a2=4.279_wp )
    case(p_b97m)
       param = dftd_param ( & ! (10.1002/jcc.26411)
          &  s6=1.0000_wp, s8=0.6633_wp, a1=0.4288_wp, a2=3.9935_wp )
@@ -615,6 +639,9 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (10.1002/jcc.26411)
          &  s6=1.0000_wp, s8=0.7761_wp, a1=0.7514_wp, a2=2.7099_wp )
       !  Fitset: MD= -0.20216 MAD= 0.34696 RMSD= 0.53641
+   case(p_wb97m_rev) 
+      param = dftd_param ( & ! (MF231024)
+         &  s6=1.0000_wp, s8=0.842_wp, a1=0.359_wp, a2=4.668_wp )
    case(p_x3lyp)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.54701429_wp, a1=0.20318443_wp, a2=5.61852648_wp )
@@ -797,14 +824,16 @@ pure function get_functional_id(df) result(num)
       num = p_m06l
    case('m06')
       num = p_m06
-   case('wb97', 'ωb97', 'omegab97')
-      num = p_wb97
-   case('wb97x', 'ωb97x', 'omegab97x')
-      num = p_wb97x
-   case('cam-b3lyp')
+   case('cam-b3lyp', 'camb3lyp')
       num = p_camb3lyp
-   case('lc-blyp')
+   case('cam-qtp01', 'camqtp01', 'camqtp(01)')
+      num = p_camqtp01
+   case('lc-blyp', 'lcblyp')
       num = p_lcblyp
+   case('lc-wpbe', 'lcwpbe', 'lc-ωpbe', 'lcωpbe', 'lc-omegapbe', 'lcomegapbe')
+      num = p_lcwpbe
+   case('lc-wpbeh', 'lcwpbeh', 'lc-ωpbeh', 'lcωpbeh', 'lc-omegapbeh', 'lcomegapbeh')
+      num = p_lcwpbeh
    case('lh07tsvwn', 'lh07t-svwn')
       num = p_lh07tsvwn
    case('lh07ssvwn', 'lh07s-svwn')
@@ -899,6 +928,14 @@ pure function get_functional_id(df) result(num)
       num = p_b97m
    case('wb97m', 'ωb97m', 'omegab97m')
       num = p_wb97m
+   case('wb97m-rev', 'ωb97m-rev', 'omegab97m-rev', 'wb97m_rev', 'ωb97m_rev', 'omegab97m_rev')
+      num = p_wb97m_rev
+   case('wb97', 'ωb97', 'omegab97')
+      num = p_wb97
+   case('wb97x', 'ωb97x', 'omegab97x')
+      num = p_wb97x
+   case('wb97x-rev', 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev')
+      num = p_wb97x_rev
    case('am05')
       num = p_am05
    end select
