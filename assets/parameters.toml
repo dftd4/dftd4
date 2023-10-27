@@ -366,15 +366,15 @@ d4.bj-eeq-atm = { s8=0.60187490, a1=0.51559235, a2=5.77342911, doi="10.1063/5.00
 
 [parameter.r2scanh]
 reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.1063/5.0086040"]
-d4.bj-eeq-atm = {s8=0.8324, a1=0.4944, a2=5.9019, doi="10.1063/5.0086040"}
+d4.bj-eeq-atm = { s8=0.8324, a1=0.4944, a2=5.9019, doi="10.1063/5.0086040" }
 
 [parameter.r2scan0]
 reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.1063/5.0086040"]
-d4.bj-eeq-atm = {s8=0.8992, a1=0.4778, a2=5.8779, doi="10.1063/5.0086040"}
+d4.bj-eeq-atm = { s8=0.8992, a1=0.4778, a2=5.8779, doi="10.1063/5.0086040" }
 
 [parameter.r2scan50]
 reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.1063/5.0086040"]
-d4.bj-eeq-atm = {s8=1.0471, a1=0.4574, a2=5.8969, doi="10.1063/5.0086040"}
+d4.bj-eeq-atm = { s8=1.0471, a1=0.4574, a2=5.8969, doi="10.1063/5.0086040" }
 
 [parameter.rscan-3c]
 reference.doi = ["10.1063/5.0040021"]
