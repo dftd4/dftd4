@@ -44,7 +44,7 @@ module dftd4_param
          & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
          & p_r2scanh, p_r2scan0, p_r2scan50, p_camqtp01, p_lcwpbe, p_lcwpbeh, &
-         & p_wb97x_rev, p_wb97m_rev, p_last
+         & p_wb97x_rev, p_wb97m_rev, p_wb97x_3c, p_last
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -196,6 +196,8 @@ subroutine get_functionals(funcs)
    funcs(p_wb97x) = new_funcgroup([character(len=20) :: 'wb97x', 'ωb97x', 'omegab97x'])
    funcs(p_wb97x_rev) = new_funcgroup([character(len=20) :: 'wb97x-rev', &
     & 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev'])
+   funcs(p_wb97x_3c) = new_funcgroup([character(len=20) :: 'wb97x-3c', &
+    & 'ωb97x-3c', 'omegab97x-3c', 'wb97x_3c', 'ωb97x_3c', 'omegab97x_3c'])
 
    funcs(p_camb3lyp) = new_funcgroup([character(len=20) :: 'cam-b3lyp', 'camb3lyp'])
    funcs(p_camqtp01) = new_funcgroup([character(len=20) :: 'cam-qtp01', 'camqtp01', 'camqtp(01)'])
@@ -629,6 +631,9 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_wb97x_rev)
       param = dftd_param ( & ! (10.1063/5.0133026)
          &  s6=1.0000_wp, s8=0.4485_wp, a1=0.3306_wp, a2=4.279_wp )
+   case(p_wb97x_3c)
+      param = dftd_param ( & ! (10.1063/5.0133026)
+         &  s6=1.0000_wp, s8=0.0_wp, a1=0.2464_wp, a2=4.737_wp )
    case(p_b97m)
       param = dftd_param ( & ! (10.1002/jcc.26411)
          &  s6=1.0000_wp, s8=0.6633_wp, a1=0.4288_wp, a2=3.9935_wp )
@@ -728,6 +733,8 @@ pure function get_functional_id(df) result(num)
       num = p_invalid
    case('hf')
       num = p_hf
+   case('am05')
+      num = p_am05
    case('b-lyp', 'blyp')
       num = p_blyp
    case('bpbe')
@@ -936,8 +943,8 @@ pure function get_functional_id(df) result(num)
       num = p_wb97x
    case('wb97x-rev', 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev')
       num = p_wb97x_rev
-   case('am05')
-      num = p_am05
+   case('wb97x-3c', 'ωb97x-3c', 'omegab97x-3c', 'wb97x_3c', 'ωb97x_3c', 'omegab97x_3c')
+      num = p_wb97x_3c
    end select
 end function get_functional_id
 
