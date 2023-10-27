@@ -193,21 +193,22 @@ subroutine get_functionals(funcs)
    funcs(p_b97m) = new_funcgroup([character(len=20) :: 'b97m'])
    funcs(p_wb97m) = new_funcgroup([character(len=20) :: 'wb97m', 'ωb97m', 'omegab97m'])
    funcs(p_wb97m_rev) = new_funcgroup([character(len=20) :: 'wb97m-rev', &
-    & 'ωb97m-rev', 'omegab97m-rev', 'wb97m_rev', 'ωb97m_rev', 'omegab97m_rev'])
+      & 'ωb97m-rev', 'omegab97m-rev', 'wb97m_rev', 'ωb97m_rev', 'omegab97m_rev'])
    funcs(p_wb97) = new_funcgroup([character(len=20) :: 'wb97', 'ωb97', 'omegab97'])
    funcs(p_wb97x) = new_funcgroup([character(len=20) :: 'wb97x', 'ωb97x', 'omegab97x'])
    funcs(p_wb97x_rev) = new_funcgroup([character(len=20) :: 'wb97x-rev', &
-    & 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev'])
+      & 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev'])
    funcs(p_wb97x_3c) = new_funcgroup([character(len=20) :: 'wb97x-3c', &
-    & 'ωb97x-3c', 'omegab97x-3c', 'wb97x_3c', 'ωb97x_3c', 'omegab97x_3c'])
+      & 'ωb97x-3c', 'omegab97x-3c', 'wb97x_3c', 'ωb97x_3c', 'omegab97x_3c'])
 
    funcs(p_camb3lyp) = new_funcgroup([character(len=20) :: 'cam-b3lyp', 'camb3lyp'])
-   funcs(p_camqtp01) = new_funcgroup([character(len=20) :: 'cam-qtp01', 'camqtp01', 'camqtp(01)'])
+   funcs(p_camqtp01) = new_funcgroup([character(len=20) :: 'cam-qtp01', &
+      & 'camqtp01', 'camqtp(01)', 'cam-qtp(01)'])
    funcs(p_lcblyp) = new_funcgroup([character(len=20) :: 'lc-blyp', 'lcblyp'])
    funcs(p_lcwpbe) = new_funcgroup([character(len=20) :: 'lc-wpbe', &
-    & 'lcwpbe', 'lc-ωpbe', 'lcωpbe', 'lc-omegapbe', 'lcomegapbe'])
+      & 'lcwpbe', 'lc-ωpbe', 'lcωpbe', 'lc-omegapbe', 'lcomegapbe'])
    funcs(p_lcwpbeh) = new_funcgroup([character(len=20) :: 'lc-wpbeh', &
-    & 'lcwpbeh', 'lc-ωpbeh', 'lcωpbeh', 'lc-omegapbeh', 'lcomegapbeh'])
+      & 'lcwpbeh', 'lc-ωpbeh', 'lcωpbeh', 'lc-omegapbeh', 'lcomegapbeh'])
 
 end subroutine get_functionals
 
@@ -843,7 +844,7 @@ pure function get_functional_id(df) result(num)
       num = p_m06
    case('cam-b3lyp', 'camb3lyp')
       num = p_camb3lyp
-   case('cam-qtp01', 'camqtp01', 'camqtp(01)')
+   case('cam-qtp01', 'camqtp01', 'camqtp(01)', 'cam-qtp(01)')
       num = p_camqtp01
    case('lc-blyp', 'lcblyp')
       num = p_lcblyp
