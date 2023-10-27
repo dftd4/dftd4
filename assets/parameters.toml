@@ -365,16 +365,20 @@ reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077"]
 d4.bj-eeq-atm = { s8=0.60187490, a1=0.51559235, a2=5.77342911, doi="10.1063/5.0041008" }
 
 [parameter.r2scanh]
-reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.26434/chemrxiv-2021-cn8lp"]
-d4.bj-eeq-atm = {s8=0.8324, a1=0.4944, a2=5.9019, doi="10.26434/chemrxiv-2021-cn8lp"}
+reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.1063/5.0086040"]
+d4.bj-eeq-atm = {s8=0.8324, a1=0.4944, a2=5.9019, doi="10.1063/5.0086040"}
 
 [parameter.r2scan0]
-reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.26434/chemrxiv-2021-cn8lp"]
-d4.bj-eeq-atm = {s8=0.8992, a1=0.4778, a2=5.8779, doi="10.26434/chemrxiv-2021-cn8lp"}
+reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.1063/5.0086040"]
+d4.bj-eeq-atm = {s8=0.8992, a1=0.4778, a2=5.8779, doi="10.1063/5.0086040"}
 
 [parameter.r2scan50]
-reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.26434/chemrxiv-2021-cn8lp"]
-d4.bj-eeq-atm = {s8=1.0471, a1=0.4574, a2=5.8969, doi="10.26434/chemrxiv-2021-cn8lp"}
+reference.doi = ["10.1021/acs.jpclett.0c02405", "10.1021/acs.jpclett.0c03077", "10.1063/5.0086040"]
+d4.bj-eeq-atm = {s8=1.0471, a1=0.4574, a2=5.8969, doi="10.1063/5.0086040"}
+
+[parameter.rscan-3c]
+reference.doi = ["10.1063/5.0040021"]
+d4.bj-eeq-atm = { s8=0.00, a1=0.42, a2=5.65, s9=2.0, doi="10.1063/5.0040021" }
 
 [parameter.tpss0]
 d4.bj-eeq-atm = { s8=1.62438102, a1=0.40329022, a2=4.80537871, doi="10.1063/1.5090222" }

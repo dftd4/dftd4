@@ -43,8 +43,8 @@ module dftd4_param
          & p_hse03, p_revtpssh, p_mn12sx, p_glyp, p_mpw1b95, &
          & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
-         & p_r2scanh, p_r2scan0, p_r2scan50, p_camqtp01, p_lcwpbe, p_lcwpbeh, &
-         & p_wb97x_rev, p_wb97m_rev, p_wb97x_3c, p_last
+         & p_r2scanh, p_r2scan0, p_r2scan50, p_r2scan_3c, p_camqtp01, &
+         & p_lcwpbe, p_lcwpbeh, p_wb97x_rev, p_wb97m_rev, p_wb97x_3c, p_last
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -120,6 +120,8 @@ subroutine get_functionals(funcs)
    funcs(p_r2scanh) = new_funcgroup([character(len=20) :: 'r2scanh', 'r²scanh'])
    funcs(p_r2scan0) = new_funcgroup([character(len=20) :: 'r2scan0', 'r²scan0'])
    funcs(p_r2scan50) = new_funcgroup([character(len=20) :: 'r2scan50', 'r²scan50'])
+   funcs(p_r2scan_3c) = new_funcgroup([character(len=20) :: 'r2scan-3c', &
+    & 'r²scan-3c', 'r2scan_3c', 'r²scan_3c'])
    funcs(p_b1lyp) = new_funcgroup([character(len=20) :: 'b1lyp', 'b1-lyp'])
    funcs(p_b3lyp) = new_funcgroup([character(len=20) :: 'b3-lyp', 'b3lyp'])
    funcs(p_bhlyp) = new_funcgroup([character(len=20) :: 'bh-lyp', 'bhlyp'])
@@ -597,11 +599,17 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (10.1063/5.0041008)
          &  s6=1.0000_wp, s8=0.60187490_wp, a1=0.51559235_wp, a2=5.77342911_wp )
    case(p_r2scanh)
-      param = dftd_param (s6=1.0_wp, s8=0.8324_wp, a1=0.4944_wp, a2=5.9019_wp)
+      param = dftd_param ( & ! (10.1063/5.0086040)
+         & s6=1.0_wp, s8=0.8324_wp, a1=0.4944_wp, a2=5.9019_wp)
    case(p_r2scan0)
-      param = dftd_param (s6=1.0_wp, s8=0.8992_wp, a1=0.4778_wp, a2=5.8779_wp)
+      param = dftd_param ( & ! (10.1063/5.0086040)
+         & s6=1.0_wp, s8=0.8992_wp, a1=0.4778_wp, a2=5.8779_wp)
    case(p_r2scan50)
-      param = dftd_param (s6=1.0_wp, s8=1.0471_wp, a1=0.4574_wp, a2=5.8969_wp)
+      param = dftd_param ( & ! (10.1063/5.0086040)
+         & s6=1.0_wp, s8=1.0471_wp, a1=0.4574_wp, a2=5.8969_wp)
+   case(p_r2scan_3c)
+      param = dftd_param ( & ! (10.1063/5.0040021)
+         & s6=1.0_wp, s8=0.00_wp, s9=2.0_wp, a1=0.42_wp, a2=5.65_wp)
    case(p_tpss0)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.62438102_wp, a1=0.40329022_wp, a2=4.80537871_wp )
@@ -789,6 +797,8 @@ pure function get_functional_id(df) result(num)
       num = p_r2scan0
    case('r2scan50', 'r²scan50')
       num = p_r2scan50
+   case('r2scan-3c', 'r²scan-3c', 'r2scan_3c', 'r²scan_3c')
+      num = p_r2scan_3c
    case('b1lyp', 'b1-lyp')
       num = p_b1lyp
    case('b3-lyp', 'b3lyp')
