@@ -68,6 +68,7 @@ subroutine run_main(config, error)
 
    type(structure_type) :: mol
    character(len=:), allocatable :: filename
+   character(len=:), allocatable :: functional
    class(damping_param), allocatable :: param
    type(d4_model) :: d4
    real(wp) :: charge
@@ -75,7 +76,8 @@ subroutine run_main(config, error)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    real(wp), allocatable :: s9
-   integer :: stat, unit
+   real(wp) :: ga, gc
+   integer :: stat, unit, is
    logical :: exist
 
    if (config%verbosity > 1) then
@@ -116,12 +118,30 @@ subroutine run_main(config, error)
       call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
    end if
 
+   ga = config%ga
+   gc = config%gc
    if (config%mbdscale) s9 = config%inp%s9
    if (config%rational) then
       if (config%has_param) then
          param = config%inp
       else
-         call get_rational_damping(config%method, param, s9)
+         is = index(config%method, '/')
+         if (is == 0) is = len_trim(config%method) + 1
+         functional = lowercase(config%method(:is-1))
+
+         ! special case: r2SCAN-3c (modifies s9, ga, gc)
+         if (functional == 'r2scan-3c' .or. functional == 'r²scan-3c' .or. &
+            & functional == 'r2scan_3c' .or. functional == 'r²scan_3c') then
+               if (.not.config%mbdscale) then
+                  s9 = 2.0_wp
+               end if
+               if (.not.config%zeta) then
+                  ga = 2.0_wp
+                  gc = 1.0_wp
+               end if
+         end if
+
+         call get_rational_damping(functional, param, s9)
          if (.not.allocated(param)) then
             call fatal_error(error, "No parameters for '"//config%method//"' available")
             return
@@ -143,7 +163,7 @@ subroutine run_main(config, error)
       end if
    end if
 
-   call new_d4_model(error, d4, mol, ga=config%ga, gc=config%gc, wf=config%wf)
+   call new_d4_model(error, d4, mol, ga=ga, gc=gc, wf=config%wf)
    if (allocated(error)) return
 
    if (config%properties) then

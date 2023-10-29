@@ -19,7 +19,7 @@ module dftd4_utils
    use mctc_io_math, only : matinv_3x3
    implicit none
 
-   public :: wrap_to_central_cell
+   public :: lowercase, wrap_to_central_cell
 
 
 contains
@@ -59,6 +59,38 @@ elemental function shift_back_abc(in) result(out)
    if (abs(in - 1.0_wp) < p_pbc_eps) &
       out = in - 1.0_wp
 end function shift_back_abc
+
+
+!> Convert string to lower case
+pure function lowercase(str) result(lcstr)
+   character(len=*), intent(in)  :: str
+   character(len=len_trim(str)) :: lcstr
+   integer :: ilen, ioffset, iquote, i, iav, iqc
+
+   ilen=len_trim(str)
+   ioffset=iachar('A')-iachar('a')
+   iquote=0
+   lcstr=str
+   do i=1, ilen
+      iav=iachar(str(i:i))
+      if(iquote==0 .and. (iav==34 .or.iav==39)) then
+         iquote=1
+         iqc=iav
+        cycle
+      endif
+      if(iquote==1 .and. iav==iqc) then
+         iquote=0
+         cycle
+      endif
+      if (iquote==1) cycle
+      if(iav >= iachar('A') .and. iav <= iachar('Z')) then
+         lcstr(i:i)=achar(iav-ioffset)
+      else
+         lcstr(i:i)=str(i:i)
+      endif
+   enddo
+
+end function lowercase
 
 
 end module dftd4_utils

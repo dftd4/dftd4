@@ -84,3 +84,45 @@ test(
     '--func', 'b3lyp',
   ],
 )
+
+# r2SCAN-3c modifies s9, ga, gc, hence, requiring additional tests:
+# - selection via functional name
+# - check if s9, ga, gc can still be modified when name is given
+# - full manual specification via command line
+test(
+  'app-r2scan3c',
+  app_tester,
+  args: [
+    dftd4_exe,
+    files('05-r2scan3c.json'),
+    files('04-caffeine.xyz'),
+    '--noedisp',
+    '--func', 'r2scan-3c',
+  ],
+)
+test(
+  'app-r2scan3c-mod',
+  app_tester,
+  args: [
+    dftd4_exe,
+    files('06-r2scan3c-mod.json'),
+    files('04-caffeine.xyz'),
+    '--noedisp',
+    '--func', 'r2scan-3c',
+    '--zeta', '4.0', '5.0',
+    '--mbdscale', '1.0',
+  ],
+)
+test(
+  'app-r2scan3c-cli',
+  app_tester,
+  args: [
+    dftd4_exe,
+    files('05-r2scan3c.json'),
+    files('04-caffeine.xyz'),
+    '--noedisp',
+    '--param', '1.0', '0.0', '0.42', '5.65',
+    '--mbdscale', '2.0',
+    '--zeta', '2.0', '1.0',
+  ],
+)
