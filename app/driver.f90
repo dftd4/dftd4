@@ -28,7 +28,7 @@ module dftd4_driver
    use dftd4_utils
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
-   use dftd4_param, only : functional_group, get_functionals
+   use dftd4_param, only : functional_group, get_functionals, get_functional_id
    implicit none
    private
 
@@ -77,7 +77,7 @@ subroutine run_main(config, error)
    real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    real(wp), allocatable :: s9
    real(wp) :: ga, gc
-   integer :: stat, unit, is
+   integer :: stat, unit, is, id
    logical :: exist
 
    if (config%verbosity > 1) then
@@ -128,17 +128,17 @@ subroutine run_main(config, error)
          is = index(config%method, '/')
          if (is == 0) is = len_trim(config%method) + 1
          functional = lowercase(config%method(:is-1))
+         id = get_functional_id(functional)
 
          ! special case: r2SCAN-3c (modifies s9, ga, gc)
-         if (functional == 'r2scan-3c' .or. functional == 'r²scan-3c' .or. &
-            & functional == 'r2scan_3c' .or. functional == 'r²scan_3c') then
-               if (.not.config%mbdscale) then
-                  s9 = 2.0_wp
-               end if
-               if (.not.config%zeta) then
-                  ga = 2.0_wp
-                  gc = 1.0_wp
-               end if
+         if (id == 102) then
+            if (.not.config%mbdscale) then
+               s9 = 2.0_wp
+            end if
+            if (.not.config%zeta) then
+               ga = 2.0_wp
+               gc = 1.0_wp
+            end if
          end if
 
          call get_rational_damping(functional, param, s9)

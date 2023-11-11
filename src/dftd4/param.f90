@@ -22,7 +22,8 @@ module dftd4_param
    implicit none
    private
 
-   public :: get_rational_damping, get_functionals, functional_group
+   public :: functional_group
+   public :: get_rational_damping, get_functionals, get_functional_id
 
 
    enum, bind(C)
@@ -50,10 +51,16 @@ module dftd4_param
    integer, parameter :: df_enum = kind(p_invalid)
 
 
-   ! Group different spellings/names of functionals
+   !> Group different spellings/names of functionals
    type functional_group
       character(len=:), allocatable :: names(:)
    end type functional_group
+
+   !> Retrieve rational damping parameters from functional name or ID
+   interface get_rational_damping
+      module procedure :: get_rational_damping_name
+      module procedure :: get_rational_damping_id
+   end interface get_rational_damping
 
 contains
 
@@ -122,7 +129,7 @@ subroutine get_functionals(funcs)
    funcs(p_r2scan0) = new_funcgroup([character(len=20) :: 'r2scan0', 'r²scan0'])
    funcs(p_r2scan50) = new_funcgroup([character(len=20) :: 'r2scan50', 'r²scan50'])
    funcs(p_r2scan_3c) = new_funcgroup([character(len=20) :: 'r2scan-3c', &
-    & 'r²scan-3c', 'r2scan_3c', 'r²scan_3c'])
+      & 'r²scan-3c', 'r2scan_3c', 'r²scan_3c', 'r2scan3c'])
    funcs(p_b1lyp) = new_funcgroup([character(len=20) :: 'b1lyp', 'b1-lyp'])
    funcs(p_b3lyp) = new_funcgroup([character(len=20) :: 'b3-lyp', 'b3lyp'])
    funcs(p_bhlyp) = new_funcgroup([character(len=20) :: 'bh-lyp', 'bhlyp'])
@@ -214,24 +221,37 @@ subroutine get_functionals(funcs)
 end subroutine get_functionals
 
 
-subroutine get_rational_damping(functional, param, s9)
-   !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping
+!> Retrieve rational damping parameters from functional name
+subroutine get_rational_damping_name(functional, param, s9)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping_name
    character(len=*), intent(in) :: functional
    class(damping_param), allocatable, intent(out) :: param
    real(wp), intent(in), optional :: s9
 
    character(len=:), allocatable :: fname
    integer :: is, id
-   logical :: mbd
-
-   mbd = .true.
-   if (present(s9)) mbd = s9 /= 0.0_wp
 
    is = index(functional, '/')
    if (is == 0) is = len_trim(functional) + 1
    fname = lowercase(functional(:is-1))
 
    id = get_functional_id(fname)
+
+   call get_rational_damping_id(id, param, s9=s9)
+
+end subroutine get_rational_damping_name
+
+
+!> Retrieve rational damping parameters from functional ID
+subroutine get_rational_damping_id(id, param, s9)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping_id
+   integer, intent(in) :: id
+   class(damping_param), allocatable, intent(out) :: param
+   real(wp), intent(in), optional :: s9
+   logical :: mbd
+
+   mbd = .true.
+   if (present(s9)) mbd = s9 /= 0.0_wp
 
    if (mbd) then
       call get_d4eeq_bjatm_parameter(id, param, s9)
@@ -245,7 +265,8 @@ subroutine get_rational_damping(functional, param, s9)
       end if
    end if
 
-end subroutine get_rational_damping
+end subroutine get_rational_damping_id
+
 
 subroutine get_d4eeq_bj_parameter(dfnum, param, s9)
    integer(df_enum), intent(in) :: dfnum
@@ -799,7 +820,7 @@ pure function get_functional_id(df) result(num)
       num = p_r2scan0
    case('r2scan50', 'r²scan50')
       num = p_r2scan50
-   case('r2scan-3c', 'r²scan-3c', 'r2scan_3c', 'r²scan_3c')
+   case('r2scan-3c', 'r²scan-3c', 'r2scan_3c', 'r²scan_3c', 'r2scan3c')
       num = p_r2scan_3c
    case('b1lyp', 'b1-lyp')
       num = p_b1lyp
