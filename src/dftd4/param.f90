@@ -24,6 +24,7 @@ module dftd4_param
 
    public :: functional_group
    public :: get_rational_damping, get_functionals, get_functional_id
+   public :: p_r2scan_3c
 
 
    enum, bind(C)

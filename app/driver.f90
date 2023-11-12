@@ -28,7 +28,8 @@ module dftd4_driver
    use dftd4_utils
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
-   use dftd4_param, only : functional_group, get_functionals, get_functional_id
+   use dftd4_param, only : functional_group, get_functionals, &
+      get_functional_id, p_r2scan_3c
    implicit none
    private
 
@@ -131,7 +132,7 @@ subroutine run_main(config, error)
          id = get_functional_id(functional)
 
          ! special case: r2SCAN-3c (modifies s9, ga, gc)
-         if (id == 102) then
+         if (id == p_r2scan_3c) then
             if (.not.config%mbdscale) then
                s9 = 2.0_wp
             end if
