@@ -97,7 +97,8 @@ subroutine test_rational_damping(error)
       & 'revtpss0', 'revdsd-pbep86', 'revdsd-pbe', 'revdsd-blyp', &
       & 'revdod-pbep86', 'b97m', 'wb97m', 'pbesol', 'am05', 'mn12sx', &
       & 'hse03', 'hse06', 'hse12', 'hse12s', 'hsesol', 'r2scanh', 'r2scan0', &
-      & 'r2scan50']
+      & 'r2scan50', 'r2scan-3c', 'cam-qtp(01)', 'lc-wpbe', 'lc-wpbe', &
+      & 'wb97m-rev', 'wb97x-rev', 'wb97x-3c']
    real(wp), parameter :: ref(*) = [&
       &-2.82477942248756E-1_wp,-1.83931931447376E-1_wp,-1.67883731806544E-1_wp, &
       &-1.19260344286630E-1_wp,-1.73553643190541E-1_wp,-4.64187008858948E-1_wp, &
@@ -131,7 +132,9 @@ subroutine test_rational_damping(error)
       &-3.62056559678757E-2_wp,-2.40058302367699E-2_wp,-6.96544052724497E-2_wp, &
       &-7.14846527169669E-2_wp,-6.94907081073225E-2_wp,-6.20062456876537E-2_wp, &
       &-5.03611950945288E-2_wp,-2.92623318488036E-2_wp,-3.16651212523792E-2_wp, &
-      &-3.45136899744303E-2_wp]
+      &-3.45136899744303E-2_wp,-3.21006297575776E-02_wp,-2.64304324016606E-2_wp, &
+      &-9.62084434444786E-2_wp,-9.62084434444786E-2_wp,-1.02981045785624E-1_wp, &
+      &-1.30367427484416E-1_wp,-9.72681691945497E-2_wp]
    class(damping_param), allocatable :: param
    type(structure_type) :: mol
    integer :: ii

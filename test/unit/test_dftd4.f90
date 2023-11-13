@@ -55,13 +55,14 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("M06L-D4-ATM", test_m06ld4atm_mb13), &
       & new_unittest("TPSSh-D4-ATM", test_tpsshd4atm_mb14), &
       & new_unittest("HF-D4-ATM", test_hfd4atm_mb15), &
-      & new_unittest("CAM-B3LYP-D4-ATM", test_camb3lypd4atm_mb16) &
+      & new_unittest("CAM-B3LYP-D4-ATM", test_camb3lypd4atm_mb16), &
+      & new_unittest("r2SCAN-3c", test_r2scan3c_mb01) &
       & ]
 
 end subroutine collect_dftd4
 
 
-subroutine test_dftd4_gen(error, mol, param, ref)
+subroutine test_dftd4_gen(error, mol, param, ref, ga, gc)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -75,10 +76,16 @@ subroutine test_dftd4_gen(error, mol, param, ref)
    !> Expected dispersion energy
    real(wp), intent(in) :: ref
 
+   !> Charge scaling height
+   real(wp), intent(in), optional :: ga
+
+   !> Charge scaling steepness
+   real(wp), intent(in), optional :: gc
+
    type(d4_model) :: d4
    real(wp) :: energy
 
-   call new_d4_model(d4, mol)
+   call new_d4_model(d4, mol, ga=ga, gc=gc)
    call get_dispersion(mol, d4, param, realspace_cutoff(), energy)
 
    call check(error, energy, ref, thr=thr)
@@ -432,6 +439,24 @@ subroutine test_camb3lypd4atm_mb16(error)
    call test_numsigma(error, mol, param)
 
 end subroutine test_camb3lypd4atm_mb16
+
+
+subroutine test_r2scan3c_mb01(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.00_wp, s9 = 2.00_wp, alp = 16.0_wp, &
+      & s8 = 0.00_wp, a1 = 0.42_wp, a2 = 5.65_wp)
+   
+   real(wp), parameter :: ref = -5.7825025556386862E-003_wp
+
+   call get_structure(mol, "MB16-43", "01")
+   call test_dftd4_gen(error, mol, param, ref, ga=2.0_wp, gc=1.0_wp)
+
+end subroutine test_r2scan3c_mb01
 
 
 end module test_dftd4

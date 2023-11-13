@@ -45,6 +45,7 @@ module dftd4_cli
       logical :: tmer = .true.
       logical :: properties = .false.
       logical :: mbdscale = .false.
+      logical :: zeta = .false.
       logical :: grad = .false.
       logical :: hessian = .false.
       character(len=:), allocatable :: grad_output
@@ -238,6 +239,7 @@ subroutine get_run_arguments(config, list, start, error)
          iarg = iarg + 1
          call get_argument_as_real(iarg, config%gc, error)
          if (allocated(error)) exit
+         config%zeta = .true.
       case("--wfactor")
          iarg = iarg + 1
          call get_argument_as_real(iarg, config%wf, error)
