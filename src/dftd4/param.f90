@@ -634,6 +634,33 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_r2scan_3c)
       param = dftd_param ( & ! (10.1063/5.0040021)
          & s6=1.0_wp, s8=0.00_wp, a1=0.42_wp, a2=5.65_wp)
+   case(p_wr2scan) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=1.0_wp, s8=1.0_wp, a1=0.3834_wp, a2=0.4280_wp)
+   case(p_r2scan0_dh) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.9424_wp, s8=0.3856_wp, a1=0.4271_wp, a2=5.8565_wp)
+   case(p_r2scan_cidh) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.8666_wp, s8=0.5336_wp, a1=0.4171_wp, a2=5.9125_wp)
+   case(p_r2scan_qidh) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7867_wp, s8=0.2955_wp, a1=0.4001_wp, a2=5.8300_wp)
+   case(p_r2scan0_2) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7386_wp, s8=0.0000_wp, a1=0.4030_wp, a2=5.5142_wp)
+   case(p_pr2scan50) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7964_wp, s8=0.3421_wp, a1=0.4663_wp, a2=5.7916_wp)
+   case(p_pr2scan69) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7167_wp, s8=0.0000_wp, a1=0.4644_wp, a2=5.2563_wp)
+   case(p_kpr2scan50) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.8402_wp, s8=0.1212_wp, a1=0.4382_wp, a2=5.8232_wp)
+   case(p_wpr2scan50) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.8143_wp, s8=0.3842_wp, a1=0.4135_wp, a2=5.8773_wp)
    case(p_tpss0)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=1.62438102_wp, a1=0.40329022_wp, a2=4.80537871_wp )
