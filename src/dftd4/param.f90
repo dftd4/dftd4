@@ -748,7 +748,7 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
          &  s6=1.0_wp, s8=1.82207807_wp, a1=0.45646268_wp, a2=5.59662251_wp)
    case(p_wr2scan) ! (10.1063/5.0174988)
       param = dftd_param ( &
-         & s6=1.0_wp, s8=1.0_wp, a1=0.3834_wp, a2=0.4280_wp)
+         & s6=1.0_wp, s8=1.0_wp, a1=0.3834_wp, a2=5.7889_wp)
    case(p_r2scan0_dh) ! (10.1063/5.0174988)
       param = dftd_param ( &
          & s6=0.9424_wp, s8=0.3856_wp, a1=0.4271_wp, a2=5.8565_wp)
