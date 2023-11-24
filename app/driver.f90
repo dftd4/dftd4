@@ -274,10 +274,10 @@ subroutine run_param(config, error)
          character(len=:), allocatable :: temp_names(:)
     
          integer :: i, j, nfuncs
- 
+
          call get_functionals(funcs)
          nfuncs = size(funcs)
-         
+
          ! Bubble sort based on the first name in each group of funcs
          do i = 1, nfuncs - 1
             do j = 1, nfuncs - i
