@@ -18,7 +18,7 @@ module test_dftd4
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
-   use mctc_io, only : structure_type
+   use mctc_io, only : structure_type, new
    use mstore, only : get_structure
    use dftd4
    implicit none
@@ -421,21 +421,18 @@ subroutine test_tpsshd4atm_amf3(error)
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
       & s8 = 1.85897750_wp, a1 = 0.44286966_wp, a2 = 4.60230534_wp)
 
-   real(wp), parameter :: ref = -2.5941168539290347E-003_wp ! TODO: Update EEQ
+   real(wp), parameter :: ref = -2.0265307606391596E-003_wp ! TODO: Update EEQ
 
-   ! Molecular structure data 
-   mol%nat = 4
-   mol%nid = 2
-   mol%id = [1, 2, 2, 2]
-   mol%num = [95, 9]
-   mol%xyz = reshape([ &
+   integer, parameter :: nat = 4
+   integer, parameter :: num(nat) = [95, 9, 9, 9]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
       & -1.13163973200000_wp, -2.17446990100000_wp, +1.10012477100000_wp, &
       & -4.66377948900000_wp, -3.12947883400000_wp, -0.36987606800000_wp, &
       & -0.19032564300000_wp, +1.36339950600000_wp, -0.36521789300000_wp, &
       & +1.46283310800000_wp, -4.75734549200000_wp, -0.36503081000000_wp],&
-      & [3, 4])
-   mol%periodic = [.false.]
+      & [3, nat])
 
+   call new(mol, num, xyz)
    call test_dftd4_gen(error, mol, param, ref)
    call test_numgrad(error, mol, param)
    call test_numsigma(error, mol, param)
@@ -503,16 +500,12 @@ subroutine test_actinides(error)
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
-   real(wp), parameter :: ref = -2.9969892004838511E-001_wp  ! TODO: Update EEQ
-
-   ! Molecular structure data 
-   mol%nat = 17
-   mol%nid = 17
-   mol%id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, &
-      & 12, 13, 14, 15, 16, 17]
-   mol%num = [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, &
-      & 98, 99, 100, 101, 102, 103]
-   mol%xyz = reshape([ &
+   real(wp), parameter :: ref = -0.17135234612941966_wp  ! TODO: Update EEQ
+   
+   integer, parameter :: nat = 17
+   integer, parameter :: num(nat) = [&
+      & 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
       & 0.98692316414074_wp, 6.12727238368797_wp,-6.67861597188102_wp, &
       & 3.63898862390869_wp, 5.12109301182962_wp, 3.01908613326278_wp, &
       & 5.14503571563551_wp,-3.97172984617710_wp, 3.82011791828867_wp, &
@@ -530,9 +523,9 @@ subroutine test_actinides(error)
       & 6.20675384557240_wp, 4.24490721493632_wp,-0.71004195169885_wp, &
       & 7.04586341131562_wp, 5.20053667939076_wp,-7.51972863675876_wp, &
       & 2.01082807362334_wp, 1.34838807211157_wp,-4.70482633508447_wp],&
-      & [3, 17])
-   mol%periodic = [.false.]
+      & [3, nat])
 
+   call new(mol, num, xyz)
    call test_dftd4_gen(error, mol, param, ref)
 
 end subroutine test_actinides
