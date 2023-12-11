@@ -545,7 +545,7 @@ subroutine test_model_error(error)
    type(d4_model) :: d4
 
    integer, parameter :: nat = 2
-   character(len=*), parameter :: sym(nat) = [character(len=4) :: "Ra", "Fr"]
+   character(len=*), parameter :: sym(nat) = [character(len=4) :: "Rf", "Db"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp],&
       & shape(xyz))

@@ -29,7 +29,6 @@ def get_data_file_name() -> str:
 
 
 def test_get_b3lyp():
-
     expected = {
         "s6": 1.0,
         "s9": 1.0,
@@ -45,7 +44,6 @@ def test_get_b3lyp():
 
 
 def test_get_b2plyp():
-
     expected = {
         "s6": 0.64,
         "s9": 1.0,
@@ -61,7 +59,6 @@ def test_get_b2plyp():
 
 
 def test_get_pw6b95():
-
     expected = {
         "s6": 1.0,
         "s9": 1.0,
@@ -79,7 +76,6 @@ def test_get_pw6b95():
 
 
 def test_all_parameters():
-
     params = get_all_damping_params()
 
     assert "b3lyp" in params
