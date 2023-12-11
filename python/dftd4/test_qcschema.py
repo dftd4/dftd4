@@ -23,7 +23,6 @@ from typing import Any, Dict
 
 
 def get_example_molecule() -> Dict[str, Any]:
-
     return {
         "symbols": "C C C C C C I H H H H H S H C H H H".split(" "),
         "geometry": [
@@ -90,7 +89,7 @@ def test_energy_r2scan_3c():
 
     print(atomic_result)
     assert atomic_result.success
-    assert approx(atomic_result.return_result, abs=thr) == -6.0533536923248E-03
+    assert approx(atomic_result.return_result, abs=thr) == -6.0533536923248e-03
 
 
 def test_energy_lh20t_d4():
@@ -113,6 +112,7 @@ def test_energy_lh20t_d4():
 
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == -0.010064263146257654
+
 
 def test_energy_m06l_d4():
     thr = 1e-6
@@ -172,6 +172,7 @@ def test_energy_m06l_d4():
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == -0.0013314656225517764
     assert approx(atomic_result.extras["dftd4"]["partial charges"], abs=thr) == charges
+
 
 def test_gradient_b97m_d4():
     thr = 1e-9

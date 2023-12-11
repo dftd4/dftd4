@@ -28,7 +28,6 @@ except ModuleNotFoundError:
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_energy_r2scan_d4():
-
     mol = gto.M(
         atom="""
              C   -0.755422531  -0.796459123  -1.023590391
