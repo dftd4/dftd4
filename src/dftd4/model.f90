@@ -153,9 +153,9 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
    real(wp) :: aiw(23), c6
    real(wp), parameter :: thopi = 3.0_wp/pi
 
-   ! check for unsupported elements (87 (Fr) - 111 (Rg))
+   ! check for unsupported elements (104 (Rf) - 111 (Rg))
    do isp = 1, mol%nid
-      if (mol%num(isp) > 86 .and. mol%num(isp) < 112) then
+      if (mol%num(isp) > 103 .and. mol%num(isp) < 112) then
          call fatal_error(error, "Structure contains unsupported element '"//trim(mol%sym(isp))//"'")
          return
       end if
