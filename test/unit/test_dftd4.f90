@@ -421,7 +421,7 @@ subroutine test_tpsshd4atm_amf3(error)
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
       & s8 = 1.85897750_wp, a1 = 0.44286966_wp, a2 = 4.60230534_wp)
 
-   real(wp), parameter :: ref = -2.0265307606391596E-003_wp ! TODO: Update EEQ
+   real(wp), parameter :: ref = -2.3289809765967293E-003_wp
 
    integer, parameter :: nat = 4
    integer, parameter :: num(nat) = [95, 9, 9, 9]
@@ -433,8 +433,13 @@ subroutine test_tpsshd4atm_amf3(error)
       & [3, nat])
 
    call new(mol, num, xyz)
+
    call test_dftd4_gen(error, mol, param, ref)
+   if (allocated(error)) return
+
    call test_numgrad(error, mol, param)
+   if (allocated(error)) return
+
    call test_numsigma(error, mol, param)
 
 end subroutine test_tpsshd4atm_amf3
@@ -500,7 +505,7 @@ subroutine test_actinides(error)
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
-   real(wp), parameter :: ref = -0.17135234612941966_wp  ! TODO: Update EEQ
+   real(wp), parameter :: ref = -0.17450871973102888_wp
    
    integer, parameter :: nat = 17
    integer, parameter :: num(nat) = [&
