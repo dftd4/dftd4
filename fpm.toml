@@ -1,5 +1,5 @@
 name = "dftd4"
-version = "3.6.0"
+version = "3.7.0"
 license = "LGPL-3.0-or-later"
 maintainer = ["@awvwgk"]
 author = ["Eike Caldeweyher", "Sebastian Ehlert", "Stefan Grimme"]
