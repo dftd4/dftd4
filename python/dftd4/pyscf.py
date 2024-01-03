@@ -22,6 +22,7 @@ Compatibility layer for supporting DFT-D4 in `pyscf <https://pyscf.org/>`_.
 
 try:
     from pyscf import lib, gto
+    from pyscf.grad import rhf as rhf_grad
 except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
 
@@ -29,6 +30,9 @@ import numpy as np
 from typing import Tuple
 
 from .interface import DispersionModel, DampingParam
+
+
+GradientsBase = getattr(rhf_grad, "GradientsBase", rhf_grad.Gradients)
 
 
 class DFTD4Dispersion(lib.StreamObject):
@@ -227,7 +231,7 @@ def energy(mf):
     return DFTD4(mf, with_dftd4)
 
 
-def grad(mfgrad):
+def grad(mfgrad: GradientsBase):
     """
     Apply DFT-D4 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
@@ -268,9 +272,8 @@ def grad(mfgrad):
     5 H    -0.0158316004     0.0230596847    -0.0218908543
     ----------------------------------------------
     """
-    from pyscf.grad import rhf as rhf_grad
 
-    if not isinstance(mfgrad, rhf_grad.Gradients):
+    if not isinstance(mfgrad, GradientsBase):
         raise TypeError("mfgrad must be an instance of Gradients")
 
     # Ensure that the zeroth order results include DFTD4 corrections
