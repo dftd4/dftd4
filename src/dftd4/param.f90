@@ -140,6 +140,8 @@ subroutine get_functionals(funcs)
       & 'r²scan-cidh', 'r2scancidh', 'r²scancidh'])
    funcs(p_r2scan_qidh) = new_funcgroup([character(len=20) :: 'r2scan-qidh', &  
       & 'r²scan-qidh', 'r2scanqidh', 'r²scanqidh'])
+    funcs(p_r2scan0_2) = new_funcgroup([character(len=20) :: 'r2scan0-2', &
+      & 'r²scan0-2', 'r2scan02', 'r²scan02'])
    funcs(p_pr2scan50) = new_funcgroup([character(len=20) :: 'pr2scan50', &
       & 'pr²scan50', 'pr2scan50', 'pr²scan50'])
    funcs(p_pr2scan69) = new_funcgroup([character(len=20) :: 'pr2scan69', &
@@ -215,7 +217,6 @@ subroutine get_functionals(funcs)
    funcs(p_revdsdpbe) = new_funcgroup([character(len=20) :: 'revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe'])
    funcs(p_revdsdblyp) = new_funcgroup([character(len=20) :: 'revdsd-blyp', 'revdsdblyp'])
    funcs(p_revdodpbep86) = new_funcgroup([character(len=20) :: 'revdod-pbep86', 'revdodpbep86'])
-
    funcs(p_b97m) = new_funcgroup([character(len=20) :: 'b97m'])
    funcs(p_wb97m) = new_funcgroup([character(len=20) :: 'wb97m', 'ωb97m', 'omegab97m'])
    funcs(p_wb97m_rev) = new_funcgroup([character(len=20) :: 'wb97m-rev', &
@@ -226,7 +227,6 @@ subroutine get_functionals(funcs)
       & 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev'])
    funcs(p_wb97x_3c) = new_funcgroup([character(len=20) :: 'wb97x-3c', &
       & 'ωb97x-3c', 'omegab97x-3c', 'wb97x_3c', 'ωb97x_3c', 'omegab97x_3c'])
-
    funcs(p_camb3lyp) = new_funcgroup([character(len=20) :: 'cam-b3lyp', 'camb3lyp'])
    funcs(p_camqtp01) = new_funcgroup([character(len=20) :: 'cam-qtp01', &
       & 'camqtp01', 'camqtp(01)', 'cam-qtp(01)'])
