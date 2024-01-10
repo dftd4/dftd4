@@ -272,20 +272,34 @@ subroutine run_param(config, error)
       block
          type(functional_group), allocatable :: funcs(:)
          character(len=:), allocatable :: temp_names(:)
+         integer, parameter :: MAX_LEN = 20
     
          integer :: i, j, nfuncs
+         integer :: size_j, size_jp1
  
          call get_functionals(funcs)
          nfuncs = size(funcs)
-         
+
          ! Bubble sort based on the first name in each group of funcs
          do i = 1, nfuncs - 1
             do j = 1, nfuncs - i
                if (funcs(j)%names(1) > funcs(j+1)%names(1)) then
-                  ! Swap only the names for simplicity
+                  size_j = size(funcs(j)%names)
+                  size_jp1 = size(funcs(j+1)%names)
+
+                  allocate(character(len=MAX_LEN) :: temp_names(size_j))
                   temp_names = funcs(j)%names
+
+                  ! De- and reallocate before swap
+                  if (allocated(funcs(j)%names)) deallocate(funcs(j)%names)
+                  allocate(character(len=MAX_LEN) :: funcs(j)%names(size_jp1))
                   funcs(j)%names = funcs(j+1)%names
+
+                  if (allocated(funcs(j+1)%names)) deallocate(funcs(j+1)%names)
+                  allocate(character(len=MAX_LEN) :: funcs(j+1)%names(size_j))
                   funcs(j+1)%names = temp_names
+
+                  deallocate(temp_names)
                end if
             end do
          end do
