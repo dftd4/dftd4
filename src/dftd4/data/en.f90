@@ -50,12 +50,14 @@ module dftd4_data_en
       &                 1.27_wp,1.30_wp,1.50_wp,2.36_wp,1.90_wp, & ! Lu-
       &                 2.20_wp,2.20_wp,2.28_wp,2.54_wp,2.00_wp, & ! -Hg
       &                 1.62_wp,2.33_wp,2.02_wp,2.00_wp,2.20_wp,2.20_wp, & ! Tl-Rn
+
+      & 0.79_wp,0.90_wp, & ! Fr,Ra
+      &         1.10_wp,1.30_wp,1.50_wp,1.38_wp,1.36_wp,1.28_wp,1.13_wp, & ! Ac-Am
+      &         1.28_wp,1.30_wp,1.30_wp,1.30_wp,1.30_wp,1.30_wp,1.30_wp, & ! Cm-No
+      &         1.30_wp, & ! Lr
       ! only dummies below
-      & 1.50_wp,1.50_wp, & ! Fr,Ra
-      &         1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Ac-Am
-      &         1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Cm-No
-      &                 1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Rf-
-      &                 1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Rf-Cn
+      &                 1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Rf-Bh
+      &                 1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp, & ! Hs-Cn
       &                 1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp,1.50_wp ] ! Nh-Og
 
 contains

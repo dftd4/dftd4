@@ -38,3 +38,7 @@
 # Python files
 __pycache__
 .idea/
+
+# Project-specific files
+.EDISP
+dftd4.txt

@@ -18,7 +18,7 @@ module test_dftd4
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
-   use mctc_io, only : structure_type
+   use mctc_io, only : structure_type, new
    use mstore, only : get_structure
    use dftd4
    implicit none
@@ -54,9 +54,11 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("B1B95-D4-ATM", test_b1b95d4atm_mb12), &
       & new_unittest("M06L-D4-ATM", test_m06ld4atm_mb13), &
       & new_unittest("TPSSh-D4-ATM", test_tpsshd4atm_mb14), &
+      & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
       & new_unittest("HF-D4-ATM", test_hfd4atm_mb15), &
       & new_unittest("CAM-B3LYP-D4-ATM", test_camb3lypd4atm_mb16), &
-      & new_unittest("r2SCAN-3c", test_r2scan3c_mb01) &
+      & new_unittest("r2SCAN-3c", test_r2scan3c_mb01), &
+      & new_unittest("Actinides", test_actinides) &
       & ]
 
 end subroutine collect_dftd4
@@ -409,6 +411,40 @@ subroutine test_tpsshd4atm_mb14(error)
 end subroutine test_tpsshd4atm_mb14
 
 
+subroutine test_tpsshd4atm_amf3(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
+      & s8 = 1.85897750_wp, a1 = 0.44286966_wp, a2 = 4.60230534_wp)
+
+   real(wp), parameter :: ref = -2.3289809765967293E-003_wp
+
+   integer, parameter :: nat = 4
+   integer, parameter :: num(nat) = [95, 9, 9, 9]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      & -1.13163973200000_wp, -2.17446990100000_wp, +1.10012477100000_wp, &
+      & -4.66377948900000_wp, -3.12947883400000_wp, -0.36987606800000_wp, &
+      & -0.19032564300000_wp, +1.36339950600000_wp, -0.36521789300000_wp, &
+      & +1.46283310800000_wp, -4.75734549200000_wp, -0.36503081000000_wp],&
+      & [3, nat])
+
+   call new(mol, num, xyz)
+
+   call test_dftd4_gen(error, mol, param, ref)
+   if (allocated(error)) return
+
+   call test_numgrad(error, mol, param)
+   if (allocated(error)) return
+
+   call test_numsigma(error, mol, param)
+
+end subroutine test_tpsshd4atm_amf3
+
+
 subroutine test_hfd4atm_mb15(error)
 
    !> Error handling
@@ -457,6 +493,47 @@ subroutine test_r2scan3c_mb01(error)
    call test_dftd4_gen(error, mol, param, ref, ga=2.0_wp, gc=1.0_wp)
 
 end subroutine test_r2scan3c_mb01
+
+
+subroutine test_actinides(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
+
+   real(wp), parameter :: ref = -0.17450871973102888_wp
+   
+   integer, parameter :: nat = 17
+   integer, parameter :: num(nat) = [&
+      & 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      & 0.98692316414074_wp, 6.12727238368797_wp,-6.67861597188102_wp, &
+      & 3.63898862390869_wp, 5.12109301182962_wp, 3.01908613326278_wp, &
+      & 5.14503571563551_wp,-3.97172984617710_wp, 3.82011791828867_wp, &
+      & 6.71986847575494_wp, 1.71382138402812_wp, 3.92749159076307_wp, &
+      & 4.13783589704826_wp,-2.10695793491818_wp, 0.19753203068899_wp, &
+      & 8.97685097698326_wp,-3.08813636191844_wp,-4.45568615593938_wp, &
+      & 12.5486412940776_wp,-1.77128765259458_wp, 0.59261498922861_wp, &
+      & 7.82051475868325_wp,-3.97159756604558_wp,-0.53637703616916_wp, &
+      &-0.43444574624893_wp,-1.69696511583960_wp,-1.65898182093050_wp, &
+      &-4.71270645149099_wp,-0.11534827468942_wp, 2.84863373521297_wp, &
+      &-2.52061680335614_wp, 1.82937752749537_wp,-2.10366982879172_wp, &
+      & 0.13551154616576_wp, 7.99805359235043_wp,-1.55508522619903_wp, &
+      & 3.91594542499717_wp,-1.72975169129597_wp,-5.07944366756113_wp, &
+      &-1.03393930231679_wp, 4.69307230054046_wp, 0.02656940927472_wp, &
+      & 6.20675384557240_wp, 4.24490721493632_wp,-0.71004195169885_wp, &
+      & 7.04586341131562_wp, 5.20053667939076_wp,-7.51972863675876_wp, &
+      & 2.01082807362334_wp, 1.34838807211157_wp,-4.70482633508447_wp],&
+      & [3, nat])
+
+   call new(mol, num, xyz)
+   call test_dftd4_gen(error, mol, param, ref)
+
+end subroutine test_actinides
 
 
 end module test_dftd4
