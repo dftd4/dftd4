@@ -47,7 +47,9 @@ module dftd4_param
          & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
          & p_r2scanh, p_r2scan0, p_r2scan50, p_r2scan_3c, p_camqtp01, &
-         & p_lcwpbe, p_lcwpbeh, p_wb97x_rev, p_wb97m_rev, p_wb97x_3c, p_last
+         & p_lcwpbe, p_lcwpbeh, p_wb97x_rev, p_wb97m_rev, p_wb97x_3c, &         
+         & p_wr2scan, p_r2scan0_dh, p_r2scan_cidh, p_r2scan_qidh, p_r2scan0_2, &
+         & p_pr2scan50, p_pr2scan69, p_kpr2scan50, p_wpr2scan50, p_last
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -131,6 +133,23 @@ subroutine get_functionals(funcs)
    funcs(p_r2scan50) = new_funcgroup([character(len=20) :: 'r2scan50', 'r²scan50'])
    funcs(p_r2scan_3c) = new_funcgroup([character(len=20) :: 'r2scan-3c', &
       & 'r²scan-3c', 'r2scan_3c', 'r²scan_3c', 'r2scan3c'])
+   funcs(p_wr2scan) = new_funcgroup([character(len=20) :: 'wr2scan', 'wr²scan'])
+   funcs(p_r2scan0_dh) = new_funcgroup([character(len=20) :: 'r2scan0-dh', &
+      & 'r²scan0-dh', 'r2scan0dh', 'r²scan0dh'])
+   funcs(p_r2scan_cidh) = new_funcgroup([character(len=20) :: 'r2scan-cidh', &
+      & 'r²scan-cidh', 'r2scancidh', 'r²scancidh'])
+   funcs(p_r2scan_qidh) = new_funcgroup([character(len=20) :: 'r2scan-qidh', &  
+      & 'r²scan-qidh', 'r2scanqidh', 'r²scanqidh'])
+    funcs(p_r2scan0_2) = new_funcgroup([character(len=20) :: 'r2scan0-2', &
+      & 'r²scan0-2', 'r2scan02', 'r²scan02'])
+   funcs(p_pr2scan50) = new_funcgroup([character(len=20) :: 'pr2scan50', &
+      & 'pr²scan50', 'pr2scan50', 'pr²scan50'])
+   funcs(p_pr2scan69) = new_funcgroup([character(len=20) :: 'pr2scan69', &
+      & 'pr²scan69', 'pr2scan69', 'pr²scan69'])
+   funcs(p_kpr2scan50) = new_funcgroup([character(len=20) :: 'kpr2scan50', & 
+      & 'kpr²scan50', 'kpr2scan50', 'kpr²scan50'])
+   funcs(p_wpr2scan50) = new_funcgroup([character(len=20) :: 'wpr2scan50', &
+      & 'wpr²scan50', 'wpr2scan50', 'wpr²scan50'])
    funcs(p_b1lyp) = new_funcgroup([character(len=20) :: 'b1lyp', 'b1-lyp'])
    funcs(p_b3lyp) = new_funcgroup([character(len=20) :: 'b3-lyp', 'b3lyp'])
    funcs(p_bhlyp) = new_funcgroup([character(len=20) :: 'bh-lyp', 'bhlyp'])
@@ -198,7 +217,6 @@ subroutine get_functionals(funcs)
    funcs(p_revdsdpbe) = new_funcgroup([character(len=20) :: 'revdsd-pbe', 'revdsd-pbepbe', 'revdsdpbe', 'revdsdpbepbe'])
    funcs(p_revdsdblyp) = new_funcgroup([character(len=20) :: 'revdsd-blyp', 'revdsdblyp'])
    funcs(p_revdodpbep86) = new_funcgroup([character(len=20) :: 'revdod-pbep86', 'revdodpbep86'])
-
    funcs(p_b97m) = new_funcgroup([character(len=20) :: 'b97m'])
    funcs(p_wb97m) = new_funcgroup([character(len=20) :: 'wb97m', 'ωb97m', 'omegab97m'])
    funcs(p_wb97m_rev) = new_funcgroup([character(len=20) :: 'wb97m-rev', &
@@ -209,7 +227,6 @@ subroutine get_functionals(funcs)
       & 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev'])
    funcs(p_wb97x_3c) = new_funcgroup([character(len=20) :: 'wb97x-3c', &
       & 'ωb97x-3c', 'omegab97x-3c', 'wb97x_3c', 'ωb97x_3c', 'omegab97x_3c'])
-
    funcs(p_camb3lyp) = new_funcgroup([character(len=20) :: 'cam-b3lyp', 'camb3lyp'])
    funcs(p_camqtp01) = new_funcgroup([character(len=20) :: 'cam-qtp01', &
       & 'camqtp01', 'camqtp(01)', 'cam-qtp(01)'])
@@ -729,6 +746,33 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_hsesol)
       param = dftd_param( & ! (SAW211107)
          &  s6=1.0_wp, s8=1.82207807_wp, a1=0.45646268_wp, a2=5.59662251_wp)
+   case(p_wr2scan) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=1.0_wp, s8=1.0_wp, a1=0.3834_wp, a2=5.7889_wp)
+   case(p_r2scan0_dh) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.9424_wp, s8=0.3856_wp, a1=0.4271_wp, a2=5.8565_wp)
+   case(p_r2scan_cidh) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.8666_wp, s8=0.5336_wp, a1=0.4171_wp, a2=5.9125_wp)
+   case(p_r2scan_qidh) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7867_wp, s8=0.2955_wp, a1=0.4001_wp, a2=5.8300_wp)
+   case(p_r2scan0_2) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7386_wp, s8=0.0000_wp, a1=0.4030_wp, a2=5.5142_wp)
+   case(p_pr2scan50) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7964_wp, s8=0.3421_wp, a1=0.4663_wp, a2=5.7916_wp)
+   case(p_pr2scan69) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.7167_wp, s8=0.0000_wp, a1=0.4644_wp, a2=5.2563_wp)
+   case(p_kpr2scan50) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.8402_wp, s8=0.1212_wp, a1=0.4382_wp, a2=5.8232_wp)
+   case(p_wpr2scan50) ! (10.1063/5.0174988)
+      param = dftd_param ( &
+         & s6=0.8143_wp, s8=0.3842_wp, a1=0.4135_wp, a2=5.8773_wp)
    end select
 
 contains
@@ -979,6 +1023,24 @@ pure function get_functional_id(df) result(num)
       num = p_wb97x_rev
    case('wb97x-3c', 'ωb97x-3c', 'omegab97x-3c', 'wb97x_3c', 'ωb97x_3c', 'omegab97x_3c')
       num = p_wb97x_3c
+   case('wr2scan', 'wr²scan')
+      num = p_wr2scan
+   case('r2scan0-dh', 'r²scan0-dh', 'r2scan0dh', 'r²scan0dh')
+      num = p_r2scan0_dh
+   case('r2scan-cidh', 'r²scan-cidh', 'r2scancidh', 'r²scancidh')
+      num = p_r2scan_cidh
+   case('r2scan-qidh', 'r²scan-qidh', 'r2scanqidh', 'r²scanqidh')
+      num = p_r2scan_qidh
+   case('r2scan0-2', 'r²scan0-2', 'r2scan02', 'r²scan02')
+      num = p_r2scan0_2
+   case('pr2scan50', 'pr²scan50')
+      num = p_pr2scan50
+   case('pr2scan69', 'pr²scan69')
+      num = p_pr2scan69
+   case('kpr2scan50', 'kpr²scan50')
+      num = p_kpr2scan50
+   case('wpr2scan50', 'wpr²scan50')
+      num = p_wpr2scan50
    end select
 end function get_functional_id
 
