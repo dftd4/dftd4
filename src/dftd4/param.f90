@@ -939,9 +939,9 @@ pure function get_functional_id(df) result(num)
       num = p_lh14tcalpbe
    case('lh20t') ! no libxc
       num = p_lh20t
-   case('b2plyp', 'b2-plyp', 'XC_HYB_GGA_XC_B2PLYP') ! only in code
+   case('b2plyp', 'b2-plyp', 'xc_hyb_gga_xc_b2plyp') ! only in code
       num = p_b2plyp
-   case('b2gpplyp', 'b2gp-plyp', 'XC_HYB_GGA_XC_B2GPPLYP') ! only in code
+   case('b2gpplyp', 'b2gp-plyp', 'xc_hyb_gga_xc_b2gpplyp') ! only in code
       num = p_b2gpplyp
    case('mpw2plyp') ! no libxc
       num = p_mpw2plyp
