@@ -97,10 +97,11 @@ subroutine test_rational_damping(error)
       & 'revtpss0', 'revdsd-pbep86', 'revdsd-pbe', 'revdsd-blyp', &
       & 'revdod-pbep86', 'b97m', 'wb97m', 'pbesol', 'am05', 'mn12sx', &
       & 'hse03', 'hse06', 'hse12', 'hse12s', 'hsesol', 'r2scanh', 'r2scan0', &
-      & 'r2scan50', 'r2scan-3c', 'cam-qtp(01)', 'lc-wpbe', 'lc-wpbe', &
+      & 'r2scan50', 'r2scan-3c', 'cam-qtp(01)', 'lc-wpbe', 'lc-wpbeh', &
       & 'wb97m-rev', 'wb97x-rev', 'wb97x-3c', 'wr2scan', 'r2scan0-dh', &
       & 'r2scan-cidh', 'r2scan-qidh', 'r2scan0-2', 'pr2scan50', &
-      & 'pr2scan69', 'kpr2scan50', 'wpr2scan50']
+      & 'pr2scan69', 'kpr2scan50', 'wpr2scan50', 'b97d', 'mpwb1k', &
+      & 'revtpssh', 'revtpssh', 'mpw1b95']
    real(wp), parameter :: ref(*) = [&
       &-2.82477942248756E-1_wp,-1.83931931447376E-1_wp,-1.67883731806544E-1_wp, &
       &-1.19260344286630E-1_wp,-1.73553643190541E-1_wp,-4.64187008858948E-1_wp, &
@@ -135,11 +136,13 @@ subroutine test_rational_damping(error)
       &-7.14846527169669E-2_wp,-6.94907081073225E-2_wp,-6.20062456876537E-2_wp, &
       &-5.03611950945288E-2_wp,-2.92623318488036E-2_wp,-3.16651212523792E-2_wp, &
       &-3.45136899744303E-2_wp,-3.21006297575776E-2_wp,-2.64304324016606E-2_wp, &
-      &-9.62084434444786E-2_wp,-9.62084434444786E-2_wp,-1.02981045785624E-1_wp, &
+      &-9.62084434444786E-2_wp,-8.46614067739745E-2_wp,-1.02981045785624E-1_wp, &
       &-1.30367427484416E-1_wp,-9.72681691945497E-2_wp,-4.56420158979754E-2_wp, &
       &-3.03460981931314E-2_wp,-2.95785080956723E-2_wp,-2.74474515700095E-2_wp, &  
       &-2.67802208375706E-2_wp,-2.39612790751360E-2_wp,-2.54023462353336E-2_wp, &  
-      &-2.44710136053936E-2_wp,-2.74280989349169E-2_wp]
+      &-2.44710136053936E-2_wp,-2.74280989349169E-2_wp,-2.92749846421858E-1_wp, &
+      &-4.75432573533092E-2_wp,-8.87276590259854E-2_wp,-8.87276590259854E-2_wp, &
+      &-5.90626128920443E-2_wp]
    class(damping_param), allocatable :: param
    type(structure_type) :: mol
    integer :: ii
