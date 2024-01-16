@@ -234,7 +234,21 @@ For an overview over all command line arguments use the `--help` argument or che
 ## Parameters
 
 DFT-D4 is parametrized for plenty of density functionals.
-The available parameters are listed in the [parameters.toml file](https://github.com/dftd4/dftd4/blob/main/assets/parameters.toml).
+The available parameters are listed in the [parameters.toml file](https://github.com/dftd4/dftd4/blob/main/assets/parameters.toml) or with the following command.
+
+```sh
+dftd4 param --list
+```
+
+While the functionals can be selected with their common names (e.g., `PBE`), the [libxc](https://www.tddft.org/programs/libxc/functionals/) names can also be used (e.g., `GGA_X_PBE:GGA_C_PBE`).
+
+```sh
+dftd4 --func PBE coord
+dftd4 --func GGA_X_PBE:GGA_C_PBE coord
+```
+
+The exchange and correlation functional must be separated by a colon.
+All names are case-insensitive.
 
 You can add new functionals using to the TOML file by adding a new subtable
 

@@ -827,7 +827,7 @@ pure function get_functional_id(df) result(num)
       num = p_mpwpw
    case('o-lyp', 'olyp', 'gga_x_optx:gga_c_lyp')
       num = p_olyp
-   case('opbe', 'gga_x_optx::gga_c_pbe')
+   case('opbe', 'gga_x_optx:gga_c_pbe')
       num = p_opbe
    case('pbe', 'gga_x_pbe:gga_c_pbe')
       num = p_pbe

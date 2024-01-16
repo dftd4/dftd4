@@ -88,5 +88,5 @@ Specify the functional to select the correct parameters.
 
 == Options: param
 
-*--list-func*::
+*--list, --funcs, -l*::
      List all available functionals (keywords for *-f, --func*)
