@@ -7235,7 +7235,7 @@
       data clsh    (2, 95) /     -0.29480000000000_wp /
       data hcount  (2, 95) /      1.00000000000000_wp /
       data ascale  (2, 95) /      1.00000000000000_wp /
-      data refcovcn(2, 95) /      0.76201480627060_wp /
+      data refcovcn(2, 95) /      0.78272187709808_wp /
       data refcn   (2, 95) /      0.91631740331650_wp /
       data refsys  (2, 95) /      1 /
       data alphaiw (:, 2, 95) / &
@@ -7258,7 +7258,7 @@
       data clsh    (3, 95) /     -0.19190000000000_wp /
       data hcount  (3, 95) /      2.00000000000000_wp /
       data ascale  (3, 95) /      1.00000000000000_wp /
-      data refcovcn(3, 95) /      1.54385828971863_wp /
+      data refcovcn(3, 95) /      1.58581125736237_wp /
       data refcn   (3, 95) /      1.85625433921814_wp /
       data refsys  (3, 95) /      1 /
       data alphaiw (:, 3, 95) / &
@@ -7281,7 +7281,7 @@
       data clsh    (4, 95) /     -0.14357000000000_wp /
       data hcount  (4, 95) /      3.00000000000000_wp /
       data ascale  (4, 95) /      1.00000000000000_wp /
-      data refcovcn(4, 95) /      2.39868640899658_wp /
+      data refcovcn(4, 95) /      2.46386861801147_wp /
       data refcn   (4, 95) /      2.88227415084839_wp /
       data refsys  (4, 95) /      1 /
       data alphaiw (:, 4, 95) / &
@@ -7304,7 +7304,7 @@
       data clsh    (5, 95) /     -0.09426000000000_wp /
       data hcount  (5, 95) /      5.00000000000000_wp /
       data ascale  (5, 95) /      1.00000000000000_wp /
-      data refcovcn(5, 95) /      3.99497199058533_wp /
+      data refcovcn(5, 95) /      4.10353183746338_wp /
       data refcn   (5, 95) /      4.80048131942749_wp /
       data refsys  (5, 95) /      1 /
       data alphaiw (:, 5, 95) / &
@@ -7327,7 +7327,7 @@
       data clsh    (6, 95) /     -0.08050000000000_wp /
       data hcount  (6, 95) /      6.00000000000000_wp /
       data ascale  (6, 95) /      1.00000000000000_wp /
-      data refcovcn(6, 95) /      4.80997991561890_wp /
+      data refcovcn(6, 95) /      4.94068670272827_wp /
       data refcn   (6, 95) /      5.77936410903931_wp /
       data refsys  (6, 95) /      1 /
       data alphaiw (:, 6, 95) / &
@@ -7374,7 +7374,7 @@
       data clsh    (2, 96) /     -0.23790000000000_wp /
       data hcount  (2, 96) /      1.00000000000000_wp /
       data ascale  (2, 96) /      1.00000000000000_wp /
-      data refcovcn(2, 96) /      0.83212512731552_wp /
+      data refcovcn(2, 96) /      0.83474421501160_wp /
       data refcn   (2, 96) /      0.97616904973984_wp /
       data refsys  (2, 96) /      1 /
       data alphaiw (:, 2, 96) / &
@@ -7397,7 +7397,7 @@
       data clsh    (3, 96) /     -0.14160000000000_wp /
       data hcount  (3, 96) /      2.00000000000000_wp /
       data ascale  (3, 96) /      1.00000000000000_wp /
-      data refcovcn(3, 96) /      1.64380240440369_wp /
+      data refcovcn(3, 96) /      1.64897620677948_wp /
       data refcn   (3, 96) /      1.92883539199829_wp /
       data refsys  (3, 96) /      1 /
       data alphaiw (:, 3, 96) / &
@@ -7420,7 +7420,7 @@
       data clsh    (4, 96) /     -0.10080000000000_wp /
       data hcount  (4, 96) /      3.00000000000000_wp /
       data ascale  (4, 96) /      1.00000000000000_wp /
-      data refcovcn(4, 96) /      2.46540093421936_wp /
+      data refcovcn(4, 96) /      2.47316074371338_wp /
       data refcn   (4, 96) /      2.89290571212769_wp /
       data refsys  (4, 96) /      1 /
       data alphaiw (:, 4, 96) / &
@@ -7443,7 +7443,7 @@
       data clsh    (5, 96) /     -0.07817500000000_wp /
       data hcount  (5, 96) /      4.00000000000000_wp /
       data ascale  (5, 96) /      1.00000000000000_wp /
-      data refcovcn(5, 96) /      3.25204372406006_wp /
+      data refcovcn(5, 96) /      3.26227951049805_wp /
       data refcn   (5, 96) /      3.81673455238342_wp /
       data refsys  (5, 96) /      1 /
       data alphaiw (:, 5, 96) / &
@@ -7466,7 +7466,7 @@
       data clsh    (6, 96) /     -0.06382000000000_wp /
       data hcount  (6, 96) /      5.00000000000000_wp /
       data ascale  (6, 96) /      1.00000000000000_wp /
-      data refcovcn(6, 96) /      4.04486131668091_wp /
+      data refcovcn(6, 96) /      4.05759239196777_wp /
       data refcn   (6, 96) /      4.74775981903076_wp /
       data refsys  (6, 96) /      1 /
       data alphaiw (:, 6, 96) / &
@@ -7489,7 +7489,7 @@
       data clsh    (7, 96) /     -0.05390000000000_wp /
       data hcount  (7, 96) /      6.00000000000000_wp /
       data ascale  (7, 96) /      1.00000000000000_wp /
-      data refcovcn(7, 96) /      4.84447526931763_wp /
+      data refcovcn(7, 96) /      4.85972309112549_wp /
       data refcn   (7, 96) /      5.68661880493164_wp /
       data refsys  (7, 96) /      1 /
       data alphaiw (:, 7, 96) / &
