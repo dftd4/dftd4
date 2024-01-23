@@ -905,7 +905,7 @@ pure function get_functional_id(df) result(num)
       num = p_tpssh
    case('tpss0', 'hyb_mgga_xc_tpss0')
       num = p_tpss0
-   case('x3-lyp', 'x3lyp', 'hyb_gga_xc_x3lyp', '')
+   case('x3-lyp', 'x3lyp', 'hyb_gga_xc_x3lyp')
       num = p_x3lyp
    case('m06', 'mgga_x_m06:mgga_c_m06')
       num = p_m06
@@ -985,6 +985,8 @@ pure function get_functional_id(df) result(num)
       num = p_b1b95
    case('mpwb1k', 'hyb_mgga_xc_mpwb1k')
       num = p_mpwb1k
+   case('mpw1b95', 'hyb_mgga_xc_mpw1b95')
+      num = p_mpw1b95
    case('hse03', 'hyb_gga_xc_hse03')
       num = p_hse03
    case('hse06', 'hyb_gga_xc_hse06')
@@ -997,8 +999,6 @@ pure function get_functional_id(df) result(num)
       num = p_hsesol
    case('glyp', 'g-lyp', 'gga_x_g96:gga_c_lyp')
       num = p_glyp
-   case('mpw1b95', 'hyb_mgga_xc_mpw1b95')
-      num = p_mpw1b95
    case('revpbe0dh', 'revpbe0-dh') ! no libxc
       num = p_revpbe0dh
    case('revtpssh', 'hyb_mgga_xc_revtpssh')
