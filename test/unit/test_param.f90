@@ -42,7 +42,8 @@ subroutine collect_param(testsuite)
    type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
    testsuite = [ &
-      & new_unittest("rational-damping", test_rational_damping) &
+      & new_unittest("rational-damping", test_rational_damping), &
+      & new_unittest("libxc-names", test_libxc_names) &
       & ]
 
 end subroutine collect_param
@@ -97,10 +98,11 @@ subroutine test_rational_damping(error)
       & 'revtpss0', 'revdsd-pbep86', 'revdsd-pbe', 'revdsd-blyp', &
       & 'revdod-pbep86', 'b97m', 'wb97m', 'pbesol', 'am05', 'mn12sx', &
       & 'hse03', 'hse06', 'hse12', 'hse12s', 'hsesol', 'r2scanh', 'r2scan0', &
-      & 'r2scan50', 'r2scan-3c', 'cam-qtp(01)', 'lc-wpbe', 'lc-wpbe', &
+      & 'r2scan50', 'r2scan-3c', 'cam-qtp(01)', 'lc-wpbe', 'lc-wpbeh', &
       & 'wb97m-rev', 'wb97x-rev', 'wb97x-3c', 'wr2scan', 'r2scan0-dh', &
       & 'r2scan-cidh', 'r2scan-qidh', 'r2scan0-2', 'pr2scan50', &
-      & 'pr2scan69', 'kpr2scan50', 'wpr2scan50']
+      & 'pr2scan69', 'kpr2scan50', 'wpr2scan50', 'b97d', 'mpwb1k', &
+      & 'revtpssh', 'revtpssh', 'mpw1b95']
    real(wp), parameter :: ref(*) = [&
       &-2.82477942248756E-1_wp,-1.83931931447376E-1_wp,-1.67883731806544E-1_wp, &
       &-1.19260344286630E-1_wp,-1.73553643190541E-1_wp,-4.64187008858948E-1_wp, &
@@ -135,11 +137,13 @@ subroutine test_rational_damping(error)
       &-7.14846527169669E-2_wp,-6.94907081073225E-2_wp,-6.20062456876537E-2_wp, &
       &-5.03611950945288E-2_wp,-2.92623318488036E-2_wp,-3.16651212523792E-2_wp, &
       &-3.45136899744303E-2_wp,-3.21006297575776E-2_wp,-2.64304324016606E-2_wp, &
-      &-9.62084434444786E-2_wp,-9.62084434444786E-2_wp,-1.02981045785624E-1_wp, &
+      &-9.62084434444786E-2_wp,-8.46614067739745E-2_wp,-1.02981045785624E-1_wp, &
       &-1.30367427484416E-1_wp,-9.72681691945497E-2_wp,-4.56420158979754E-2_wp, &
       &-3.03460981931314E-2_wp,-2.95785080956723E-2_wp,-2.74474515700095E-2_wp, &  
       &-2.67802208375706E-2_wp,-2.39612790751360E-2_wp,-2.54023462353336E-2_wp, &  
-      &-2.44710136053936E-2_wp,-2.74280989349169E-2_wp]
+      &-2.44710136053936E-2_wp,-2.74280989349169E-2_wp,-2.92749846421858E-1_wp, &
+      &-4.75432573533092E-2_wp,-8.87276590259854E-2_wp,-8.87276590259854E-2_wp, &
+      &-5.90626128920443E-2_wp]
    class(damping_param), allocatable :: param
    type(structure_type) :: mol
    integer :: ii
@@ -154,5 +158,67 @@ subroutine test_rational_damping(error)
    end do
 
 end subroutine test_rational_damping
+
+
+subroutine test_libxc_names(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+   
+   character(len=*), parameter :: names(*) = [character(len=32)::&
+      & 'am05', 'b-lyp', 'bpbe', 'b-p', 'bpw', 'mpwlyp', 'mpwpw', &
+      & 'o-lyp', 'opbe', 'pbe', 'rpbe', 'revpbe', 'pbesol', 'pw86pbe', &
+      & 'rpw86pbe', 'pw91', 'pwp', 'x-lyp', 'b97', 'b97d', 'tpss', 'revtpss', &
+      & 'scan', 'rscan', 'r2scan', 'r2scanh', 'r2scan0', 'r2scan50', 'b1lyp', &
+      & 'b3-lyp', 'bh-lyp', 'b3p', 'b1pw', 'b3pw', 'o3-lyp', 'pbe0', 'mpw1pw', &
+      & 'mpw1lyp', 'pw6b95', 'tpssh', 'tpss0', 'x3-lyp', 'm06', 'm06l', &
+      & 'mn12sx', 'cam-b3lyp', 'cam-qtp01', 'lc-blyp', 'lc-wpbe', 'lc-wpbeh', &
+      & 'b2plyp', 'b2gpplyp', 'b1b95', 'mpwb1k', 'mpw1b95', 'hse03', 'hse06', &
+      & 'hse12', 'hse12s', 'hsesol', 'glyp', 'revtpssh', 'b97m', 'wb97m', &
+      & 'wb97', 'wb97x']
+
+   character(len=*), parameter :: libxc_names(*) = [character(len=40)::&
+      & 'gga_x_am05:gga_c_am05', 'gga_x_b88:gga_c_lyp', 'gga_x_b88:gga_c_pbe', &
+      & 'gga_x_b88:gga_c_p86', 'gga_x_b88:gga_c_pw91', &
+      & 'gga_x_mpw91:gga_c_lyp', 'gga_x_mpw91:gga_c_pw91', &
+      & 'gga_x_optx:gga_c_lyp', 'gga_x_optx:gga_c_pbe', 'gga_x_pbe:gga_c_pbe', &
+      & 'gga_x_rpbe:gga_c_pbe', 'gga_x_pbe_r:gga_c_pbe', &
+      & 'gga_x_pbe_sol:gga_c_pbe_sol', 'gga_x_pw86:gga_c_pbe', &
+      & 'gga_x_rpw86:gga_c_pbe', 'gga_x_pw91:gga_c_pw91', &
+      & 'gga_x_pw91:gga_c_p86', 'gga_xc_xlyp', 'hyb_gga_xc_b97', &
+      & 'gga_xc_b97_d', 'mgga_c_tpss:mgga_x_tpss', &
+      & 'mgga_c_revtpss:mgga_x_revtpss', 'mgga_x_scan:mgga_c_scan', &
+      & 'mgga_x_rscan:mgga_c_rscan', 'mgga_x_r2scan:mgga_c_r2scan', &
+      & 'hyb_mgga_xc_r2scanh', 'hyb_mgga_xc_r2scan0', &
+      & 'hyb_mgga_xc_r2scan50', 'hyb_gga_xc_b1lyp', 'hyb_gga_xc_b3lyp', &
+      & 'hyb_gga_xc_bhandhlyp', 'hyb_gga_xc_b3p86', 'hyb_gga_xc_b1pw91', &
+      & 'hyb_gga_xc_b3pw91', 'hyb_gga_xc_o3lyp', 'hyb_gga_xc_pbeh', &
+      & 'hyb_gga_xc_mpw1pw', 'hyb_gga_xc_mpw1lyp', 'hyb_mgga_xc_pw6b95', &
+      & 'hyb_mgga_xc_tpssh', 'hyb_mgga_xc_tpss0', 'hyb_gga_xc_x3lyp', &
+      & 'mgga_x_m06:mgga_c_m06', 'mgga_x_m06_l:mgga_c_m06_l', &
+      & 'mgga_c_mn12_sx:mgga_c_mn12_sx', 'hyb_gga_xc_cam_b3lyp', &
+      & 'hyb_gga_xc_cam_qtp_01', 'hyb_gga_xc_lc_blyp', 'hyb_gga_xc_lc_wpbe', &
+      & 'hyb_gga_xc_lrc_wpbeh', 'xc_hyb_gga_xc_b2plyp', &
+      & 'xc_hyb_gga_xc_b2gpplyp', 'hyb_mgga_xc_b88b95', 'hyb_mgga_xc_mpwb1k', &
+      & 'hyb_mgga_xc_mpw1b95', 'hyb_gga_xc_hse03', 'hyb_gga_xc_hse06', &
+      & 'hyb_gga_xc_hse12', 'hyb_gga_xc_hse12s', 'hyb_gga_xc_hse_sol', &
+      & 'gga_x_g96:gga_c_lyp', 'hyb_mgga_xc_revtpssh', &
+      & 'mgga_xc_b97m_v', 'hyb_mgga_xc_wb97m_v', 'hyb_gga_xc_wb97', &
+      & 'hyb_gga_xc_wb97x']
+   
+   integer :: i, id, id2
+   
+   do i = 1, size(names)
+      id = get_functional_id(names(i))
+      id2 = get_functional_id(libxc_names(i))
+      call check(error, id, id2)
+      if (allocated(error)) then
+         print*, libxc_names(i), id2, names(i), id
+         exit
+      end if
+   end do
+
+end subroutine test_libxc_names
+
 
 end module test_param
