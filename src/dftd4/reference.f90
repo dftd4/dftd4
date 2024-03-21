@@ -306,6 +306,8 @@ pure subroutine set_refalpha_eeq_num(alpha, ga, gc, num)
       ref = get_nref(num)
       do ir = 1, ref
          is = refsys(ir, num)
+         if (is == 0.0_wp) cycle
+
          iz = get_effective_charge(is)
          aiw = sscale(is)*secaiw(:, is) &
             &    * zeta(ga, get_hardness(is)*gc, iz, clsh(ir, num)+iz)
@@ -362,6 +364,8 @@ pure subroutine set_refalpha_gfn2_num(alpha, ga, gc, num)
       ref = get_nref(num)
       do ir = 1, ref
          is = refsys(ir, num)
+         if (is == 0.0_wp) cycle
+
          iz = get_effective_charge(is)
          aiw = sscale(is)*secaiw(:, is) &
             &    * zeta(ga, get_hardness(is)*gc, iz, refh(ir, num)+iz)
