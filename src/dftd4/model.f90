@@ -447,7 +447,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
       !$omp parallel do default(none) schedule(runtime) &
       !$omp shared(gwvec, gwdcn, gwdq, mol, self, cn, q) private(iat, izp, iref, &
-      !$omp& igw, norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi)
+      !$omp& igw, norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, maxcn)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          zi = self%zeff(izp)
@@ -498,7 +498,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
       !$omp parallel do default(none) schedule(runtime) &
       !$omp shared(gwvec, mol, self, cn, q) &
-      !$omp private(iat, izp, iref, igw, norm, gw, expw, gwk, wf, zi, gi)
+      !$omp private(iat, izp, iref, igw, norm, gw, expw, gwk, wf, zi, gi, maxcn)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          zi = self%zeff(izp)
