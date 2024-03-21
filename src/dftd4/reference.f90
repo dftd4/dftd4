@@ -64,8 +64,8 @@ module dftd4_reference
    integer, dimension(max_elem)      :: refn ! for D4
    real(wp),dimension(7,max_elem)    :: refq
    real(wp),dimension(7,max_elem)    :: refh
-   real(wp),dimension(7,max_elem)    :: dftq,pbcq,gffq,solq,clsq
-   real(wp),dimension(7,max_elem)    :: dfth,pbch,gffh,solh,clsh
+   real(wp),dimension(7,max_elem)    :: dftq,pbcq,gffq,clsq !solq
+   real(wp),dimension(7,max_elem)    :: dfth,pbch,gffh,clsh !solh
    real(wp),dimension(7,max_elem)    :: hcount
    real(wp),dimension(7,max_elem)    :: ascale
    real(wp),dimension(7,max_elem)    :: refcovcn
@@ -306,7 +306,7 @@ pure subroutine set_refalpha_eeq_num(alpha, ga, gc, num)
       ref = get_nref(num)
       do ir = 1, ref
          is = refsys(ir, num)
-         if (is == 0.0_wp) cycle
+         if (abs(is) < 1e-12_wp) cycle
 
          iz = get_effective_charge(is)
          aiw = sscale(is)*secaiw(:, is) &
@@ -364,7 +364,7 @@ pure subroutine set_refalpha_gfn2_num(alpha, ga, gc, num)
       ref = get_nref(num)
       do ir = 1, ref
          is = refsys(ir, num)
-         if (is == 0.0_wp) cycle
+         if (abs(is) < 1e-12_wp) cycle
 
          iz = get_effective_charge(is)
          aiw = sscale(is)*secaiw(:, is) &
