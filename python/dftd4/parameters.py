@@ -14,7 +14,7 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-from os.path import join, dirname, exists
+from os.path import dirname, exists, join
 from typing import Optional
 
 # We prefer tomli and tomlkit here, because they are 1.0.0 compliant, while toml is not yet

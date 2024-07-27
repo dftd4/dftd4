@@ -14,9 +14,9 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-from dftd4.interface import Structure, DampingParam, DispersionModel
-from pytest import approx, raises
 import numpy as np
+from dftd4.interface import DampingParam, DispersionModel, Structure
+from pytest import approx, raises
 
 
 def test_rational_damping_noargs() -> None:

@@ -90,11 +90,12 @@ Example
 """
 
 from typing import Union
-from .interface import DispersionModel, DampingParam
-from .library import get_api_version
+
 import numpy as np
 import qcelemental as qcel
 
+from .interface import DampingParam, DispersionModel
+from .library import get_api_version
 
 _supported_drivers = [
     "energy",

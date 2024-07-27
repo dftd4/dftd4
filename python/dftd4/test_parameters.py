@@ -15,13 +15,14 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from dftd4.parameters import get_all_damping_params, get_damping_param
 from pytest import approx
-from dftd4.parameters import get_damping_param, get_all_damping_params
 
 
 def get_data_file_name() -> str:
     """Make sure we can still test without installing"""
-    from os.path import join, dirname, exists
+    from os.path import dirname, exists, join
+
     from dftd4.parameters import get_data_file_name as _get_data_file_name
 
     data_file = join(dirname(__file__), "..", "..", "assets", "parameters.toml")

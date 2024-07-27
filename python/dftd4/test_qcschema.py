@@ -15,11 +15,12 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pytest import approx
-from dftd4.qcschema import run_qcschema
-import qcelemental as qcel
-import numpy as np
 from typing import Any, Dict
+
+import numpy as np
+import qcelemental as qcel
+from dftd4.qcschema import run_qcschema
+from pytest import approx
 
 
 def get_example_molecule() -> Dict[str, Any]:

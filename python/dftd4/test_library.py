@@ -15,9 +15,10 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from packaging.version import parse as parse_version
-from dftd4 import __version__
 from dftd4.library import get_api_version
+from pkg_resources import parse_version
+
+from dftd4 import __version__
 
 
 def test_api_version() -> None:

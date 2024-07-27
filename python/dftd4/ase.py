@@ -87,16 +87,17 @@ except ModuleNotFoundError:
 
 from typing import List, Optional
 
-from .interface import DispersionModel, DampingParam
+from ase.atoms import Atoms
 from ase.calculators.calculator import (
+    CalculationFailed,
     Calculator,
     InputError,
-    CalculationFailed,
     all_changes,
 )
 from ase.calculators.mixing import SumCalculator
-from ase.atoms import Atoms
-from ase.units import Hartree, Bohr
+from ase.units import Bohr, Hartree
+
+from .interface import DampingParam, DispersionModel
 
 
 class DFTD4(Calculator):

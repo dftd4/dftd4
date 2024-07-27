@@ -15,10 +15,12 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 from math import sqrt
+
 import numpy as np
 
 try:
-    from os.path import join, dirname
+    from os.path import dirname, join
+
     from ase.collections import Collection
 
     # using a collection will remove the data, but we get at least the structures
