@@ -2,6 +2,10 @@ name: wheel
 
 on: [push, workflow_dispatch]
 
+env:
+  # https://github.com/actions/checkout/issues/1809
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   sdist:
     runs-on: ubuntu-latest
@@ -69,7 +73,7 @@ jobs:
         auditwheel show dftd4-*/dist/*.whl
         auditwheel repair -w . dftd4-*/dist/*.whl --plat ${{ env.plat }}
       env:
-        plat: manylinux${{ matrix.python == '3.6' && '2010' || '_2_12' }}_x86_64
+        plat: manylinux2014_x86_64
     - uses: actions/upload-artifact@v3
       with:
         name: dftd4-python-${{ matrix.python }}
