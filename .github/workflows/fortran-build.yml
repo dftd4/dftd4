@@ -24,7 +24,7 @@ jobs:
           compiler: gnu
           version: 8
 
-        - os: macos-latest
+        - os: macos-13
           build: cmake
           build-type: debug
           compiler: gnu
@@ -36,7 +36,7 @@ jobs:
           compiler: gnu
           version: 9
 
-        - os: macos-latest
+        - os: macos-13
           build: meson
           build-type: debug
           compiler: gnu
