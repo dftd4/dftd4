@@ -267,6 +267,11 @@ jobs:
         create-args: >-
           python=${{ matrix.python_v }}
 
+    - name: Install ase<3.23 for Python 3.7
+      if: matrix.python_v == '3.7'
+      run: |
+        micromamba install -y -c conda-forge "ase<3.23"
+
     - name: Install GCC (OSX)
       if: ${{ contains(matrix.os, 'macos') }}
       run: |

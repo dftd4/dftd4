@@ -21,7 +21,7 @@ from dftd4.ase import DFTD4
 from pytest import approx
 
 
-def test_ase_scand4():
+def test_ase_scand4() -> None:
     thr = 1.0e-6
 
     forces = np.array(
@@ -47,11 +47,17 @@ def test_ase_scand4():
 
     atoms.calc = DFTD4(method="SCAN").add_calculator(EMT())
     assert approx(atoms.get_potential_energy(), abs=thr) == 3.6624398683434225
-    energies = [calc.get_potential_energy() for calc in atoms.calc.calcs]
+
+    if hasattr(atoms.calc, "calcs"):
+        calcs = atoms.calc.calcs
+    else:
+        calcs = atoms.calc.mixer.calcs
+
+    energies = [calc.get_potential_energy() for calc in calcs]
     assert approx(energies, abs=thr) == [-0.021665446836610563, 3.684105315180033]
 
 
-def test_ase_tpssd4():
+def test_ase_tpssd4() -> None:
     thr = 1.0e-6
 
     forces = np.array(
@@ -79,5 +85,11 @@ def test_ase_tpssd4():
 
     atoms.calc = DFTD4(method="TPSS").add_calculator(EMT())
     assert approx(atoms.get_potential_energy(), abs=thr) == 4.864016486351274
-    energies = [calc.get_potential_energy() for calc in atoms.calc.calcs]
+
+    if hasattr(atoms.calc, 'calcs'):
+        calcs = atoms.calc.calcs
+    else:
+        calcs = atoms.calc.mixer.calcs
+
+    energies = [calc.get_potential_energy() for calc in calcs]
     assert approx(energies, abs=thr) == [-0.24206732765720396, 5.106083814008478]
