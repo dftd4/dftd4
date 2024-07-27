@@ -23,8 +23,8 @@ library in actual workflows than the low-level access provided in the CFFI gener
 """
 
 from typing import Optional
-import numpy as np
 
+import numpy as np
 
 from . import library
 

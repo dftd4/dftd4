@@ -15,12 +15,13 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pkg_resources import parse_version
-from dftd4 import __version__
 from dftd4.library import get_api_version
+from pkg_resources import parse_version
+
+from dftd4 import __version__
 
 
-def test_api_version():
+def test_api_version() -> None:
     """Ensure that the API version is compatible."""
 
     assert parse_version(get_api_version()) == parse_version(__version__)

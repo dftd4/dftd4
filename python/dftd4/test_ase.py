@@ -14,11 +14,11 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-from dftd4.ase import DFTD4
+import numpy as np
 from ase.build import molecule
 from ase.calculators.emt import EMT
+from dftd4.ase import DFTD4
 from pytest import approx
-import numpy as np
 
 
 def test_ase_scand4():

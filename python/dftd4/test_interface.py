@@ -14,12 +14,12 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-from dftd4.interface import Structure, DampingParam, DispersionModel
-from pytest import approx, raises
 import numpy as np
+from dftd4.interface import DampingParam, DispersionModel, Structure
+from pytest import approx, raises
 
 
-def test_rational_damping_noargs():
+def test_rational_damping_noargs() -> None:
     """Check constructor of damping parameters for insufficient arguments"""
 
     with raises(TypeError):
@@ -38,7 +38,7 @@ def test_rational_damping_noargs():
         DampingParam(s8=1.0, a1=0.4, a2=5.0, method="abc")
 
 
-def test_structure():
+def test_structure() -> None:
     """check if the molecular structure data is working as expected."""
 
     numbers = np.array(
@@ -101,7 +101,7 @@ def test_structure():
         mol.update(np.zeros((24, 3)))
 
 
-def test_blypd4():
+def test_blypd4() -> None:
     """Use BLYP-D4 for a mindless molecule"""
     thr = 1.0e-7
 
@@ -157,7 +157,7 @@ def test_blypd4():
     assert approx(res.get("energy"), abs=thr) == -0.06991716314879085
 
 
-def test_pbed4():
+def test_pbed4() -> None:
     """Use PBE-D4 for a mindless molecule"""
     thr = 1.0e-7
 
@@ -213,7 +213,7 @@ def test_pbed4():
     assert approx(res.get("energy"), abs=thr) == -0.028415184156428127
 
 
-def test_r2scan3c():
+def test_r2scan3c() -> None:
     """Use r2SCAN-3c for a mindless molecule"""
     thr = 1.0e-8
 
@@ -273,7 +273,7 @@ def test_r2scan3c():
     assert approx(res.get("energy"), abs=thr) == -0.008016697276824889
 
 
-def test_pair_resolved():
+def test_pair_resolved() -> None:
     """Calculate pairwise resolved dispersion energy for a molecule"""
     thr = 1.0e-8
 
@@ -469,7 +469,7 @@ def test_pair_resolved():
     assert approx(res.get("non-additive pairwise energy"), abs=thr) == pair_disp3
 
 
-def test_properties():
+def test_properties() -> None:
     """Calculate dispersion related properties for a molecule"""
     thr = 1.0e-7
 
