@@ -48,7 +48,7 @@ def get_example_molecule() -> Dict[str, Any]:
     }
 
 
-def test_energy_r2scan_d4():
+def test_energy_r2scan_d4() -> None:
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
@@ -65,7 +65,7 @@ def test_energy_r2scan_d4():
     assert approx(atomic_result.return_result, abs=thr) == -0.005001101011286166
 
 
-def test_energy_r2scan_3c():
+def test_energy_r2scan_3c() -> None:
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
@@ -92,7 +92,7 @@ def test_energy_r2scan_3c():
     assert approx(atomic_result.return_result, abs=thr) == -6.0533536923248e-03
 
 
-def test_energy_lh20t_d4():
+def test_energy_lh20t_d4() -> None:
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
@@ -114,7 +114,7 @@ def test_energy_lh20t_d4():
     assert approx(atomic_result.return_result, abs=thr) == -0.010064263146257654
 
 
-def test_energy_m06l_d4():
+def test_energy_m06l_d4() -> None:
     thr = 1e-6
 
     atomic_input = qcel.models.AtomicInput(
@@ -174,7 +174,7 @@ def test_energy_m06l_d4():
     assert approx(atomic_result.extras["dftd4"]["partial charges"], abs=thr) == charges
 
 
-def test_gradient_b97m_d4():
+def test_gradient_b97m_d4() -> None:
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
@@ -236,7 +236,7 @@ def test_gradient_b97m_d4():
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-def test_gradient_tpss_d4():
+def test_gradient_tpss_d4() -> None:
     thr = 1.0e-9
 
     atomic_input = qcel.models.AtomicInput(
@@ -294,7 +294,7 @@ def test_gradient_tpss_d4():
     )
 
 
-def test_error_noargs():
+def test_error_noargs() -> None:
     atomic_input = qcel.models.AtomicInput(
         molecule={
             "symbols": "C C C C N C S H H H H H".split(),
@@ -328,7 +328,7 @@ def test_error_noargs():
     assert atomic_result.error == error
 
 
-def test_error_nomethod():
+def test_error_nomethod() -> None:
     atomic_input = qcel.models.AtomicInput(
         molecule={
             "symbols": "C C C C N C S H H H H H".split(),
@@ -366,7 +366,7 @@ def test_error_nomethod():
     assert atomic_result.error == error
 
 
-def test_error_level():
+def test_error_level() -> None:
     atomic_input = qcel.models.AtomicInput(
         molecule={
             "symbols": "C C C C N C S H H H H H".split(),
@@ -404,7 +404,7 @@ def test_error_level():
     assert atomic_result.error == error
 
 
-def test_ghost_pbe_d4():
+def test_ghost_pbe_d4() -> None:
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
