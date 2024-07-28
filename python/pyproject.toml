@@ -26,7 +26,10 @@ dependencies = [
    "cffi",
    "numpy",
 ]
-optional-dependencies.ase = ["ase"]
+optional-dependencies.ase = [
+  "ase<3.23; python_version < '3.8'",
+  "ase; python_version >= '3.8'",
+]
 optional-dependencies.qcschema = ["qcelemental"]
 optional-dependencies.pyscf = ["pyscf"]
 optional-dependencies.test = [
