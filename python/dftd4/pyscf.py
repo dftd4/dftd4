@@ -21,8 +21,7 @@ Compatibility layer for supporting DFT-D4 in `pyscf <https://pyscf.org/>`_.
 """
 
 try:
-    from pyscf import lib
-    from pyscf.data.elements import charge as sym2chrg
+    from pyscf import lib, gto
     from pyscf.grad import rhf as rhf_grad
 except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
@@ -102,7 +101,7 @@ class DFTD4Dispersion(lib.StreamObject):
         mol = self.mol
 
         disp = DispersionModel(
-            np.asarray([sym2chrg(sym) for sym in mol.elements]),
+            np.asarray([gto.charge(sym) for sym in mol.elements]),
             mol.atom_coords(),
             mol.charge,
         )
