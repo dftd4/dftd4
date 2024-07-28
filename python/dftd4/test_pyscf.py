@@ -14,20 +14,23 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Union
+
 import numpy as np
 import pytest
 from pytest import approx
 
 try:
+    import dftd4.pyscf as disp
     import pyscf
     from pyscf import gto, scf
-    import dftd4.pyscf as disp
 except ModuleNotFoundError:
     pyscf = None
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_energy_r2scan_d4():
+@pytest.mark.parametrize("ecp", [None, "ccecp"])
+def test_energy_r2scan_d4(ecp: Union[None, str]) -> None:
     mol = gto.M(
         atom="""
              C   -0.755422531  -0.796459123  -1.023590391
@@ -48,7 +51,8 @@ def test_energy_r2scan_d4():
              H   -1.684433029   7.115457372  -0.460265708
              H   -2.683867206   5.816530502  -1.115183775
              H   -3.365330613   7.451201412  -0.890098894
-             """
+             """,
+        ecp=ecp,
     )
 
     d4 = disp.DFTD4Dispersion(mol, xc="r2SCAN")
@@ -56,7 +60,7 @@ def test_energy_r2scan_d4():
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_gradient_b97m_d4():
+def test_gradient_b97m_d4() -> None:
     mol = gto.M(
         atom="""
              H    0.002144194   0.361043475   0.029799709
@@ -105,7 +109,7 @@ def test_gradient_b97m_d4():
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_energy_hf():
+def test_energy_hf() -> None:
     mol = gto.M(
         atom="""
              N  -1.57871857  -0.04661102   0.00000000
@@ -124,7 +128,7 @@ def test_energy_hf():
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_gradient_hf():
+def test_gradient_hf() -> None:
     mol = gto.M(
         atom="""
              O  -1.65542061  -0.12330038   0.00000000
