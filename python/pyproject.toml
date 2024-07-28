@@ -26,15 +26,13 @@ dependencies = [
    "cffi",
    "numpy",
 ]
-
-[project.optional-dependencies]
-ase = [
+optional-dependencies.ase = [
   "ase<3.23; python_version < '3.8'",
   "ase; python_version >= '3.8'",
 ]
-qcschema = ["qcelemental"]
-pyscf = ["pyscf"]
-test = [
+optional-dependencies.qcschema = ["qcelemental"]
+optional-dependencies.pyscf = ["pyscf"]
+optional-dependencies.test = [
   "pytest",
   "pytest-cov",
 ]
