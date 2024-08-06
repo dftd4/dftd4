@@ -20,7 +20,7 @@ from pytest import approx
 
 try:
     import pyscf
-    from pyscf import gto, scf
+    from pyscf import gto, scf, pbc
     import dftd4.pyscf as disp
 except ModuleNotFoundError:
     pyscf = None
@@ -147,3 +147,32 @@ def test_gradient_hf():
     )
     grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
     assert grad.kernel() == approx(ref, abs=1.0e-7)
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_pbc():
+    mol = gto.M(
+        atom="""
+             O  -1.6256  -0.0413   0.3705
+             H  -0.7061  -0.0938   0.0934
+             H  -2.0618  -0.7328  -0.1359
+             """,
+        basis="def2-tzvp",
+    )
+
+    pmol = pbc.gto.M(
+        atom="""
+             O  -1.6256  -0.0413   0.3705
+             H  -0.7061  -0.0938   0.0934
+             H  -2.0618  -0.7328  -0.1359
+             """,
+        basis="def2-tzvp",
+        a=[[3, 0, 0], [0, 3, 0], [0, 0, 3]],
+    )
+
+    xc = 'pbe'
+
+    e_mol_disp = disp.DFTD4Dispersion(mol, xc=xc).kernel()[0]
+    e_pbc_disp = disp.DFTD4Dispersion(pmol, xc=xc).kernel()[0]
+
+    assert e_mol_disp != e_pbc_disp
