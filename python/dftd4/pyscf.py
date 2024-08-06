@@ -26,11 +26,11 @@ try:
 except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
 
-import numpy as np
 from typing import Tuple
 
-from .interface import DispersionModel, DampingParam
+import numpy as np
 
+from .interface import DampingParam, DispersionModel
 
 GradientsBase = getattr(rhf_grad, "GradientsBase", rhf_grad.Gradients)
 
@@ -107,7 +107,7 @@ class DFTD4Dispersion(lib.StreamObject):
             periodic = np.array([True, True, True], dtype=bool)
 
         disp = DispersionModel(
-            mol.atom_charges(),
+            np.asarray([gto.charge(sym) for sym in mol.elements]),
             mol.atom_coords(),
             mol.charge,
             lattice=lattice,
@@ -185,8 +185,8 @@ def energy(mf):
     -110.917424528592
     """
 
-    from pyscf.scf import hf
     from pyscf.mcscf import casci
+    from pyscf.scf import hf
 
     if not isinstance(mf, (hf.SCF, casci.CASCI)):
         raise TypeError("mf must be an instance of SCF or CASCI")

@@ -15,20 +15,21 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from dftd4.parameters import get_all_damping_params, get_damping_param
 from pytest import approx
-from dftd4.parameters import get_damping_param, get_all_damping_params
 
 
 def get_data_file_name() -> str:
     """Make sure we can still test without installing"""
-    from os.path import join, dirname, exists
+    from os.path import dirname, exists, join
+
     from dftd4.parameters import get_data_file_name as _get_data_file_name
 
     data_file = join(dirname(__file__), "..", "..", "assets", "parameters.toml")
     return data_file if exists(data_file) else _get_data_file_name()
 
 
-def test_get_b3lyp():
+def test_get_b3lyp() -> None:
     expected = {
         "s6": 1.0,
         "s9": 1.0,
@@ -43,7 +44,7 @@ def test_get_b3lyp():
         assert approx(actual[key]) == expected[key]
 
 
-def test_get_b2plyp():
+def test_get_b2plyp() -> None:
     expected = {
         "s6": 0.64,
         "s9": 1.0,
@@ -58,7 +59,7 @@ def test_get_b2plyp():
         assert approx(actual[key]) == expected[key]
 
 
-def test_get_pw6b95():
+def test_get_pw6b95() -> None:
     expected = {
         "s6": 1.0,
         "s9": 1.0,
@@ -75,7 +76,7 @@ def test_get_pw6b95():
         assert approx(actual[key]) == expected[key]
 
 
-def test_all_parameters():
+def test_all_parameters() -> None:
     params = get_all_damping_params()
 
     assert "b3lyp" in params
