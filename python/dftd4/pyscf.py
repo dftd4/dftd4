@@ -100,10 +100,18 @@ class DFTD4Dispersion(lib.StreamObject):
         """
         mol = self.mol
 
+        lattice = None
+        periodic = None
+        if hasattr(mol, 'lattice_vectors'):
+            lattice = mol.lattice_vectors()
+            periodic = np.array([True, True, True], dtype=bool)
+
         disp = DispersionModel(
             np.asarray([gto.charge(sym) for sym in mol.elements]),
             mol.atom_coords(),
             mol.charge,
+            lattice=lattice,
+            periodic=periodic,
         )
 
         param = DampingParam(
