@@ -22,6 +22,10 @@ if has_cc
 endif
 fc_id = fc.get_id()
 
+# Treat Intel LLVM compiler as standard Intel compiler for compatibility
+if fc_id == 'intel-llvm'
+  fc_id = 'intel'
+endif
 if fc_id == 'gcc'
   add_project_arguments(
     '-ffree-line-length-none',
