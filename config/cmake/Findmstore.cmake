@@ -17,7 +17,7 @@
 set(_lib "mstore")
 set(_pkg "MSTORE")
 set(_url "https://github.com/grimme-lab/mstore")
-set(_revision "v0.2.0")
+set(_revision "v0.3.0")
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")
