@@ -20,7 +20,7 @@ if(NOT BLAS_FOUND)
     # https://cmake.org/cmake/help/v3.14/module/FindBLAS.html#result-variables
     enable_language("C")
   endif()
-  find_package("BLAS")
+  find_package("BLAS" REQUIRED)
   if(NOT TARGET "BLAS::BLAS")
     add_library("BLAS::BLAS" INTERFACE IMPORTED)
     target_link_libraries("BLAS::BLAS" INTERFACE "${BLAS_LIBRARIES}")
