@@ -290,7 +290,7 @@ jobs:
         --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
     - name: Download package
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: ${{ env.DFTD4_OUTPUT }}
 
