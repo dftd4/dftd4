@@ -224,7 +224,7 @@ jobs:
 
     - name: Upload package
       if: ${{ matrix.build == 'meson' && matrix.build-type != 'coverage' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.DFTD4_OUTPUT }}
         path: ${{ env.DFTD4_OUTPUT }}
