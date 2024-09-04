@@ -5,6 +5,8 @@ on: [push, workflow_dispatch]
 env:
   # https://github.com/actions/checkout/issues/1809
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+  ACTIONS_RUNNER_FORCE_ACTIONS_NODE_VERSION: node16
+  ACTIONS_RUNNER_FORCED_INTERNAL_NODE_VERSION: node16
 
 jobs:
   sdist:
