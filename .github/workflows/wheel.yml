@@ -10,7 +10,8 @@ jobs:
   sdist:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+
     - name: Reorganize repository
       run: |
         git config user.email ""
@@ -20,7 +21,8 @@ jobs:
         git commit -m "Python dist"
     - run: |
         pipx run build python/ --sdist --outdir .
-    - uses: actions/upload-artifact@v3
+
+    - uses: actions/upload-artifact@v4
       with:
         name: dftd4-python-sdist
         path: ./*.tar.gz
@@ -60,10 +62,12 @@ jobs:
         meson
         unzip
         wheel
+
     - name: Download sdist
       uses: actions/download-artifact@v4.1.7
       with:
         name: dftd4-python-sdist
+
     - name: Build wheel
       run: |
         conda activate wheel
@@ -74,7 +78,8 @@ jobs:
         auditwheel repair -w . dftd4-*/dist/*.whl --plat ${{ env.plat }}
       env:
         plat: manylinux2014_x86_64
-    - uses: actions/upload-artifact@v3
+
+    - uses: actions/upload-artifact@v4
       with:
         name: dftd4-python-${{ matrix.python }}
         path: ./*.whl
