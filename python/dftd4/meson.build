@@ -21,6 +21,7 @@ python = pymod.find_installation(
   get_option('python_version'),
   modules: [
     'cffi',
+    'setuptools',
   ],
 )
 python_dep = python.dependency(required: true)
