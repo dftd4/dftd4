@@ -33,6 +33,7 @@
 
 # Build directories
 /build*/
+/install*/
 /_*/
 
 # Python files
