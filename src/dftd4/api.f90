@@ -27,7 +27,8 @@ module dftd4_api
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
    use dftd4_disp, only : get_dispersion, get_pairwise_dispersion, get_properties
-   use dftd4_model, only : d4_model, new_d4_model
+   use dftd4_model_d4, only : d4_model, new_d4_model
+   use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_numdiff, only: get_dispersion_hessian
    use dftd4_param, only : get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell

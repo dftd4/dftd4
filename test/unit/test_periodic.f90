@@ -44,15 +44,19 @@ subroutine collect_periodic(testsuite)
 
    testsuite = [ &
       & new_unittest("PBE-D4", test_pbed4_acetic), &
+      & new_unittest("PBE-D4S", test_pbed4s_acetic), &
       & new_unittest("BLYP-D4", test_blypd4_adaman), &
+      & new_unittest("BLYP-D4S", test_blypd4s_adaman), &
       & new_unittest("TPSS-D4", test_tpssd4_ammonia), &
-      & new_unittest("SCAN-D4", test_scand4_anthracene) &
+      & new_unittest("TPSS-D4S", test_tpssd4s_ammonia), &
+      & new_unittest("SCAN-D4", test_scand4_anthracene), &
+      & new_unittest("SCAN-D4S", test_scand4s_anthracene) &
       & ]
 
 end subroutine collect_periodic
 
 
-subroutine test_dftd4_gen(error, mol, param, ref)
+subroutine test_dftd4_gen(error, mol, d4, param, ref)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -60,16 +64,17 @@ subroutine test_dftd4_gen(error, mol, param, ref)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
 
+   !> Dispersion model
+   class(base_d4_model), intent(in) :: d4
+
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
    !> Expected dispersion energy
    real(wp), intent(in) :: ref
 
-   type(d4_model) :: d4
    real(wp) :: energy
 
-   call new_d4_model(d4, mol)
    call get_dispersion(mol, d4, param, cutoff, energy)
 
    call check(error, energy, ref, thr=thr)
@@ -80,7 +85,7 @@ subroutine test_dftd4_gen(error, mol, param, ref)
 end subroutine test_dftd4_gen
 
 
-subroutine test_numgrad(error, mol, param)
+subroutine test_numgrad(error, mol, d4, param)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -88,17 +93,18 @@ subroutine test_numgrad(error, mol, param)
    !> Molecular structure data
    type(structure_type), intent(inout) :: mol
 
+   !> Dispersion model
+   class(base_d4_model), intent(in) :: d4
+
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
    integer :: iat, ic
-   type(d4_model) :: d4
    real(wp) :: energy, er, el, sigma(3, 3)
    real(wp), allocatable :: gradient(:, :), numgrad(:, :)
    real(wp), parameter :: step = 1.0e-6_wp
 
    allocate(gradient(3, mol%nat), numgrad(3, mol%nat))
-   call new_d4_model(d4, mol)
 
    do iat = 1, mol%nat
       do ic = 1, 3
@@ -121,7 +127,7 @@ subroutine test_numgrad(error, mol, param)
 end subroutine test_numgrad
 
 
-subroutine test_numsigma(error, mol, param)
+subroutine test_numsigma(error, mol, d4, param)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -129,11 +135,13 @@ subroutine test_numsigma(error, mol, param)
    !> Molecular structure data
    type(structure_type), intent(inout) :: mol
 
+   !> Dispersion model
+   class(base_d4_model), intent(in) :: d4
+
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
    integer :: ic, jc
-   type(d4_model) :: d4
    real(wp) :: energy, er, el, sigma(3, 3), eps(3, 3), numsigma(3, 3), lattice(3, 3)
    real(wp), allocatable :: gradient(:, :), xyz(:, :)
    real(wp), parameter :: unity(3, 3) = reshape(&
@@ -141,7 +149,6 @@ subroutine test_numsigma(error, mol, param)
    real(wp), parameter :: step = 1.0e-7_wp
 
    allocate(gradient(3, mol%nat), xyz(3, mol%nat))
-   call new_d4_model(d4, mol)
 
    eps(:, :) = unity
    xyz(:, :) = mol%xyz
@@ -179,14 +186,33 @@ subroutine test_pbed4_acetic(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(d4_model) :: d4
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp )
 
    call get_structure(mol, "X23", "acetic")
-   call test_dftd4_gen(error, mol, param, -6.6969773229895183E-002_wp)
+   call new_d4_model(d4, mol)
+   call test_dftd4_gen(error, mol, d4, param, -6.6969773229895183E-002_wp)
 
 end subroutine test_pbed4_acetic
+
+subroutine test_pbed4s_acetic(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp )
+
+   call get_structure(mol, "X23", "acetic")
+   call new_d4s_model(d4s, mol)
+   call test_dftd4_gen(error, mol, d4s, param, -6.8611894281210548E-002_wp)
+
+end subroutine test_pbed4s_acetic
 
 
 subroutine test_blypd4_adaman(error)
@@ -195,14 +221,33 @@ subroutine test_blypd4_adaman(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(d4_model) :: d4
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 2.34076671_wp, a1 = 0.44488865_wp, a2 = 4.09330090_wp )
 
    call get_structure(mol, "X23", "adaman")
-   call test_dftd4_gen(error, mol, param, -0.23629687693703993_wp)
+   call new_d4_model(d4, mol)
+   call test_dftd4_gen(error, mol, d4, param, -0.23629687693703993_wp)
 
 end subroutine test_blypd4_adaman
+
+subroutine test_blypd4s_adaman(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 2.34076671_wp, a1 = 0.44488865_wp, a2 = 4.09330090_wp )
+
+   call get_structure(mol, "X23", "adaman")
+   call new_d4s_model(d4s, mol)
+   call test_dftd4_gen(error, mol, d4s, param, -0.25250595410032312_wp)
+
+end subroutine test_blypd4s_adaman
 
 
 subroutine test_tpssd4_ammonia(error)
@@ -211,14 +256,33 @@ subroutine test_tpssd4_ammonia(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(d4_model) :: d4
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
    call get_structure(mol, "X23", "ammonia")
-   call test_numgrad(error, mol, param)
+   call new_d4_model(d4, mol)
+   call test_numgrad(error, mol, d4, param)
 
 end subroutine test_tpssd4_ammonia
+
+subroutine test_tpssd4s_ammonia(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
+
+   call get_structure(mol, "X23", "ammonia")
+   call new_d4s_model(d4s, mol)
+   call test_numgrad(error, mol, d4s, param)
+
+end subroutine test_tpssd4s_ammonia
 
 
 subroutine test_scand4_anthracene(error)
@@ -227,14 +291,32 @@ subroutine test_scand4_anthracene(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(d4_model) :: d4
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 1.46126056_wp, a1 = 0.62930855_wp, a2 = 6.31284039_wp )
 
    call get_structure(mol, "X23", "anthracene")
-   call test_numsigma(error, mol, param)
+   call new_d4_model(d4, mol)
+   call test_numsigma(error, mol, d4, param)
 
 end subroutine test_scand4_anthracene
 
+subroutine test_scand4s_anthracene(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 1.46126056_wp, a1 = 0.62930855_wp, a2 = 6.31284039_wp )
+
+   call get_structure(mol, "X23", "anthracene")
+   call new_d4s_model(d4s, mol)
+   call test_numsigma(error, mol, d4s, param)
+
+end subroutine test_scand4s_anthracene
 
 end module test_periodic

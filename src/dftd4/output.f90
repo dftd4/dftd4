@@ -21,7 +21,7 @@ module dftd4_output
    use mctc_io_math, only : matinv_3x3
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
-   use dftd4_model, only : d4_model
+   use dftd4_model, only : base_d4_model
    use dftd4_version, only : get_dftd4_version
    implicit none
    private
@@ -45,7 +45,7 @@ subroutine ascii_atomic_radii(unit, mol, disp)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(d4_model), intent(in) :: disp
+   class(base_d4_model), intent(in) :: disp
 
    integer :: isp
 
@@ -78,7 +78,7 @@ subroutine ascii_atomic_references(unit, mol, disp)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(d4_model), intent(in) :: disp
+   class(base_d4_model), intent(in) :: disp
 
    integer :: isp, iref, mref
 
@@ -127,7 +127,7 @@ subroutine ascii_system_properties(unit, mol, disp, cn, q, c6)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(d4_model), intent(in) :: disp
+   class(base_d4_model), intent(in) :: disp
 
    !> Coordination numbers
    real(wp), intent(in) :: cn(:)
