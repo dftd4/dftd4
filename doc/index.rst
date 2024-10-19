@@ -47,6 +47,11 @@ References
   DOI: `10.1039/D0CP00502A <https://dx.doi.org/10.1039/D0CP00502A>`__
   chemrxiv: `10.26434/chemrxiv.10299428 <https://dx.doi.org/10.26434/chemrxiv.10299428>`__
 
+- Nikolay V. Tkachenko, Linus B. Dittmer, Rebecca Tomann and Martin Head-Gordon,
+  * ???
+  DOI: `????? <https://dx.doi.org/?????>`__
+  chemrxiv: `10.26434/chemrxiv-2024-31x2z <https://dx.doi.org/10.26434/chemrxiv-2024-31x2z>`__
+
 .. toctree::
 
    Recipes <recipe/index>

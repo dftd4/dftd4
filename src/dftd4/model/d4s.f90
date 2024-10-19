@@ -124,7 +124,7 @@ subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, wf, ref)
       d4%gc = gc_default
    end if
 
-   allocate(d4%wf(mol%nat, mol%nat))
+   allocate(d4%wf(mol%nid, mol%nid))
    if (present(wf)) then
       d4%wf(:, :) = wf
    else
@@ -272,7 +272,7 @@ subroutine new_d4s_model_no_checks(d4, mol, ga, gc, wf, ref)
       d4%gc = gc_default
    end if
 
-   allocate(d4%wf(mol%nat, mol%nat))
+   allocate(d4%wf(mol%nid, mol%nid))
    if (present(wf)) then
       d4%wf(:, :) = wf
    else

@@ -3,7 +3,7 @@ C API
 
 The C API bindings are provided by using the ``iso_c_binding`` intrinsic module.
 Generally, objects are exported as opaque pointers and can only be manipulated within the library.
-The API user is required delete all objects created in the library by using the provided deconstructor functions to avoid mamory leaks.
+The API user is required to delete all objects created in the library by using the provided deconstructor functions to avoid mamory leaks.
 
 Overall four classes of objects are provided by the library
 
