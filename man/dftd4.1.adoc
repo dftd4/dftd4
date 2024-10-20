@@ -47,7 +47,7 @@ Specify the functional to select the correct parameters.
      (default: 3.0 and 2.0)
 
 *--wfactor* _real_::
-     Adjust weighting factor for the Gaussian interpolation
+     Adjust weighting factor for the Gaussian interpolation (only D4)
      (default: 6.0)
 
 *-m, --model* _string_::

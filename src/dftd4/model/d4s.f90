@@ -67,7 +67,7 @@ contains
 
 
 !> Create new D4S dispersion model from molecular structure input
-subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, wf, ref)
+subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, ref)
    !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_with_checks
 
    !> Instance of the dispersion model
@@ -84,9 +84,6 @@ subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, wf, ref)
 
    !> Charge scaling steepness
    real(wp), intent(in), optional :: gc
-
-   !> Constant weighting factor for coordination number interpolation
-   real(wp), intent(in), optional :: wf
 
    !> Reference charge selection
    integer, intent(in), optional :: ref
@@ -125,17 +122,13 @@ subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, wf, ref)
    end if
 
    allocate(d4%wf(mol%nid, mol%nid))
-   if (present(wf)) then
-      d4%wf(:, :) = wf
-   else
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         do jsp = 1, mol%nid
-            jzp = mol%num(jsp)
-            d4%wf(isp, jsp) = get_wfpair_val(izp, jzp)
-         end do 
-      end do
-   end if
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      do jsp = 1, mol%nid
+         jzp = mol%num(jsp)
+         d4%wf(isp, jsp) = get_wfpair_val(izp, jzp)
+      end do 
+   end do
 
    allocate(d4%rcov(mol%nid))
    do isp = 1, mol%nid
@@ -226,7 +219,7 @@ end subroutine new_d4s_model_with_checks
 
 !> Create new dispersion model from molecular structure input without
 !> checking for supported elements (old/compatibility version)
-subroutine new_d4s_model_no_checks(d4, mol, ga, gc, wf, ref)
+subroutine new_d4s_model_no_checks(d4, mol, ga, gc, ref)
    !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_no_checks
 
    !> Instance of the dispersion model
@@ -240,9 +233,6 @@ subroutine new_d4s_model_no_checks(d4, mol, ga, gc, wf, ref)
 
    !> Charge scaling steepness
    real(wp), intent(in), optional :: gc
-
-   !> Weighting factor for coordination number interpolation
-   real(wp), intent(in), optional :: wf
 
    !> Reference charge selection
    integer, intent(in), optional :: ref
@@ -273,17 +263,13 @@ subroutine new_d4s_model_no_checks(d4, mol, ga, gc, wf, ref)
    end if
 
    allocate(d4%wf(mol%nid, mol%nid))
-   if (present(wf)) then
-      d4%wf(:, :) = wf
-   else
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         do jsp = 1, mol%nid
-            jzp = mol%num(jsp)
-            d4%wf(isp, jsp) = get_wfpair_val(izp, jzp)
-         end do 
-      end do
-   end if
+   do isp = 1, mol%nid
+      izp = mol%num(isp)
+      do jsp = 1, mol%nid
+         jzp = mol%num(jsp)
+         d4%wf(isp, jsp) = get_wfpair_val(izp, jzp)
+      end do 
+   end do
 
    allocate(d4%rcov(mol%nid))
    do isp = 1, mol%nid

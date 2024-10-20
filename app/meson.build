@@ -51,6 +51,18 @@ test(
   ],
 )
 test(
+  'app-energy-d4s',
+  app_tester,
+  args: [
+    dftd4_exe,
+    files('01-energy-d4s.json'),
+    files('01-ammonia.tmol'),
+    '--noedisp',
+    '--func', 'tpssh',
+    '--model', 'D4S'
+  ],
+)
+test(
   'app-gradient',
   app_tester,
   args: [
@@ -58,6 +70,20 @@ test(
     files('02-gradient.json'),
     '--noedisp',
     '--func', 'scan',
+    '--grad',
+    '--',
+    files('02-nitralin.mol'),
+  ],
+)
+test(
+  'app-gradient-d4s',
+  app_tester,
+  args: [
+    dftd4_exe,
+    files('02-gradient-d4s.json'),
+    '--noedisp',
+    '--func', 'scan',
+    '--model', 'D4S',
     '--grad',
     '--',
     files('02-nitralin.mol'),

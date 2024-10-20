@@ -176,7 +176,7 @@ subroutine run_main(config, error)
       block 
          type(d4s_model), allocatable :: tmp
          allocate(tmp)
-         call new_d4s_model(error, tmp, mol, ga=ga, gc=gc, wf=config%wf)
+         call new_d4s_model(error, tmp, mol, ga=ga, gc=gc)
          call move_alloc(tmp, d4)
       end block
    else

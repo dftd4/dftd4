@@ -37,7 +37,7 @@ module dftd4_help
       "   --mbdscale <s9>       Use scaled ATM three-body dispersion"//nl//&
       "   --zeta <list>         Adjust charge scaling parameters, takes two reals,"//nl//&
       "                         expected order is ga, gc (default: 3.0, 2.0)"//nl//&
-      "   --wfactor <real>      Adjust weighting factor for interpolation"//nl//&
+      "   --wfactor <real>      Adjust weighting factor for interpolation (only D4)"//nl//&
       "                         (default: 6.0)"//nl//&
       "-m,--model <model>       Use specific D4 model (options: D4 (default), D4S)"//nl//&
       "-g,--grad [file]         Evaluate molecular gradient and virial,"//nl//&

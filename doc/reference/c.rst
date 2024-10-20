@@ -130,6 +130,24 @@ Recreating a structure object requires to recreate the dispersion model as well.
 
    Create new D4 dispersion model with custom parameters
 
+.. c:function:: dftd4_model dftd4_new_d4s_model(dftd4_error error, dftd4_structure mol);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :returns: New dispersion model handle
+
+   Create new D4S dispersion model
+
+.. c:function:: dftd4_model dftd4_custom_d4s_model(dftd4_error error, dftd4_structure mol, double ga, double gc);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :param ga: Charge scaling height
+   :param gc: Charge scaling steepness
+   :returns: New dispersion model handle
+
+   Create new D4S dispersion model with custom parameters   
+
 .. c:function:: void dftd4_delete_model(dftd4_model* disp);
 
    :param disp: Dispersion model handle
