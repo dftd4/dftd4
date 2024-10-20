@@ -283,14 +283,24 @@ class DispersionModel(Structure):
         Structure.__init__(self, numbers, positions, charge, lattice, periodic)
 
         if "ga" in kwargs or "gc" in kwargs or "wf" in kwargs:
-            self._disp = library.custom_d4_model(
-                self._mol,
-                kwargs.get("ga", 3.0),
-                kwargs.get("gc", 2.0),
-                kwargs.get("wf", 6.0),
+            if "model" in kwargs and "d4s" in kwargs: 
+                self._disp = library.custom_d4s_model(
+                    self._mol,
+                    kwargs.get("ga", 3.0),
+                    kwargs.get("gc", 2.0),
+            )
+            else: 
+                self._disp = library.custom_d4_model(
+                    self._mol,
+                    kwargs.get("ga", 3.0),
+                    kwargs.get("gc", 2.0),
+                    kwargs.get("wf", 6.0),
             )
         else:
-            self._disp = library.new_d4_model(self._mol)
+            if "model" in kwargs and "d4s" in kwargs: 
+                self._disp = library.new_d4s_model(self._mol)
+            else: 
+                self._disp = library.new_d4_model(self._mol)
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """

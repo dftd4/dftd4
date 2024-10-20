@@ -38,7 +38,7 @@ Supported keywords are
  Keyword                  Default      Description
 ======================== ============ ============================================
  method                   None         Method to calculate dispersion for
- params_tweaks            None        Optional dict with the damping parameters
+ params_tweaks            None         Optional dict with the damping parameters
  cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
 
