@@ -19,7 +19,7 @@ module dftd4_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type, read_structure, filetype
-   use dftd4, only : get_dispersion, base_d4_model, &
+   use dftd4, only : get_dispersion, dispersion_model, &
       & d4_model, new_d4_model, d4s_model, new_d4s_model, &
       realspace_cutoff, get_lattice_points, get_coordination_number, &
       damping_param, rational_damping_param, get_rational_damping, &
@@ -72,7 +72,7 @@ subroutine run_main(config, error)
    character(len=:), allocatable :: filename
    character(len=:), allocatable :: functional
    class(damping_param), allocatable :: param
-   class(base_d4_model), allocatable :: d4
+   class(dispersion_model), allocatable :: d4
    real(wp) :: charge
    real(wp), allocatable :: energy, gradient(:, :), sigma(:, :), hessian(:, :, :, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)

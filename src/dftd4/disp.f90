@@ -21,7 +21,7 @@ module dftd4_disp
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : base_d4_model
+   use dftd4_model, only : dispersion_model
    use dftd4_ncoord, only : get_coordination_number
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -43,7 +43,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: disp
+   class(dispersion_model), intent(in) :: disp
 
    !> Damping parameters
    class(damping_param), intent(in) :: param
@@ -132,7 +132,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: disp
+   class(dispersion_model), intent(in) :: disp
 
    !> Realspace cutoffs
    type(realspace_cutoff), intent(in) :: cutoff
@@ -176,7 +176,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: disp
+   class(dispersion_model), intent(in) :: disp
 
    !> Damping parameters
    class(damping_param), intent(in) :: param

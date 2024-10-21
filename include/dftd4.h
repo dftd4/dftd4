@@ -31,6 +31,7 @@
 #define DFTD4_API_SUFFIX__V_3_3
 #define DFTD4_API_SUFFIX__V_3_4
 #define DFTD4_API_SUFFIX__V_3_5
+#define DFTD4_API_SUFFIX__V_4_0
 
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;
@@ -122,7 +123,7 @@ dftd4_new_d4_model(dftd4_error /* error */,
 /// Create new D4 dispersion model
 DFTD4_API_ENTRY dftd4_model DFTD4_API_CALL
 dftd4_new_d4s_model(dftd4_error /* error */,
-                    dftd4_structure /* mol */) DFTD4_API_SUFFIX__V_3_0;
+                    dftd4_structure /* mol */) DFTD4_API_SUFFIX__V_4_0;
 
 /// Create new D4 dispersion model
 DFTD4_API_ENTRY dftd4_model DFTD4_API_CALL
@@ -137,7 +138,7 @@ DFTD4_API_ENTRY dftd4_model DFTD4_API_CALL
 dftd4_custom_d4s_model(dftd4_error /* error */,
                       dftd4_structure /* mol */,
                       double /* ga */,
-                      double /* gc */) DFTD4_API_SUFFIX__V_3_1;
+                      double /* gc */) DFTD4_API_SUFFIX__V_4_0;
 
 
 /// Delete dispersion model

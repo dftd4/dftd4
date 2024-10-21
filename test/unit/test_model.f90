@@ -24,7 +24,7 @@ module test_model
    use dftd4_cutoff, only : get_lattice_points
    use dftd4_data, only : get_covalent_rad
    use dftd4_ncoord, only : get_coordination_number
-   use dftd4_model, only : base_d4_model, d4_ref
+   use dftd4_model, only : dispersion_model, d4_ref
    use dftd4_model_d4, only : d4_model, new_d4_model
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    implicit none
@@ -75,7 +75,7 @@ subroutine test_gw_gen(error, mol, d4, ref, with_cn, with_q, qat)
    type(structure_type) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: d4
+   class(dispersion_model), intent(in) :: d4
 
    !> Reference Gaussian weights
    real(wp), intent(in) :: ref(:, :, :)
@@ -128,7 +128,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
    type(structure_type) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: d4
+   class(dispersion_model), intent(in) :: d4
 
    !> Calculate coordination number
    logical, intent(in) :: with_cn
@@ -174,7 +174,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
          cn(iat) = cn(iat) + step
          gwdcn(:, :, :) = 0.5_wp*(gwr - gwl)/step
          numdcn(:, iat, :) = gwdcn(:, iat, :)
-         gwdcn(:, iat, :) = 0.0_wp ! ??? ncoup ???
+         gwdcn(:, iat, :) = 0.0_wp 
          if (any(abs(gwdcn) > thr)) then
             call test_failed(error, "Unexpected non-zero gradient element found")
             exit

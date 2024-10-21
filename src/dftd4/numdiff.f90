@@ -19,7 +19,7 @@ module dftd4_numdiff
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
    use dftd4_disp, only : get_dispersion
-   use dftd4_model, only : base_d4_model
+   use dftd4_model, only : dispersion_model
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -39,7 +39,7 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: disp
+   class(dispersion_model), intent(in) :: disp
 
    !> Damping parameters
    class(damping_param), intent(in) :: param

@@ -17,4 +17,6 @@
 srcs += files(
   'd4.f90',
   'd4s.f90',
+  'type.f90',
+  'utils.f90',
 )

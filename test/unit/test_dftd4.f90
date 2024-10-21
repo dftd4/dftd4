@@ -92,7 +92,7 @@ subroutine test_dftd4_gen(error, mol, d4, param, ref)
    type(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: d4
+   class(dispersion_model), intent(in) :: d4
 
    !> Damping parameters
    class(damping_param), intent(in) :: param
@@ -122,7 +122,7 @@ subroutine test_numgrad(error, mol, d4, param)
    type(structure_type), intent(inout) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: d4
+   class(dispersion_model), intent(in) :: d4
 
    !> Damping parameters
    class(damping_param), intent(in) :: param
@@ -164,7 +164,7 @@ subroutine test_numsigma(error, mol, d4, param)
    type(structure_type), intent(inout) :: mol
 
    !> Dispersion model
-   class(base_d4_model), intent(in) :: d4
+   class(dispersion_model), intent(in) :: d4
 
    !> Damping parameters
    class(damping_param), intent(in) :: param
