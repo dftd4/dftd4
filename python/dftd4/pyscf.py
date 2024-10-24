@@ -113,7 +113,7 @@ class DFTD4Dispersion(lib.StreamObject):
             mol.charge,
             lattice=lattice,
             periodic=periodic,
-            model=self.model.lower().replace(" ", ""),
+            model=self.model,
         )
 
         param = DampingParam(
@@ -200,7 +200,7 @@ def energy(mf, model: str = "d4"):
         xc="hf"
         if isinstance(mf, casci.CASCI)
         else getattr(mf, "xc", "HF").upper().replace(" ", ""),
-        model=model.lower().replace(" ", ""),
+        model=model,
     )
 
     if isinstance(mf, _DFTD4):

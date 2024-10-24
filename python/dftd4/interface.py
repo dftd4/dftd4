@@ -276,7 +276,7 @@ class DispersionModel(Structure):
         charge: Optional[float] = None,
         lattice: Optional[np.ndarray] = None,
         periodic: Optional[np.ndarray] = None,
-        model: Optional[str] = None,
+        model: str = "d4",
         **kwargs,
     ):
         """Create new dispersion model"""
@@ -284,7 +284,7 @@ class DispersionModel(Structure):
         Structure.__init__(self, numbers, positions, charge, lattice, periodic)
 
         if "ga" in kwargs or "gc" in kwargs or "wf" in kwargs:
-            if model == "d4s": 
+            if model.lower().replace(" ", "") == "d4s": 
                 self._disp = library.custom_d4s_model(
                     self._mol,
                     kwargs.get("ga", 3.0),
@@ -298,7 +298,7 @@ class DispersionModel(Structure):
                     kwargs.get("wf", 6.0),
             )
         else:
-            if model == "d4s": 
+            if model.lower().replace(" ", "") == "d4s": 
                 self._disp = library.new_d4s_model(self._mol)
             else: 
                 self._disp = library.new_d4_model(self._mol)
