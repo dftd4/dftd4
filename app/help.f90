@@ -147,7 +147,7 @@ subroutine citation(unit)
       "DFTD4 model:", &
       "Eike Caldeweyher, Sebastian Ehlert, Andreas Hansen, Hagen Neugebauer,", &
       "Sebastian Spicher, Christoph Bannwarth and Stefan Grimme,", &
-      "J. Chem Phys, 2019, 150, 154122.", &
+      "J. Chem. Phys., 2019, 150, 154122.", &
       "DOI: 10.1063/1.5090222", &
       "ChemRxiv: 10.26434/chemrxiv.7430216.v2", &
       "", &
@@ -157,10 +157,10 @@ subroutine citation(unit)
       "DOI: 10.1039/D0CP00502A", &
       "ChemRxiv: 10.26434/chemrxiv.10299428.v1", &
       "", &
-      "Smooth DFTD4 model:", &
+      "Smooth D4S model:", &
       "Nikolay V. Tkachenko, Linus B. Dittmer, Rebecca Tomann", &
-      "and Martin Head-Gordon, ?????.", &
-      "DOI: ?????", &
+      "and Martin Head-Gordon, J. Phys. Chem. Lett., 2024, 15, 42, 10629–10637.", &
+      "DOI: 10.1021/acs.jpclett.4c02653", &
       "ChemRxiv: 10.26434/chemrxiv-2024-31x2z", &
       ""
       

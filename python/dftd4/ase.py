@@ -40,6 +40,7 @@ Supported keywords are
  method                   None         Method to calculate dispersion for
  params_tweaks            None         Optional dict with the damping parameters
  cache_api                True         Reuse generate API objects (recommended)
+ model                    d4           Used dispersion Model (D4S or D4 (default))
 ======================== ============ ============================================
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
@@ -125,6 +126,7 @@ class DFTD4(Calculator):
         "method": None,
         "params_tweaks": {},
         "cache_api": True,
+        "model" : "d4"
     }
 
     _disp = None
@@ -215,6 +217,7 @@ class DFTD4(Calculator):
                 _charge,
                 _cell / Bohr,
                 _periodic,
+                model=self.parameters.get("model"),
             )
 
         except RuntimeError:

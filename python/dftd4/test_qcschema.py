@@ -66,6 +66,26 @@ def test_energy_r2scan_d4() -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.005001101011286166
 
 
+def test_energy_r2scan_d4s() -> None:
+    thr = 1e-9
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule=get_example_molecule(),
+        driver="energy",
+        model={
+            "method": "r2scan",
+        },
+        keywords={
+            "level_hint": "d4s",
+        },
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert atomic_result.success
+    assert approx(atomic_result.return_result, abs=thr) == -0.00509785822000568
+
+
 def test_energy_r2scan_3c() -> None:
     thr = 1e-9
 
@@ -113,6 +133,29 @@ def test_energy_lh20t_d4() -> None:
 
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == -0.010064263146257654
+
+
+def test_energy_lh20t_d4s() -> None:
+    thr = 1e-9
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule=get_example_molecule(),
+        driver="energy",
+        model={"method": ""},
+        keywords={
+            "params_tweaks": {
+                "s8": 0.113,
+                "a1": 0.479,
+                "a2": 4.635,
+            },
+            "level_hint": "d4s",
+        },
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+
+    assert atomic_result.success
+    assert approx(atomic_result.return_result, abs=thr) == -0.010252088837042048
 
 
 def test_energy_m06l_d4() -> None:
@@ -179,29 +222,7 @@ def test_gradient_b97m_d4() -> None:
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": "C C C C C C I H H H H H S H C H H H".split(" "),
-            "geometry": [
-                [-1.42754169820131, -1.50508961850828, -1.93430551124333],
-                [+1.19860572924150, -1.66299114873979, -2.03189643761298],
-                [+2.65876001301880, +0.37736955363609, -1.23426391650599],
-                [+1.50963368042358, +2.57230374419743, -0.34128058818180],
-                [-1.12092277855371, +2.71045691257517, -0.25246348639234],
-                [-2.60071517756218, +0.67879949508239, -1.04550707592673],
-                [-2.86169588073340, +5.99660765711210, +1.08394899986031],
-                [+2.09930989272956, -3.36144811062374, -2.72237695164263],
-                [+2.64405246349916, +4.15317840474646, +0.27856972788526],
-                [+4.69864865613751, +0.26922271535391, -1.30274048619151],
-                [-4.63786461351839, +0.79856258572808, -0.96906659938432],
-                [-2.57447518692275, -3.08132039046931, -2.54875517521577],
-                [-5.88211879210329, 11.88491819358157, +2.31866455902233],
-                [-8.18022701418703, 10.95619984550779, +1.83940856333092],
-                [-5.08172874482867, 12.66714386256482, -0.92419491629867],
-                [-3.18311711399702, 13.44626574330220, -0.86977613647871],
-                [-5.07177399637298, 10.99164969235585, -2.10739192258756],
-                [-6.35955320518616, 14.08073002965080, -1.68204314084441],
-            ],
-        },
+        molecule=get_example_molecule(),
         driver="gradient",
         model={
             "method": "b97m-D4",
@@ -233,6 +254,49 @@ def test_gradient_b97m_d4() -> None:
 
     atomic_result = run_qcschema(atomic_input)
 
+    assert atomic_result.success
+    assert approx(atomic_result.return_result, abs=thr) == gradient
+
+
+def test_gradient_tpss_d4s() -> None:
+    thr = 1e-9
+
+    atomic_input = qcel.models.AtomicInput(
+        molecule=get_example_molecule(),
+        driver="gradient",
+        model={
+            "method": "TPSS",
+        },
+        keywords={
+            "level_hint": "d4s",
+        },
+    )
+    gradient = np.array(
+        [
+            
+            [-1.36067766e-04, -4.72731818e-04, -1.88160742e-04],
+            [+2.00334329e-04, -3.77344166e-04, -1.54443106e-04],
+            [+4.85748705e-04, -1.86465318e-04, -8.16713264e-05],
+            [+3.40248245e-04, +1.04514066e-04, +4.31391229e-05],
+            [-7.10734227e-05, +1.27160703e-04, +7.31294101e-05],
+            [-2.97997359e-04, -1.89214279e-04, -6.66535024e-05],
+            [-1.16456272e-04, +4.84627746e-05, +5.51782210e-04],
+            [+6.64898493e-05, -1.25194763e-04, -5.12043373e-05],
+            [+1.50558513e-04, +7.37719529e-05, +3.08377180e-05],
+            [+1.62329419e-04, -2.32012807e-05, -1.15835288e-05],
+            [-1.54748174e-04, -6.78861151e-05, -2.21532014e-05],
+            [-7.86055402e-05, -1.34246120e-04, -5.28699703e-05],
+            [-3.39623373e-04, +5.01841681e-04, +1.79953770e-04],
+            [-7.38516701e-05, +7.66383868e-05, +6.65527953e-05],
+            [-7.64722239e-05, +3.68207143e-04, -2.27167892e-04],
+            [-2.65824875e-05, +9.70334513e-05, -2.37042257e-05],
+            [-3.95478770e-05, +1.43973339e-04, -4.59543086e-05],
+            [+5.31710551e-06, +3.46803626e-05, -1.98288866e-05],
+        ]
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+    print(atomic_result.return_result)
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
