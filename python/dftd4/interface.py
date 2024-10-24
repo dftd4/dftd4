@@ -290,18 +290,22 @@ class DispersionModel(Structure):
                     kwargs.get("ga", 3.0),
                     kwargs.get("gc", 2.0),
             )
-            else: 
+            elif model.lower().replace(" ", "") == "d4": 
                 self._disp = library.custom_d4_model(
                     self._mol,
                     kwargs.get("ga", 3.0),
                     kwargs.get("gc", 2.0),
                     kwargs.get("wf", 6.0),
             )
+            else: 
+                raise ValueError("Unknown dispersion model")
         else:
             if model.lower().replace(" ", "") == "d4s": 
                 self._disp = library.new_d4s_model(self._mol)
-            else: 
+            elif model.lower().replace(" ", "") == "d4": 
                 self._disp = library.new_d4_model(self._mol)
+            else: 
+                raise ValueError("Unknown dispersion model")
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """

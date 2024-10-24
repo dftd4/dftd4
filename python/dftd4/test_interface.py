@@ -16,6 +16,7 @@
 
 import numpy as np
 from dftd4.interface import DampingParam, DispersionModel, Structure
+import pytest
 from pytest import approx, raises
 
 
@@ -625,3 +626,24 @@ def test_properties() -> None:
     assert approx(res.get("coordination numbers"), abs=thr) == cn
     assert approx(res.get("partial charges"), abs=thr) == charges
     assert approx(res.get("polarizibilities"), abs=thr) == alpha
+
+
+@pytest.mark.xfail()
+def test_error_model() -> None:
+    """Test the error for unkown dispersion model"""
+    numbers = np.array(
+        [
+            1, 
+            1, 
+            8, 
+        ]
+    )
+    positions = np.array(
+        [
+            [-0.02298820517725,  0.00000000000000, -1.76188954246096], 
+            [ 1.65369502723146,  0.00000000000000,  0.60848805100320], 
+            [-0.10273226709885,  0.00000000000000,  0.07266269355725], 
+        ]
+    )
+
+    model = DispersionModel(numbers, positions, model="D42")
