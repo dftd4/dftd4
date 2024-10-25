@@ -181,7 +181,6 @@ subroutine run_main(config, error)
       end block
    else
       call fatal_error(error, "Unknown model selected")
-      return
    end if
    if (allocated(error)) return
 
