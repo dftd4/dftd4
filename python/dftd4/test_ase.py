@@ -76,12 +76,9 @@ def test_ase_pbed4s() -> None:
     )
 
     atoms = molecule("bicyclobutane")
-    print(atoms.numbers)
-    print(atoms.positions)
     atoms.calc = DFTD4(method="PBE", model="d4s")
 
     assert approx(atoms.get_potential_energy(), abs=thr) == -0.16377494406788423
-    print(atoms.get_forces())
     assert approx(atoms.get_forces(), abs=thr) == forces
 
     atoms.calc = DFTD4(method="PBE", model="d4s").add_calculator(EMT())

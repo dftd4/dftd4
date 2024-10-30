@@ -296,7 +296,6 @@ def test_gradient_tpss_d4s() -> None:
     )
 
     atomic_result = run_qcschema(atomic_input)
-    print(atomic_result.return_result)
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == gradient
 

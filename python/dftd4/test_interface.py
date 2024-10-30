@@ -628,9 +628,8 @@ def test_properties() -> None:
     assert approx(res.get("polarizibilities"), abs=thr) == alpha
 
 
-@pytest.mark.xfail()
 def test_error_model() -> None:
-    """Test the error for unkown dispersion model"""
+    """Test the error for unknown dispersion model"""
     numbers = np.array(
         [
             1, 
@@ -646,4 +645,7 @@ def test_error_model() -> None:
         ]
     )
 
-    model = DispersionModel(numbers, positions, model="D42")
+    with pytest.raises(ValueError) as exc:
+        DispersionModel(numbers, positions, model="D42")
+    
+    assert "Unknown dispersion model" in str(exc)

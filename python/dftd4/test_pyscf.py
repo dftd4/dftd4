@@ -264,7 +264,6 @@ def test_gradient_hf_d4s() -> None:
         ]
     )
     grad = disp.energy(scf.RHF(mol), model="d4s").run().nuc_grad_method()
-    print(grad.kernel())
     assert grad.kernel() == approx(ref, abs=1.0e-7)
 
 

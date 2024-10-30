@@ -304,7 +304,7 @@ class DispersionModel(Structure):
             else: 
                 self._disp = library.new_d4s_model(self._mol)
         else: 
-            raise ValueError("Unknown dispersion model")
+            raise ValueError(f"Unknown dispersion model '{model}'.")
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """
