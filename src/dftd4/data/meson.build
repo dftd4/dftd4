@@ -19,5 +19,6 @@ srcs += files(
   'en.f90',
   'hardness.f90',
   'r4r2.f90',
+  'wfpair.f90',
   'zeff.f90',
 )

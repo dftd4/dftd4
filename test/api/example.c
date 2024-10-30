@@ -176,7 +176,39 @@ int test_example(void)
         goto err;
     }
     dftd4_delete(param);
+    dftd4_delete(disp);
 
+    // D4S - r2SCAN-3c
+    disp = dftd4_custom_d4s_model(error, mol, 2.0, 1.0);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
+    if (!disp) {
+        goto err;
+    }
+
+    param = dftd4_load_rational_damping(error, "r2scan_3c", true);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
+    if (!param) {
+        goto err;
+    }
+
+    dftd4_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
+
+    dftd4_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
+    dftd4_get_numerical_hessian(error, mol, disp, param, hessian);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
+    dftd4_delete(param);
     dftd4_delete(disp);
     dftd4_delete(mol);
     dftd4_delete(error);

@@ -47,6 +47,11 @@ References
   DOI: `10.1039/D0CP00502A <https://dx.doi.org/10.1039/D0CP00502A>`__
   chemrxiv: `10.26434/chemrxiv.10299428 <https://dx.doi.org/10.26434/chemrxiv.10299428>`__
 
+- Nikolay V. Tkachenko, Linus B. Dittmer, Rebecca Tomann and Martin Head-Gordon,
+  *J. Phys. Chem. Lett.*, **2024**, 15, 42, 10629–10637.
+  DOI: `10.1021/acs.jpclett.4c02653 <https://dx.doi.org/10.1021/acs.jpclett.4c02653>`__
+  chemrxiv: `10.26434/chemrxiv-2024-31x2z <https://dx.doi.org/10.26434/chemrxiv-2024-31x2z>`__
+
 .. toctree::
 
    Recipes <recipe/index>

@@ -77,7 +77,7 @@ The ``read_structure`` routine can also use an already opened unit, but in this 
    end subroutine example
 
 
-The structure type as well as the error type are using only allocatable members and can therefore be used without requiring explicit deconstruction.
+The structure type as well as the error type contain only allocatable members and can therefore be used without requiring explicit deconstruction.
 
 Certain members of the structure type should be considered immutable, like the number of atoms (``nat``), the identifiers for unique atoms (``id``) and the boundary conditions (``periodic``).
 To change those specific structure parameters the structure type and all dependent objects should be reconstructed to ensure a consistent setup.

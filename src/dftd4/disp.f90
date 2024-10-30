@@ -21,7 +21,7 @@ module dftd4_disp
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : d4_model
+   use dftd4_model, only : dispersion_model
    use dftd4_ncoord, only : get_coordination_number
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -43,7 +43,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(d4_model), intent(in) :: disp
+   class(dispersion_model), intent(in) :: disp
 
    !> Damping parameters
    class(damping_param), intent(in) :: param
@@ -64,7 +64,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    integer :: mref
    real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
    real(wp), allocatable :: q(:), dqdr(:, :, :), dqdL(:, :, :)
-   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :), gwdq(:, :)
+   real(wp), allocatable :: gwvec(:, :, :), gwdcn(:, :, :), gwdq(:, :, :)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :), dc6dq(:, :)
    real(wp), allocatable :: dEdcn(:), dEdq(:), energies(:)
    real(wp), allocatable :: lattr(:, :)
@@ -82,8 +82,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
    call get_charges(mol, q, dqdr, dqdL)
 
-   allocate(gwvec(mref, mol%nat))
-   if (grad) allocate(gwdcn(mref, mol%nat), gwdq(mref, mol%nat))
+   allocate(gwvec(mref, mol%nat, disp%ncoup))
+   if (grad) allocate(gwdcn(mref, mol%nat, disp%ncoup), gwdq(mref, mol%nat, disp%ncoup))
    call disp%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
 
    allocate(c6(mol%nat, mol%nat))
@@ -132,7 +132,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(d4_model), intent(in) :: disp
+   class(dispersion_model), intent(in) :: disp
 
    !> Realspace cutoffs
    type(realspace_cutoff), intent(in) :: cutoff
@@ -150,7 +150,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    real(wp), intent(out) :: alpha(:)
 
    integer :: mref
-   real(wp), allocatable :: gwvec(:, :), lattr(:, :)
+   real(wp), allocatable :: gwvec(:, :, :), lattr(:, :)
 
    mref = maxval(disp%ref)
 
@@ -159,7 +159,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
 
    call get_charges(mol, q)
 
-   allocate(gwvec(mref, mol%nat))
+   allocate(gwvec(mref, mol%nat, disp%ncoup))
    call disp%weight_references(mol, cn, q, gwvec)
 
    call disp%get_atomic_c6(mol, gwvec, c6=c6)
@@ -176,7 +176,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    class(structure_type), intent(in) :: mol
 
    !> Dispersion model
-   class(d4_model), intent(in) :: disp
+   class(dispersion_model), intent(in) :: disp
 
    !> Damping parameters
    class(damping_param), intent(in) :: param
@@ -191,7 +191,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    real(wp), intent(out) :: energy3(:, :)
 
    integer :: mref
-   real(wp), allocatable :: cn(:), q(:), gwvec(:, :), c6(:, :), lattr(:, :)
+   real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :), c6(:, :), lattr(:, :)
 
    mref = maxval(disp%ref)
 
@@ -202,7 +202,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    allocate(q(mol%nat))
    call get_charges(mol, q)
 
-   allocate(gwvec(mref, mol%nat))
+   allocate(gwvec(mref, mol%nat, disp%ncoup))
    call disp%weight_references(mol, cn, q, gwvec)
 
    allocate(c6(mol%nat, mol%nat))

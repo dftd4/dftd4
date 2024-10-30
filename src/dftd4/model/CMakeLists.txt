@@ -14,34 +14,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-add_subdirectory("damping")
-add_subdirectory("data")
-add_subdirectory("model")
-
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
-  "${dir}/blas.F90"
-  "${dir}/charge.f90"
-  "${dir}/cutoff.f90"
-  "${dir}/damping.f90"
-  "${dir}/data.f90"
-  "${dir}/disp.f90"
-  "${dir}/model.f90"
-  "${dir}/ncoord.f90"
-  "${dir}/numdiff.f90"
-  "${dir}/output.f90"
-  "${dir}/param.f90"
-  "${dir}/reference.f90"
+  "${dir}/d4.f90"
+  "${dir}/d4s.f90"
+  "${dir}/type.f90"
   "${dir}/utils.f90"
-  "${dir}/version.f90"
 )
-if(WITH_API)
-  list(APPEND srcs "${dir}/api.f90")
-endif()
-if(WITH_API_V2)
-  list(APPEND srcs "${dir}/compat.f90")
-endif()
 
 set(srcs "${srcs}" PARENT_SCOPE)

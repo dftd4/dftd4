@@ -20,6 +20,7 @@ module dftd4_data
    use dftd4_data_en, only : get_electronegativity
    use dftd4_data_hardness, only : get_hardness
    use dftd4_data_r4r2, only : get_r4r2_val
+   use dftd4_data_wfpair, only : get_wfpair_val
    use dftd4_data_zeff, only : get_effective_charge
    implicit none
    public

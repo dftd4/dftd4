@@ -70,11 +70,12 @@ class DFTD4Dispersion(lib.StreamObject):
     array(-0.0050011)
     """
 
-    def __init__(self, mol, xc: str = "hf", atm: bool = True):
+    def __init__(self, mol, xc: str = "hf", atm: bool = True, model: str = "d4"):
         self.mol = mol
         self.verbose = mol.verbose
         self.xc = xc
         self.atm = atm
+        self.model = model
         self.edisp = None
         self.grads = None
 
@@ -112,6 +113,7 @@ class DFTD4Dispersion(lib.StreamObject):
             mol.charge,
             lattice=lattice,
             periodic=periodic,
+            model=self.model,
         )
 
         param = DampingParam(
@@ -149,7 +151,7 @@ class _DFTD4Grad:
     pass
 
 
-def energy(mf):
+def energy(mf, model: str = "d4"):
     """
     Apply DFT-D4 corrections to SCF or MCSCF methods by returning an
     instance of a new class built from the original instances class.
@@ -158,6 +160,8 @@ def energy(mf):
     ----------
     mf
         The method to which DFT-D4 corrections will be applied.
+    model 
+        The DFT-D4 model to use (D4S or D4 (default)).
 
     Returns
     -------
@@ -196,6 +200,7 @@ def energy(mf):
         xc="hf"
         if isinstance(mf, casci.CASCI)
         else getattr(mf, "xc", "HF").upper().replace(" ", ""),
+        model=model,
     )
 
     if isinstance(mf, _DFTD4):
