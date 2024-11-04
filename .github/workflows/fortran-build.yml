@@ -70,7 +70,7 @@ jobs:
         - os: windows-latest
           build: meson
           build-type: debug
-          compiler: msys2
+          compiler: msys
           version: 10
 
     defaults:
@@ -120,7 +120,7 @@ jobs:
           --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
     - name: Install GCC (Windows)
-      if: ${{ contains(matrix.os, 'windows') && matrix.compiler == 'gnu' }}
+      if: ${{ contains(matrix.os, 'windows') && matrix.compiler == 'msys' }}
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
