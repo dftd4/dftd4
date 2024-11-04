@@ -53,7 +53,7 @@ jobs:
           build: meson
           build-type: debug
           compiler: gnu
-          version: 11
+          version: 12
 
         - os: ubuntu-latest
           build: meson
@@ -255,7 +255,7 @@ jobs:
         echo "DFTD4_PREFIX=$PWD/_dist" >> $GITHUB_ENV
 
     - name: Create package
-      if: ${{ matrix.build == 'meson' && matrix.version == 10 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
+      if: ${{ matrix.build == 'meson' && matrix.version == 12 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
       run: |
         tar cvf ${{ env.OUTPUT }} _dist
         xz -T0 ${{ env.OUTPUT }}
@@ -264,7 +264,7 @@ jobs:
         OUTPUT: dftd4-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}.tar
 
     - name: Upload package
-      if: ${{ matrix.build == 'meson' && matrix.version == 10 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
+      if: ${{ matrix.build == 'meson' && matrix.version == 12 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.DFTD4_OUTPUT }}
@@ -285,7 +285,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        gcc_v: [10]
+        gcc_v: [12]
         python_v: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
 
         include:
