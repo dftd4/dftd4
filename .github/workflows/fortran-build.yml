@@ -167,10 +167,6 @@ jobs:
         source /opt/intel/oneapi/setvars.sh
         printenv >> $GITHUB_ENV
 
-    - name: Upgrade pip
-      if: ${{ ! contains(matrix.os, 'windows') }}
-      run: pip install --upgrade pip
-
     - name: Install build and test dependencies
       if: ${{ ! contains(matrix.os, 'windows') }}
       run: pip3 install ${{ env.PIP_PACKAGES }} ${{ env.PIP_EXTRAS }}
