@@ -34,7 +34,7 @@ jobs:
         build: [meson, cmake]
         build-type: [debug]
         compiler: [gnu]
-        version: [10]
+        version: [12]
 
         include:
         - os: ubuntu-20.04
