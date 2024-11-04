@@ -66,6 +66,13 @@ jobs:
           build-type: debug
           compiler: gnu
           version: 10
+
+        - os: windows-latest
+          build: meson
+          build-type: debug
+          compiler: msys2
+          version: 10
+
     defaults:
       run:
         shell: ${{ matrix.shell || 'bash' }}
@@ -87,7 +94,7 @@ jobs:
     - name: Link pre-installed GCC and FC (macOS)
       if: ${{ contains(matrix.os, 'macos') && matrix.compiler == 'gnu' }}
       run: |
-        brew install openblas || true
+        brew install openblas
         gfortran_path=$( which gfortran-${{ env.GCC_V }} )
         gcc_path=$( which gcc-${{ env.GCC_V }} )
         gplusplus_path=$( which g++-${{ env.GCC_V }} )
@@ -169,6 +176,10 @@ jobs:
     - name: Install build and test dependencies
       if: ${{ ! contains(matrix.os, 'windows') }}
       run: pip3 install ${{ env.PIP_PACKAGES }} ${{ env.PIP_EXTRAS }}
+
+    - name: Install build and test dependencies
+      if: ${{ contains(matrix.os, 'windows') }}
+      run: pip3 install meson
 
     - name: Configure build (meson)
       if: ${{ matrix.build == 'meson' }}
