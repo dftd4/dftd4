@@ -264,7 +264,7 @@ jobs:
         OUTPUT: dftd4-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}.tar
 
     - name: Upload package
-      if: ${{ matrix.build == 'meson' && matrix.build-type != 'coverage' }}
+      if: ${{ matrix.build == 'meson' && matrix.version == 10 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.DFTD4_OUTPUT }}
