@@ -87,7 +87,7 @@ jobs:
     - name: Link pre-installed GCC and FC (macOS)
       if: ${{ contains(matrix.os, 'macos') && matrix.compiler == 'gnu' }}
       run: |
-        brew install openblas
+        brew install openblas || true
         gfortran_path=$( which gfortran-${{ env.GCC_V }} )
         gcc_path=$( which gcc-${{ env.GCC_V }} )
         gplusplus_path=$( which g++-${{ env.GCC_V }} )
