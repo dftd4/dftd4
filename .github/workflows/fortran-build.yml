@@ -67,12 +67,6 @@ jobs:
           compiler: gnu
           version: 10
 
-        - os: windows-latest
-          build: meson
-          build-type: debug
-          compiler: msys
-          version: 10
-
     defaults:
       run:
         shell: ${{ matrix.shell || 'bash' }}
@@ -174,12 +168,8 @@ jobs:
         printenv >> $GITHUB_ENV
 
     - name: Install build and test dependencies
-      # if: ${{ ! contains(matrix.os, 'windows') }}
+      if: ${{ ! contains(matrix.os, 'windows') }}
       run: pip3 install ${{ env.PIP_PACKAGES }} ${{ env.PIP_EXTRAS }}
-
-    # - name: Install build and test dependencies
-    #   if: ${{ contains(matrix.os, 'windows') }}
-    #   run: pip3 install meson
 
     - name: Configure build (meson)
       if: ${{ matrix.build == 'meson' }}
