@@ -75,7 +75,7 @@ jobs:
       FC: ${{ matrix.compiler == 'intel' && 'ifort' || 'gfortran' }}
       CC: ${{ matrix.compiler == 'intel' && 'icc' || 'gcc' }}
       GCC_V: ${{ matrix.version }}
-      PYTHON_V: 3.8
+      PYTHON_V: 3.9
 
     steps:
     - name: Checkout code
