@@ -18,8 +18,8 @@ env:
     ase
     matplotlib
     qcelemental
-    tomli
     setuptools
+    tomli
   LINUX_INTEL_COMPONENTS: >-
     intel-oneapi-compiler-fortran-2021.2.0
     intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2021.2.0
