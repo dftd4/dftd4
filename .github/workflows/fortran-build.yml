@@ -351,6 +351,10 @@ jobs:
         tar xvf ${{ env.DFTD4_OUTPUT }}
         echo "DFTD4_PREFIX=$PWD/_dist" >> $GITHUB_ENV
 
+    - name: Copy parameter file
+      run: |
+        cp assets/parameters.toml python/dftd4
+
     - name: Install Python extension module (pip)
       run: pip3 install . -vv
       working-directory: python
