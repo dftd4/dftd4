@@ -19,7 +19,8 @@ module dftd4_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type, read_structure, filetype
-   use dftd4, only : get_dispersion, d4_model, new_d4_model, &
+   use dftd4, only : get_dispersion, dispersion_model, &
+      & d4_model, new_d4_model, d4s_model, new_d4s_model, &
       realspace_cutoff, get_lattice_points, get_coordination_number, &
       damping_param, rational_damping_param, get_rational_damping, &
       get_properties, get_pairwise_dispersion, get_dispersion_hessian
@@ -71,7 +72,7 @@ subroutine run_main(config, error)
    character(len=:), allocatable :: filename
    character(len=:), allocatable :: functional
    class(damping_param), allocatable :: param
-   type(d4_model) :: d4
+   class(dispersion_model), allocatable :: d4
    real(wp) :: charge
    real(wp), allocatable :: energy, gradient(:, :), sigma(:, :), hessian(:, :, :, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
@@ -164,7 +165,23 @@ subroutine run_main(config, error)
       end if
    end if
 
-   call new_d4_model(error, d4, mol, ga=ga, gc=gc, wf=config%wf)
+   if(lowercase(config%model) == "d4") then
+      block 
+         type(d4_model), allocatable :: tmp
+         allocate(tmp)
+         call new_d4_model(error, tmp, mol, ga=ga, gc=gc, wf=config%wf)
+         call move_alloc(tmp, d4)
+      end block 
+   else if(lowercase(config%model) == "d4s") then
+      block 
+         type(d4s_model), allocatable :: tmp
+         allocate(tmp)
+         call new_d4s_model(error, tmp, mol, ga=ga, gc=gc)
+         call move_alloc(tmp, d4)
+      end block
+   else
+      call fatal_error(error, "Unknown model selected")
+   end if
    if (allocated(error)) return
 
    if (config%properties) then

@@ -22,6 +22,7 @@ list(
   "${dir}/en.f90"
   "${dir}/hardness.f90"
   "${dir}/r4r2.f90"
+  "${dir}/wfpair.f90"
   "${dir}/zeff.f90"
 )
 

@@ -44,14 +44,17 @@ subroutine collect_pairwise(testsuite)
 
    testsuite = [ &
       & new_unittest("PBE-D4", test_pbed4_mb01), &
+      & new_unittest("PBE-D4S", test_pbed4s_mb01), &
       & new_unittest("B97-D4", test_b97d4_mb02), &
-      & new_unittest("TPSS-D4", test_tpssd4_ammonia) &
+      & new_unittest("B97-D4S", test_b97d4s_mb02), &
+      & new_unittest("TPSS-D4", test_tpssd4_ammonia), &
+      & new_unittest("TPSS-D4S", test_tpssd4s_ammonia) &
       & ]
 
 end subroutine collect_pairwise
 
 
-subroutine test_dftd4_pairwise(error, mol, param)
+subroutine test_dftd4_pairwise(error, mol, d4, param)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -59,15 +62,17 @@ subroutine test_dftd4_pairwise(error, mol, param)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
 
+   !> Dispersion model
+   class(dispersion_model), intent(in) :: d4
+
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
-   type(d4_model) :: d4
    real(wp) :: energy
    real(wp), allocatable :: energy2(:, :), energy3(:, :)
 
    allocate(energy2(mol%nat, mol%nat), energy3(mol%nat, mol%nat))
-   call new_d4_model(d4, mol)
+
    call get_dispersion(mol, d4, param, cutoff, energy)
    call get_pairwise_dispersion(mol, d4, param, cutoff, energy2, energy3)
 
@@ -85,14 +90,33 @@ subroutine test_pbed4_mb01(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(d4_model) :: d4
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call test_dftd4_pairwise(error, mol, param)
+   call new_d4_model(d4, mol)
+   call test_dftd4_pairwise(error, mol, d4, param)
 
 end subroutine test_pbed4_mb01
+
+subroutine test_pbed4s_mb01(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d4s_model(d4s, mol)
+   call test_dftd4_pairwise(error, mol, d4s, param)
+
+end subroutine test_pbed4s_mb01
 
 
 subroutine test_b97d4_mb02(error)
@@ -101,14 +125,33 @@ subroutine test_b97d4_mb02(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(d4_model) :: d4
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
       & s8 = 1.69460052_wp, a1 = 0.28904684_wp, a2 = 4.13407323_wp)
 
    call get_structure(mol, "MB16-43", "02")
-   call test_dftd4_pairwise(error, mol, param)
+   call new_d4_model(d4, mol)
+   call test_dftd4_pairwise(error, mol, d4, param)
 
 end subroutine test_b97d4_mb02
+
+subroutine test_b97d4s_mb02(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
+      & s8 = 1.69460052_wp, a1 = 0.28904684_wp, a2 = 4.13407323_wp)
+
+   call get_structure(mol, "MB16-43", "02")
+   call new_d4s_model(d4s, mol)
+   call test_dftd4_pairwise(error, mol, d4s, param)
+
+end subroutine test_b97d4s_mb02
 
 
 subroutine test_tpssd4_ammonia(error)
@@ -117,14 +160,33 @@ subroutine test_tpssd4_ammonia(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(d4_model) :: d4
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
    call get_structure(mol, "X23", "ammonia")
-   call test_dftd4_pairwise(error, mol, param)
+   call new_d4_model(d4, mol)
+   call test_dftd4_pairwise(error, mol, d4, param)
 
 end subroutine test_tpssd4_ammonia
+
+subroutine test_tpssd4s_ammonia(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
+      & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
+
+   call get_structure(mol, "X23", "ammonia")
+   call new_d4s_model(d4s, mol)
+   call test_dftd4_pairwise(error, mol, d4s, param)
+
+end subroutine test_tpssd4s_ammonia
 
 
 end module test_pairwise

@@ -10,7 +10,7 @@ dftd4 - Generally Applicable Atomic-Charge Dependent London Dispersion Correctio
 
 == Description
 
-Takes an geometry input to calculate the D4 dispersion correction.
+Takes an geometry input to calculate the D4(S) dispersion correction.
 Periodic calculations are performed automatically for periodic input formats.
 Reads .CHRG file (if present) from the same directory as the input.
 Specify the functional to select the correct parameters.
@@ -47,8 +47,11 @@ Specify the functional to select the correct parameters.
      (default: 3.0 and 2.0)
 
 *--wfactor* _real_::
-     Adjust weighting factor for the Gaussian interpolation
+     Adjust weighting factor for the Gaussian interpolation (only D4)
      (default: 6.0)
+
+*-m, --model* _string_::
+     use either standard D4 (default) or the smoothed D4S model
 
 *-g, --grad* [_file_]::
      prints analytical gradient to file,

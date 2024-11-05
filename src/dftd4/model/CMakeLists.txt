@@ -2,21 +2,26 @@
 # SPDX-Identifier: LGPL-3.0-or-later
 #
 # dftd4 is free software: you can redistribute it and/or modify it under
-# the terms of the Lesser GNU General Public License as published by
+# the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # dftd4 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# Lesser GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the Lesser GNU General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-from setuptools import setup
+set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
-setup(
-    cffi_modules=["ffibuilder.py:ffibuilder"],
-    package_data={"dftd4": ["_libdftd4*.so", "*.toml", "*.json"]},
+list(
+  APPEND srcs
+  "${dir}/d4.f90"
+  "${dir}/d4s.f90"
+  "${dir}/type.f90"
+  "${dir}/utils.f90"
 )
+
+set(srcs "${srcs}" PARENT_SCOPE)

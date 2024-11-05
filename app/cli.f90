@@ -39,6 +39,7 @@ module dftd4_cli
       integer, allocatable :: input_format
       type(rational_damping_param) :: inp
       character(len=:), allocatable :: method
+      character(len=:), allocatable :: model
       logical :: json = .false.
       character(len=:), allocatable :: json_output
       logical :: wrap = .true.
@@ -180,6 +181,14 @@ subroutine get_run_arguments(config, list, start, error)
             call fatal_error(error, "Too many positional arguments present")
          end if
          exit
+      case("-m", "--model") 
+         iarg = iarg + 1
+         call get_argument(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for model")
+            exit
+         end if
+         call move_alloc(arg, config%model)
       case("-i", "--input")
          iarg = iarg + 1
          call get_argument(iarg, arg)
@@ -278,6 +287,10 @@ subroutine get_run_arguments(config, list, start, error)
 
    if (.not.allocated(config%grad_output)) then
       config%grad_output = "dftd4.txt"
+   end if
+
+   if (.not.allocated(config%model)) then
+      config%model = "d4"
    end if
 
    if (.not.allocated(config%input)) then

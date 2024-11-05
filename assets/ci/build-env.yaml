@@ -2,8 +2,8 @@ name: devel
 channels:
   - conda-forge
 dependencies:
-  - meson 0.58.0
-  - fpm 0.3.0
+  - meson
+  - fpm
   - cmake
   - ninja
   - gcovr

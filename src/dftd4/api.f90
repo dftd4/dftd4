@@ -27,7 +27,9 @@ module dftd4_api
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
    use dftd4_disp, only : get_dispersion, get_pairwise_dispersion, get_properties
-   use dftd4_model, only : d4_model, new_d4_model
+   use dftd4_model, only : dispersion_model
+   use dftd4_model_d4, only : d4_model, new_d4_model
+   use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_numdiff, only: get_dispersion_hessian
    use dftd4_param, only : get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell
@@ -45,6 +47,7 @@ module dftd4_api
 
    public :: vp_model
    public :: new_d4_model_api, custom_d4_model_api, delete_model_api
+   public :: new_d4s_model_api, custom_d4s_model_api
 
    public :: vp_param
    public :: new_rational_damping_api , load_rational_damping_api
@@ -70,7 +73,7 @@ module dftd4_api
    !> Void pointer to dispersion model
    type :: vp_model
       !> Actual payload
-      type(d4_model) :: ptr
+      class(dispersion_model), allocatable :: ptr
    end type vp_model
 
    !> Void pointer to damping parameters
@@ -310,6 +313,7 @@ function new_d4_model_api(verror, vmol) &
    type(vp_structure), pointer :: mol
    type(c_ptr) :: vdisp
    type(vp_model), pointer :: disp
+   type(d4_model), allocatable :: tmp
 
    if (debug) print'("[Info]",1x, a)', "new_d4_model"
 
@@ -324,18 +328,61 @@ function new_d4_model_api(verror, vmol) &
    end if
    call c_f_pointer(vmol, mol)
 
-   allocate(disp)
-   call new_d4_model(error%ptr, disp%ptr, mol%ptr)
+   allocate(tmp)
+   call new_d4_model(error%ptr, tmp, mol%ptr)
+
    if (allocated(error%ptr)) then
-      deallocate(disp)
+      deallocate(tmp)
    else
+      allocate(disp)
+      call move_alloc(tmp, disp%ptr)   
       vdisp = c_loc(disp)
    end if
 
 end function new_d4_model_api
 
 
-!> Create new D4 dispersion model
+!> Create new D4S dispersion model
+function new_d4s_model_api(verror, vmol) &
+      & result(vdisp) &
+      & bind(C, name=namespace//"new_d4s_model")
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4s_model_api
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr) :: vdisp
+   type(vp_model), pointer :: disp
+   type(d4s_model), allocatable :: tmp
+
+   if (debug) print'("[Info]",1x, a)', "new_d4s_model"
+
+   vdisp = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   allocate(tmp)
+   call new_d4s_model(error%ptr, tmp, mol%ptr)
+
+   if (allocated(error%ptr)) then
+      deallocate(tmp)
+   else
+      allocate(disp)
+      call move_alloc(tmp, disp%ptr)   
+      vdisp = c_loc(disp)
+   end if
+
+end function new_d4s_model_api
+
+
+!> Create new custom D4 dispersion model
 function custom_d4_model_api(verror, vmol, ga, gc, wf) &
       & result(vdisp) &
       & bind(C, name=namespace//"custom_d4_model")
@@ -349,6 +396,7 @@ function custom_d4_model_api(verror, vmol, ga, gc, wf) &
    real(c_double), value, intent(in) :: ga
    real(c_double), value, intent(in) :: gc
    real(c_double), value, intent(in) :: wf
+   type(d4_model), allocatable :: tmp
 
    if (debug) print'("[Info]",1x, a)', "custom_d4_model"
 
@@ -363,15 +411,60 @@ function custom_d4_model_api(verror, vmol, ga, gc, wf) &
    end if
    call c_f_pointer(vmol, mol)
 
-   allocate(disp)
-   call new_d4_model(error%ptr, disp%ptr, mol%ptr, ga=ga, gc=gc, wf=wf)
+   allocate(tmp)
+   call new_d4_model(error%ptr, tmp, mol%ptr, ga=ga, gc=gc, wf=wf)
+
    if (allocated(error%ptr)) then
-      deallocate(disp)
+      deallocate(tmp)
    else
+      allocate(disp)
+      call move_alloc(tmp, disp%ptr)   
       vdisp = c_loc(disp)
    end if
 
 end function custom_d4_model_api
+
+
+!> Create new custom D4S dispersion model
+function custom_d4s_model_api(verror, vmol, ga, gc) &
+      & result(vdisp) &
+      & bind(C, name=namespace//"custom_d4s_model")
+   !DEC$ ATTRIBUTES DLLEXPORT :: custom_d4s_model_api
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr) :: vdisp
+   type(vp_model), pointer :: disp
+   real(c_double), value, intent(in) :: ga
+   real(c_double), value, intent(in) :: gc
+   type(d4s_model), allocatable :: tmp
+
+   if (debug) print'("[Info]",1x, a)', "custom_d4s_model"
+
+   vdisp = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   allocate(tmp)
+   call new_d4s_model(error%ptr, tmp, mol%ptr, ga=ga, gc=gc)
+
+   if (allocated(error%ptr)) then
+      deallocate(tmp)
+   else
+      allocate(disp)
+      call move_alloc(tmp, disp%ptr)   
+      vdisp = c_loc(disp)
+   end if
+
+end function custom_d4s_model_api
 
 
 !> Delete dispersion model

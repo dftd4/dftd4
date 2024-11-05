@@ -1,5 +1,5 @@
 [build-system]
-requires = ["meson-python", "cffi"]
+requires = ["meson-python", "cffi", "setuptools"]
 build-backend = "mesonpy"
 
 [project]
@@ -19,6 +19,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Chemistry",
   "Topic :: Scientific/Engineering :: Physics",
 ]

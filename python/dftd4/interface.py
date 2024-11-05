@@ -276,21 +276,35 @@ class DispersionModel(Structure):
         charge: Optional[float] = None,
         lattice: Optional[np.ndarray] = None,
         periodic: Optional[np.ndarray] = None,
+        model: str = "d4",
         **kwargs,
     ):
         """Create new dispersion model"""
 
         Structure.__init__(self, numbers, positions, charge, lattice, periodic)
+        
 
-        if "ga" in kwargs or "gc" in kwargs or "wf" in kwargs:
-            self._disp = library.custom_d4_model(
-                self._mol,
-                kwargs.get("ga", 3.0),
-                kwargs.get("gc", 2.0),
-                kwargs.get("wf", 6.0),
-            )
-        else:
-            self._disp = library.new_d4_model(self._mol)
+        if model.lower().replace(" ", "") == "d4": 
+            if "ga" in kwargs or "gc" in kwargs or "wf" in kwargs:
+                self._disp = library.custom_d4_model(
+                    self._mol,
+                    kwargs.get("ga", 3.0),
+                    kwargs.get("gc", 2.0),
+                    kwargs.get("wf", 6.0),
+                )
+            else:
+                self._disp = library.new_d4_model(self._mol)
+        elif model.lower().replace(" ", "") == "d4s": 
+            if "ga" in kwargs or "gc" in kwargs:
+                self._disp = library.custom_d4s_model(
+                    self._mol,
+                    kwargs.get("ga", 3.0),
+                    kwargs.get("gc", 2.0),
+                )
+            else: 
+                self._disp = library.new_d4s_model(self._mol)
+        else: 
+            raise ValueError(f"Unknown dispersion model '{model}'.")
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """

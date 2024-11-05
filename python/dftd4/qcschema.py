@@ -28,7 +28,7 @@ Supported keywords are
 ======================== =========== ============================================
  Keyword                  Default     Description
 ======================== =========== ============================================
- level_hint               None        Dispersion correction level (allowed: "d4")
+ level_hint               None        Dispersion correction level ("d4" or "d4s")
  params_tweaks            None        Optional dict with the damping parameters
  pair_resolved            False       Enable pairwise resolved dispersion energy
  property                 False       Evaluate dispersion related properties
@@ -104,6 +104,7 @@ _supported_drivers = [
 
 _available_levels = [
     "d4",
+    "d4s",
 ]
 
 _clean_dashlevel = str.maketrans("", "", "()")
@@ -157,14 +158,23 @@ def run_qcschema(
 
     # Obtain the parameters for the damping function
     _input_param = atomic_input.keywords.get("params_tweaks", {"method": _method})
-    _model_param = {
-        key: _input_param.pop(key, default)
-        for key, default in (
-            ("ga", 3.0),
-            ("gc", 2.0),
-            ("wf", 6.0),
-        )
-    }
+    if(_level.lower() == "d4s"):
+        _model_param = {
+            key: _input_param.pop(key, default)
+            for key, default in (
+                ("ga", 3.0),
+                ("gc", 2.0),
+            )
+        }
+    else: 
+        _model_param = {
+            key: _input_param.pop(key, default)
+            for key, default in (
+                ("ga", 3.0),
+                ("gc", 2.0),
+                ("wf", 6.0),
+            )
+        }
 
     try:
         param = DampingParam(**_input_param)
@@ -173,6 +183,7 @@ def run_qcschema(
             atomic_input.molecule.atomic_numbers[atomic_input.molecule.real],
             atomic_input.molecule.geometry[atomic_input.molecule.real],
             atomic_input.molecule.molecular_charge,
+            model = _level,
             **_model_param,
         )
 

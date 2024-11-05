@@ -3,7 +3,7 @@ C API
 
 The C API bindings are provided by using the ``iso_c_binding`` intrinsic module.
 Generally, objects are exported as opaque pointers and can only be manipulated within the library.
-The API user is required delete all objects created in the library by using the provided deconstructor functions to avoid mamory leaks.
+The API user is required to delete all objects created in the library by using the provided deconstructor functions to avoid mamory leaks.
 
 Overall four classes of objects are provided by the library
 
@@ -129,6 +129,24 @@ Recreating a structure object requires to recreate the dispersion model as well.
    :returns: New dispersion model handle
 
    Create new D4 dispersion model with custom parameters
+
+.. c:function:: dftd4_model dftd4_new_d4s_model(dftd4_error error, dftd4_structure mol);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :returns: New dispersion model handle
+
+   Create new D4S dispersion model
+
+.. c:function:: dftd4_model dftd4_custom_d4s_model(dftd4_error error, dftd4_structure mol, double ga, double gc);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :param ga: Charge scaling height
+   :param gc: Charge scaling steepness
+   :returns: New dispersion model handle
+
+   Create new D4S dispersion model with custom parameters   
 
 .. c:function:: void dftd4_delete_model(dftd4_model* disp);
 
