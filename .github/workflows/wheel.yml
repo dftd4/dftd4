@@ -68,7 +68,7 @@ jobs:
         os:
         - ubuntu-latest
         - macos-latest
-        python: ['39', '310', '311', '312']
+        python: ['39', '310', '311', '312', '313']
         include: # Python 3.7 and 3.8 is not supported on 'macos-latest'
           - os: ubuntu-latest
             python: '37'
