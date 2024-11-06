@@ -1,0 +1,11 @@
+name: devel
+channels:
+  - conda-forge
+dependencies:
+  - meson
+  - fpm
+  - cmake
+  - ninja
+  - gcovr
+  - liblapack
+  - pkg-config
