@@ -45,6 +45,18 @@ jobs:
           compiler: gnu
           version: 8
 
+        - os: macos-13
+          build: cmake
+          build-type: debug
+          compiler: gnu
+          version: 10
+
+        - os: macos-13
+          build: meson
+          build-type: debug
+          compiler: gnu
+          version: 10
+
         - os: ubuntu-latest
           build: meson
           build-type: coverage
@@ -87,8 +99,8 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_V }}
     
-    - name: Link pre-installed GCC and FC (macOS)
-      if: ${{ contains(matrix.os, 'macos') && matrix.compiler == 'gnu' }}
+    - name: Link pre-installed GCC and FC (MacOS - ARM)
+      if: ${{ contains(matrix.os, 'macos') && ! contains(matrix.os, '13') && matrix.compiler == 'gnu' }}
       run: |
         brew install openblas
         gfortran_path=$( which gfortran-${{ env.GCC_V }} )
@@ -106,6 +118,15 @@ jobs:
         brew install libffi
         export LDFLAGS="-L$(brew --prefix libffi)/lib"
         export CPPFLAGS="-I$(brew --prefix libffi)/include"
+
+    - name: Install GCC (MacOS - x86_64)
+      if: ${{ contains(matrix.os, 'macos-13') && matrix.compiler == 'gnu' }}
+      run: |
+        brew install gcc@${{ env.GCC_V }} openblas
+        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
+        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
+        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+        echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
 
     - name: Install GCC (Linux)
       if: ${{ contains(matrix.os, 'ubuntu') && matrix.compiler == 'gnu' }}
