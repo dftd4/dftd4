@@ -104,7 +104,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir . *.tar.gz
         env:
-          CIBW_PLAT: ${{ contains(matrix.os, 'macos-latest') && '-Dlapack=openblas' || '' }}
+          CIBW_PLAT: ${{ contains(matrix.os, 'macos') && '-Dlapack=openblas' || '' }}
           CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-13' && 'x86_64' || 'arm64' }}
           CIBW_ARCHS_LINUX: x86_64
           CIBW_BUILD: "*${{ matrix.python }}-*"
