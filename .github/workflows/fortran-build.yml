@@ -4,6 +4,27 @@ on: [push, pull_request]
 
 env:
   BUILD_DIR: _build
+  PIP_PACKAGES: >-
+    meson
+    cmake
+    ninja
+    gcovr
+  PIP_EXTRAS: >-
+    pkgconfig
+    pytest
+    pytest-cov
+    cffi
+    numpy
+    ase
+    matplotlib
+    qcelemental
+    setuptools
+    tomli
+  LINUX_INTEL_COMPONENTS: >-
+    intel-oneapi-compiler-fortran-2021.2.0
+    intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2021.2.0
+    intel-oneapi-mkl-2021.2.0
+    intel-oneapi-mkl-devel-2021.2.0
 
 jobs:
   build:
@@ -11,11 +32,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        build: [meson, cmake, fpm]
+        os: [ubuntu-latest, macos-latest]
+        build: [meson, cmake]
         build-type: [debug]
         compiler: [gnu]
-        version: [10]
+        version: [12]
 
         include:
         - os: ubuntu-20.04
@@ -30,12 +51,6 @@ jobs:
           compiler: gnu
           version: 10
 
-        - os: ubuntu-latest
-          build: meson
-          build-type: coverage
-          compiler: gnu
-          version: 9
-
         - os: macos-13
           build: meson
           build-type: debug
@@ -44,32 +59,68 @@ jobs:
 
         - os: ubuntu-latest
           build: meson
+          build-type: coverage
+          compiler: gnu
+          version: 9
+
+        - os: ubuntu-latest
+          build: meson
           build-type: debug
           compiler: gnu
-          version: 11
+          version: 10
 
-        - os: ubuntu-20.04
+        - os: ubuntu-latest
           build: meson
           build-type: debug
           compiler: intel
           version: 2021.2.0
 
+        - os: ubuntu-latest
+          build: fpm
+          build-type: debug
+          compiler: gnu
+          version: 10
+
     defaults:
       run:
-        shell: ${{ matrix.shell || 'bash -l {0}' }}
+        shell: ${{ matrix.shell || 'bash' }}
 
     env:
       FC: ${{ matrix.compiler == 'intel' && 'ifort' || 'gfortran' }}
       CC: ${{ matrix.compiler == 'intel' && 'icc' || 'gcc' }}
       GCC_V: ${{ matrix.version }}
-      PYTHON_V: 3.8
+      PYTHON_V: 3.9
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Install GCC (OSX)
-      if: ${{ contains(matrix.os, 'macos') && matrix.compiler == 'gnu' }}
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_V }}
+    
+    - name: Link pre-installed GCC and FC (MacOS - ARM)
+      if: ${{ contains(matrix.os, 'macos') && ! contains(matrix.os, '13') && matrix.compiler == 'gnu' }}
+      run: |
+        brew install openblas
+        gfortran_path=$( which gfortran-${{ env.GCC_V }} )
+        gcc_path=$( which gcc-${{ env.GCC_V }} )
+        gplusplus_path=$( which g++-${{ env.GCC_V }} )
+        export FC=$gfortran_path
+        export CC=$gcc_path
+        export CXX=$gplusplus_path
+        ln -s $gfortran_path /usr/local/bin/gfortran
+        ln -s $gcc_path /usr/local/bin/gcc
+        ln -s $gplusplus_path /usr/local/bin/g++
+        echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
+        echo "LDFLAGS=-L/opt/homebrew/opt/openblas/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I/opt/homebrew/opt/openblas/include" >> $GITHUB_ENV
+        brew install libffi
+        export LDFLAGS="-L$(brew --prefix libffi)/lib"
+        export CPPFLAGS="-I$(brew --prefix libffi)/include"
+
+    - name: Install GCC (MacOS - x86_64)
+      if: ${{ contains(matrix.os, 'macos-13') && matrix.compiler == 'gnu' }}
       run: |
         brew install gcc@${{ env.GCC_V }} openblas
         ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
@@ -89,7 +140,7 @@ jobs:
           --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
     - name: Install GCC (Windows)
-      if: ${{ contains(matrix.os, 'windows') && matrix.compiler == 'gnu' }}
+      if: ${{ contains(matrix.os, 'windows') && matrix.compiler == 'msys' }}
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
@@ -97,16 +148,17 @@ jobs:
         install: >-
           git
           mingw-w64-x86_64-gcc-fortran
+          mingw-w64-x86_64-openblas
           mingw-w64-x86_64-lapack
           mingw-w64-x86_64-cmake
           mingw-w64-x86_64-meson
           mingw-w64-x86_64-ninja
 
-    - name: Install dependencies
-      if: ${{ ! contains(matrix.os, 'windows') }}
-      uses: mamba-org/setup-micromamba@v1
+    - name: Install fpm
+      if: ${{ matrix.build == 'fpm' }}
+      uses: fortran-lang/setup-fpm@v5
       with:
-        environment-file: assets/ci/build-env.yaml
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Prepare for cache restore
       if: ${{ matrix.compiler == 'intel' }}
@@ -117,21 +169,33 @@ jobs:
     - name: Cache Intel install
       if: ${{ matrix.compiler == 'intel' }}
       id: cache-install
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /opt/intel/oneapi
         key: install-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}
 
-    - name: Install Intel
-      if: ${{ contains(matrix.compiler, 'intel') && steps.cache-install.outputs.cache-hit != 'true' }}
+    - name: Install Intel (Linux)
+      if: ${{ contains(matrix.os, 'ubuntu') && contains(matrix.compiler, 'intel') && steps.cache-install.outputs.cache-hit != 'true' }}
       run: |
-        bash assets/ci/setup-intel.sh
+        wget https://apt.repos.intel.com/intel-gpg-keys/${{ env.KEY }}
+        sudo apt-key add ${{ env.KEY }}
+        rm ${{ env.KEY }}
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+        sudo apt-get install ${{ env.PKG }}
+      env:
+        KEY: GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        PKG: ${{ env.LINUX_INTEL_COMPONENTS }}
 
     - name: Setup Intel oneAPI environment
       if: ${{ matrix.compiler == 'intel' }}
       run: |
         source /opt/intel/oneapi/setvars.sh
         printenv >> $GITHUB_ENV
+
+    - name: Install build and test dependencies
+      if: ${{ ! contains(matrix.os, 'windows') }}
+      run: pip3 install ${{ env.PIP_PACKAGES }} ${{ env.PIP_EXTRAS }}
 
     - name: Configure build (meson)
       if: ${{ matrix.build == 'meson' }}
@@ -146,7 +210,9 @@ jobs:
       env:
         COVERAGE: ${{ matrix.build-type == 'coverage' }}
         MESON_ARGS: >-
+          ${{ matrix.compiler == 'intel' && '-Dfortran_link_args=-qopenmp -Dapi=false' || '' }}
           ${{ contains(matrix.os, 'macos') && '-Dlapack=openblas' || '' }}
+          ${{ contains(matrix.os, 'windows') && '-Dfortran_link_args=-Wl,--allow-multiple-definition' || '' }}
 
     - name: Configure build (CMake)
       if: ${{ matrix.build == 'cmake' }}
@@ -159,7 +225,9 @@ jobs:
 
     - name: Build library (fpm)
       if: ${{ matrix.build == 'fpm' }}
-      run: fpm build
+      run: |
+        fpm --version
+        fpm build
 
     - name: Build library
       if: ${{ matrix.build != 'fpm' }}
@@ -214,7 +282,7 @@ jobs:
         echo "DFTD4_PREFIX=$PWD/_dist" >> $GITHUB_ENV
 
     - name: Create package
-      if: ${{ matrix.build == 'meson' }}
+      if: ${{ matrix.build == 'meson' && matrix.version == 12 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
       run: |
         tar cvf ${{ env.OUTPUT }} _dist
         xz -T0 ${{ env.OUTPUT }}
@@ -223,30 +291,34 @@ jobs:
         OUTPUT: dftd4-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}.tar
 
     - name: Upload package
-      if: ${{ matrix.build == 'meson' && matrix.build-type != 'coverage' }}
+      if: ${{ matrix.build == 'meson' && matrix.version == 12 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.DFTD4_OUTPUT }}
         path: ${{ env.DFTD4_OUTPUT }}
 
     - name: Upload coverage report
-      if: ${{ matrix.build-type == 'coverage' }}
-      uses: codecov/codecov-action@v3
+      if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 
   python:
     needs:
       - build
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash -l {0}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        gcc_v: [10]
+        gcc_v: [12]
         python_v: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+
+        include:
+          - os: macos-latest
+            gcc_v: 12
+            python_v: '3.9'
 
     env:
       FC: gfortran
@@ -258,28 +330,28 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Install dependencies
-      uses: mamba-org/setup-micromamba@v1
+    - uses: actions/setup-python@v5
       with:
-        environment-file: assets/ci/python-env.yaml
-        create-args: >-
-          python=${{ matrix.python_v }}
+        python-version: ${{ matrix.python_v }}
 
-    - name: Install ase<3.23 for Python 3.7
-      if: matrix.python_v == '3.7'
+    - name: Link pre-installed GCC and FC (macOS)
+      if: ${{ contains(matrix.os, 'macos')}}
       run: |
-        micromamba install -y -c conda-forge "ase<3.23"
-
-    - name: Install GCC (OSX)
-      if: ${{ contains(matrix.os, 'macos') }}
-      run: |
-        brew install gcc@${{ env.GCC_V }} openblas
-        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
-        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
-        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+        brew install openblas
+        gfortran_path=$( which gfortran-${{ env.GCC_V }} )
+        gcc_path=$( which gcc-${{ env.GCC_V }} )
+        gplusplus_path=$( which g++-${{ env.GCC_V }} )
+        export FC=$gfortran_path
+        export CC=$gcc_path
+        export CXX=$gplusplus_path
+        ln -s $gfortran_path /usr/local/bin/gfortran
+        ln -s $gcc_path /usr/local/bin/gcc
+        ln -s $gplusplus_path /usr/local/bin/g++
         echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
+        echo "LDFLAGS=-L/opt/homebrew/opt/openblas/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I/opt/homebrew/opt/openblas/include" >> $GITHUB_ENV
 
     - name: Install GCC (Linux)
       if: ${{ contains(matrix.os, 'ubuntu') }}
@@ -289,8 +361,11 @@ jobs:
         --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${{ env.GCC_V }}
         --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
+    - name: Install meson and test dependencies
+      run: pip3 install ${{ env.PIP_EXTRAS }}
+
     - name: Download package
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4
       with:
         name: ${{ env.DFTD4_OUTPUT }}
 
@@ -319,3 +394,5 @@ jobs:
 
     - name: Upload coverage report
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
