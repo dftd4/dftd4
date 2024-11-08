@@ -13,11 +13,13 @@ auto-tests = false
 
 [dependencies]
 mctc-lib.git = "https://github.com/grimme-lab/mctc-lib.git"
-mctc-lib.tag = "v0.3.0"
+mctc-lib.tag = "v0.3.2"
 multicharge.git = "https://github.com/grimme-lab/multicharge.git"
+multicharge.tag = "v0.3.0"
 
 [dev-dependencies]
 mstore.git = "https://github.com/grimme-lab/mstore.git"
+mstore.tag = "v0.3.0"
 
 [[test]]
 name = "tester"
