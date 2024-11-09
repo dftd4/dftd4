@@ -17,7 +17,7 @@
 # Create mstore as subproject for testing
 mstore_dep = dependency(
   'mstore',
-  version: '0.3.0',
+  version: '>=0.3.0',
   fallback: ['mstore', 'mstore_dep'],
   default_options: ['default_library=static'],
   required: not meson.is_subproject(),
