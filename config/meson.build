@@ -151,6 +151,7 @@ lib_deps += mctc_dep
 # Create the electrostatic library as subproject
 multicharge_dep = dependency(
   'multicharge',
+  version: '>=0.3.0',
   fallback: ['multicharge', 'multicharge_dep'],
   default_options: ['default_library=static'],
 )
