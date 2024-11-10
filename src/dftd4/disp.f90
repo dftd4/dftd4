@@ -22,7 +22,7 @@ module dftd4_disp
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
    use dftd4_model, only : dispersion_model
-   use dftd4_ncoord, only : get_coordination_number
+   use dftd4_ncoord, only : get_coordination_number, add_coordination_number_derivs
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
@@ -62,7 +62,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
  
    logical :: grad
    integer :: mref
-   real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
+   real(wp), allocatable :: cn(:)
    real(wp), allocatable :: q(:), dqdr(:, :, :), dqdL(:, :, :)
    real(wp), allocatable :: gwvec(:, :, :), gwdcn(:, :, :), gwdq(:, :, :)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :), dc6dq(:, :)
@@ -73,10 +73,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    grad = present(gradient).or.present(sigma)
 
    allocate(cn(mol%nat))
-   if (grad) allocate(dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, &
-      & cn, dcndr, dcndL)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
 
    allocate(q(mol%nat))
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
@@ -99,6 +97,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
       gradient(:, :) = 0.0_wp
       sigma(:, :) = 0.0_wp
    end if
+
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
    call param%get_dispersion2(mol, lattr, cutoff%disp2, disp%r4r2, &
       & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
@@ -115,8 +114,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%r4r2, &
       & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
    if (grad) then
-      call d4_gemv(dcndr, dEdcn, gradient, beta=1.0_wp)
-      call d4_gemv(dcndL, dEdcn, sigma, beta=1.0_wp)
+      call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
+         & disp%rcov, disp%en, dEdcn, gradient, sigma)
    end if
 
    energy = sum(energies)

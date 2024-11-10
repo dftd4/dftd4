@@ -92,7 +92,9 @@ if install
   pkg = import('pkgconfig')
   pkg.generate(
     dftd4_lib,
+    name: 'dftd4',
     description: 'Generally Applicable Atomic-Charge Dependent London Dispersion Correction',
+    version: meson.project_version(),
     subdirs: ['', module_id],
   )
 
