@@ -152,7 +152,7 @@ subroutine test_numsigma(error, mol)
    real(wp), allocatable :: lattr(:, :), trans(:, :)
    real(wp), parameter :: cutoff = 20.0_wp
    real(wp), parameter :: unity(3, 3) = reshape(&
-      & [1, 0, 0, 0, 1, 0, 0, 0, 1], shape(unity))
+      & [1, 0, 0, 0, 1, 0, 0, 0, 1], [3, 3])
    real(wp), parameter :: step = 1.0e-6_wp
 
    allocate(rcov(mol%nid), en(mol%nid), cn(mol%nat), cnr(mol%nat), cnl(mol%nat), &
