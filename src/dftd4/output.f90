@@ -291,8 +291,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      write(unit, '(a)') &
-         & trim(merge("D4-ATM", "D4    ", abs(param%s9) > 0))
+      if (abs(param%s9) > 0) then
+         write(unit, '(a)') "D4-ATM"
+      else
+         write(unit, '(a)') "D4"
+      end if
       write(unit, '(21("-"))')
       write(unit, '(a4, t10, f10.4)') &
          & "s6", param%s6, &
