@@ -258,7 +258,8 @@ subroutine test_gw_d4_mb01(error)
       & 1.2720379452861E-05_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
       & 1.4066048552144E-05_wp, 6.8494819902320E-01_wp, 0.0000000000000E+00_wp, &
       & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 1.9574616732692E-10_wp, &
-      & 1.0064486114128E+00_wp, 0.0000000000000E+00_wp], shape(ref))
+      & 1.0064486114128E+00_wp, 0.0000000000000E+00_wp], &
+      & [5, 16, 1])
 
    call get_structure(mol, "MB16-43", "01")
    call new_d4_model(error, d4, mol)
@@ -704,7 +705,8 @@ subroutine test_gw_d4s_mb01(error)
       & 9.7809437645041E-02_wp, 6.8362324068111E-11_wp, 3.0917858879577E-06_wp, &
       & 1.8135933744590E-02_wp, 6.7075660296166E-01_wp, 1.3284665444268E-05_wp, &
       & 2.8388831053016E-13_wp, 6.7329811561295E-08_wp, 9.9935157277430E-04_wp, &
-      & 1.0054489358913E+00_wp, 0.0000000000000E+00_wp], shape(ref))
+      & 1.0054489358913E+00_wp, 0.0000000000000E+00_wp], &
+      & [5, 16, 16])
 
    call get_structure(mol, "MB16-43", "01")
    call new_d4s_model(error, d4s, mol)
@@ -751,7 +753,8 @@ subroutine test_gw_d4_mb02(error)
       & 0.0000000000000E+00_wp, 7.4607907232618E-01_wp, 2.0511405541139E-03_wp, &
       & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
       & 1.0523038058719E+00_wp, 2.0872155477415E-03_wp, 4.6145584504737E-10_wp, &
-      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp], shape(ref))
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp], &
+      & [5, 16, 1])
 
    call get_structure(mol, "MB16-43", "02")
    call new_d4_model(error, d4, mol)
@@ -809,7 +812,8 @@ subroutine test_gw_d4_mb03(error)
       & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
       & 2.8478831017041E-04_wp, 9.0297474706410E-01_wp, 0.0000000000000E+00_wp, &
       & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
-      & 0.0000000000000E+00_wp], shape(ref))
+      & 0.0000000000000E+00_wp], &
+      & [7, 16, 1])
 
    call get_structure(mol, "MB16-43", "03")
    call new_d4_model(error, d4, mol)
@@ -983,7 +987,8 @@ subroutine test_gw_d4_mb07(error)
       & 9.9022177224599E-01_wp, 3.7155688096309E-02_wp, 0.0000000000000E+00_wp, &
       & 7.0488497407158E-06_wp, 3.5717430467401E-01_wp, 0.0000000000000E+00_wp, &
       & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
-      & 0.0000000000000E+00_wp], shape(ref))
+      & 0.0000000000000E+00_wp], &
+      & [7, 16, 1])
 
    type(structure_type) :: mol
    type(d4_model) :: d4
@@ -1064,7 +1069,7 @@ subroutine test_d4_model_error(error)
    character(len=*), parameter :: sym(nat) = [character(len=4) :: "Rf", "Db"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp],&
-      & shape(xyz))
+      & [3, nat])
 
    call new(mol, sym, xyz)
    call new_d4_model(error, d4, mol)
@@ -1083,7 +1088,7 @@ subroutine test_d4s_model_error(error)
    character(len=*), parameter :: sym(nat) = [character(len=4) :: "H", "Db"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp],&
-      & shape(xyz))
+      & [3, nat])
 
    call new(mol, sym, xyz)
    call new_d4s_model(error, d4s, mol)

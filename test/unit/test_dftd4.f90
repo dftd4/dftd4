@@ -173,7 +173,7 @@ subroutine test_numsigma(error, mol, d4, param)
    real(wp) :: energy, er, el, sigma(3, 3), eps(3, 3), numsigma(3, 3)
    real(wp), allocatable :: gradient(:, :), xyz(:, :)
    real(wp), parameter :: unity(3, 3) = reshape(&
-      & [1, 0, 0, 0, 1, 0, 0, 0, 1], shape(unity))
+      & [1, 0, 0, 0, 1, 0, 0, 0, 1], [3, 3])
    real(wp), parameter :: step = 1.0e-6_wp
 
    allocate(gradient(3, mol%nat), xyz(3, mol%nat))
