@@ -88,19 +88,19 @@ if lapack_vendor == 'mkl'
   lib_deps += mkl_dep
 
 elif lapack_vendor == 'mkl-rt'
-  mkl_dep = fc.find_library('mkl_rt')
+  mkl_dep = cc.find_library('mkl_rt')
   lib_deps += mkl_dep
 
 elif lapack_vendor == 'openblas'
   openblas_dep = dependency( ilp64 ? 'openblas64' : 'openblas', required: false)
   if not openblas_dep.found()
-    openblas_dep = fc.find_library( ilp64 ? 'openblas64' : 'openblas')
+    openblas_dep = cc.find_library( ilp64 ? 'openblas64' : 'openblas')
   endif
   lib_deps += openblas_dep
   if not fc.links('external dsytrs; call dsytrs(); end', dependencies: openblas_dep)
     lapack_dep = dependency(ilp64 ? 'lapack64' : 'lapack', required: false)
     if not lapack_dep.found()
-      lapack_dep = fc.find_library(ilp64 ? 'lapack64' : 'lapack')
+      lapack_dep = cc.find_library(ilp64 ? 'lapack64' : 'lapack')
     endif
     lib_deps += lapack_dep
   endif
@@ -111,12 +111,12 @@ elif lapack_vendor == 'custom'
   if libs[0].startswith('-L')
     foreach lib: libs
       if lib != libs[0]
-        custom_deps += fc.find_library(lib, dirs: libs[0].substring(2))
+        custom_deps += cc.find_library(lib, dirs: libs[0].substring(2))
       endif
     endforeach
   else
     foreach lib: libs
-      custom_deps += fc.find_library(lib)
+      custom_deps += cc.find_library(lib)
     endforeach
   endif
   if (not fc.links('external dsytrs; call dsytrs(); end', dependencies: [custom_deps,omp_dep]))
@@ -129,12 +129,12 @@ elif lapack_vendor == 'custom'
 else
   lapack_dep = dependency(ilp64 ? 'lapack64' : 'lapack', required: false)
   if not lapack_dep.found()
-    lapack_dep = fc.find_library(ilp64 ? 'lapack64' : 'lapack')
+    lapack_dep = cc.find_library(ilp64 ? 'lapack64' : 'lapack')
   endif
   lib_deps += lapack_dep
-  blas_dep = fc.find_library(ilp64 ? 'blas64' : 'blas', required: false)
+  blas_dep = cc.find_library(ilp64 ? 'blas64' : 'blas', required: false)
   if not blas_dep.found()
-    blas_dep = fc.find_library(ilp64 ? 'blas64' : 'blas')
+    blas_dep = cc.find_library(ilp64 ? 'blas64' : 'blas')
   endif
   lib_deps += blas_dep
 endif
