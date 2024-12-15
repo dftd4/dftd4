@@ -304,9 +304,8 @@ jobs:
         if: ${{ matrix.build == 'cmake' }}
         run: |
           ctest --output-on-failure --parallel 2
-        working-directory: $BUILD_DIR
+        working-directory: ${{ env.BUILD_DIR }}
         env:
-          BUILD_DIR: ${{ env.BUILD_DIR }}
           OMP_NUM_THREADS: 1,2,1
 
       - name: Create coverage report
