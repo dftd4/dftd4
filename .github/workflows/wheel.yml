@@ -31,15 +31,21 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
     - name: Setup Python
       uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: assets/ci/build-env.yaml
+
     - run: |
         meson setup _build
         meson dist -C _build --no-tests --include-subprojects
         mv _build/meson-dist/*.tar.xz .
+
     - uses: actions/upload-artifact@v4
       with:
         name: dftd4-source
@@ -52,28 +58,37 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup Python
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        environment-file: assets/ci/python-env.yaml
-        create-args: >-
-          meson-python
-          python-build
-    - name: Reorganize repository
-      run: |
-        git config user.email ""
-        git config user.name "dummy"
-        git subtree add --prefix python/subprojects/dftd4 . HEAD
-        git mv {assets,python/dftd4}/parameters.toml
-        git commit -m "Python dist"
-    - run: |
-        python -m build python/ --sdist --outdir . -n
-    - uses: actions/upload-artifact@v4
-      with:
-        name: dftd4-python-sdist
-        path: ./*.tar.gz
-        retention-days: 5
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: assets/ci/python-env.yaml
+          create-args: >-
+            meson-python
+            python-build
+
+      - name: Reorganize repository
+        run: |
+          git config user.email ""
+          git config user.name "dummy"
+          git subtree add --prefix python/subprojects/dftd4 . HEAD
+          git mv {assets,python/dftd4}/parameters.toml
+          git commit -m "Python dist"
+
+      - name: Build source distribution
+        run: |
+          python -m build python/ --sdist --outdir . -n
+
+      - name: Upload source distribution as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dftd4-python-sdist
+          path: ./*.tar.gz
+          retention-days: 5
 
   wheels:
     needs:
