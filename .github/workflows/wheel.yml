@@ -31,20 +31,26 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup Python
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        environment-file: assets/ci/build-env.yaml
-    - run: |
-        meson setup _build
-        meson dist -C _build --no-tests --include-subprojects
-        mv _build/meson-dist/*.tar.xz .
-    - uses: actions/upload-artifact@v4
-      with:
-        name: dftd4-source
-        path: ./*.tar.xz
-        retention-days: 5
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: assets/ci/build-env.yaml
+
+      - run: |
+          meson setup _build
+          meson dist -C _build --no-tests --include-subprojects
+          mv _build/meson-dist/*.tar.xz .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dftd4-source
+          path: ./*.tar.xz
+          retention-days: 5
 
   sdist:
     runs-on: ubuntu-latest
@@ -52,28 +58,37 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup Python
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        environment-file: assets/ci/python-env.yaml
-        create-args: >-
-          meson-python
-          python-build
-    - name: Reorganize repository
-      run: |
-        git config user.email ""
-        git config user.name "dummy"
-        git subtree add --prefix python/subprojects/dftd4 . HEAD
-        git mv {assets,python/dftd4}/parameters.toml
-        git commit -m "Python dist"
-    - run: |
-        python -m build python/ --sdist --outdir . -n
-    - uses: actions/upload-artifact@v4
-      with:
-        name: dftd4-python-sdist
-        path: ./*.tar.gz
-        retention-days: 5
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: assets/ci/python-env.yaml
+          create-args: >-
+            meson-python
+            python-build
+
+      - name: Reorganize repository
+        run: |
+          git config user.email ""
+          git config user.name "dummy"
+          git subtree add --prefix python/subprojects/dftd4 . HEAD
+          git mv {assets,python/dftd4}/parameters.toml
+          git commit -m "Python dist"
+
+      - name: Build source distribution
+        run: |
+          python -m build python/ --sdist --outdir . -n
+
+      - name: Upload source distribution as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dftd4-python-sdist
+          path: ./*.tar.gz
+          retention-days: 5
 
   wheels:
     needs:
@@ -83,19 +98,19 @@ jobs:
       fail-fast: false
       matrix:
         os:
-        - ubuntu-latest
-        - macos-latest
-        - macos-13
-        python: ['39', '310', '311', '312', '313']
+          - ubuntu-latest
+          - macos-latest
+          - macos-13
+        python: ["39", "310", "311", "312", "313"]
         include: # Python 3.7 and 3.8 is not supported on 'macos-latest'
           - os: ubuntu-latest
-            python: '37'
+            python: "37"
           - os: ubuntu-latest
-            python: '38'
+            python: "38"
           - os: macos-13
-            python: '37'
+            python: "37"
           - os: macos-13
-            python: '38'
+            python: "38"
 
     defaults:
       run:
@@ -105,7 +120,7 @@ jobs:
       # Set up Python to host 'cibuildwheel'
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       # Install 'cibuildwheel' as the driver for building wheels
       - name: Install cibuildwheel
@@ -163,7 +178,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ${{ github.workspace }}  # This will download all files
+          path: ${{ github.workspace }} # This will download all files
 
       - name: Create SHA256 checksums
         run: |
