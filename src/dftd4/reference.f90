@@ -334,7 +334,7 @@ pure subroutine set_refalpha_gfn2_sym(alpha, ga, gc, sym)
    !> Element symbol
    character(len=*), intent(in) :: sym
 
-   call set_refalpha_eeq(alpha, ga, gc, to_number(sym))
+   call set_refalpha_gfn2(alpha, ga, gc, to_number(sym))
 
 end subroutine set_refalpha_gfn2_sym
 
