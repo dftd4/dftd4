@@ -1,5 +1,6 @@
 fixes:
   - "/home/runner/work/dftd4/dftd4::"
+
 coverage:
   exclude:
     - 'test/**'
