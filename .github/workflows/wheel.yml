@@ -36,6 +36,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install LAPACK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblapack-dev
+
       - name: Setup Python
         uses: mamba-org/setup-micromamba@v1
         with:
@@ -63,6 +68,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install LAPACK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblapack-dev
+
       - name: Setup Python
         uses: mamba-org/setup-micromamba@v1
         with:
@@ -70,6 +80,11 @@ jobs:
           create-args: >-
             meson-python
             python-build
+
+      - name: Install LAPACK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblapack-dev
 
       - name: Reorganize repository
         run: |
