@@ -89,7 +89,7 @@ subroutine test_rational_damping(error)
       & 'r2scan', 'b1lyp', 'b3-lyp', 'bh-lyp', 'b1p', 'b3p', 'b1pw', 'b3pw', &
       & 'o3-lyp', 'revpbe0', 'revpbe38', 'pbe0', 'pwp1', 'pw1pw', 'mpw1pw', &
       & 'mpw1lyp', 'pw6b95', 'tpssh', 'tpss0', 'x3-lyp', 'm06l', 'm06', &
-      & 'wb97', 'wb97x', 'cam-b3lyp', 'lc-blyp', 'lh07tsvwn', 'lh07ssvwn', &
+      & 'wb97', 'wb97x_2008', 'cam-b3lyp', 'lc-blyp', 'lh07tsvwn', 'lh07ssvwn', &
       & 'lh12ctssirpw92', 'lh12ctssifpw92', 'lh14tcalpbe', 'lh20t', &
       & 'b2plyp', 'b2gpplyp', 'mpw2plyp', 'pwpb95', 'dsdblyp', 'dsdpbe', &
       & 'dsdpbeb95', 'dsdpbep86', 'dsdsvwn', 'dodblyp', 'dodpbe', 'dodpbeb95', &
@@ -143,7 +143,7 @@ subroutine test_rational_damping(error)
       &-2.67802208375706E-2_wp,-2.39612790751360E-2_wp,-2.54023462353336E-2_wp, &  
       &-2.44710136053936E-2_wp,-2.74280989349169E-2_wp,-2.92749846421858E-1_wp, &
       &-4.75432573533092E-2_wp,-8.87276590259854E-2_wp,-8.87276590259854E-2_wp, &
-      &-5.90626128920443E-2_wp]
+      &-5.90626128920443E-2_wp,-1.49262251668830E-1_wp]
    class(damping_param), allocatable :: param
    type(structure_type) :: mol
    integer :: ii
@@ -175,7 +175,7 @@ subroutine test_libxc_names(error)
       & 'mn12sx', 'cam-b3lyp', 'cam-qtp01', 'lc-blyp', 'lc-wpbe', 'lc-wpbeh', &
       & 'b2plyp', 'b2gpplyp', 'b1b95', 'mpwb1k', 'mpw1b95', 'hse03', 'hse06', &
       & 'hse12', 'hse12s', 'hsesol', 'glyp', 'revtpssh', 'b97m', 'wb97m', &
-      & 'wb97', 'wb97x']
+      & 'wb97', 'wb97x_2008', 'wb97x']
 
    character(len=*), parameter :: libxc_names(*) = [character(len=40)::&
       & 'gga_x_am05:gga_c_am05', 'gga_x_b88:gga_c_lyp', 'gga_x_b88:gga_c_pbe', &
@@ -204,7 +204,7 @@ subroutine test_libxc_names(error)
       & 'hyb_gga_xc_hse12', 'hyb_gga_xc_hse12s', 'hyb_gga_xc_hse_sol', &
       & 'gga_x_g96:gga_c_lyp', 'hyb_mgga_xc_revtpssh', &
       & 'mgga_xc_b97m_v', 'hyb_mgga_xc_wb97m_v', 'hyb_gga_xc_wb97', &
-      & 'hyb_gga_xc_wb97x']
+      & 'hyb_gga_xc_wb97x', 'hyb_gga_xc_wb97x_v']
    
    integer :: i, id, id2
    
