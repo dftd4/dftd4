@@ -36,7 +36,7 @@ module dftd4_param
          & p_b3p, p_b1pw, p_b3pw, p_o3lyp, p_revpbe0, p_revpbe38, &
          & p_pbe0, p_pwp1, p_pw1pw, p_mpw1pw, p_mpw1lyp, p_pw6b95, &
          & p_tpssh, p_tpss0, p_x3lyp, p_m06l, p_m06, p_b97d, &
-         & p_wb97, p_wb97x, p_b97m, p_wb97m, p_camb3lyp, p_lcblyp, &
+         & p_wb97, p_wb97x_2008, p_b97m, p_wb97m, p_camb3lyp, p_lcblyp, &
          & p_lh07tsvwn, p_lh07ssvwn, p_lh12ctssirpw92, p_lh12ctssifpw92, &
          & p_lh14tcalpbe, p_lh20t, p_b2plyp, p_b2gpplyp, p_mpw2plyp, p_pwpb95, &
          & p_dsdblyp, p_dsdpbe, p_dsdpbeb95, p_dsdpbep86, p_dsdsvwn, &
@@ -47,9 +47,10 @@ module dftd4_param
          & p_revpbe0dh, p_revtpss0, p_revdsdpbep86, p_revdsdpbe, &
          & p_revdsdblyp, p_revdodpbep86, p_am05, p_hse12, p_hse12s, &
          & p_r2scanh, p_r2scan0, p_r2scan50, p_r2scan_3c, p_camqtp01, &
-         & p_lcwpbe, p_lcwpbeh, p_wb97x_rev, p_wb97m_rev, p_wb97x_3c, &         
-         & p_wr2scan, p_r2scan0_dh, p_r2scan_cidh, p_r2scan_qidh, p_r2scan0_2, &
-         & p_pr2scan50, p_pr2scan69, p_kpr2scan50, p_wpr2scan50, p_last
+         & p_lcwpbe, p_lcwpbeh, p_wb97x_rev, p_wb97m_rev, &
+         & p_wb97x_3c, p_wr2scan, p_r2scan0_dh, p_r2scan_cidh, &
+         & p_r2scan_qidh, p_r2scan0_2, p_pr2scan50, p_pr2scan69, &
+         & p_kpr2scan50, p_wpr2scan50, p_wb97x, p_last
    end enum
    integer, parameter :: df_enum = kind(p_invalid)
 
@@ -222,7 +223,11 @@ subroutine get_functionals(funcs)
    funcs(p_wb97m_rev) = new_funcgroup([character(len=20) :: 'wb97m-rev', &
       & 'ωb97m-rev', 'omegab97m-rev', 'wb97m_rev', 'ωb97m_rev', 'omegab97m_rev'])
    funcs(p_wb97) = new_funcgroup([character(len=20) :: 'wb97', 'ωb97', 'omegab97'])
-   funcs(p_wb97x) = new_funcgroup([character(len=20) :: 'wb97x', 'ωb97x', 'omegab97x'])
+   funcs(p_wb97x_2008) = new_funcgroup([character(len=20) :: 'wb97x_2008', &
+      & 'ωb97x_2008', 'omegab97x_2008', 'wb97x-2008', 'ωb97x-2008', &
+      & 'omegab97x-2008'])
+   funcs(p_wb97x) = new_funcgroup([character(len=20) :: 'wb97x', 'ωb97x', &
+      & 'omegab97x'])
    funcs(p_wb97x_rev) = new_funcgroup([character(len=20) :: 'wb97x-rev', &
       & 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', 'omegab97x_rev'])
    funcs(p_wb97x_3c) = new_funcgroup([character(len=20) :: 'wb97x-3c', &
@@ -269,7 +274,7 @@ subroutine get_rational_damping_id(id, param, s9)
    logical :: mbd
 
    mbd = .true.
-   if (present(s9)) mbd = s9 /= 0.0_wp
+   if (present(s9)) mbd = abs(s9) > epsilon(s9)
 
    if (mbd) then
       call get_d4eeq_bjatm_parameter(id, param, s9)
@@ -671,12 +676,15 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=6.55792598_wp, a1=0.76666802_wp, a2=8.36027334_wp )
       !  Fitset: MD= -0.12779 MAD= 0.36152 RMSD= 0.49991
-   case(p_wb97x)
+   case(p_wb97x_2008)
       param = dftd_param ( & ! (SAW190103)
          &  s6=1.0000_wp, s8=-0.07519516_wp, a1=0.45094893_wp, a2=6.78425255_wp )
       !  S22x5: MD= 0.05 MAD= 0.16 RMSD= 0.22
       !  S66x8: MD= 0.06 MAD= 0.16 RMSD= 0.21
       !  NCI10: MD= 0.08 MAD= 0.15 RMSD= 0.25
+   case(p_wb97x)
+      param = dftd_param ( & ! (10.1002/jcc.26411)
+         &  s6=1.0000_wp, s8=0.5093_wp, a1=0.0662_wp, a2=5.4487_wp )
    case(p_wb97x_rev)
       param = dftd_param ( & ! (10.1063/5.0133026)
          &  s6=1.0000_wp, s8=0.4485_wp, a1=0.3306_wp, a2=4.279_wp )
@@ -1022,7 +1030,10 @@ pure function get_functional_id(df) result(num)
       num = p_wb97m_rev
    case('wb97', 'ωb97', 'omegab97', 'hyb_gga_xc_wb97')
       num = p_wb97
-   case('wb97x', 'ωb97x', 'omegab97x', 'hyb_gga_xc_wb97x')
+   case('wb97x-2008', 'ωb97x-2008', 'omegab97x-2008', 'hyb_gga_xc_wb97x', &
+      & 'wb97x_2008', 'ωb97x_2008', 'omegab97x_2008')
+      num = p_wb97x_2008
+   case('wb97x', 'ωb97x', 'omegab97x', 'hyb_gga_xc_wb97x_v')
       num = p_wb97x
    case('wb97x-rev', 'ωb97x-rev', 'omegab97x-rev', 'wb97x_rev', 'ωb97x_rev', &
       & 'omegab97x_rev') ! D4 re-parametrization

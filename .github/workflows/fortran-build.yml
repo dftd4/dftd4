@@ -163,6 +163,7 @@ jobs:
             --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
             --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
             --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
+          sudo apt-get install -y liblapack-dev
         env:
           GCC_V: ${{ env.GCC_V }}
 
@@ -353,7 +354,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         gcc_v: [12]
-        python_v: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        python_v: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
         include:
           - os: macos-latest
@@ -399,11 +400,14 @@ jobs:
 
       - name: Install GCC (Linux)
         if: ${{ contains(matrix.os, 'ubuntu') }}
-        run: >-
-          sudo update-alternatives
-          --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100
-          --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V}
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo update-alternatives \
+          --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
+          --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
           --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
+          sudo apt-get install liblapack-dev
         env:
           GCC_V: ${{ env.GCC_V }}
 

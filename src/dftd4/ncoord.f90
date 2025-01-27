@@ -241,7 +241,7 @@ subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, en, dEdcn, g
    real(wp), intent(inout) :: sigma(:, :)
 
    integer :: iat, jat, izp, jzp, itr
-   real(wp) :: r2, r1, rc, rij(3), countf, countd(3), ds(3, 3), cutoff2, den
+   real(wp) :: r2, r1, rc, rij(3), countd(3), ds(3, 3), cutoff2, den
 
    cutoff2 = cutoff**2
 

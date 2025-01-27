@@ -250,6 +250,26 @@ dftd4 --func GGA_X_PBE:GGA_C_PBE coord
 The exchange and correlation functional must be separated by a colon.
 All names are case-insensitive.
 
+<details>
+<summary>Note on ωB97X-type functionals</summary>
+
+Since there has been some confusion concerning the different ωB97X functionals, we provide a detailed summary: 
+
+- [ωB97X](https://doi.org/10.1063/1.2834918) (original functional, 2008, parameters: `wb97x-2008`)
+- [ωB97X-D](https://doi.org/10.1039/B810189B) (re-optimization of ωB97X to include dispersion correction, 2008, no D4 parameters)
+- [ωB97X-D3](https://doi.org/10.1021/ct300715s) (re-optimization of ωB97X-D with improved dispersion corrections, D3(0), 2013, no D4 parameters)
+- [ωB97X-V](https://doi.org/10.1039/C3CP54374A) (new functional, different from the above ωB97X's and not just a re-optimization for VV10 dispersion, 2013)
+- [ωB97X-D4](https://doi.org/10.1002/jcc.26411) (ωB97X-V with D4 dispersion instead of VV10 dispersion, parameters: `wb97x`)
+- [ωB97X-D4rev](https://doi.org/10.1063/5.0133026) (revised D4 parameters for ωB97X-V with D4 dispersion instead of VV10 dispersion, parameters: `wb97x-rev`)
+- [ωB97X-3c](https://doi.org/10.1063/5.0133026) (Composite "3c" method based on ωB97X-V, parameters: `wb97x-3c`)
+
+Note that the ωB97X parameters (`wb97x-2008`) cannot be used for the ωB97X-V functional (`wb97x`, `wb97x-rev`).
+We recommend the revised D4 parameters for ωB97X-V (`wb97x-rev`).
+
+</details>
+
+<br>
+
 You can add new functionals using to the TOML file by adding a new subtable
 
 ```toml
