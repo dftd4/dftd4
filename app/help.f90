@@ -119,6 +119,7 @@ subroutine header(unit)
       "     |          Mulliken Center for Theoretical Chemistry        |",&
       "     |                    University of Bonn                     |",&
       "      ----------------------------------------------------------- ",""
+
 end subroutine header
 
 
@@ -152,18 +153,27 @@ subroutine citation(unit)
       "ChemRxiv: 10.26434/chemrxiv.7430216.v2", &
       "", &
       "Periodic DFTD4 model:", &
-      "Eike Caldeweyher, Jan-Michael Mewes, Sebastian Ehlert", &
-      "and Stefan Grimme, Phys. Chem. Chem. Phys., 2020, 22, 8499-8512.", &
+      "Eike Caldeweyher, Jan-Michael Mewes, Sebastian Ehlert and Stefan Grimme,", &
+      "Phys. Chem. Chem. Phys., 2020, 22, 8499-8512.", &
       "DOI: 10.1039/D0CP00502A", &
       "ChemRxiv: 10.26434/chemrxiv.10299428.v1", &
       "", &
+      "DFTD4 for range-separated hybrids:", &
+      "Marvin Friede, Sebastian Ehlert, Stefan Grimme, Jan-Michael Mewes,", &
+      "J. Chem. Theory Comput., 2023, 19 (22), 8097-8107.", &
+      "DOI: 10.1021/acs.jctc.3c00717", &
+      "", &
+      "Extension to Fr, Ra, and full Actinide series:", &
+      "Lukas Wittmann, Igor Gordiy, Marvin Friede, Benjamin Helmich-Paris, ", &
+      "Stefan Grimme, Andreas Hansen and Markus Bursch,", &
+      "Phys. Chem. Chem. Phys., 2024, 26, 21379-21394.", &
+      "DOI: 10.1039/D4CP01514B", &   
+      "", &
       "Smooth D4S model:", &
-      "Nikolay V. Tkachenko, Linus B. Dittmer, Rebecca Tomann", &
-      "and Martin Head-Gordon, J. Phys. Chem. Lett., 2024, 15, 42, 10629–10637.", &
+      "Nikolay V. Tkachenko, Linus B. Dittmer, Rebecca Tomann and Martin Head-Gordon, ", &
+      "J. Phys. Chem. Lett., 2024, 15, 42, 10629-10637.", &
       "DOI: 10.1021/acs.jpclett.4c02653", &
-      "ChemRxiv: 10.26434/chemrxiv-2024-31x2z", &
-      ""
-      
+      "ChemRxiv: 10.26434/chemrxiv-2024-31x2z"
 
 end subroutine citation
 
@@ -184,6 +194,7 @@ subroutine license(unit)
       "", &
       "You should have received a copy of the Lesser GNU General Public License", &
       "along with dftd4.  If not, see <https://www.gnu.org/licenses/>."
+
 end subroutine license
 
 
