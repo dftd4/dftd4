@@ -411,6 +411,24 @@ Eike Caldeweyher, Jan-Michael Mewes, Sebastian Ehlert and Stefan Grimme, *Phys. 
 DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 chemrxiv: [10.26434/chemrxiv.10299428](https://doi.org/10.26434/chemrxiv.10299428.v1)
 
+<br>
+
+In the range-separate hybrid context:
+
+Marvin Friede, Sebastian Ehlert, Stefan Grimme and Jan-Michael Mewes, *J. Chem. Theory Comput.*, **2023**, 19 (22), 8097-8107.
+DOI: [10.1021/acs.jctc.3c00717](10.1021/acs.jctc.3c00717)
+
+<br>
+
+Extension to Fr, Ra, and full Actinide series:
+
+Lukas Wittmann, Igor Gordiy, Marvin Friede, Benjamin Helmich-Paris, Stefan Grimme, Andreas Hansen and Markus Bursch, *Phys. Chem. Chem. Phys.*, **2024**, 26, 21379-21394.
+DOI: [10.1039/D4CP01514B](10.1039/D4CP01514B)
+
+<br>
+
+Citations can also be viewed via `dftd4 --citation` or in the [BibTeX file](CITATION.bib).
+
 
 ## License
 
