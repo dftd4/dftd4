@@ -341,9 +341,13 @@ To enable support for D4 in Vasp add the following lines to the Makefile:
 
 ```make
 CPP_OPTIONS += -DDFTD4
-LLIBS       += $(shell pkg-config --libs dftd4)
+LLIBS       += $(shell pkg-config --libs dftd4) -lmulticharge -lmctc-lib -lmstore
 INCS        += $(shell pkg-config --cflags dftd4)
 ```
+
+The ``-lmulticharge -lmctc-lib -lmstore`` libraries are dependencies of ``dftd4`` and have to be linked as well.
+
+If you still run into issues, check out [VASP-related issues](https://github.com/dftd4/dftd4/issues?q=label%3Avasp%20) on the ``dftd4`` issue tracker.
 
 
 ### C API
