@@ -356,7 +356,6 @@ INCS        += $(shell pkg-config --cflags dftd4)
 If you still run into issues, check out [VASP-related issues](https://github.com/dftd4/dftd4/issues?q=label%3Avasp%20) on the ``dftd4`` issue tracker.
 
 
-
 ### C API
 
 The C API provides access to the basic Fortran objects and their most important methods to interact with them.
