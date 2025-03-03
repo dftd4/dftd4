@@ -20,7 +20,7 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
   endif()
 
   if(NOT TARGET "BLAS::BLAS")
-    find_dependency("BLAS")
+    find_dependency("custom-blas")
   endif()
 
   if(NOT TARGET "mctc-lib::mctc-lib")
