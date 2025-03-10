@@ -39,8 +39,8 @@ elseif(WITH_ILP64)
   message(FATAL_ERROR "ILP64 support needs BLAS_LIBRARIES")
 endif()
 
-if(NOT TARGET "BLAS::BLAS")
-  find_package("custom-blas" REQUIRED)
+if(NOT TARGET "DFTD4::BLAS")
+  find_package("dftd4-blas" REQUIRED)
 endif()
 
 # Collect subprojects
@@ -127,6 +127,10 @@ install(
   "${PROJECT_NAME}-targets"
   NAMESPACE
   "${PROJECT_NAME}::"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+install(
+  FILES ${CMAKE_SOURCE_DIR}/config/cmake/Finddftd4-blas.cmake
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
 install(

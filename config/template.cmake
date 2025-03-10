@@ -19,8 +19,8 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
     find_dependency("OpenMP")
   endif()
 
-  if(NOT TARGET "BLAS::BLAS")
-    find_dependency("custom-blas")
+  if(NOT TARGET "DFTD4::BLAS")
+    find_dependency("dftd4-blas")
   endif()
 
   if(NOT TARGET "mctc-lib::mctc-lib")
