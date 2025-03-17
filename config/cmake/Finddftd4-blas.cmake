@@ -14,20 +14,21 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-if(NOT BLAS_FOUND)
-  if("${BLA_VENDOR}" MATCHES "^Intel" OR DEFINED ENV{MKLROOT})
-    # C must be enabled to use MKL
-    # https://cmake.org/cmake/help/v3.14/module/FindBLAS.html#result-variables
-    enable_language("C")
-  endif()
+if ((BLA_VENDOR MATCHES ^Intel) OR (DEFINED ENV{MKLROOT}))
+  enable_language("C")
+endif()
 
+if(WITH_ILP64)
+  set(BLA_SIZEOF_INTEGER 8)
+  set(_nvpl_int "_ilp64")
+else()
+  set(_nvpl_int "_lp64")
+endif()
+
+if(NOT DFTD4_BLAS_FOUND)
   if(BLA_VENDOR STREQUAL "NVPL")
     find_package("nvpl_blas" REQUIRED)
-    if(BLA_SIZEOF_INTEGER EQUAL 8)
-      set(_nvpl_int "_ilp64")
-    else()
-      set(_nvpl_int "_lp64")
-    endif()
+    set(DFTD4_BLAS_FOUND TRUE)
 
     if((BLA_THREAD STREQUAL "OMP") OR (BLA_THREAD STREQUAL "ANY"))
       set(_nvpl_thread "_omp")
@@ -35,15 +36,18 @@ if(NOT BLAS_FOUND)
       set(_nvpl_thread "_seq")
     endif()
 
-    if(NOT TARGET "BLAS::BLAS")
-      add_library("BLAS::BLAS" INTERFACE IMPORTED)
-      target_link_libraries("BLAS::BLAS" INTERFACE "nvpl::blas${_nvpl_int}${_nvpl_thread}")
-    endif()
+    add_library("dftd4::BLAS" INTERFACE IMPORTED GLOBAL)
+    target_link_libraries("dftd4::BLAS" INTERFACE "nvpl::blas${_nvpl_int}${_nvpl_thread}")
   else()
     find_package("BLAS" REQUIRED)
-    if(NOT TARGET "BLAS::BLAS")
-      add_library("BLAS::BLAS" INTERFACE IMPORTED)
-      target_link_libraries("BLAS::BLAS" INTERFACE "${BLAS_LIBRARIES}")
+    set(DFTD4_BLAS_FOUND ${BLAS_FOUND})
+  
+    if(NOT TARGET "dftd4::BLAS")
+      add_library("dftd4::BLAS" INTERFACE IMPORTED GLOBAL)
+      target_link_libraries("dftd4::BLAS" INTERFACE "BLAS::BLAS")
     endif()
   endif()
- endif()
+endif()
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(dftd4-blas DEFAULT_MSG DFTD4_BLAS_FOUND)

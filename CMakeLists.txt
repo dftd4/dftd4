@@ -14,7 +14,7 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.18)
 
 project(
   "dftd4"
@@ -39,8 +39,8 @@ elseif(WITH_ILP64)
   message(FATAL_ERROR "ILP64 support needs BLAS_LIBRARIES")
 endif()
 
-if(NOT TARGET "BLAS::BLAS")
-  find_package("custom-blas" REQUIRED)
+if(NOT TARGET "dftd4::BLAS")
+  find_package("dftd4-blas" REQUIRED)
 endif()
 
 # Collect subprojects
@@ -133,6 +133,12 @@ install(
   DIRECTORY
   "${CMAKE_CURRENT_BINARY_DIR}/include/"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
+)
+install(
+  DIRECTORY ${PROJECT_SOURCE_DIR}/config/cmake/
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  FILES_MATCHING
+  PATTERN "Find*.cmake"
 )
 if(WITH_API)
   enable_language("C")
