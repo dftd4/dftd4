@@ -17,7 +17,6 @@
 # Unit testing
 set(
   tests
-  "ncoord"
   "model"
   "dftd4"
   "pairwise"

@@ -21,7 +21,7 @@ module dftd4_driver
    use mctc_io, only : structure_type, read_structure, filetype
    use dftd4, only : get_dispersion, dispersion_model, &
       & d4_model, new_d4_model, d4s_model, new_d4s_model, &
-      realspace_cutoff, get_lattice_points, get_coordination_number, &
+      realspace_cutoff, get_lattice_points, &
       damping_param, rational_damping_param, get_rational_damping, &
       get_properties, get_pairwise_dispersion, get_dispersion_hessian
    use dftd4_charge, only : get_charges

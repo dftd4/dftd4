@@ -16,8 +16,8 @@
 
 set(_lib "mctc-lib")
 set(_pkg "MCTCLIB")
-set(_url "https://github.com/grimme-lab/mctc-lib")
-set(_revision "v0.3.2")
+set(_url "https://github.com/thfroitzheim/mctc-lib")
+set(_revision "ncoord")
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")

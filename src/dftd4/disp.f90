@@ -22,7 +22,7 @@ module dftd4_disp
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
    use dftd4_model, only : dispersion_model
-   use dftd4_ncoord, only : get_coordination_number, add_coordination_number_derivs
+   use mctc_ncoord, only : new_ncoord, ncoord_type
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
@@ -68,13 +68,15 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :), dc6dq(:, :)
    real(wp), allocatable :: dEdcn(:), dEdq(:), energies(:)
    real(wp), allocatable :: lattr(:, :)
+   class(ncoord_type), allocatable :: ncoord
 
    mref = maxval(disp%ref)
    grad = present(gradient).or.present(sigma)
 
    allocate(cn(mol%nat))
+   call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
+   call ncoord%get_coordination_number(mol, lattr, cn)
 
    allocate(q(mol%nat))
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
@@ -114,8 +116,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%r4r2, &
       & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
    if (grad) then
-      call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
-         & disp%rcov, disp%en, dEdcn, gradient, sigma)
+      call ncoord%add_coordination_number_derivs(mol, lattr, dEdcn, gradient, sigma)
    end if
 
    energy = sum(energies)
@@ -150,11 +151,13 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
 
    integer :: mref
    real(wp), allocatable :: gwvec(:, :, :), lattr(:, :)
+   class(ncoord_type), allocatable :: ncoord
 
    mref = maxval(disp%ref)
 
+   call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
+   call ncoord%get_coordination_number(mol, lattr, cn)
 
    call get_charges(mol, q)
 
@@ -191,12 +194,14 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
 
    integer :: mref
    real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :), c6(:, :), lattr(:, :)
+   class(ncoord_type), allocatable :: ncoord
 
    mref = maxval(disp%ref)
 
    allocate(cn(mol%nat))
+   call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
+   call ncoord%get_coordination_number(mol, lattr, cn)
 
    allocate(q(mol%nat))
    call get_charges(mol, q)

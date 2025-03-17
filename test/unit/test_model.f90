@@ -19,11 +19,11 @@ module test_model
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed
    use mctc_io_structure, only : new, structure_type
+   use mctc_ncoord, only : new_ncoord, ncoord_type
    use mstore, only : get_structure
    use dftd4_charge, only : get_charges
    use dftd4_cutoff, only : get_lattice_points
    use dftd4_data, only : get_covalent_rad
-   use dftd4_ncoord, only : get_coordination_number
    use dftd4_model, only : dispersion_model, d4_ref
    use dftd4_model_d4, only : d4_model, new_d4_model
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
@@ -92,14 +92,16 @@ subroutine test_gw_gen(error, mol, d4, ref, with_cn, with_q, qat)
    real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :)
    real(wp), parameter :: cutoff = 30.0_wp
    real(wp), allocatable :: lattr(:, :)
+   class(ncoord_type), allocatable :: ncoord
 
    allocate(cn(mol%nat), q(mol%nat), gwvec(maxval(d4%ref), mol%nat, d4%ncoup))
    cn(:) = 0.0_wp
    q(:) = 0.0_wp
 
    if (with_cn) then
+      call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff, rcov=d4%rcov, en=d4%en)
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
-      call get_coordination_number(mol, lattr, cutoff, d4%rcov, d4%en, cn)
+      call ncoord%get_coordination_number(mol, lattr, cn)
    end if
    if (with_q) then
       if(present(qat)) then
@@ -144,6 +146,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
    real(wp), allocatable :: gwr(:, :, :), gwl(:, :, :), numdcn(:, :, :), numdq(:, :, :)
    real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
    real(wp), parameter :: step = 1.0e-6_wp
+   class(ncoord_type), allocatable :: ncoord
 
    mref = maxval(d4%ref)
    ncoup = d4%ncoup
@@ -155,7 +158,8 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
    q(:) = 0.0_wp
 
    if (with_cn) then
-      call get_coordination_number(mol, lattr, cutoff, d4%rcov, d4%en, cn)
+      call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff, rcov=d4%rcov, en=d4%en)
+      call ncoord%get_coordination_number(mol, lattr, cn)
    end if
    if (with_q) then
       if(present(qat)) then
