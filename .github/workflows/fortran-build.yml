@@ -184,7 +184,7 @@ jobs:
 
       - name: Install fpm
         if: ${{ matrix.build == 'fpm' }}
-        uses: fortran-lang/setup-fpm@v5
+        uses: fortran-lang/setup-fpm@v7  # fpm 0.11.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
