@@ -33,7 +33,6 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
-set(DFTD4_BLAS ${BLA_VENDOR})
 if(NOT TARGET "dftd4::BLAS")
   find_package("dftd4-blas" REQUIRED)
 endif()
