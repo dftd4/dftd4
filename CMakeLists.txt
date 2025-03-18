@@ -33,12 +33,7 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
-if(WITH_ILP64 AND BLAS_LIBRARIES)
-  message(STATUS "Using LAPACK/BLAS ILP64 interface")
-elseif(WITH_ILP64)
-  message(FATAL_ERROR "ILP64 support needs BLAS_LIBRARIES")
-endif()
-
+set(DFTD4_BLAS ${BLA_VENDOR})
 if(NOT TARGET "dftd4::BLAS")
   find_package("dftd4-blas" REQUIRED)
 endif()

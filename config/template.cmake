@@ -19,6 +19,7 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
     find_dependency("OpenMP")
   endif()
 
+  set(DTD4_BLAS @DFTD4_BLAS@)
   if(NOT TARGET "dftd4::BLAS")
     find_dependency("dftd4-blas")
   endif()
