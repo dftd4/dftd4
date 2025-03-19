@@ -19,7 +19,7 @@ module test_model
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed
    use mctc_io_structure, only : new, structure_type
-   use mctc_ncoord, only : new_ncoord, ncoord_type
+   use mctc_ncoord, only : new_ncoord, ncoord_type, cn_count
    use mstore, only : get_structure
    use dftd4_charge, only : get_charges
    use dftd4_cutoff, only : get_lattice_points
@@ -99,7 +99,7 @@ subroutine test_gw_gen(error, mol, d4, ref, with_cn, with_q, qat)
    q(:) = 0.0_wp
 
    if (with_cn) then
-      call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff, rcov=d4%rcov, en=d4%en)
+      call new_ncoord(ncoord, mol, cn_count%dftd4, cutoff=cutoff, rcov=d4%rcov, en=d4%en)
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
       call ncoord%get_coordination_number(mol, lattr, cn)
    end if
@@ -158,7 +158,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
    q(:) = 0.0_wp
 
    if (with_cn) then
-      call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff, rcov=d4%rcov, en=d4%en)
+      call new_ncoord(ncoord, mol, cn_count%dftd4, cutoff=cutoff, rcov=d4%rcov, en=d4%en)
       call ncoord%get_coordination_number(mol, lattr, cn)
    end if
    if (with_q) then

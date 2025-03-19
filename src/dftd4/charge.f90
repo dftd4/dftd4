@@ -18,9 +18,7 @@
 module dftd4_charge
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use multicharge, only : mchrg_model_type, new_eeq2019_model, &
-      & write_ascii_model, write_ascii_properties, write_ascii_results, &
-      & get_coordination_number, get_covalent_rad, get_lattice_points
+   use multicharge, only : mchrg_model_type, new_eeq2019_model
    implicit none
    private
 
@@ -55,15 +53,13 @@ subroutine get_charges(mol, qvec, dqdr, dqdL)
    grad = present(dqdr) .and. present(dqdL)
 
    call new_eeq2019_model(mol, model)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
 
    allocate(cn(mol%nat))
    if (grad) then
       allocate(dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat))
    end if
 
-   rcov = get_covalent_rad(mol%num)
-   call get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL, cut=cn_max)
+   call model%ncoord%get_cn(mol, cn, dcndr, dcndL)
 
    call model%solve(mol, cn, dcndr, dcndL, qvec=qvec, dqdr=dqdr, dqdL=dqdL)
 

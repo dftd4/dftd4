@@ -22,7 +22,7 @@ module dftd4_disp
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
    use dftd4_model, only : dispersion_model
-   use mctc_ncoord, only : new_ncoord, ncoord_type
+   use mctc_ncoord, only : new_ncoord, ncoord_type, cn_count
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
@@ -74,7 +74,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    grad = present(gradient).or.present(sigma)
 
    allocate(cn(mol%nat))
-   call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
+   call new_ncoord(ncoord, mol, cn_count%dftd4, cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call ncoord%get_coordination_number(mol, lattr, cn)
 
@@ -155,7 +155,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
 
    mref = maxval(disp%ref)
 
-   call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
+   call new_ncoord(ncoord, mol, cn_count%dftd4, cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call ncoord%get_coordination_number(mol, lattr, cn)
 
@@ -199,7 +199,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    mref = maxval(disp%ref)
 
    allocate(cn(mol%nat))
-   call new_ncoord(ncoord, mol, "dftd4", cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
+   call new_ncoord(ncoord, mol, cn_count%dftd4, cutoff=cutoff%cn, rcov=disp%rcov, en=disp%en)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call ncoord%get_coordination_number(mol, lattr, cn)
 
