@@ -16,7 +16,7 @@
 
 !> Interface to the charge model
 module dftd4_charge
-   use mctc_env, only : wp
+   use mctc_env, only : error_type, wp
    use mctc_io, only : structure_type
    use multicharge, only : mchrg_model_type, new_eeq2019_model
    implicit none
@@ -46,13 +46,17 @@ subroutine get_charges(mol, qvec, dqdr, dqdL)
 
    logical :: grad
    type(mchrg_model_type) :: model
+   type(error_type), allocatable :: error
    real(wp), parameter :: cn_max = 8.0_wp, cutoff = 25.0_wp
    real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
    real(wp), allocatable :: rcov(:), trans(:, :)
 
    grad = present(dqdr) .and. present(dqdL)
 
-   call new_eeq2019_model(mol, model)
+   call new_eeq2019_model(mol, model, error)
+   if(allocated(error)) then
+      error stop "Error occurd in the coordination number setup"
+   end if
 
    allocate(cn(mol%nat))
    if (grad) then
