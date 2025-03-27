@@ -101,6 +101,7 @@ subroutine test_gw_gen(error, mol, d4, ref, with_cn, with_q, qat)
    if (with_cn) then
       call new_ncoord(ncoord, mol, cn_count%dftd4, &
          & cutoff=cutoff, rcov=d4%rcov, en=d4%en, error=error)
+      if (allocated(error)) return
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
       call ncoord%get_coordination_number(mol, lattr, cn)
    end if
@@ -161,6 +162,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
    if (with_cn) then
       call new_ncoord(ncoord, mol, cn_count%dftd4, &
          & cutoff=cutoff, rcov=d4%rcov, en=d4%en, error=error)
+      if (allocated(error)) return
       call ncoord%get_coordination_number(mol, lattr, cn)
    end if
    if (with_q) then
