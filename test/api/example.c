@@ -210,6 +210,28 @@ int test_example(void)
     }
     dftd4_delete(param);
     dftd4_delete(disp);
+
+    // Attempt to create custom d4 model
+    disp = dftd4_custom_d4_model(error, mol, 2.0, 1.0, 4.0);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
+    if (!disp) {
+        goto err;
+    }
+
+    dftd4_delete(disp);
+
+    // Attempt to create default d4s model
+    disp = dftd4_new_d4s_model(error, mol);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
+    if (!disp) {
+        goto err;
+    }
+
+    dftd4_delete(disp);
     dftd4_delete(mol);
     dftd4_delete(error);
 

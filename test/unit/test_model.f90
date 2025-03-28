@@ -59,6 +59,10 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-D4-gfn2", test_gw_d4_mb07), &
       & new_unittest("dgw-D4-gfn2", test_dgw_d4_mb08), &
       & new_unittest("dgw-D4S-gfn2", test_dgw_d4s_mb08), &
+      & new_unittest("pol-D4-mb09", test_pol_d4_mb09), &
+      & new_unittest("pol-D4s-mb09", test_pol_d4s_mb09), &
+      & new_unittest("dpol-D4-mb10", test_dpol_d4_mb10), &
+      & new_unittest("dpol-D4S-mb10", test_dpol_d4s_mb10), &
       & new_unittest("model-D4-error", test_d4_model_error, should_fail=.true.), &
       & new_unittest("model-D4S-error", test_d4s_model_error, should_fail=.true.) &
       & ]
@@ -230,6 +234,172 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
    end if
 
 end subroutine test_dgw_gen
+
+
+subroutine test_pol_gen(error, mol, d4, ref, with_cn, with_q, qat)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type) :: mol
+
+   !> Dispersion model
+   class(dispersion_model), intent(in) :: d4
+
+   !> Reference polarizabilities
+   real(wp), intent(in) :: ref(:)
+
+   !> Calculate coordination number
+   logical, intent(in) :: with_cn
+
+   !> Calculate atomic charges
+   logical, intent(in) :: with_q
+
+   !> Atomic charges
+   real(wp), optional, intent(in) :: qat(:)
+
+   real(wp), allocatable :: cn(:), q(:), alpha(:), gwvec(:, :, :)
+   real(wp), parameter :: cutoff = 30.0_wp
+   real(wp), allocatable :: lattr(:, :)
+   class(ncoord_type), allocatable :: ncoord
+
+   allocate(cn(mol%nat), q(mol%nat), alpha(mol%nat), &
+      & gwvec(maxval(d4%ref), mol%nat, d4%ncoup))
+   cn(:) = 0.0_wp
+   q(:) = 0.0_wp
+
+   if (with_cn) then
+      call new_ncoord(ncoord, mol, cn_count%dftd4, &
+         & cutoff=cutoff, rcov=d4%rcov, en=d4%en, error=error)
+      if (allocated(error)) return
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+      call ncoord%get_coordination_number(mol, lattr, cn)
+   end if
+   if (with_q) then
+      if(present(qat)) then
+         q(:) = qat
+      else
+         call get_charges(mol, q)
+      end if
+   end if
+
+   call d4%weight_references(mol, cn, q, gwvec)
+
+   call d4%get_polarizibilities(mol, gwvec, alpha=alpha)
+
+   if (any(abs(alpha - ref) > thr2)) then
+      call test_failed(error, "Polarizabilities do not match")
+      where(abs(alpha) < thr) alpha = 0.0_wp
+      print'(3(es20.13,"_wp,"), " &")', alpha
+   end if
+
+end subroutine test_pol_gen
+
+
+subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type) :: mol
+
+   !> Dispersion model
+   class(dispersion_model), intent(in) :: d4
+
+   !> Calculate coordination number
+   logical, intent(in) :: with_cn
+
+   !> Calculate atomic charges
+   logical, intent(in) :: with_q
+
+   !> Atomic charges
+   real(wp), optional, intent(in) :: qat(:)
+
+   integer :: iat, mref, ncoup
+   real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :), gwdcn(:, :, :), gwdq(:, :, :)
+   real(wp), allocatable :: alpha(:), alphadcn(:), alphadq(:)
+   real(wp), allocatable :: alphar(:), alphal(:), numdcn(:), numdq(:)
+   real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
+   real(wp), parameter :: step = 1.0e-6_wp
+   class(ncoord_type), allocatable :: ncoord
+
+   mref = maxval(d4%ref)
+   ncoup = d4%ncoup
+   allocate(cn(mol%nat), q(mol%nat), gwvec(mref, mol%nat, ncoup), &
+      & gwdcn(mref, mol%nat, ncoup), gwdq(mref, mol%nat, ncoup), &
+      & alpha(mol%nat), alphadcn(mol%nat), alphadq(mol%nat), &
+      & alphar(mol%nat), alphal(mol%nat), numdcn(mol%nat), numdq(mol%nat))
+   cn(:) = 0.0_wp
+   q(:) = 0.0_wp
+
+   if (with_cn) then
+      call new_ncoord(ncoord, mol, cn_count%dftd4, &
+         & cutoff=cutoff, rcov=d4%rcov, en=d4%en, error=error)
+      if (allocated(error)) return
+      call ncoord%get_coordination_number(mol, lattr, cn)
+   end if
+   if (with_q) then
+      if(present(qat)) then
+         q(:) = qat
+      else
+         call get_charges(mol, q)
+      end if
+   end if
+
+   if (with_cn) then
+      do iat = 1, mol%nat
+         cn(iat) = cn(iat) + step
+         call d4%weight_references(mol, cn, q, gwvec)
+         call d4%get_polarizibilities(mol, gwvec, alpha=alphar)
+         cn(iat) = cn(iat) - 2*step
+         call d4%weight_references(mol, cn, q, gwvec)
+         call d4%get_polarizibilities(mol, gwvec, alpha=alphal)
+         cn(iat) = cn(iat) + step
+         numdcn(iat) = 0.5_wp*(alphar(iat) - alphal(iat))/step
+      end do
+      if (allocated(error)) return
+   end if
+
+   if (with_q) then
+      do iat = 1, mol%nat
+         q(iat) = q(iat) + step
+         call d4%weight_references(mol, cn, q, gwvec)
+         call d4%get_polarizibilities(mol, gwvec, alpha=alphar)
+         q(iat) = q(iat) - 2*step
+         call d4%weight_references(mol, cn, q, gwvec)
+         call d4%get_polarizibilities(mol, gwvec, alpha=alphal)
+         q(iat) = q(iat) + step
+         numdq(iat) = 0.5_wp*(alphar(iat) - alphal(iat))/step
+      end do
+      if (allocated(error)) return
+   end if
+
+   call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+   call d4%get_polarizibilities(mol, gwvec, gwdcn=gwdcn, gwdq=gwdq, &
+      & alpha=alpha, dadcn=alphadcn, dadq=alphadq)
+
+
+   if (with_cn .and. any(abs(alphadcn - numdcn) > thr2)) then
+     call test_failed(error, "Gaussian weights derivatives do not match")
+     print'(3es21.14)', alphadcn
+     print'("---")'
+     print'(3es21.14)', numdcn
+     print'("---")'
+     print'(3es21.14)', alphadcn - numdcn
+   end if
+
+   if (with_q .and. any(abs(alphadq - numdq) > thr2)) then
+      call test_failed(error, "Gaussian weights derivatives do not match")
+      print'(3es21.14)', alphadq
+      print'("---")'
+      print'(3es21.14)', numdq
+      print'("---")'
+      print'(3es21.14)', alphadq - numdq
+   end if
+
+end subroutine test_dpol_gen
 
 
 subroutine test_gw_d4_mb01(error)
@@ -1057,12 +1227,99 @@ subroutine test_dgw_d4s_mb08(error)
    call get_structure(mol, "MB16-43", "08")
    call new_d4s_model(error, d4s, mol, ref=d4_ref%gfn2)
    if (allocated(error)) then 
-      call test_failed(error, "D4 model could not be created")
+      call test_failed(error, "D4S model could not be created")
       return
    end if
    call test_dgw_gen(error, mol, d4s, with_cn=.true., with_q=.true., qat=qat)
 
 end subroutine test_dgw_d4s_mb08
+
+
+subroutine test_pol_d4_mb09(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   real(wp), parameter :: ref(16) = [&
+      & 2.7207807469636E+00_wp, 2.7207697669106E+00_wp, 2.7340295240471E+00_wp, &
+      & 2.7373201241818E+00_wp, 2.0051462957754E+01_wp, 2.7348043044018E+00_wp, &
+      & 6.9923962318719E+00_wp, 9.2345547677329E+00_wp, 2.7338175995796E+00_wp, &
+      & 2.7347959316428E+00_wp, 2.3018401095949E+01_wp, 2.7347926176379E+00_wp, &
+      & 1.5079046616252E+01_wp, 3.5315073387745E+00_wp, 2.7340548152913E+00_wp, &
+      & 9.2442543133947E+00_wp]
+
+   call get_structure(mol, "MB16-43", "09")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) then 
+      call test_failed(error, "D4 model could not be created")
+      return
+   end if
+   call test_pol_gen(error, mol, d4, ref, with_cn=.true., with_q=.false.)
+
+end subroutine test_pol_d4_mb09
+
+subroutine test_pol_d4s_mb09(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   real(wp), parameter :: ref(16) = [&
+      & 2.0796638857659E+00_wp, 2.0317560362159E+00_wp, 2.1362479991008E+00_wp, &
+      & 2.4840420351444E+00_wp, 3.5144617579624E+01_wp, 2.1798399760895E+00_wp, &
+      & 8.7285804463012E+00_wp, 1.0754720091309E+01_wp, 2.1068749047750E+00_wp, &
+      & 2.2167964014782E+00_wp, 2.4223007635619E+01_wp, 2.1626725547918E+00_wp, &
+      & 1.5342832501948E+01_wp, 4.0831999012216E+00_wp, 2.2319948533110E+00_wp, &
+      & 1.0723200212288E+01_wp]
+
+   call get_structure(mol, "MB16-43", "09")
+   call new_d4s_model(error, d4s, mol)
+   if (allocated(error)) then 
+      call test_failed(error, "D4S model could not be created")
+      return
+   end if
+   call test_pol_gen(error, mol, d4s, ref, with_cn=.true., with_q=.true.)
+
+end subroutine test_pol_d4s_mb09
+
+subroutine test_dpol_d4_mb10(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+
+   call get_structure(mol, "MB16-43", "10")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) then 
+      call test_failed(error, "D4 model could not be created")
+      return
+   end if
+   call test_dpol_gen(error, mol, d4, with_cn=.true., with_q=.true.)
+
+end subroutine test_dpol_d4_mb10
+
+subroutine test_dpol_d4s_mb10(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+
+   call get_structure(mol, "MB16-43", "10")
+   call new_d4s_model(error, d4s, mol)
+   if (allocated(error)) then 
+      call test_failed(error, "D4S model could not be created")
+      return
+   end if
+   call test_dpol_gen(error, mol, d4s, with_cn=.true., with_q=.true.)
+
+end subroutine test_dpol_d4s_mb10
 
 
 subroutine test_d4_model_error(error)
