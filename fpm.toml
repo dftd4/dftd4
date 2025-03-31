@@ -12,10 +12,10 @@ link = ["lapack", "blas"]
 auto-tests = false
 
 [dependencies]
-mctc-lib.git = "https://github.com/thfroitzheim/mctc-lib.git"
-mctc-lib.tag = "error-handling"
-multicharge.git = "https://github.com/thfroitzheim/multicharge.git"
-multicharge.tag = "error-handling"
+mctc-lib.git = "https://github.com/grimme-lab/mctc-lib.git"
+mctc-lib.tag = "HEAD"
+multicharge.git = "https://github.com/grimme-lab/multicharge.git"
+multicharge.tag = "HEAD"
 
 [dev-dependencies]
 mstore.git = "https://github.com/grimme-lab/mstore.git"
