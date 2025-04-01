@@ -276,6 +276,7 @@ subroutine test_pol_gen(error, mol, d4, ref, with_cn, with_q, qat)
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
       call ncoord%get_coordination_number(mol, lattr, cn)
    end if
+
    if (with_q) then
       if(present(qat)) then
          q(:) = qat
@@ -340,6 +341,7 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
       if (allocated(error)) return
       call ncoord%get_coordination_number(mol, lattr, cn)
    end if
+
    if (with_q) then
       if(present(qat)) then
          q(:) = qat
@@ -359,7 +361,6 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
          cn(iat) = cn(iat) + step
          numdcn(iat) = 0.5_wp*(alphar(iat) - alphal(iat))/step
       end do
-      if (allocated(error)) return
    end if
 
    if (with_q) then
@@ -373,7 +374,6 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
          q(iat) = q(iat) + step
          numdq(iat) = 0.5_wp*(alphar(iat) - alphal(iat))/step
       end do
-      if (allocated(error)) return
    end if
 
    call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
