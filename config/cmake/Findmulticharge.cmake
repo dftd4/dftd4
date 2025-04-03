@@ -16,8 +16,8 @@
 
 set(_lib "multicharge")
 set(_pkg "MULTICHARGE")
-set(_url "https://github.com/grimme-lab/multicharge")
-set(_rev "HEAD")
+set(_url "https://github.com/thfroitzheim/multicharge")
+set(_rev "error-handling")
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")

@@ -55,7 +55,7 @@ subroutine get_charges(mol, qvec, dqdr, dqdL)
 
    call new_eeq2019_model(mol, model, error)
    if(allocated(error)) then
-      error stop "Error occurd in the coordination number setup"
+      error stop "Error occurred in the coordination number setup"
    end if
 
    allocate(cn(mol%nat))
@@ -65,7 +65,10 @@ subroutine get_charges(mol, qvec, dqdr, dqdL)
 
    call model%ncoord%get_cn(mol, cn, dcndr, dcndL)
 
-   call model%solve(mol, cn, dcndr, dcndL, qvec=qvec, dqdr=dqdr, dqdL=dqdL)
+   call model%solve(mol, error, cn, dcndr, dcndL, qvec=qvec, dqdr=dqdr, dqdL=dqdL)
+   if(allocated(error)) then
+      error stop "Error occurred in the coordination number setup"
+   end if
 
 end subroutine get_charges
 
