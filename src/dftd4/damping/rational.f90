@@ -151,9 +151,9 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, r4r2, c6, energy)
    !$omp parallel default(none) &
    !$omp shared(mol, self, c6, trans, cutoff2, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r0ij, rrij, c6ij, &
-   !$omp& t6, t8, edisp, dE)
-   !$omp shared(energy_local)
-   !$omp private(energy)
+   !$omp& t6, t8, edisp, dE) &
+   !$omp shared(energy) &
+   !$omp private(energy_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
    !$omp do schedule(runtime)
    do iat = 1, mol%nat
