@@ -16,6 +16,7 @@
 
 !> Interface to the charge model
 module dftd4_charge
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_env, only : error_type, wp
    use mctc_io, only : structure_type
    use multicharge, only : mchrg_model_type, new_eeq2019_model
@@ -55,7 +56,8 @@ subroutine get_charges(mol, qvec, dqdr, dqdL)
 
    call new_eeq2019_model(mol, model, error)
    if(allocated(error)) then
-      error stop "Error occurred in the coordination number setup"
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
    end if
 
    allocate(cn(mol%nat))
@@ -67,7 +69,8 @@ subroutine get_charges(mol, qvec, dqdr, dqdL)
 
    call model%solve(mol, error, cn, dcndr, dcndL, qvec=qvec, dqdr=dqdr, dqdL=dqdL)
    if(allocated(error)) then
-      error stop "Error occurred in the coordination number setup"
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
    end if
 
 end subroutine get_charges
