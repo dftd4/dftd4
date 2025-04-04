@@ -399,13 +399,21 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, r4r2, c6, energy)
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, cutoff2, r0ij, rrij, c6ij, t6, t8, edisp, dE
 
+   ! Thread-private array for reduction
+   ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
+   real(wp), allocatable :: energy_local(:, :)
+
    if (abs(self%s6) < epsilon(1.0_wp) .and. abs(self%s8) < epsilon(1.0_wp)) return
    cutoff2 = cutoff*cutoff
 
-   !$omp parallel do schedule(runtime) default(none) reduction(+:energy) &
+   !$omp parallel default(none) &
    !$omp shared(mol, self, c6, trans, cutoff2, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r0ij, rrij, c6ij, &
-   !$omp& t6, t8, edisp, dE)
+   !$omp& t6, t8, edisp, dE) &
+   !$omp shared(energy) &
+   !$omp private(energy_local)
+   allocate(energy_local(size(energy, 1), size(energy, 2)), source=0.0_wp)
+   !$omp do schedule(runtime)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
@@ -425,13 +433,19 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, r4r2, c6, energy)
 
             dE = -c6ij*edisp * 0.5_wp
 
-            energy(jat, iat) = energy(jat, iat) + dE
+            energy_local(jat, iat) = energy_local(jat, iat) + dE
             if (iat /= jat) then
-               energy(iat, jat) = energy(iat, jat) + dE
+               energy_local(iat, jat) = energy_local(iat, jat) + dE
             end if
          end do
       end do
    end do
+   !$omp end do
+   !$omp critical (get_pairwise_dispersion2_)
+   energy(:, :) = energy(:, :) + energy_local(:, :)
+   !$omp end critical (get_pairwise_dispersion2_)
+   deallocate(energy_local)
+   !$omp end parallel
 
 end subroutine get_pairwise_dispersion2
 
@@ -466,14 +480,22 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
    real(wp) :: cutoff2, c9, dE
 
+   ! Thread-private arrays for reduction
+   ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
+   real(wp), allocatable :: energy_local(:, :)
+
    if (abs(self%s9) < epsilon(1.0_wp)) return
    cutoff2 = cutoff*cutoff
 
-   !$omp parallel do schedule(runtime) default(none) reduction(+:energy) &
+   !$omp parallel default(none) &
    !$omp shared(mol, trans, c6, r4r2, cutoff2, self) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
-   !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE)
+   !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
+   !$omp shared(energy) &
+   !$omp private(energy_local)
+   allocate(energy_local(size(energy, 1), size(energy, 2)), source=0.0_wp)
+   !$omp do schedule(runtime)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
@@ -513,17 +535,23 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
                   rr = ang*fdmp
 
                   dE = rr * c9 * triple/6
-                  energy(jat, iat) = energy(jat, iat) - dE
-                  energy(kat, iat) = energy(kat, iat) - dE
-                  energy(iat, jat) = energy(iat, jat) - dE
-                  energy(kat, jat) = energy(kat, jat) - dE
-                  energy(iat, kat) = energy(iat, kat) - dE
-                  energy(jat, kat) = energy(jat, kat) - dE
+                  energy_local(jat, iat) = energy_local(jat, iat) - dE
+                  energy_local(kat, iat) = energy_local(kat, iat) - dE
+                  energy_local(iat, jat) = energy_local(iat, jat) - dE
+                  energy_local(kat, jat) = energy_local(kat, jat) - dE
+                  energy_local(iat, kat) = energy_local(iat, kat) - dE
+                  energy_local(jat, kat) = energy_local(jat, kat) - dE
                end do
             end do
          end do
       end do
    end do
+   !$omp end do
+   !$omp critical (get_pairwise_dispersion3_)
+   energy(:, :) = energy(:, :) + energy_local(:, :)
+   !$omp end critical (get_pairwise_dispersion3_)
+   deallocate(energy_local)
+   !$omp end parallel
 
 end subroutine get_pairwise_dispersion3
 
