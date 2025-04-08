@@ -15,7 +15,7 @@ auto-tests = false
 mctc-lib.git = "https://github.com/grimme-lab/mctc-lib.git"
 mctc-lib.tag = "v0.4.1"
 multicharge.git = "https://github.com/grimme-lab/multicharge.git"
-multicharge.tag = "HEAD"
+multicharge.tag = "v0.4.0"
 
 [dev-dependencies]
 mstore.git = "https://github.com/grimme-lab/mstore.git"
