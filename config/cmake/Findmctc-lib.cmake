@@ -17,7 +17,7 @@
 set(_lib "mctc-lib")
 set(_pkg "MCTCLIB")
 set(_url "https://github.com/grimme-lab/mctc-lib")
-set(_revision "v0.3.2")
+set(_rev "v0.4.1")
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")
@@ -30,7 +30,7 @@ endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/dftd4-utils.cmake")
 
-dftd4_find_package("${_lib}" "${${_pkg}_FIND_METHOD}" "${_url}" "${_revision}")
+dftd4_find_package("${_lib}" "${${_pkg}_FIND_METHOD}" "${_url}" "${_rev}")
 
 if(DEFINED "_${_pkg}_FIND_METHOD")
   unset("${_pkg}_FIND_METHOD")
@@ -39,4 +39,4 @@ endif()
 unset(_lib)
 unset(_pkg)
 unset(_url)
-unset(_revision)
+unset(_rev)

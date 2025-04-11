@@ -20,11 +20,9 @@ module dftd4_driver
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type, read_structure, filetype
    use dftd4, only : get_dispersion, dispersion_model, &
-      & d4_model, new_d4_model, d4s_model, new_d4s_model, &
-      realspace_cutoff, get_lattice_points, get_coordination_number, &
-      damping_param, rational_damping_param, get_rational_damping, &
-      get_properties, get_pairwise_dispersion, get_dispersion_hessian
-   use dftd4_charge, only : get_charges
+      & d4_model, new_d4_model, d4s_model, new_d4s_model, realspace_cutoff, &
+      & damping_param, rational_damping_param, get_rational_damping, &
+      & get_properties, get_pairwise_dispersion, get_dispersion_hessian
    use dftd4_output
    use dftd4_utils
    use dftd4_cli, only : cli_config, param_config, run_config

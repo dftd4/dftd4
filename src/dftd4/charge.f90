@@ -16,11 +16,10 @@
 
 !> Interface to the charge model
 module dftd4_charge
-   use mctc_env, only : wp
+   use, intrinsic :: iso_fortran_env, only : error_unit
+   use mctc_env, only : error_type, wp
    use mctc_io, only : structure_type
-   use multicharge, only : mchrg_model_type, new_eeq2019_model, &
-      & write_ascii_model, write_ascii_properties, write_ascii_results, &
-      & get_coordination_number, get_covalent_rad, get_lattice_points
+   use multicharge, only : mchrg_model_type, new_eeq2019_model
    implicit none
    private
 
@@ -48,24 +47,31 @@ subroutine get_charges(mol, qvec, dqdr, dqdL)
 
    logical :: grad
    type(mchrg_model_type) :: model
+   type(error_type), allocatable :: error
    real(wp), parameter :: cn_max = 8.0_wp, cutoff = 25.0_wp
    real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
    real(wp), allocatable :: rcov(:), trans(:, :)
 
    grad = present(dqdr) .and. present(dqdL)
 
-   call new_eeq2019_model(mol, model)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call new_eeq2019_model(mol, model, error)
+   if(allocated(error)) then
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
+   end if
 
    allocate(cn(mol%nat))
    if (grad) then
       allocate(dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat))
    end if
 
-   rcov = get_covalent_rad(mol%num)
-   call get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL, cut=cn_max)
+   call model%ncoord%get_cn(mol, cn, dcndr, dcndL)
 
-   call model%solve(mol, cn, dcndr, dcndL, qvec=qvec, dqdr=dqdr, dqdL=dqdL)
+   call model%solve(mol, error, cn, dcndr, dcndL, qvec=qvec, dqdr=dqdr, dqdL=dqdL)
+   if(allocated(error)) then
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
+   end if
 
 end subroutine get_charges
 
