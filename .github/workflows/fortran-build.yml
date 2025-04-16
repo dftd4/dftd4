@@ -58,11 +58,11 @@ jobs:
         version: [12]
 
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             build: cmake
             build-type: debug
             compiler: gnu
-            version: 8
+            version: 9
 
           - os: macos-13
             build: cmake
