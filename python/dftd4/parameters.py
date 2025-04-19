@@ -55,7 +55,7 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
     if not exists(data_file):
         # for Windows install layout
         data_file = join(
-            dirname(__file__), "..", "..", "..", "Library", "share", "s-dftd3", base_name
+            dirname(__file__), "..", "..", "..", "Library", "share", "dftd4", base_name
         )
         if not exists(data_file):
             data_file = join(dirname(__file__), base_name)
