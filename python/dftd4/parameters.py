@@ -47,7 +47,6 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
 
     If we don't find the parameter file there we might be standalone and ship
     our own data base file in the same directory as this source file.
-    Or we might be on Windows where accessed from $PREFIX/Lib/site-packages/dftd4.
     """
 
     data_file = join(
