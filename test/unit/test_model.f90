@@ -15,18 +15,18 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_model
+   use dftd4_cutoff, only : get_lattice_points
+   use dftd4_data, only : get_covalent_rad
+   use dftd4_model, only : dispersion_model, new_dispersion_model, d4_ref
+   use dftd4_model_d4, only : d4_model, new_d4_model
+   use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed
    use mctc_io_structure, only : new, structure_type
    use mctc_ncoord, only : new_ncoord, ncoord_type, cn_count
    use mstore, only : get_structure
-   use dftd4_charge, only : get_charges
-   use dftd4_cutoff, only : get_lattice_points
-   use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : dispersion_model, new_dispersion_model, d4_ref
-   use dftd4_model_d4, only : d4_model, new_d4_model
-   use dftd4_model_d4s, only : d4s_model, new_d4s_model
+   use multicharge, only : get_charges
    implicit none
    private
 

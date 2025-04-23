@@ -18,7 +18,6 @@
 module dftd4_disp
    use, intrinsic :: iso_fortran_env, only : error_unit
    use dftd4_blas, only : d4_gemv
-   use dftd4_charge, only : get_charges
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
@@ -27,6 +26,7 @@ module dftd4_disp
    use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
+   use multicharge, only : get_charges
    implicit none
    private
 
