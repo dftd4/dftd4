@@ -16,8 +16,8 @@
 
 set(_lib "multicharge")
 set(_pkg "MULTICHARGE")
-set(_url "https://github.com/grimme-lab/multicharge")
-set(_rev "v0.4.0")
+set(_url "https://github.com/thfroitzheim/multicharge")
+set(_rev "eeq-bc")
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")

@@ -16,14 +16,15 @@
 
 !> High-level wrapper to obtain the dispersion energy for a DFT-D4 calculation
 module dftd4_disp
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use dftd4_blas, only : d4_gemv
    use dftd4_charge, only : get_charges
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : dispersion_model
+   use dftd4_model, only : dispersion_model, d4_ref
    use dftd4_ncoord, only : get_coordination_number, add_coordination_number_derivs
-   use mctc_env, only : wp
+   use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
    implicit none
@@ -68,9 +69,15 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :), dc6dq(:, :)
    real(wp), allocatable :: dEdcn(:), dEdq(:), energies(:)
    real(wp), allocatable :: lattr(:, :)
+   type(error_type), allocatable :: error
 
    mref = maxval(disp%ref)
    grad = present(gradient).or.present(sigma)
+
+   if (.not. allocated(disp%mchrg_model)) then
+      write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
+      error stop
+   end if
 
    allocate(cn(mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
@@ -78,7 +85,11 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    allocate(q(mol%nat))
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
-   call get_charges(mol, q, dqdr, dqdL)
+   call get_charges(disp%mchrg_model, mol, error, q, dqdr, dqdL)
+   if(allocated(error)) then
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
+   end if
 
    allocate(gwvec(mref, mol%nat, disp%ncoup))
    if (grad) allocate(gwdcn(mref, mol%nat, disp%ncoup), gwdq(mref, mol%nat, disp%ncoup))
@@ -150,13 +161,23 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
 
    integer :: mref
    real(wp), allocatable :: gwvec(:, :, :), lattr(:, :)
+   type(error_type), allocatable :: error
+
+   if (.not. allocated(disp%mchrg_model)) then
+      write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
+      error stop
+   end if
 
    mref = maxval(disp%ref)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
 
-   call get_charges(mol, q)
+   call get_charges(disp%mchrg_model, mol, error, q)
+   if(allocated(error)) then
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
+   end if
 
    allocate(gwvec(mref, mol%nat, disp%ncoup))
    call disp%weight_references(mol, cn, q, gwvec)
@@ -191,6 +212,12 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
 
    integer :: mref
    real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :), c6(:, :), lattr(:, :)
+   type(error_type), allocatable :: error
+
+   if (.not. allocated(disp%mchrg_model)) then
+      write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
+      error stop
+   end if
 
    mref = maxval(disp%ref)
 
@@ -199,7 +226,11 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
 
    allocate(q(mol%nat))
-   call get_charges(mol, q)
+   call get_charges(disp%mchrg_model, mol, error, q)
+   if(allocated(error)) then
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
+   end if
 
    allocate(gwvec(mref, mol%nat, disp%ncoup))
    call disp%weight_references(mol, cn, q, gwvec)

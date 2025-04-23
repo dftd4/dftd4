@@ -22,7 +22,7 @@ module dftd4_driver
    use dftd4, only : get_dispersion, realspace_cutoff, &
       & damping_param, rational_damping_param, get_rational_damping, &
       & get_properties, get_pairwise_dispersion, get_dispersion_hessian, &
-      & dispersion_model, new_dispersion_model
+      & dispersion_model, new_dispersion_model, d4_ref
    use dftd4_output
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
@@ -77,7 +77,7 @@ subroutine run_main(config, error)
    real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    real(wp), allocatable :: s9
    real(wp) :: ga, gc
-   integer :: stat, unit, is, id
+   integer :: stat, unit, is, id, charge_model
    logical :: exist
 
    if (config%verbosity > 1) then
@@ -163,9 +163,26 @@ subroutine run_main(config, error)
       end if
    end if
 
+   if(allocated(config%charge_model)) then
+      if(lowercase(config%charge_model) == "eeq") then
+         charge_model = d4_ref%eeq
+      else if(lowercase(config%charge_model) == "eeqbc") then
+         charge_model = d4_ref%eeqbc
+      else
+         ! Unknown charge model or GFN2 are not supported 
+         ! for non-self-consistent D4
+         call fatal_error(error, "Unknown charge model selected")
+         return
+      end if
+   else
+      ! Use EEQ as default charge model
+      charge_model = d4_ref%eeq
+   end if
+
    ! Initialize D4/D4S model
    call new_dispersion_model(error, d4, mol, config%model, ga=ga, &
-      & gc=gc, wf=config%wf)
+      & gc=gc, wf=config%wf, ref=charge_model)
+
    if (allocated(error)) return
 
    if (config%properties) then

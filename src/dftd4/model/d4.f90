@@ -16,7 +16,7 @@
 
 !> Definition of the D4 dispersion model for the evaluation of C6 coefficients.
 module dftd4_model_d4
-   use, intrinsic :: iso_fortran_env, only : output_unit
+   use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
    use ieee_arithmetic, only : ieee_is_nan
    use dftd4_model_type, only : dispersion_model, d4_ref
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_effective_charge, &
@@ -26,6 +26,7 @@ module dftd4_model_d4
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
+   use multicharge, only : new_eeq2019_model, new_eeqbc2024_model
    implicit none
    private
 
@@ -189,6 +190,18 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
          call set_refq_eeq(d4%q(:, isp), izp)
          call set_refalpha_eeq(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
+      ! Setup EEQ model
+      call new_eeq2019_model(mol, d4%mchrg_model, error)
+      if(allocated(error)) return
+   case(d4_ref%eeqbc)
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refq_eeqbc(d4%q(:, isp), izp)
+         call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
+      end do
+      ! Setup EEQBC model
+      call new_eeqbc2024_model(mol, d4%mchrg_model, error)  
+      if(allocated(error)) return
    case(d4_ref%gfn2)
       do isp = 1, mol%nid
          izp = mol%num(isp)
@@ -248,6 +261,7 @@ subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
    integer :: mref, ref_charge
    real(wp) :: aiw(23), c6
    real(wp), parameter :: thopi = 3.0_wp/pi
+   type(error_type), allocatable :: error
 
    d4%ncoup = 1
 
@@ -326,6 +340,18 @@ subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
          call set_refq_gfn2(d4%q(:, isp), izp)
          call set_refalpha_gfn2(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
+   else if (ref_charge == d4_ref%eeqbc) then
+      do isp = 1, mol%nid
+         izp = mol%num(isp)
+         call set_refq_eeqbc(d4%q(:, isp), izp)
+         call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
+      end do
+      ! Setup EEQBC model
+      call new_eeqbc2024_model(mol, d4%mchrg_model, error)  
+      if(allocated(error)) then
+         write(error_unit, '("[Error]:", 1x, a)') error%message
+         error stop
+      end if
    else
       if (ref_charge /= d4_ref%eeq) then
          write(output_unit, '(a)') "[Info] Unsupported option for reference charge. Defaulting to EEQ charges."
@@ -335,6 +361,12 @@ subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
          call set_refq_eeq(d4%q(:, isp), izp)
          call set_refalpha_eeq(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
+      ! Setup EEQ model
+      call new_eeq2019_model(mol, d4%mchrg_model, error)
+      if(allocated(error)) then
+         write(error_unit, '("[Error]:", 1x, a)') error%message
+         error stop
+      end if
    end if
 
    allocate(d4%ngw(mref, mol%nid))

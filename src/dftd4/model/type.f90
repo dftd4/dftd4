@@ -18,6 +18,7 @@
 module dftd4_model_type
    use mctc_env, only : wp
    use mctc_io, only : structure_type
+   use multicharge, only : mchrg_model_type, mchargeModel
    implicit none
    private
 
@@ -68,6 +69,9 @@ module dftd4_model_type
 
       !> Reference C6 coefficients
       real(wp), allocatable :: c6(:, :, :, :)
+
+      !> Multicharge model
+      class(mchrg_model_type), allocatable :: mchrg_model 
 
    contains
 
@@ -159,6 +163,9 @@ module dftd4_model_type
 
       !> GFN2-xTB Mulliken partial charges
       integer :: gfn2 = 2
+
+      !> Bond-Capcity Electronegativity equilibration charges
+      integer :: eeqbc = 3
 
    end type enum_ref
 

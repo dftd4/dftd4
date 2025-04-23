@@ -41,7 +41,9 @@ subroutine collect_dftd4(testsuite)
 
    testsuite = [ &
       & new_unittest("PBE-D4", test_pbed4_mb01), &
+      & new_unittest("PBE-D4-EEQBC", test_pbed4_eeqbc_mb01), &
       & new_unittest("PBE-D4S", test_pbed4s_mb01), &
+      & new_unittest("PBE-D4S-EEQBC", test_pbed4s_eeqbc_mb01), &
       & new_unittest("B97-D4", test_b97d4_mb02), &
       & new_unittest("B97-D4S", test_b97d4s_mb02), &
       & new_unittest("TPSS-D4", test_tpssd4_mb03), &
@@ -221,6 +223,23 @@ subroutine test_pbed4_mb01(error)
 
 end subroutine test_pbed4_mb01
 
+subroutine test_pbed4_eeqbc_mb01(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d4_model(d4, mol, ref=d4_ref%eeqbc)
+   call test_dftd4_gen(error, mol, d4, param, -1.7931287092741860E-002_wp)
+
+end subroutine test_pbed4_eeqbc_mb01
+
 subroutine test_pbed4s_mb01(error)
 
    !> Error handling
@@ -237,6 +256,23 @@ subroutine test_pbed4s_mb01(error)
    call test_dftd4_gen(error, mol, d4s, param, -1.9870451633183694E-002_wp)
 
 end subroutine test_pbed4s_mb01
+
+subroutine test_pbed4s_eeqbc_mb01(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
+      & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d4s_model(d4s, mol, ref=d4_ref%eeqbc)
+   call test_dftd4_gen(error, mol, d4s, param, -1.9357638452866848E-002_wp)
+
+end subroutine test_pbed4s_eeqbc_mb01
 
 subroutine test_b97d4_mb02(error)
 
