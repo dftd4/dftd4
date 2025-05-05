@@ -15,4 +15,4 @@ dependencies:
   - ase
   - qcelemental
   - matplotlib-base
-  - meson
+  - meson !=1.8.0

@@ -10,6 +10,7 @@ ase
 qcelemental
 matplotlib-base
 liblapack
-meson
+meson!=1.8.0
+setuptools
 unzip
 wheel
