@@ -24,7 +24,7 @@ on:
 env:
   BUILD_DIR: _build
   PIP_PACKAGES: >-
-    meson
+    meson!=1.8.0
     cmake
     ninja
     gcovr
