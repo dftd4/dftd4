@@ -39,6 +39,19 @@ set(
 )
 set(module-dir "${module-dir}" PARENT_SCOPE)
 
+# Compiler-specific configurations 
+if(
+  "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "NVHPC"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Flang"
+)
+  set(
+    CMAKE_Fortran_FLAGS
+    "${CMAKE_Fortran_FLAGS} -Mbackslash -Mallocatable=03"
+    PARENT_SCOPE
+  )
+endif()
+
 # Set build type as CMake does not provide defaults
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(

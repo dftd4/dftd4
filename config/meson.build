@@ -37,11 +37,22 @@ elif fc_id == 'intel'
     '-traceback',
     language: 'fortran',
   )
+elif fc_id == 'intel-cl'
+  add_project_arguments(
+    '-fpp',
+    language: 'fortran',
+  )
 elif fc_id == 'pgi' or fc_id == 'nvidia_hpc'
   add_project_arguments(
     '-Mbackslash',
     '-Mallocatable=03',
     '-traceback',
+    language: 'fortran',
+  )
+elif fc_id == 'flang'
+  add_project_arguments(
+    '-Mbackslash',
+    '-Mallocatable=03',
     language: 'fortran',
   )
 endif
