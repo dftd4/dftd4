@@ -15,16 +15,26 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd4_param
-   use mctc_env, only : wp
+   use mctc_env, only : wp, error_type, fatal_error
    use dftd4_damping, only : damping_param
-   use dftd4_damping_rational, only : rational_damping_param
    use dftd4_utils, only : lowercase
    implicit none
    private
 
-   public :: functional_group
-   public :: get_rational_damping, get_functionals, get_functional_id
+   public :: d4_param
+   public :: get_rational_damping
+   public :: functional_group, get_functionals, get_functional_id
    public :: p_r2scan_3c
+
+
+   type :: d4_param
+      real(wp) :: s6 = 1.0_wp
+      real(wp) :: s8 = 1.0_wp
+      real(wp) :: s9 = 0.0_wp
+      real(wp) :: a1 = 0.4_wp
+      real(wp) :: a2 = 5.0_wp
+      real(wp) :: alp = 16.0_wp
+   end type d4_param
 
 
    enum, bind(C)
@@ -245,10 +255,19 @@ end subroutine get_functionals
 
 
 !> Retrieve rational damping parameters from functional name
-subroutine get_rational_damping_name(functional, param, s9)
+subroutine get_rational_damping_name(param, functional, error, s9)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping_name
+
+   !> Loaded parameter record
+   type(d4_param), intent(out) :: param
+
+   !> Name of the functional to look up
    character(len=*), intent(in) :: functional
-   class(damping_param), allocatable, intent(out) :: param
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Overwrite s9
    real(wp), intent(in), optional :: s9
 
    character(len=:), allocatable :: fname
@@ -260,42 +279,59 @@ subroutine get_rational_damping_name(functional, param, s9)
 
    id = get_functional_id(fname)
 
-   call get_rational_damping_id(id, param, s9=s9)
+   call get_rational_damping_id(param, id, error, s9=s9)
 
 end subroutine get_rational_damping_name
 
 
 !> Retrieve rational damping parameters from functional ID
-subroutine get_rational_damping_id(id, param, s9)
+subroutine get_rational_damping_id(param, id, error, s9)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping_id
+
+   !> Loaded parameter record
+   class(d4_param), intent(out) :: param
+
+   !> ID of the method to look up
    integer, intent(in) :: id
-   class(damping_param), allocatable, intent(out) :: param
+
+   !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
    logical :: mbd
 
    mbd = .true.
    if (present(s9)) mbd = abs(s9) > epsilon(s9)
 
    if (mbd) then
-      call get_d4eeq_bjatm_parameter(id, param, s9)
-      if (.not.allocated(param)) then
-         call get_d4eeq_bj_parameter(id, param, s9)
-      end if
+      call get_d4eeq_bjatm_parameter(param, id, error, s9)
    else
-      call get_d4eeq_bj_parameter(id, param, s9)
-      if (.not.allocated(param)) then
-         call get_d4eeq_bjatm_parameter(id, param, s9)
-      end if
+      call get_d4eeq_bj_parameter(param, id, error, s9)
    end if
 
 end subroutine get_rational_damping_id
 
 
-subroutine get_d4eeq_bj_parameter(dfnum, param, s9)
+subroutine get_d4eeq_bj_parameter(param, dfnum, error, s9)
+   !> Loaded parameter record
+   type(d4_param), intent(out) :: param
+
+   !> ID of the method to look up
    integer(df_enum), intent(in) :: dfnum
-   class(damping_param), allocatable, intent(out) :: param
+
+   !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
    select case(dfnum)
+   case default
+      ! call fatal_error(error, "No entry for '"//dfnum//"' present")
+      call fatal_error(error, "No entry for selected functional present")
+      return
    case(p_dftb_3ob)
       param = dftd_param( & ! (SAW191202)
          &  s6=1.0_wp, s8=0.4727337_wp, a1=0.5467502_wp, a2=4.4955068_wp)
@@ -318,7 +354,7 @@ contains
    pure function dftd_param(s6, s8, a1, a2, alp) result(par)
       real(wp), intent(in) :: s8, a1, a2
       real(wp), intent(in), optional :: s6, alp
-      type(rational_damping_param) :: par
+      type(d4_param) :: par
       real(wp) :: s6_, alp_, s9_
 
       s6_ = 1.0_wp
@@ -328,7 +364,7 @@ contains
       alp_ = 16.0_wp
       if (present(alp)) alp_ = alp
 
-      par = rational_damping_param(&
+      par = d4_param(&
          & s6=s6_, &
          & s8=s8, a1=a1, a2=a2, &
          & s9=s9_, &
@@ -337,11 +373,24 @@ contains
 
 end subroutine get_d4eeq_bj_parameter
 
-subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
+subroutine get_d4eeq_bjatm_parameter(param, dfnum, error, s9)
+   !> Loaded parameter record
+   type(d4_param), intent(out) :: param
+
+   !> ID of the method to look up
    integer(df_enum), intent(in) :: dfnum
-   class(damping_param), allocatable, intent(out) :: param
+
+   !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
    select case(dfnum)
+   case default
+      ! call fatal_error(error, "No entry for '"//dfnum//"' present")
+      call fatal_error(error, "No entry for selected functional present")
+      return
    case(p_b1b95)
       param = dftd_param ( & ! (SAW190107)
          &  s6=1.0000_wp, s8=1.27701162_wp, a1=0.40554715_wp, a2=4.63323074_wp )
@@ -788,7 +837,7 @@ contains
    pure function dftd_param(s6, s8, a1, a2, alp) result(par)
       real(wp), intent(in) :: s8, a1, a2
       real(wp), intent(in), optional :: s6, alp
-      type(rational_damping_param) :: par
+      type(d4_param) :: par
       real(wp) :: s6_, alp_, s9_
 
       s6_ = 1.0_wp
@@ -798,7 +847,7 @@ contains
       alp_ = 16.0_wp
       if (present(alp)) alp_ = alp
 
-      par = rational_damping_param(&
+      par = d4_param(&
          & s6=s6_, &
          & s8=s8, a1=a1, a2=a2, &
          & s9=s9_, &

@@ -25,13 +25,13 @@ module dftd4_api
    use mctc_io_structure, only : structure_type, new
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
-   use dftd4_damping_rational, only : rational_damping_param
+   use dftd4_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd4_disp, only : get_dispersion, get_pairwise_dispersion, get_properties
    use dftd4_model, only : dispersion_model
    use dftd4_model_d4, only : d4_model, new_d4_model
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_numdiff, only: get_dispersion_hessian
-   use dftd4_param, only : get_rational_damping
+   use dftd4_param, only : d4_param, get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell
    use dftd4_version, only : get_dftd4_version
    implicit none
@@ -511,7 +511,7 @@ function new_rational_damping_api(verror, s6, s8, s9, a1, a2, alp) &
    call c_f_pointer(verror, error)
 
    allocate(tmp)
-   tmp = rational_damping_param(s6=s6, s8=s8, s9=s9, a1=a1, a2=a2, alp=alp)
+   call new_rational_damping(tmp, d4_param(s6=s6, s8=s8, s9=s9, a1=a1, a2=a2, alp=alp))
 
    allocate(param)
    call move_alloc(tmp, param%ptr)
@@ -532,8 +532,9 @@ function load_rational_damping_api(verror, charptr, atm) &
    character(len=:, kind=c_char), allocatable :: method
    type(c_ptr) :: vparam
    type(vp_param), pointer :: param
+   type(d4_param) :: inp
    real(wp), allocatable :: s9
-   class(damping_param), allocatable :: tmp
+   class(rational_damping_param), allocatable :: tmp
 
    if (debug) print'("[Info]",1x, a)', "load_rational_damping"
 
@@ -545,11 +546,12 @@ function load_rational_damping_api(verror, charptr, atm) &
    call c_f_character(charptr, method)
 
    if (atm) s9 = 1.0_wp
-   call get_rational_damping(method, tmp, s9)
-   if (.not.allocated(tmp)) then
-      call fatal_error(error%ptr, "Functional '"//method//"' not known")
-      return
-   end if
+
+   call get_rational_damping(inp, method, error%ptr, s9)
+   if (allocated(error%ptr)) return
+
+   allocate(tmp)
+   call new_rational_damping(tmp, inp)
 
    allocate(param)
    call move_alloc(tmp, param%ptr)

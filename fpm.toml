@@ -13,7 +13,7 @@ auto-tests = false
 
 [dependencies]
 mctc-lib.git = "https://github.com/grimme-lab/mctc-lib.git"
-mctc-lib.tag = "v0.4.1"
+mctc-lib.tag = "v0.4.2"
 multicharge.git = "https://github.com/grimme-lab/multicharge.git"
 multicharge.tag = "v0.4.0"
 

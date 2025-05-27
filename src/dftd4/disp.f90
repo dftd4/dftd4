@@ -106,13 +106,19 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
       call d4_gemv(dqdL, dEdq, sigma, beta=1.0_wp)
    end if
 
-   q(:) = 0.0_wp
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
+
+   ! ATM-term in default D4-ATM model is not charge-dependent
+   if (.not.disp%mbdcharge) then
+      q(:) = 0.0_wp
+   end if
+
    call disp%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
    call disp%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
 
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
    call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%r4r2, &
       & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
+   
    if (grad) then
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
          & disp%rcov, disp%en, dEdcn, gradient, sigma)

@@ -17,10 +17,11 @@
 !> This is a compatibility module for dftd4 2.5.0 reproducing enough of the old API
 !> to compile the interface with Vasp.
 module dftd4_compat
-   use mctc_env, only : wp
+   use mctc_env, only : wp, error_type
    use mctc_io_math, only : matdet_3x3, matinv_3x3
-   use dftd4, only: structure_type, new, d4_model, new_d4_model, rational_damping_param, &
-      & damping_param, get_rational_damping, get_dispersion, realspace_cutoff
+   use dftd4, only: structure_type, new, d4_model, new_d4_model, &
+      & rational_damping_param, d4_param, damping_param, get_rational_damping, &
+      & get_dispersion, realspace_cutoff
    implicit none
    private
 
@@ -33,6 +34,7 @@ module dftd4_compat
       real(wp) :: wf = 6.0_wp
       real(wp) :: g_a
       real(wp) :: g_c
+      logical :: mbdcharge
       logical :: lmolpol
       logical :: lenergy
       logical :: lgradient
@@ -104,12 +106,16 @@ subroutine d4_calculation(io, env, options, mol_, param_, res)
    type(dftd_results), intent(out) :: res
 
    type(structure_type) :: mol
+   type(error_type), allocatable :: error
    type(d4_model) :: d4
    type(rational_damping_param) :: param
    real(wp), allocatable :: energy, gradient(:, :), sigma(:, :)
 
    call new(mol, mol_%at, mol_%xyz, lattice=mol_%lattice)
-   call new_d4_model(d4, mol, ga=options%g_a, gc=options%g_c, wf=options%wf)
+   call new_d4_model(error, d4, mol, ga=options%g_a, gc=options%g_c, &
+      & wf=options%wf, mbdcharge=options%mbdcharge)
+   if (allocated(error)) return
+
    param = rational_damping_param(&
       & s6=param_%s6, &
       & s8=param_%s8, &
@@ -132,25 +138,23 @@ subroutine d4par(fname, param_, lmbd, env)
    integer, intent(in) :: lmbd
    type(mctc_logger) :: env
 
-   class(damping_param), allocatable :: param
+   class(d4_param), allocatable :: param
+   type(error_type), allocatable :: error
 
-   call get_rational_damping(fname, param, merge(1.0_wp, 0.0_wp, lmbd == 3))
-   if (allocated(param)) then
-      select type(param)
-      type is(rational_damping_param)
-         env%sane = .true.
-         param_%s6 = param%s6
-         param_%s8 = param%s8
-         param_%s9 = param%s9
-         param_%a1 = param%a1
-         param_%a2 = param%a2
-         param_%alp = param%alp
-      class default
-         env%sane = .false.
-      end select
-   else
+   call get_rational_damping(param, fname, error, merge(1.0_wp, 0.0_wp, lmbd == 3))
+   if (allocated(error)) then
       env%sane = .false.
+      return
    end if
+
+   param_%s6 = param%s6
+   param_%s8 = param%s8
+   param_%s9 = param%s9
+   param_%a1 = param%a1
+   param_%a2 = param%a2
+   param_%alp = param%alp
+   env%sane = .true.
+
 end subroutine d4par
 
 subroutine dlat_to_cell(lattice, cellpar)

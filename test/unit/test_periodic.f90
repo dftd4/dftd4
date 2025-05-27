@@ -192,7 +192,7 @@ subroutine test_pbed4_acetic(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp )
 
    call get_structure(mol, "X23", "acetic")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -6.6969773229895183E-002_wp)
 
 end subroutine test_pbed4_acetic
@@ -209,7 +209,7 @@ subroutine test_pbed4s_acetic(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp )
 
    call get_structure(mol, "X23", "acetic")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -6.8611894281210548E-002_wp)
 
 end subroutine test_pbed4s_acetic
@@ -227,7 +227,7 @@ subroutine test_blypd4_adaman(error)
       & s8 = 2.34076671_wp, a1 = 0.44488865_wp, a2 = 4.09330090_wp )
 
    call get_structure(mol, "X23", "adaman")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -0.23629687693703993_wp)
 
 end subroutine test_blypd4_adaman
@@ -244,7 +244,7 @@ subroutine test_blypd4s_adaman(error)
       & s8 = 2.34076671_wp, a1 = 0.44488865_wp, a2 = 4.09330090_wp )
 
    call get_structure(mol, "X23", "adaman")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -0.25250595410032312_wp)
 
 end subroutine test_blypd4s_adaman
@@ -262,7 +262,7 @@ subroutine test_tpssd4_ammonia(error)
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
    call get_structure(mol, "X23", "ammonia")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numgrad(error, mol, d4, param)
 
 end subroutine test_tpssd4_ammonia
@@ -279,7 +279,7 @@ subroutine test_tpssd4s_ammonia(error)
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
    call get_structure(mol, "X23", "ammonia")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_tpssd4s_ammonia
@@ -297,7 +297,7 @@ subroutine test_scand4_anthracene(error)
       & s8 = 1.46126056_wp, a1 = 0.62930855_wp, a2 = 6.31284039_wp )
 
    call get_structure(mol, "X23", "anthracene")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numsigma(error, mol, d4, param)
 
 end subroutine test_scand4_anthracene
@@ -314,7 +314,7 @@ subroutine test_scand4s_anthracene(error)
       & s8 = 1.46126056_wp, a1 = 0.62930855_wp, a2 = 6.31284039_wp )
 
    call get_structure(mol, "X23", "anthracene")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numsigma(error, mol, d4s, param)
 
 end subroutine test_scand4s_anthracene

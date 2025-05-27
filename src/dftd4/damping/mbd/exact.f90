@@ -17,21 +17,21 @@
 !> Implementation of the Axilrod-Teller-Muto triple dipole dispersion
 !> contribution with a modified zero (Chai--Head-Gordon) damping together
 !> with the critical radii from the rational (Becke--Johnson) damping.
-module dftd4_damping_atm
+module dftd4_damping_mbd_exact
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use dftd4_utils, only : triple_scale
+   use dftd4_utils, only : trapzd
    implicit none
 
-   public :: get_atm_dispersion, get_pairwise_atm_dispersion
+   public :: get_exact_atm_dispersion
 
 
 contains
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_dispersion(mol, trans, cutoff, s9, a1, a2, alp, r4r2, &
-      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
+subroutine get_exact_atm_dispersion(mol, trans, cutoff, s9, a1, a2, alp, &
+      & r4r2, aiw, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -57,8 +57,8 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, a1, a2, alp, r4r2, &
    !> Expectation values for r4 over r2 operator
    real(wp), intent(in) :: r4r2(:)
 
-   !> C6 coefficients for all atom pairs.
-   real(wp), intent(in) :: c6(:, :)
+   !> Weighted dynamic polarizabilities of all atoms.
+   real(wp), intent(in) :: aiw(:, :)
 
    !> Derivative of the C6 w.r.t. the coordination number
    real(wp), intent(in), optional :: dc6dcn(:, :)
@@ -88,19 +88,19 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, a1, a2, alp, r4r2, &
       & .and. present(dEdq) .and. present(gradient) .and. present(sigma)
 
    if (grad) then
-      call get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, &
-         & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
+      call get_exact_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, &
+         & alp, r4r2, aiw, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
    else
-      call get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, alp, r4r2, &
-         & c6, energy)
+      call get_exact_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, &
+         & alp, r4r2, aiw, energy)
    end if
 
-end subroutine get_atm_dispersion
+end subroutine get_exact_atm_dispersion
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, &
-      & alp, r4r2, c6, energy)
+subroutine get_exact_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, &
+      & alp, r4r2, aiw, energy)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -126,8 +126,8 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, &
    !> Expectation values for r4 over r2 operator
    real(wp), intent(in) :: r4r2(:)
 
-   !> C6 coefficients for all atom pairs.
-   real(wp), intent(in) :: c6(:, :)
+   !> Weighted dynamic polarizabilities of all atoms.
+   real(wp), intent(in) :: aiw(:, :)
 
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:)
@@ -154,31 +154,36 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, &
    !$omp do schedule(runtime)
    do iat = 1, mol%nat
       izp = mol%id(iat)
+
       do jat = 1, iat
          jzp = mol%id(jat)
-         c6ij = c6(jat, iat)
          r0ij = a1 * sqrt(3*r4r2(jzp)*r4r2(izp)) + a2
+      
          do jtr = 1, size(trans, 2)
             vij(:) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
             r2ij = vij(1)*vij(1) + vij(2)*vij(2) + vij(3)*vij(3)
             if (r2ij > cutoff2 .or. r2ij < epsilon(1.0_wp)) cycle
+      
             do kat = 1, jat
                kzp = mol%id(kat)
-               c6ik = c6(kat, iat)
-               c6jk = c6(kat, jat)
-               c9 = -s9 * sqrt(abs(c6ij*c6ik*c6jk))
+
+               c9 = -s9 * trapzd(aiw(:, i) * aiw(:, j) * aiw(:, k))
+
                r0ik = a1 * sqrt(3*r4r2(kzp)*r4r2(izp)) + a2
                r0jk = a1 * sqrt(3*r4r2(kzp)*r4r2(jzp)) + a2
                r0 = r0ij * r0ik * r0jk
                triple = triple_scale(iat, jat, kat)
+
                do ktr = 1, size(trans, 2)
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
+
                   vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
                      & - trans(:, jtr)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
+                  
                   r2 = r2ij*r2ik*r2jk
                   r1 = sqrt(r2)
                   r3 = r2 * r1
@@ -200,18 +205,18 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, &
       end do
    end do
    !$omp end do
-   !$omp critical (get_atm_dispersion_energy_)
+   !$omp critical (get_exact_atm_dispersion_energy_)
    energy(:) = energy(:) + energy_local(:)
-   !$omp end critical (get_atm_dispersion_energy_)
+   !$omp end critical (get_exact_atm_dispersion_energy_)
    deallocate(energy_local)
    !$omp end parallel
 
-end subroutine get_atm_dispersion_energy
+end subroutine get_exact_atm_dispersion_energy
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, & 
-      & alp, r4r2, c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
+subroutine get_exact_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, &
+      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -237,7 +242,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, &
    !> Expectation values for r4 over r2 operator
    real(wp), intent(in) :: r4r2(:)
 
-   !> C6 coefficients for all atom pairs.
+   !> Weighted dynamic polarizabilities of all atoms.
    real(wp), intent(in) :: c6(:, :)
 
    !> Derivative of the C6 w.r.t. the coordination number
@@ -386,13 +391,13 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, &
       end do
    end do
    !$omp end do
-   !$omp critical (get_atm_dispersion_derivs_)
+   !$omp critical (get_exact_atm_dispersion_derivs_)
    energy(:) = energy(:) + energy_local(:)
    dEdcn(:) = dEdcn(:) + dEdcn_local(:)
    dEdq(:) = dEdq(:) + dEdq_local(:)
    gradient(:, :) = gradient(:, :) + gradient_local(:, :)
    sigma(:, :) = sigma(:, :) + sigma_local(:, :)
-   !$omp end critical (get_atm_dispersion_derivs_)
+   !$omp end critical (get_exact_atm_dispersion_derivs_)
    deallocate(energy_local)
    deallocate(dEdcn_local)
    deallocate(dEdq_local)
@@ -400,123 +405,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, &
    deallocate(sigma_local)
    !$omp end parallel
 
-end subroutine get_atm_dispersion_derivs
+end subroutine get_exact_atm_dispersion_derivs
 
 
-!> Evaluation of the dispersion energy expression
-subroutine get_pairwise_atm_dispersion(mol, trans, cutoff, s9, a1, a2, alp, &
-      & r4r2, c6, energy)
-   !DEC$ ATTRIBUTES DLLEXPORT :: get_pairwise_atm_dispersion
-
-   !> Molecular structure data
-   class(structure_type), intent(in) :: mol
-
-   !> Lattice points
-   real(wp), intent(in) :: trans(:, :)
-
-   !> Real space cutoff
-   real(wp), intent(in) :: cutoff
-
-   !> Scaling for dispersion coefficients
-   real(wp), intent(in) :: s9
-
-   !> Scaling parameter for critical radius
-   real(wp), intent(in) :: a1
-
-   !> Offset parameter for critical radius
-   real(wp), intent(in) :: a2
-
-   !> Exponent of zero damping function
-   real(wp), intent(in) :: alp
-
-   !> Expectation values for r4 over r2 operator
-   real(wp), intent(in) :: r4r2(:)
-
-   !> C6 coefficients for all atom pairs.
-   real(wp), intent(in) :: c6(:, :)
-
-   !> Dispersion energy
-   real(wp), intent(inout) :: energy(:, :)
-
-   integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
-   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
-   real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
-   real(wp) :: cutoff2, c9, dE
-
-   ! Thread-private arrays for reduction
-   ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
-   real(wp), allocatable :: energy_local(:, :)
-
-   if (abs(s9) < epsilon(1.0_wp)) return
-   cutoff2 = cutoff*cutoff
-
-   !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, a1, a2, alp, r4r2, cutoff2) &
-   !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
-   !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
-   !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
-   !$omp shared(energy) &
-   !$omp private(energy_local)
-   allocate(energy_local(size(energy, 1), size(energy, 2)), source=0.0_wp)
-   !$omp do schedule(runtime)
-   do iat = 1, mol%nat
-      izp = mol%id(iat)
-      do jat = 1, iat
-         jzp = mol%id(jat)
-         c6ij = c6(jat, iat)
-         r0ij = a1 * sqrt(3*r4r2(jzp)*r4r2(izp)) + a2
-         do jtr = 1, size(trans, 2)
-            vij(:) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
-            r2ij = vij(1)*vij(1) + vij(2)*vij(2) + vij(3)*vij(3)
-            if (r2ij > cutoff2 .or. r2ij < epsilon(1.0_wp)) cycle
-            do kat = 1, jat
-               kzp = mol%id(kat)
-               c6ik = c6(kat, iat)
-               c6jk = c6(kat, jat)
-               c9 = -s9 * sqrt(abs(c6ij*c6ik*c6jk))
-               r0ik = a1 * sqrt(3*r4r2(kzp)*r4r2(izp)) + a2
-               r0jk = a1 * sqrt(3*r4r2(kzp)*r4r2(jzp)) + a2
-               r0 = r0ij * r0ik * r0jk
-               triple = triple_scale(iat, jat, kat)
-               do ktr = 1, size(trans, 2)
-                  vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
-                  r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
-                  if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
-                  r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
-                  if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
-                  r2 = r2ij*r2ik*r2jk
-                  r1 = sqrt(r2)
-                  r3 = r2 * r1
-                  r5 = r3 * r2
-
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(alp / 3.0_wp))
-                  ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
-                     & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
-
-                  rr = ang*fdmp
-
-                  dE = rr * c9 * triple/6
-                  energy_local(jat, iat) = energy_local(jat, iat) - dE
-                  energy_local(kat, iat) = energy_local(kat, iat) - dE
-                  energy_local(iat, jat) = energy_local(iat, jat) - dE
-                  energy_local(kat, jat) = energy_local(kat, jat) - dE
-                  energy_local(iat, kat) = energy_local(iat, kat) - dE
-                  energy_local(jat, kat) = energy_local(jat, kat) - dE
-               end do
-            end do
-         end do
-      end do
-   end do
-   !$omp end do
-   !$omp critical (get_pairwise_dispersion3_)
-   energy(:, :) = energy(:, :) + energy_local(:, :)
-   !$omp end critical (get_pairwise_dispersion3_)
-   deallocate(energy_local)
-   !$omp end parallel
-
-end subroutine get_pairwise_atm_dispersion
-
-
-end module dftd4_damping_atm
+end module dftd4_damping_exact_atm

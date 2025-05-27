@@ -66,7 +66,7 @@ subroutine test_dftd4_gen(error, mol, param, ref)
    type(d4_model) :: d4
    real(wp) :: energy
 
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call get_dispersion(mol, d4, param, cutoff, energy)
 
    call check(error, energy, ref, thr=thr)
@@ -144,15 +144,17 @@ subroutine test_rational_damping(error)
       &-2.44710136053936E-2_wp,-2.74280989349169E-2_wp,-2.92749846421858E-1_wp, &
       &-4.75432573533092E-2_wp,-8.87276590259854E-2_wp,-8.87276590259854E-2_wp, &
       &-5.90626128920443E-2_wp,-1.49262251668830E-1_wp]
-   class(damping_param), allocatable :: param
+   type(rational_damping_param) :: param
+   type(d4_param) :: inp
    type(structure_type) :: mol
    integer :: ii
 
    call get_structure(mol, "UPU23", "0a")
    do ii = 1, size(func)
-      call get_rational_damping(trim(func(ii)), param, s9=1.0_wp)
-      call check(error, allocated(param))
-      if (allocated(error)) exit
+      call get_rational_damping(inp, trim(func(ii)), error, s9=1.0_wp)
+      if (allocated(error)) return
+
+      call new_rational_damping(param, inp)
       call test_dftd4_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do

@@ -17,14 +17,16 @@
 !> Implementation of the rational (Becke--Johnson) damping function.
 module dftd4_damping_rational
    use dftd4_damping, only : damping_param
-   use dftd4_damping_atm, only : get_atm_dispersion
+   use dftd4_damping_atm, only : get_atm_dispersion, get_pairwise_atm_dispersion
    use dftd4_data, only : get_r4r2_val
+   use dftd4_param, only : d4_param
+   use dftd4_utils, only : triple_scale
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
    private
 
-   public :: rational_damping_param
+   public :: new_rational_damping, rational_damping_param
 
 
    !> Rational (Becke-Johnson) damping model
@@ -53,6 +55,25 @@ module dftd4_damping_rational
 
 
 contains
+
+
+!> Create new rational damping model
+subroutine new_rational_damping(self, param)
+
+   !> Rational damping parameters
+   type(rational_damping_param), intent(out) :: self
+
+   !> Parameters
+   type(d4_param), intent(in) :: param
+
+   self%s6 = param%s6
+   self%s8 = param%s8
+   self%s9 = param%s9
+   self%a1 = param%a1
+   self%a2 = param%a2
+   self%alp = param%alp
+
+end subroutine new_rational_damping
 
 
 !> Evaluation of the dispersion energy expression
@@ -475,115 +496,10 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:, :)
 
-   integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
-   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
-   real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
-   real(wp) :: cutoff2, c9, dE
-
-   ! Thread-private arrays for reduction
-   ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
-   real(wp), allocatable :: energy_local(:, :)
-
-   if (abs(self%s9) < epsilon(1.0_wp)) return
-   cutoff2 = cutoff*cutoff
-
-   !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, r4r2, cutoff2, self) &
-   !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
-   !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
-   !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
-   !$omp shared(energy) &
-   !$omp private(energy_local)
-   allocate(energy_local(size(energy, 1), size(energy, 2)), source=0.0_wp)
-   !$omp do schedule(runtime)
-   do iat = 1, mol%nat
-      izp = mol%id(iat)
-      do jat = 1, iat
-         jzp = mol%id(jat)
-         c6ij = c6(jat, iat)
-         r0ij = self%a1 * sqrt(3*r4r2(jzp)*r4r2(izp)) + self%a2
-         do jtr = 1, size(trans, 2)
-            vij(:) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
-            r2ij = vij(1)*vij(1) + vij(2)*vij(2) + vij(3)*vij(3)
-            if (r2ij > cutoff2 .or. r2ij < epsilon(1.0_wp)) cycle
-            do kat = 1, jat
-               kzp = mol%id(kat)
-               c6ik = c6(kat, iat)
-               c6jk = c6(kat, jat)
-               c9 = -self%s9 * sqrt(abs(c6ij*c6ik*c6jk))
-               r0ik = self%a1 * sqrt(3*r4r2(kzp)*r4r2(izp)) + self%a2
-               r0jk = self%a1 * sqrt(3*r4r2(kzp)*r4r2(jzp)) + self%a2
-               r0 = r0ij * r0ik * r0jk
-               triple = triple_scale(iat, jat, kat)
-               do ktr = 1, size(trans, 2)
-                  vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
-                  r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
-                  if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
-                  r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
-                  if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
-                  r2 = r2ij*r2ik*r2jk
-                  r1 = sqrt(r2)
-                  r3 = r2 * r1
-                  r5 = r3 * r2
-
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(self%alp / 3.0_wp))
-                  ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
-                     & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
-
-                  rr = ang*fdmp
-
-                  dE = rr * c9 * triple/6
-                  energy_local(jat, iat) = energy_local(jat, iat) - dE
-                  energy_local(kat, iat) = energy_local(kat, iat) - dE
-                  energy_local(iat, jat) = energy_local(iat, jat) - dE
-                  energy_local(kat, jat) = energy_local(kat, jat) - dE
-                  energy_local(iat, kat) = energy_local(iat, kat) - dE
-                  energy_local(jat, kat) = energy_local(jat, kat) - dE
-               end do
-            end do
-         end do
-      end do
-   end do
-   !$omp end do
-   !$omp critical (get_pairwise_dispersion3_)
-   energy(:, :) = energy(:, :) + energy_local(:, :)
-   !$omp end critical (get_pairwise_dispersion3_)
-   deallocate(energy_local)
-   !$omp end parallel
+   call get_pairwise_atm_dispersion(mol, trans, cutoff, self%s9, &
+      & self%a1, self%a2, self%alp, r4r2, c6, energy)
 
 end subroutine get_pairwise_dispersion3
-
-
-!> Logic exercise to distribute a triple energy to atomwise energies.
-elemental function triple_scale(ii, jj, kk) result(triple)
-
-   !> Atom indices
-   integer, intent(in) :: ii, jj, kk
-
-   !> Fraction of energy
-   real(wp) :: triple
-
-   if (ii == jj) then
-      if (ii == kk) then
-         ! ii'i" -> 1/6
-         triple = 1.0_wp/6.0_wp
-      else
-         ! ii'j -> 1/2
-         triple = 0.5_wp
-      end if
-   else
-      if (ii /= kk .and. jj /= kk) then
-         ! ijk -> 1 (full)
-         triple = 1.0_wp
-      else
-         ! ijj' and iji' -> 1/2
-         triple = 0.5_wp
-      end if
-   end if
-
-end function triple_scale
 
 
 end module dftd4_damping_rational

@@ -19,7 +19,7 @@ module dftd4_cli
    use, intrinsic :: iso_fortran_env, only : output_unit
    use mctc_env, only : error_type, fatal_error, get_argument, wp
    use mctc_io, only : get_filetype
-   use dftd4, only : rational_damping_param, get_dftd4_version
+   use dftd4, only : d4_param, get_dftd4_version
    use dftd4_argument, only : argument_list, len
    use dftd4_help, only : citation, header, help_text, help_text_param, help_text_run, license, prog_name, version
 
@@ -35,22 +35,42 @@ module dftd4_cli
 
    !> Configuration data for running single point calculations
    type, extends(cli_config) :: run_config
+      !> Damping paramaters
+      type(d4_param) :: inp
+
+      !> Geometry input file
       character(len=:), allocatable :: input
+
+      !> Format of the geometry input
       integer, allocatable :: input_format
-      type(rational_damping_param) :: inp
+      
+      !> Method name
       character(len=:), allocatable :: method
+      
+      !> Whether to use rational damping
+      logical :: rational = .false.
+
+      !> Type of many-body dispersion
+      character(len=:), allocatable :: mbd
+
+      !> Scaling factor for the MBD term (s9)
+      logical :: mbdscale = .false.
+
+      !> Whether the MBD term is charge-dependent
+      logical :: mbdcharge = .false.
+
+      !> Dispersion model
       character(len=:), allocatable :: model
+
       logical :: json = .false.
       character(len=:), allocatable :: json_output
       logical :: wrap = .true.
       logical :: tmer = .true.
       logical :: properties = .false.
-      logical :: mbdscale = .false.
       logical :: zeta = .false.
       logical :: grad = .false.
       logical :: hessian = .false.
       character(len=:), allocatable :: grad_output
-      logical :: rational = .false.
       logical :: has_param = .false.
       integer :: verbosity = 2
       real(wp), allocatable :: charge
@@ -236,7 +256,17 @@ subroutine get_run_arguments(config, list, start, error)
       case("--hessian")
          config%grad = .true.
          config%hessian = .true.
-      case("--mbdscale")
+      case("--mbd")
+         iarg = iarg + 1
+         call get_argument(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for MBD method")
+            exit
+         end if
+         call move_alloc(arg, config%mbd)
+      case("--mbd_charge", "--mbd-charge", "--mbdcharge")
+         config%mbdcharge = .true.
+      case("--mbd_scale", "--mbd-scale", "--mbdscale")
          iarg = iarg + 1
          call get_argument_as_real(iarg, config%inp%s9, error)
          if (allocated(error)) exit

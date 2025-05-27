@@ -14,9 +14,6 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-subdir('mbd')
-
 srcs += files(
-  'rational.f90',
-  'rational_exact.f90',
+  'exact.f90',
 )

@@ -19,7 +19,7 @@ module dftd4_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type, read_structure, filetype
-   use dftd4, only : get_dispersion, dispersion_model, &
+   use dftd4, only : get_dispersion, dispersion_model, d4_param, &
       & d4_model, new_d4_model, d4s_model, new_d4s_model, realspace_cutoff, &
       & damping_param, rational_damping_param, get_rational_damping, &
       & get_properties, get_pairwise_dispersion, get_dispersion_hessian
@@ -29,6 +29,7 @@ module dftd4_driver
    use dftd4_help, only : header
    use dftd4_param, only : functional_group, get_functionals, &
       get_functional_id, p_r2scan_3c
+   use dftd4_damping_rational, only :  new_rational_damping
    implicit none
    private
 
@@ -69,6 +70,7 @@ subroutine run_main(config, error)
    type(structure_type) :: mol
    character(len=:), allocatable :: filename
    character(len=:), allocatable :: functional
+   type(d4_param) :: inp
    class(damping_param), allocatable :: param
    class(dispersion_model), allocatable :: d4
    real(wp) :: charge
@@ -120,11 +122,17 @@ subroutine run_main(config, error)
 
    ga = config%ga
    gc = config%gc
-   if (config%mbdscale) s9 = config%inp%s9
+
+   if (config%mbdscale) then
+      s9 = config%inp%s9
+   end if
+
+   if (config%has_param) then 
+      inp = config%inp
+   end if
+
    if (config%rational) then
-      if (config%has_param) then
-         param = config%inp
-      else
+      if (.not.config%has_param) then
          is = index(config%method, '/')
          if (is == 0) is = len_trim(config%method) + 1
          functional = lowercase(config%method(:is-1))
@@ -141,11 +149,17 @@ subroutine run_main(config, error)
             end if
          end if
 
-         call get_rational_damping(functional, param, s9)
-         if (.not.allocated(param)) then
-            call fatal_error(error, "No parameters for '"//config%method//"' available")
-            return
-         end if
+         call get_rational_damping(inp, functional, error, s9)
+         if (allocated(error)) return
+      end if
+
+      if (.not.allocated(param)) then
+         block
+            type(rational_damping_param), allocatable :: rat_param
+            allocate(rat_param)
+            call new_rational_damping(rat_param, inp)
+            call move_alloc(rat_param, param)
+         end block
       end if
    end if
 
@@ -163,18 +177,20 @@ subroutine run_main(config, error)
       end if
    end if
 
-   if(lowercase(config%model) == "d4") then
+   if (lowercase(config%model) == "d4") then
       block 
          type(d4_model), allocatable :: tmp
          allocate(tmp)
-         call new_d4_model(error, tmp, mol, ga=ga, gc=gc, wf=config%wf)
+         call new_d4_model(error, tmp, mol, ga=ga, gc=gc, wf=config%wf, &
+            & mbdcharge=config%mbdcharge)
          call move_alloc(tmp, d4)
       end block 
-   else if(lowercase(config%model) == "d4s") then
+   else if (lowercase(config%model) == "d4s") then
       block 
          type(d4s_model), allocatable :: tmp
          allocate(tmp)
-         call new_d4s_model(error, tmp, mol, ga=ga, gc=gc)
+         call new_d4s_model(error, tmp, mol, ga=ga, gc=gc, &
+            & mbdcharge=config%mbdcharge)
          call move_alloc(tmp, d4)
       end block
    else
@@ -196,12 +212,12 @@ subroutine run_main(config, error)
    end if
 
    if (allocated(param)) then
-      call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, &
-         & sigma)
+      call get_dispersion(mol, d4, param, realspace_cutoff(), &
+         & energy, gradient, sigma)
       if (config%pair_resolved) then
          allocate(pair_disp2(mol%nat, mol%nat), pair_disp3(mol%nat, mol%nat))
-         call get_pairwise_dispersion(mol, d4, param, realspace_cutoff(), pair_disp2, &
-            & pair_disp3)
+         call get_pairwise_dispersion(mol, d4, param, realspace_cutoff(), &
+            & pair_disp2, pair_disp3)
       end if
       if (config%hessian) then
          call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian)

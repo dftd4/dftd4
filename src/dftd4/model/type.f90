@@ -36,6 +36,9 @@ module dftd4_model_type
       !> Charge scaling steepness
       real(wp) :: gc
 
+      !> Whether to use the classical charges in the MBD term (default: .false.)
+      logical :: mbdcharge
+
       !> Effective nuclear charges
       real(wp), allocatable :: zeff(:)
 

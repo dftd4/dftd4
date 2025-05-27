@@ -19,7 +19,7 @@ module dftd4_utils
    use mctc_io_math, only : matinv_3x3
    implicit none
 
-   public :: lowercase, wrap_to_central_cell
+   public :: lowercase, triple_scale, wrap_to_central_cell
 
 
 contains
@@ -91,6 +91,36 @@ pure function lowercase(str) result(lcstr)
    enddo
 
 end function lowercase
+
+
+!> Logic exercise to distribute a triple energy to atomwise energies.
+elemental function triple_scale(ii, jj, kk) result(triple)
+
+   !> Atom indices
+   integer, intent(in) :: ii, jj, kk
+
+   !> Fraction of energy
+   real(wp) :: triple
+
+   if (ii == jj) then
+      if (ii == kk) then
+         ! ii'i" -> 1/6
+         triple = 1.0_wp/6.0_wp
+      else
+         ! ii'j -> 1/2
+         triple = 0.5_wp
+      end if
+   else
+      if (ii /= kk .and. jj /= kk) then
+         ! ijk -> 1 (full)
+         triple = 1.0_wp
+      else
+         ! ijj' and iji' -> 1/2
+         triple = 0.5_wp
+      end if
+   end if
+
+end function triple_scale
 
 
 end module dftd4_utils

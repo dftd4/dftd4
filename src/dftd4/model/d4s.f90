@@ -58,18 +58,16 @@ module dftd4_model_d4s
    !> Default charge scaling steepness for partial charge extrapolation
    real(wp), parameter :: gc_default = 2.0_wp
 
-   !> Create new D4 dispersion model from molecular structure input
-   interface new_d4s_model
-      module procedure :: new_d4s_model_no_checks
-      module procedure :: new_d4s_model_with_checks
-   end interface new_d4s_model
+   !> Default behavior for MBD charge usage
+   logical, parameter :: mbdcharge_default = .false.
+
 
 contains
 
 
 !> Create new D4S dispersion model from molecular structure input
-subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, ref)
-   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_with_checks
+subroutine new_d4s_model(error, d4, mol, ga, gc, ref, mbdcharge)
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model
 
    !> Instance of the dispersion model
    type(d4s_model), intent(out) :: d4
@@ -89,6 +87,9 @@ subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, ref)
    !> Reference charge selection
    integer, intent(in), optional :: ref
 
+   !> Whether the MBD term uses the classical charges
+   logical, intent(in), optional :: mbdcharge
+
    integer :: isp, izp, iref, jsp, jzp, jref
    integer :: mref, ref_charge
    real(wp) :: aiw(23), c6
@@ -103,6 +104,12 @@ subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, ref)
    end do
 
    d4%ncoup = mol%nat
+
+   if (present(mbdcharge)) then
+      d4%mbdcharge = mbdcharge
+   else
+      d4%mbdcharge = mbdcharge_default
+   end if
 
    if (present(ref)) then
       ref_charge = ref
@@ -216,147 +223,7 @@ subroutine new_d4s_model_with_checks(error, d4, mol, ga, gc, ref)
       end do
    end do
 
-end subroutine new_d4s_model_with_checks
-
-!> Create new dispersion model from molecular structure input without
-!> checking for supported elements (old/compatibility version)
-subroutine new_d4s_model_no_checks(d4, mol, ga, gc, ref)
-   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_no_checks
-
-   !> Instance of the dispersion model
-   type(d4s_model), intent(out) :: d4
-
-   !> Molecular structure data
-   class(structure_type), intent(in) :: mol
-
-   !> Charge scaling height
-   real(wp), intent(in), optional :: ga
-
-   !> Charge scaling steepness
-   real(wp), intent(in), optional :: gc
-
-   !> Reference charge selection
-   integer, intent(in), optional :: ref
-
-   integer :: isp, izp, iref, jsp, jzp, jref
-   integer :: mref, ref_charge
-   real(wp) :: aiw(23), c6
-   real(wp), parameter :: thopi = 3.0_wp/pi
-
-   d4%ncoup = mol%nat
-
-   if (present(ref)) then
-      ref_charge = ref
-   else
-      ref_charge = d4_ref%eeq
-   end if
-
-   if (present(ga)) then
-      d4%ga = ga
-   else
-      d4%ga = ga_default
-   end if
-
-   if (present(gc)) then
-      d4%gc = gc
-   else
-      d4%gc = gc_default
-   end if
-
-   allocate(d4%wf(mol%nid, mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      do jsp = 1, mol%nid
-         jzp = mol%num(jsp)
-         d4%wf(isp, jsp) = get_wfpair_val(izp, jzp)
-      end do 
-   end do
-
-   allocate(d4%rcov(mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      d4%rcov(isp) = get_covalent_rad(izp)
-   end do
-
-   allocate(d4%en(mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      d4%en(isp) = get_electronegativity(izp)
-   end do
-
-   allocate(d4%zeff(mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      d4%zeff(isp) = get_effective_charge(izp)
-   end do
-
-   allocate(d4%eta(mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      d4%eta(isp) = get_hardness(izp)
-   end do
-
-   allocate(d4%r4r2(mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      d4%r4r2(isp) = get_r4r2_val(izp)
-   end do
-
-   allocate(d4%ref(mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      d4%ref(isp) = get_nref(izp)
-   end do
-
-   mref = maxval(d4%ref)
-   allocate(d4%cn(mref, mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      call set_refcn(d4%cn(:, isp), izp)
-   end do
-
-   allocate(d4%q(mref, mol%nid))
-   allocate(d4%aiw(23, mref, mol%nid))
-   if (ref_charge == d4_ref%gfn2) then
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         call set_refq_gfn2(d4%q(:, isp), izp)
-         call set_refalpha_gfn2(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
-      end do
-   else
-      if (ref_charge /= d4_ref%eeq) then
-         write(output_unit, '(a)') "[Info] Unsupported option for reference charge. Defaulting to EEQ charges."
-      end if
-      do isp = 1, mol%nid
-         izp = mol%num(isp)
-         call set_refq_eeq(d4%q(:, isp), izp)
-         call set_refalpha_eeq(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
-      end do
-   end if
-
-   allocate(d4%ngw(mref, mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      call set_refgw(d4%ngw(:, isp), izp)
-   end do
-
-   allocate(d4%c6(mref, mref, mol%nid, mol%nid))
-   do isp = 1, mol%nid
-      izp = mol%num(isp)
-      do jsp = 1, isp
-         jzp = mol%num(jsp)
-         do iref = 1, d4%ref(isp)
-            do jref = 1, d4%ref(jsp)
-               aiw(:) = d4%aiw(:, iref, isp) * d4%aiw(:, jref, jsp)
-               c6 = thopi * trapzd(aiw)
-               d4%c6(jref, iref, jsp, isp) = c6
-               d4%c6(iref, jref, isp, jsp) = c6
-            end do
-         end do
-      end do
-   end do
-
-end subroutine new_d4s_model_no_checks
+end subroutine new_d4s_model
 
 
 !> Calculate the weights of the reference system and the derivatives w.r.t.

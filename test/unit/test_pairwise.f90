@@ -96,7 +96,7 @@ subroutine test_pbed4_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_pairwise(error, mol, d4, param)
 
 end subroutine test_pbed4_mb01
@@ -113,7 +113,7 @@ subroutine test_pbed4s_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_pairwise(error, mol, d4s, param)
 
 end subroutine test_pbed4s_mb01
@@ -131,7 +131,7 @@ subroutine test_b97d4_mb02(error)
       & s8 = 1.69460052_wp, a1 = 0.28904684_wp, a2 = 4.13407323_wp)
 
    call get_structure(mol, "MB16-43", "02")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_pairwise(error, mol, d4, param)
 
 end subroutine test_b97d4_mb02
@@ -148,7 +148,7 @@ subroutine test_b97d4s_mb02(error)
       & s8 = 1.69460052_wp, a1 = 0.28904684_wp, a2 = 4.13407323_wp)
 
    call get_structure(mol, "MB16-43", "02")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_pairwise(error, mol, d4s, param)
 
 end subroutine test_b97d4s_mb02
@@ -166,7 +166,7 @@ subroutine test_tpssd4_ammonia(error)
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
    call get_structure(mol, "X23", "ammonia")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_pairwise(error, mol, d4, param)
 
 end subroutine test_tpssd4_ammonia
@@ -183,7 +183,7 @@ subroutine test_tpssd4s_ammonia(error)
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
    call get_structure(mol, "X23", "ammonia")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_pairwise(error, mol, d4s, param)
 
 end subroutine test_tpssd4s_ammonia
