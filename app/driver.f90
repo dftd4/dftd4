@@ -71,8 +71,8 @@ subroutine run_main(config, error)
    character(len=:), allocatable :: functional
    class(damping_param), allocatable :: param
    class(dispersion_model), allocatable :: d4
-   real(wp) :: energy, charge
-   real(wp), allocatable :: gradient(:, :), sigma(:, :), hessian(:, :, :, :)
+   real(wp) :: charge
+   real(wp), allocatable :: energy, gradient(:, :), sigma(:, :), hessian(:, :, :, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    real(wp), allocatable :: s9
