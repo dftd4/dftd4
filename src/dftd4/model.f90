@@ -60,14 +60,22 @@ subroutine new_dispersion_model(error, d4, mol, model, ga, gc, wf)
    !> Weighting factor for coordination number interpolation
    real(wp), intent(in), optional :: wf
 
-   if(.not.present(model) .or. lowercase(model) == "d4") then
+   character(len=:), allocatable :: mdl
+
+   if (present(model)) then
+      mdl = lowercase(trim(model)) 
+   else
+      mdl = "d4"
+   end if
+
+   if(mdl == "d4") then
       block 
          type(d4_model), allocatable :: tmp
          allocate(tmp)
          call new_d4_model(error, tmp, mol, ga=ga, gc=gc, wf=wf)
          call move_alloc(tmp, d4)
       end block 
-   else if(lowercase(model) == "d4s") then
+   else if(mdl == "d4s") then
       block 
          type(d4s_model), allocatable :: tmp
          allocate(tmp)

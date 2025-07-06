@@ -31,7 +31,7 @@ subroutine wrap_to_central_cell(xyz, lattice, periodic)
    real(wp), intent(in) :: lattice(:, :)
    logical, intent(in) :: periodic(:)
    real(wp) :: invlat(3, 3), vec(3)
-   integer :: iat, idir
+   integer :: iat
 
    if (.not.any(periodic)) return
 
