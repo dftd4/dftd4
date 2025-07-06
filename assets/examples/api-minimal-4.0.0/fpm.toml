@@ -1,0 +1,5 @@
+name = "api-minimal-4_0_0"
+
+[dependencies]
+dftd4.git = "https://github.com/dftd4/dftd4"
+dftd4.tag = "HEAD"

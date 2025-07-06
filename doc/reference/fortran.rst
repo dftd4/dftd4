@@ -123,60 +123,37 @@ An unhandled error might get dropped by the next procedure call.
 Performing calculations
 -----------------------
 
-An example for performing a calculation with DFT-D4 is shown below
+An example for performing a calculation with DFT-D4 is shown below.
 
-.. code-block:: fortran
+.. tab-set::
 
-   subroutine calc_dftd4(error, mol, method, energy, model, gradient, sigma)
-      use mctc_env, only : wp, error_type, fatal_error
-      use mctc_io, only : structure_type
-      use dftd4, only : damping_param, get_rational_damping, get_dispersion
-      use dftd4_cutoff, only : realspace_cutoff
-      use dftd4_model, only : dispersion_model
-      use dftd4_model_d4, only : d4_model, new_d4_model
-      use dftd4_model_d4s, only : d4s_model, new_d4s_model
-      use dftd4_utils, only : lowercase
-      implicit none
+   .. tab-item:: ≤ 3.7.0
 
-      !> Error handling
-      type(error_type), allocatable, intent(out) :: error
+      .. literalinclude:: ../../assets/examples/api-minimal-3.7.0/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :lines: 3-7
+         :dedent: 3
 
-      !> Molecular structure data
-      type(structure_type), intent(in) :: mol
-      
-      !> Method name for which parameters should be used
-      character(len=*), intent(in) :: method
-      
-      !> Dispersion energy
-      real(wp), intent(out) :: energy
+      .. literalinclude:: ../../assets/examples/api-minimal-3.7.0/app/main.f90
+         :language: fortran
+         :linenos:
+         :lines: 44-75
 
-      !> Dispersion model (D4 or D4S)
-      character(len=*), intent(in), optional :: model
+   .. tab-item:: 4.0.0 and later
 
-      !> Dispersion gradient
-      real(wp), intent(out), contiguous, optional :: gradient(:, :)
-      
-      !> Dispersion virial
-      real(wp), intent(out), contiguous, optional :: sigma(:, :)
+      .. literalinclude:: ../../assets/examples/api-minimal-4.0.0/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :lines: 3-7
+         :dedent: 3
+         :emphasize-lines: 5
 
-      class(damping_param), allocatable :: param
-      class(dispersion_model), allocatable :: disp
-
-      ! Get D4 damping parameters for given method
-      call get_rational_damping(method, param, s9=1.0_wp)
-      if (.not.allocated(param)) then
-         call fatal_error(error, "No parameters for '"//method//"' available")
-         return
-      end if
-
-      ! Initialize D4/D4S model
-      call new_dispersion_model(error, d4, mol)
-      if (allocated(error)) return
-      
-      call get_dispersion(mol, disp, param, realspace_cutoff(), energy, &
-         & gradient, sigma)
-
-   end subroutine calc_dftd4
+      .. literalinclude:: ../../assets/examples/api-minimal-4.0.0/app/main.f90
+         :language: fortran
+         :linenos:
+         :lines: 44-79
+         :emphasize-lines: 1,10,11,18,28
 
 
 Complete Example
@@ -184,114 +161,33 @@ Complete Example
 
 A minimal program using the snippets from above could look like this:
 
-.. code-block:: fortran
+.. tab-set::
 
-   program demo
-      use, intrinsic :: iso_fortran_env, only : error_unit
-      use mctc_env, only : wp, error_type, fatal_error
-      use mctc_io, only : new, structure_type
-      use dftd4, only : damping_param, get_rational_damping, get_dispersion
-      use dftd4_cutoff, only : realspace_cutoff
-      use dftd4_model, only : dispersion_model, new_dispersion_model
-      use dftd4_utils, only : lowercase
-      implicit none
-   
-      !> Error handling
-      type(error_type), allocatable :: error
-   
-      type(structure_type) :: mol
-      real(wp) :: energy
-      real(wp), allocatable :: gradient(:, :), sigma(:, :)
-   
-      call ch4(mol)      
-      allocate(gradient(3, mol%nat), sigma(3, 3))
-   
-      call calc_dftd4(error, mol, "pbe", energy, gradient=gradient, sigma=sigma)
-   
-      if (allocated(error)) then
-         write(error_unit, '("[Error]:", 1x, a)') error%message
-         error stop
-      end if
-   
-      write (*,'(a,f18.12)') "D4 dispersion energy (Hartree): ", energy
-   
-   
-   contains
-   
-   
-   subroutine ch4(mol)
+   .. tab-item:: ≤ 3.7.0
 
-      !> Molecular structure data
-      type(structure_type), intent(out) :: mol
-   
-      real(wp), allocatable :: xyz(:, :)
-      integer, allocatable :: num(:)
-   
-      num = [6, 1, 1, 1, 1]
-      xyz = reshape([ &
-        &  0.00000000000000_wp, -0.00000000000000_wp,  0.00000000000000_wp, &
-        & -1.19220800552211_wp,  1.19220800552211_wp,  1.19220800552211_wp, &
-        &  1.19220800552211_wp, -1.19220800552211_wp,  1.19220800552211_wp, &
-        & -1.19220800552211_wp, -1.19220800552211_wp, -1.19220800552211_wp, &
-        &  1.19220800552211_wp,  1.19220800552211_wp, -1.19220800552211_wp],&
-        & [3, size(num)])
-   
-      call new(mol, num, xyz, charge=0.0_wp, uhf=0)
-   
-   end subroutine ch4
-   
-   
-   subroutine calc_dftd4(error, mol, method, energy, model, gradient, sigma)
-   
-      !> Error handling
-      type(error_type), allocatable, intent(out) :: error
-   
-      !> Molecular structure data
-      type(structure_type), intent(in) :: mol
-      
-      !> Method name for which parameters should be used
-      character(len=*), intent(in) :: method
-      
-      !> Dispersion energy
-      real(wp), intent(out) :: energy
-   
-      !> Dispersion model (D4 or D4S)
-      character(len=*), intent(in), optional :: model
-   
-      !> Dispersion gradient
-      real(wp), intent(out), contiguous, optional :: gradient(:, :)
-      
-      !> Dispersion virial
-      real(wp), intent(out), contiguous, optional :: sigma(:, :)
-   
-      class(damping_param), allocatable :: param
-      class(dispersion_model), allocatable :: disp
-   
-      ! Get D4 damping parameters for given method
-      call get_rational_damping(method, param, s9=1.0_wp)
-      if (.not.allocated(param)) then
-         call fatal_error(error, "No parameters for '"//method//"' available")
-         return
-      end if
-   
-      ! Initialize D4/D4S model
-      call new_dispersion_model(error, disp, mol, model)
-      if (allocated(error)) return
-      
-      call get_dispersion(mol, disp, param, realspace_cutoff(), energy, &
-         & gradient, sigma)
-   
-   end subroutine calc_dftd4
-   
-   end program demo
+      .. literalinclude:: ../../assets/examples/api-minimal-3.7.0/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :linenos:
+
+   .. tab-item:: 4.0.0 and later
+
+      .. literalinclude:: ../../assets/examples/api-minimal-4.0.0/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :linenos:
+         :emphasize-lines: 7,33,34,45,54,55,62,72
 
 
-The program can be compiled using the following minimal `fpm.toml`.
+The program can be compiled using the following minimal ``fpm.toml``.
 
 .. code-block:: toml
 
-   name = "d4-demo"
-   
+   name = "api-demo-3_7_0"
+
    [dependencies]
    dftd4.git = "https://github.com/dftd4/dftd4"
-   dftd4.tag = "HEAD"
+   dftd4.tag = "v3.7.0"
+   multicharge.git = "https://github.com/grimme-lab/multicharge.git"
+   multicharge.tag = "v0.3.0"
+
