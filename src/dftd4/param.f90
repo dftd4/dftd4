@@ -247,8 +247,14 @@ end subroutine get_functionals
 !> Retrieve rational damping parameters from functional name
 subroutine get_rational_damping_name(functional, param, s9)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping_name
+
+   !> Functional name for which to retrieve the damping parameters
    character(len=*), intent(in) :: functional
+
+   !> Damping parameters for the functional
    class(damping_param), allocatable, intent(out) :: param
+
+   !> Scaling factor for the three-body term
    real(wp), intent(in), optional :: s9
 
    character(len=:), allocatable :: fname
@@ -268,9 +274,16 @@ end subroutine get_rational_damping_name
 !> Retrieve rational damping parameters from functional ID
 subroutine get_rational_damping_id(id, param, s9)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_rational_damping_id
+
+   !> Functional ID for which to retrieve the damping parameters
    integer, intent(in) :: id
+
+   !> Damping parameters for the functional
    class(damping_param), allocatable, intent(out) :: param
+
+   !> Scaling factor for the three-body term
    real(wp), intent(in), optional :: s9
+
    logical :: mbd
 
    mbd = .true.

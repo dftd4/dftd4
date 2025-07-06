@@ -19,16 +19,16 @@ module dftd4_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type, read_structure, filetype
-   use dftd4, only : get_dispersion, dispersion_model, &
-      & d4_model, new_d4_model, d4s_model, new_d4s_model, realspace_cutoff, &
+   use dftd4, only : get_dispersion, realspace_cutoff, &
       & damping_param, rational_damping_param, get_rational_damping, &
       & get_properties, get_pairwise_dispersion, get_dispersion_hessian
    use dftd4_output
-   use dftd4_utils
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
+   use dftd4_model, only : dispersion_model, new_dispersion_model
    use dftd4_param, only : functional_group, get_functionals, &
-      get_functional_id, p_r2scan_3c
+      & get_functional_id, p_r2scan_3c
+   use dftd4_utils, only : lowercase, wrap_to_central_cell
    implicit none
    private
 
@@ -71,8 +71,8 @@ subroutine run_main(config, error)
    character(len=:), allocatable :: functional
    class(damping_param), allocatable :: param
    class(dispersion_model), allocatable :: d4
-   real(wp) :: charge
-   real(wp), allocatable :: energy, gradient(:, :), sigma(:, :), hessian(:, :, :, :)
+   real(wp) :: energy, charge
+   real(wp), allocatable :: gradient(:, :), sigma(:, :), hessian(:, :, :, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    real(wp), allocatable :: s9
@@ -163,23 +163,9 @@ subroutine run_main(config, error)
       end if
    end if
 
-   if(lowercase(config%model) == "d4") then
-      block 
-         type(d4_model), allocatable :: tmp
-         allocate(tmp)
-         call new_d4_model(error, tmp, mol, ga=ga, gc=gc, wf=config%wf)
-         call move_alloc(tmp, d4)
-      end block 
-   else if(lowercase(config%model) == "d4s") then
-      block 
-         type(d4s_model), allocatable :: tmp
-         allocate(tmp)
-         call new_d4s_model(error, tmp, mol, ga=ga, gc=gc)
-         call move_alloc(tmp, d4)
-      end block
-   else
-      call fatal_error(error, "Unknown model selected")
-   end if
+   ! Initialize D4/D4S model
+   call new_dispersion_model(error, d4, mol, config%model, ga=ga, &
+      & gc=gc, wf=config%wf)
    if (allocated(error)) return
 
    if (config%properties) then
