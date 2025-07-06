@@ -136,6 +136,7 @@ jobs:
           echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
           echo "LDFLAGS=-L/opt/homebrew/opt/openblas/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I/opt/homebrew/opt/openblas/include" >> $GITHUB_ENV
+
           brew install libffi
           export LDFLAGS="-L$(brew --prefix libffi)/lib"
           export CPPFLAGS="-I$(brew --prefix libffi)/include"
@@ -146,10 +147,14 @@ jobs:
         if: ${{ contains(matrix.os, 'macos-13') && matrix.compiler == 'gnu' }}
         run: |
           brew install gcc@$GCC_V openblas
-          ln -s /usr/local/bin/gfortran-${GCC_V} /usr/local/bin/gfortran
-          ln -s /usr/local/bin/gcc-${GCC_V} /usr/local/bin/gcc
-          ln -s /usr/local/bin/g++-${GCC_V} /usr/local/bin/g++
-          echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
+
+          ln -sf "$(brew --prefix gcc@${GCC_V})/bin/gfortran-${GCC_V}" /usr/local/bin/gfortran
+          ln -sf "$(brew --prefix gcc@${GCC_V})/bin/gcc-${GCC_V}" /usr/local/bin/gcc
+          ln -sf "$(brew --prefix gcc@${GCC_V})/bin/g++-${GCC_V}" /usr/local/bin/g++
+
+          echo "PKG_CONFIG_PATH=$(brew --prefix openblas)/lib/pkgconfig" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(brew --prefix openblas)/lib"                 >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$(brew --prefix openblas)/include"            >> $GITHUB_ENV
         env:
           GCC_V: ${{ env.GCC_V }}
 
