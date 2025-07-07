@@ -21,11 +21,11 @@ module dftd4_driver
    use mctc_io, only : structure_type, read_structure, filetype
    use dftd4, only : get_dispersion, realspace_cutoff, &
       & damping_param, rational_damping_param, get_rational_damping, &
-      & get_properties, get_pairwise_dispersion, get_dispersion_hessian
+      & get_properties, get_pairwise_dispersion, get_dispersion_hessian, &
+      & dispersion_model, new_dispersion_model
    use dftd4_output
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
-   use dftd4_model, only : dispersion_model, new_dispersion_model
    use dftd4_param, only : functional_group, get_functionals, &
       & get_functional_id, p_r2scan_3c
    use dftd4_utils, only : lowercase, wrap_to_central_cell

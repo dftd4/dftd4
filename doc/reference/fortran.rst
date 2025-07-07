@@ -140,7 +140,7 @@ An example for performing a calculation with DFT-D4 is shown below.
          :linenos:
          :lines: 44-75
 
-   .. tab-item:: 4.0.0 and later
+   .. tab-item:: latest
 
       .. literalinclude:: ../../assets/examples/api-minimal-4.0.0/app/main.f90
          :language: fortran
@@ -149,7 +149,7 @@ An example for performing a calculation with DFT-D4 is shown below.
          :dedent: 3
          :emphasize-lines: 5
 
-      .. literalinclude:: ../../assets/examples/api-minimal-4.0.0/app/main.f90
+      .. literalinclude:: ../../assets/examples/api-minimal-latest/app/main.f90
          :language: fortran
          :linenos:
          :lines: 44-79
@@ -170,9 +170,9 @@ A minimal program using the snippets from above could look like this:
          :caption: app/main.f90
          :linenos:
 
-   .. tab-item:: 4.0.0 and later
+   .. tab-item:: latest
 
-      .. literalinclude:: ../../assets/examples/api-minimal-4.0.0/app/main.f90
+      .. literalinclude:: ../../assets/examples/api-minimal-latest/app/main.f90
          :language: fortran
          :caption: app/main.f90
          :linenos:
@@ -190,4 +190,3 @@ The program can be compiled using the following minimal ``fpm.toml``.
    dftd4.tag = "v3.7.0"
    multicharge.git = "https://github.com/grimme-lab/multicharge.git"
    multicharge.tag = "v0.3.0"
-
