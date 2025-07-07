@@ -65,6 +65,6 @@ jobs:
       - name: Check fpm version
         run: fpm --version
 
-      - name: Run examples (tests)
+      - name: Run examples
         working-directory: assets/examples/${{ matrix.example }}
         run: fpm run

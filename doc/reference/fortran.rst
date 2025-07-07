@@ -142,7 +142,7 @@ An example for performing a calculation with DFT-D4 is shown below.
 
    .. tab-item:: latest
 
-      .. literalinclude:: ../../assets/examples/api-minimal-4.0.0/app/main.f90
+      .. literalinclude:: ../../assets/examples/api-minimal-latest/app/main.f90
          :language: fortran
          :caption: app/main.f90
          :lines: 3-7
@@ -190,3 +190,5 @@ The program can be compiled using the following minimal ``fpm.toml``.
    dftd4.tag = "v3.7.0"
    multicharge.git = "https://github.com/grimme-lab/multicharge.git"
    multicharge.tag = "v0.3.0"
+
+The examples can also be found in the `assets/examples <https://github.com/dftd4/dftd4/tree/main/assets/examples>`_ directory of the repository.
