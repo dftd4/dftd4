@@ -183,7 +183,7 @@ The program can be compiled using the following minimal ``fpm.toml``.
 
 .. code-block:: toml
 
-   name = "api-demo-3_7_0"
+   name = "api-minimal-3_7_0"
 
    [dependencies]
    dftd4.git = "https://github.com/dftd4/dftd4"
