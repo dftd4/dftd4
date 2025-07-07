@@ -1,0 +1,70 @@
+name: Examples
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "doc*/**"
+      - "./*.ya?ml"
+      - "**/*.adoc"
+      - "**/*.md"
+      - "**/*.rst"
+
+  pull_request:
+    paths-ignore:
+      - "doc*/**"
+      - "./*.ya?ml"
+      - "**/*.adoc"
+      - "**/*.md"
+      - "**/*.rst"
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gnu]
+        version: [10]
+        example:
+          - api-minimal-3.7.0
+          - api-minimal-latest
+
+    env:
+      FC: gfortran
+      CC: gcc
+      GCC_V: ${{ matrix.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install GCC and gfortran
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-${GCC_V} gfortran-${GCC_V}
+          sudo update-alternatives \
+            --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
+            --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
+            --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
+          sudo apt-get install -y liblapack-dev
+        env:
+          GCC_V: ${{ env.GCC_V }}
+
+      - name: Setup fpm
+        uses: fortran-lang/setup-fpm@v7  # fpm 0.11.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check fpm version
+        run: fpm --version
+
+      - name: Run examples
+        working-directory: assets/examples/${{ matrix.example }}
+        run: fpm run

@@ -57,6 +57,5 @@ Depending on how you built DFT-D4, DFT-D4's dependencies not might be properly r
    CPP_OPTIONS += -DDFTD4
    LLIBS       += $(shell pkg-config --libs dftd4) -lmulticharge -lmctc-lib -lmstore
    INCS        += $(shell pkg-config --cflags dftd4)
-```
 
 If you still run into issues, check out `VASP-related issues <https://github.com/dftd4/dftd4/issues?q=label%3Avasp%20>`_ on the ``dftd4`` issue tracker.

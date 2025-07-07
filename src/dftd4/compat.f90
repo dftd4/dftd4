@@ -14,8 +14,8 @@
 ! You should have received a copy of the Lesser GNU General Public License
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-!> This is a compatibility module for dftd4 2.5.0 reproducing enough of the old API
-!> to compile the interface with Vasp.
+!> This is a compatibility module for dftd4 2.5.0 reproducing enough of the old 
+!> API to compile the interface with Vasp.
 module dftd4_compat
    use mctc_env, only : wp
    use mctc_io_math, only : matdet_3x3, matinv_3x3

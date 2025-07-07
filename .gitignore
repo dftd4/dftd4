@@ -32,9 +32,10 @@
 *.app
 
 # Build directories
-/build*/
-/install*/
+**/*build*/
+**/install*/
 /_*/
+
 
 # Python files
 __pycache__

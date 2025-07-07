@@ -118,3 +118,77 @@ The basic error handler is an allocatable derived type, available from ``mctc_en
    end
 
 An unhandled error might get dropped by the next procedure call.
+
+
+Performing calculations
+-----------------------
+
+An example for performing a calculation with DFT-D4 is shown below.
+
+.. tab-set::
+
+   .. tab-item:: ≤ 3.7.0
+
+      .. literalinclude:: ../../assets/examples/api-minimal-3.7.0/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :lines: 3-7
+         :dedent: 3
+
+      .. literalinclude:: ../../assets/examples/api-minimal-3.7.0/app/main.f90
+         :language: fortran
+         :linenos:
+         :lines: 44-75
+
+   .. tab-item:: latest
+
+      .. literalinclude:: ../../assets/examples/api-minimal-latest/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :lines: 3-7
+         :dedent: 3
+         :emphasize-lines: 5
+
+      .. literalinclude:: ../../assets/examples/api-minimal-latest/app/main.f90
+         :language: fortran
+         :linenos:
+         :lines: 44-79
+         :emphasize-lines: 1,10,11,18,28
+
+
+Complete Example
+----------------
+
+A minimal program using the snippets from above could look like this:
+
+.. tab-set::
+
+   .. tab-item:: ≤ 3.7.0
+
+      .. literalinclude:: ../../assets/examples/api-minimal-3.7.0/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :linenos:
+
+   .. tab-item:: latest
+
+      .. literalinclude:: ../../assets/examples/api-minimal-latest/app/main.f90
+         :language: fortran
+         :caption: app/main.f90
+         :linenos:
+         :emphasize-lines: 7,33,34,45,54,55,62,72
+
+
+The program can be compiled using the following minimal ``fpm.toml``.
+
+.. code-block:: toml
+
+   name = "api-minimal-3_7_0"
+
+   [dependencies]
+   dftd4.git = "https://github.com/dftd4/dftd4"
+   dftd4.tag = "v3.7.0"
+   multicharge.git = "https://github.com/grimme-lab/multicharge.git"
+   multicharge.tag = "v0.3.0"
+
+The examples can also be found in the `assets/examples <https://github.com/dftd4/dftd4/tree/main/assets/examples>`_ directory of the repository.

@@ -24,7 +24,7 @@ module test_model
    use dftd4_charge, only : get_charges
    use dftd4_cutoff, only : get_lattice_points
    use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : dispersion_model, d4_ref
+   use dftd4_model, only : dispersion_model, new_dispersion_model, d4_ref
    use dftd4_model_d4, only : d4_model, new_d4_model
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    implicit none
@@ -64,7 +64,9 @@ subroutine collect_model(testsuite)
       & new_unittest("dpol-D4-mb10", test_dpol_d4_mb10), &
       & new_unittest("dpol-D4S-mb10", test_dpol_d4s_mb10), &
       & new_unittest("model-D4-error", test_d4_model_error, should_fail=.true.), &
-      & new_unittest("model-D4S-error", test_d4s_model_error, should_fail=.true.) &
+      & new_unittest("model-D4S-error", test_d4s_model_error, should_fail=.true.), &
+      & new_unittest("model-wrapper", test_model_wrapper), &
+      & new_unittest("model-wrapper-fail", test_model_wrapper_fail, should_fail=.true.) &
       & ]
 
 end subroutine collect_model
@@ -1359,5 +1361,82 @@ subroutine test_d4s_model_error(error)
    call new_d4s_model(error, d4s, mol)
   
 end subroutine test_d4s_model_error
+
+subroutine test_model_wrapper(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   class(dispersion_model), allocatable :: disp
+
+   integer, parameter :: nat = 2
+   character(len=*), parameter :: sym(nat) = [character(len=4) :: "H", "H"]
+   real(wp), parameter :: xyz(3, nat) = reshape([&
+      & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp],&
+      & [3, nat])
+
+   call new(mol, sym, xyz)
+
+   call new_dispersion_model(error, disp, mol, "d4")
+   if (allocated(error)) then
+      call test_failed(error, "D4 model could not be created")
+      return
+   end if
+
+   ! check if the model is of type d4_model
+   select type (disp)
+      type is (d4_model)
+      class default
+         call test_failed(error, "Expected d4_model but got something else")
+         return
+   end select
+
+   deallocate(disp)
+   call new_dispersion_model(error, disp, mol, "D4S")
+   if (allocated(error)) then
+      call test_failed(error, "D4S model could not be created")
+      return
+   end if
+
+   ! check if the model is of type d4s_model
+   select type (disp)
+      type is (d4s_model)
+      class default
+         call test_failed(error, "Expected d4s_model but got something else")
+         return
+   end select
+
+end subroutine test_model_wrapper
+
+subroutine test_model_wrapper_fail(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   class(dispersion_model), allocatable :: disp
+
+   integer, parameter :: nat = 2
+   character(len=*), parameter :: sym(nat) = [character(len=4) :: "H", "H"]
+   real(wp), parameter :: xyz(3, nat) = reshape([&
+      & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp],&
+      & [3, nat])
+
+   call new(mol, sym, xyz)
+
+   call new_dispersion_model(error, disp, mol, "wrong")
+
+   if (.not. allocated(error)) then
+      call test_failed(error, "Expected an error for key 'wrong'")
+      return
+   end if
+
+   if (allocated(disp)) then
+      call test_failed(error, "Model should not be allocated with invalid key")
+      return
+   end if
+
+end subroutine test_model_wrapper_fail
 
 end module test_model
