@@ -289,7 +289,7 @@ subroutine test_pol_gen(error, mol, d4, ref, with_cn, with_q, qat)
 
    call d4%weight_references(mol, cn, q, gwvec)
 
-   call d4%get_polarizibilities(mol, gwvec, alpha=alpha)
+   call d4%get_polarizabilities(mol, gwvec, alpha=alpha)
 
    if (any(abs(alpha - ref) > thr2)) then
       call test_failed(error, "Polarizabilities do not match")
@@ -356,10 +356,10 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
       do iat = 1, mol%nat
          cn(iat) = cn(iat) + step
          call d4%weight_references(mol, cn, q, gwvec)
-         call d4%get_polarizibilities(mol, gwvec, alpha=alphar)
+         call d4%get_polarizabilities(mol, gwvec, alpha=alphar)
          cn(iat) = cn(iat) - 2*step
          call d4%weight_references(mol, cn, q, gwvec)
-         call d4%get_polarizibilities(mol, gwvec, alpha=alphal)
+         call d4%get_polarizabilities(mol, gwvec, alpha=alphal)
          cn(iat) = cn(iat) + step
          numdcn(iat) = 0.5_wp*(alphar(iat) - alphal(iat))/step
       end do
@@ -369,17 +369,17 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
       do iat = 1, mol%nat
          q(iat) = q(iat) + step
          call d4%weight_references(mol, cn, q, gwvec)
-         call d4%get_polarizibilities(mol, gwvec, alpha=alphar)
+         call d4%get_polarizabilities(mol, gwvec, alpha=alphar)
          q(iat) = q(iat) - 2*step
          call d4%weight_references(mol, cn, q, gwvec)
-         call d4%get_polarizibilities(mol, gwvec, alpha=alphal)
+         call d4%get_polarizabilities(mol, gwvec, alpha=alphal)
          q(iat) = q(iat) + step
          numdq(iat) = 0.5_wp*(alphar(iat) - alphal(iat))/step
       end do
    end if
 
    call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
-   call d4%get_polarizibilities(mol, gwvec, gwdcn=gwdcn, gwdq=gwdq, &
+   call d4%get_polarizabilities(mol, gwvec, gwdcn=gwdcn, gwdq=gwdq, &
       & alpha=alpha, dadcn=alphadcn, dadq=alphadq)
 
 

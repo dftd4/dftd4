@@ -625,7 +625,7 @@ def test_properties() -> None:
 
     assert approx(res.get("coordination numbers"), abs=thr) == cn
     assert approx(res.get("partial charges"), abs=thr) == charges
-    assert approx(res.get("polarizibilities"), abs=thr) == alpha
+    assert approx(res.get("polarizabilities"), abs=thr) == alpha
 
 
 def test_error_model() -> None:

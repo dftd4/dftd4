@@ -255,7 +255,7 @@ class DispersionModel(Structure):
     ...     ]),
     ...     numbers = np.array([8, 1, 1]),
     ... )
-    >>> disp.get_properties()["polarizibilities"]
+    >>> disp.get_properties()["polarizabilities"]
     array([6.74893641, 1.33914933, 1.33914933])
 
     Raises
@@ -370,9 +370,9 @@ class DispersionModel(Structure):
 
     def get_properties(self) -> dict:
         """
-        Evaluate dispersion related properties, like polarizibilities and C6 coefficients.
+        Evaluate dispersion related properties, like polarizabilities and C6 coefficients.
         Will also return the coordination numbers and partial charges used to derive
-        the polarizibilities. Only the static polarizibility is return at the moment.
+        the polarizabilities. Only the static polarizibility is return at the moment.
 
         Example
         -------
@@ -395,7 +395,7 @@ class DispersionModel(Structure):
         >>> res.get("coordination numbers")
         array([1.96273847, 1.96273847, 1.96273847, 1.96273847, 1.96273847,
                1.96273847, 1.96273847, 1.96273847])
-        >>> res.get("polarizibilities").sum()
+        >>> res.get("polarizabilities").sum()
         158.748605606818
         """
 
@@ -417,7 +417,7 @@ class DispersionModel(Structure):
             "coordination numbers": _cn,
             "partial charges": _charges,
             "c6 coefficients": _c6,
-            "polarizibilities": _alpha,
+            "polarizabilities": _alpha,
         }
 
     def get_pairwise_dispersion(self, param: DampingParam) -> dict:

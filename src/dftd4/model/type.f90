@@ -63,7 +63,7 @@ module dftd4_model_type
       !> Reference partial charges
       real(wp), allocatable :: q(:, :)
 
-      !> Reference dynamic polarizibilities
+      !> Reference dynamic polarizabilities
       real(wp), allocatable :: aiw(:, :, :)
 
       !> Reference C6 coefficients
@@ -77,8 +77,8 @@ module dftd4_model_type
       !> Evaluate C6 coefficient
       procedure(get_atomic_c6), deferred :: get_atomic_c6
 
-      !> Evaluate atomic polarizibilities
-      procedure(get_polarizibilities), deferred :: get_polarizibilities
+      !> Evaluate atomic polarizabilities
+      procedure(get_polarizabilities), deferred :: get_polarizabilities
 
    end type dispersion_model
 
@@ -126,9 +126,9 @@ module dftd4_model_type
          real(wp), intent(out), optional :: dc6dq(:, :)
       end subroutine get_atomic_c6
 
-      !> Calculate atomic polarizibilities and their derivatives w.r.t.
+      !> Calculate atomic polarizabilities and their derivatives w.r.t.
       !> the coordination numbers and atomic partial charges.
-      subroutine get_polarizibilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dadq)
+      subroutine get_polarizabilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dadq)
          import dispersion_model, structure_type, wp
          !> Instance of the dispersion model
          class(dispersion_model), intent(in) :: self
@@ -140,7 +140,7 @@ module dftd4_model_type
          real(wp), intent(in), optional :: gwdcn(:, :, :)
          !> Derivative of the weighting function w.r.t. the partial charge
          real(wp), intent(in), optional :: gwdq(:, :, :)
-         !> Static polarizibilities for all atoms.
+         !> Static polarizabilities for all atoms.
          real(wp), intent(out) :: alpha(:)
          !> Derivative of the polarizibility w.r.t. the coordination number
          real(wp), intent(out), optional :: dadcn(:)

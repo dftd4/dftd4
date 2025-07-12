@@ -138,7 +138,7 @@ subroutine ascii_system_properties(unit, mol, disp, cn, q, c6, alpha)
    !> Atomic dispersion coefficients
    real(wp), intent(in) :: c6(:, :)
 
-   !> Atomic static polarizibilities
+   !> Atomic static polarizabilities
    real(wp), intent(in) :: alpha(:)
 
    integer :: iat, isp, jat
@@ -594,7 +594,7 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, hessian, &
    if (present(alpha)) then
       write(unit, '(",")', advance='no')
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'polarizibilities'
+      write(unit, jsonkey, advance='no') 'polarizabilities'
       call write_json_array(unit, alpha, indent)
    end if
    if (present(pairwise_energy2)) then

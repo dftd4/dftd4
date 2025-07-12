@@ -145,7 +145,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    !> C6 coefficients
    real(wp), intent(out) :: c6(:, :)
 
-   !> Static polarizibilities
+   !> Static polarizabilities
    real(wp), intent(out) :: alpha(:)
 
    integer :: mref
@@ -162,7 +162,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    call disp%weight_references(mol, cn, q, gwvec)
 
    call disp%get_atomic_c6(mol, gwvec, c6=c6)
-   call disp%get_polarizibilities(mol, gwvec, alpha=alpha)
+   call disp%get_polarizabilities(mol, gwvec, alpha=alpha)
 
 end subroutine get_properties
 
