@@ -206,7 +206,7 @@ To evaluate dispersion energies or related properties the `dftd4_get_dispersion`
    :param cn: Coordination number for all atoms [natoms]
    :param charges: Partial charges for all atoms [natoms]
    :param c6: C6 coefficients for all atom pairs [natoms, natoms]
-   :param alpha: Static polarizibilities for all atoms [natoms]
+   :param alpha: Static polarizabilities for all atoms [natoms]
 
    Evaluate properties related to the dispersion model
 

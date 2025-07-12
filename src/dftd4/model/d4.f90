@@ -46,8 +46,8 @@ module dftd4_model_d4
       !> Evaluate C6 coefficient
       procedure :: get_atomic_c6
 
-      !> Evaluate atomic polarizibilities
-      procedure :: get_polarizibilities
+      !> Evaluate atomic polarizabilities
+      procedure :: get_polarizabilities
 
    end type d4_model
 
@@ -582,10 +582,10 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
 end subroutine get_atomic_c6
 
 
-!> Calculate atomic polarizibilities and their derivatives w.r.t.
+!> Calculate atomic polarizabilities and their derivatives w.r.t.
 !> the coordination numbers and atomic partial charges.
-subroutine get_polarizibilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dadq)
-   !DEC$ ATTRIBUTES DLLEXPORT :: get_polarizibilities
+subroutine get_polarizabilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dadq)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_polarizabilities
 
    !> Instance of the dispersion model
    class(d4_model), intent(in) :: self
@@ -602,7 +602,7 @@ subroutine get_polarizibilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dad
    !> Derivative of the weighting function w.r.t. the partial charge
    real(wp), intent(in), optional :: gwdq(:, :, :)
 
-   !> Static polarizibilities for all atoms.
+   !> Static polarizabilities for all atoms.
    real(wp), intent(out) :: alpha(:)
 
    !> Derivative of the polarizibility w.r.t. the coordination number
@@ -655,7 +655,7 @@ subroutine get_polarizibilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dad
       end do
    end if
 
-end subroutine get_polarizibilities
+end subroutine get_polarizabilities
 
 
 end module dftd4_model_d4
