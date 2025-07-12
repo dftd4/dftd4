@@ -177,7 +177,7 @@ subroutine run_main(config, error)
       call get_properties(mol, d4, realspace_cutoff(), cn, q, c6, alpha)
 
       if (config%verbosity > 0) then
-         call ascii_system_properties(output_unit, mol, d4, cn, q, c6)
+         call ascii_system_properties(output_unit, mol, d4, cn, q, c6, alpha)
       end if
    end if
 

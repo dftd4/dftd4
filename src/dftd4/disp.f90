@@ -140,7 +140,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    real(wp), intent(out) :: cn(:)
 
    !> Atomic partial charges
-   real(wp), intent(out) :: q(:)
+   real(wp), intent(out), contiguous :: q(:)
 
    !> C6 coefficients
    real(wp), intent(out) :: c6(:, :)
