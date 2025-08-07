@@ -17,7 +17,7 @@
 module test_model
    use dftd4_cutoff, only : get_lattice_points
    use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : dispersion_model, new_dispersion_model, d4_ref
+   use dftd4_model, only : dispersion_model, new_dispersion_model, d4_qmod
    use dftd4_model_d4, only : d4_model, new_d4_model
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use mctc_env, only : wp
@@ -991,7 +991,7 @@ subroutine test_gw_d4_eeqbc_mb02(error)
       & [5, 16, 1])
 
    call get_structure(mol, "MB16-43", "02")
-   call new_d4_model(error, d4, mol, ref=d4_ref%eeqbc)
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%eeqbc)
    if (allocated(error)) then 
       call test_failed(error, "D4 model could not be created")
       return
@@ -1144,7 +1144,7 @@ subroutine test_dgw_d4s_eeqbc_mb05(error)
    type(d4s_model) :: d4s
 
    call get_structure(mol, "MB16-43", "05")
-   call new_d4s_model(error, d4s, mol, ref=d4_ref%eeqbc)
+   call new_d4s_model(error, d4s, mol, qmod=d4_qmod%eeqbc)
    if (allocated(error)) then 
       call test_failed(error, "D4S model could not be created")
       return
@@ -1248,7 +1248,7 @@ subroutine test_gw_d4_mb07(error)
    type(d4_model) :: d4
 
    call get_structure(mol, "MB16-43", "06")
-   call new_d4_model(error, d4, mol, ref=d4_ref%gfn2)
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%gfn2)
    if (allocated(error)) then 
       call test_failed(error, "D4 model could not be created")
       return
@@ -1275,7 +1275,7 @@ subroutine test_dgw_d4_mb08(error)
    type(d4_model) :: d4
 
    call get_structure(mol, "MB16-43", "08")
-   call new_d4_model(error, d4, mol, ref=d4_ref%gfn2)
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%gfn2)
    if (allocated(error)) then 
       call test_failed(error, "D4 model could not be created")
       return
@@ -1301,7 +1301,7 @@ subroutine test_dgw_d4s_mb08(error)
    type(d4s_model) :: d4s
 
    call get_structure(mol, "MB16-43", "08")
-   call new_d4s_model(error, d4s, mol, ref=d4_ref%gfn2)
+   call new_d4s_model(error, d4s, mol, qmod=d4_qmod%gfn2)
    if (allocated(error)) then 
       call test_failed(error, "D4S model could not be created")
       return

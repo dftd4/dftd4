@@ -22,7 +22,7 @@ module dftd4_driver
    use dftd4, only : get_dispersion, realspace_cutoff, &
       & damping_param, rational_damping_param, get_rational_damping, &
       & get_properties, get_pairwise_dispersion, get_dispersion_hessian, &
-      & dispersion_model, new_dispersion_model, d4_ref
+      & dispersion_model, new_dispersion_model, d4_qmod
    use dftd4_output
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
@@ -165,9 +165,9 @@ subroutine run_main(config, error)
 
    if(allocated(config%charge_model)) then
       if(lowercase(config%charge_model) == "eeq") then
-         charge_model = d4_ref%eeq
+         charge_model = d4_qmod%eeq
       else if(lowercase(config%charge_model) == "eeqbc") then
-         charge_model = d4_ref%eeqbc
+         charge_model = d4_qmod%eeqbc
       else
          ! Unknown charge model or GFN2 are not supported 
          ! for non-self-consistent D4
@@ -176,12 +176,12 @@ subroutine run_main(config, error)
       end if
    else
       ! Use EEQ as default charge model
-      charge_model = d4_ref%eeq
+      charge_model = d4_qmod%eeq
    end if
 
    ! Initialize D4/D4S model
    call new_dispersion_model(error, d4, mol, config%model, ga=ga, &
-      & gc=gc, wf=config%wf, ref=charge_model)
+      & gc=gc, wf=config%wf, qmod=charge_model)
 
    if (allocated(error)) return
 

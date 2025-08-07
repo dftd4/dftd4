@@ -18,7 +18,7 @@
 module dftd4_model_d4
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
    use ieee_arithmetic, only : ieee_is_nan
-   use dftd4_model_type, only : dispersion_model, d4_ref
+   use dftd4_model_type, only : dispersion_model, d4_qmod
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_effective_charge, &
       get_electronegativity, get_hardness
    use dftd4_reference
@@ -26,7 +26,7 @@ module dftd4_model_d4
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
-   use multicharge, only : new_eeq2019_model, new_eeqbc2024_model
+   use multicharge, only : new_eeq2019_model, new_eeqbc2025_model
    implicit none
    private
 
@@ -72,7 +72,7 @@ contains
 
 
 !> Create new D4 dispersion model from molecular structure input
-subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
+subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, qmod)
    !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_with_checks
 
    !> Instance of the dispersion model
@@ -93,11 +93,11 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
    !> Weighting factor for coordination number interpolation
    real(wp), intent(in), optional :: wf
 
-   !> Reference charge selection
-   integer, intent(in), optional :: ref
+   !> Charge model selection
+   integer, intent(in), optional :: qmod
 
    integer :: isp, izp, iref, jsp, jzp, jref
-   integer :: mref, ref_charge
+   integer :: mref, tmp_qmod
    real(wp) :: aiw(23), c6
    real(wp), parameter :: thopi = 3.0_wp/pi
 
@@ -110,12 +110,6 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
    end do
 
    d4%ncoup = 1
-
-   if (present(ref)) then
-      ref_charge = ref
-   else
-      ref_charge = d4_ref%eeq
-   end if
 
    if (present(ga)) then
       d4%ga = ga
@@ -178,13 +172,19 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
       call set_refcn(d4%cn(:, isp), izp)
    end do
 
+   if (present(qmod)) then
+      tmp_qmod = qmod
+   else
+      tmp_qmod = d4_qmod%eeq
+   end if
+
    allocate(d4%q(mref, mol%nid))
    allocate(d4%aiw(23, mref, mol%nid))
-   select case(ref_charge)
+   select case(tmp_qmod)
    case default
-      call fatal_error(error, "Unsupported option for reference charges")
+      call fatal_error(error, "Unsupported option for charge model.")
       return
-   case(d4_ref%eeq)
+   case(d4_qmod%eeq)
       do isp = 1, mol%nid
          izp = mol%num(isp)
          call set_refq_eeq(d4%q(:, isp), izp)
@@ -193,16 +193,16 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, ref)
       ! Setup EEQ model
       call new_eeq2019_model(mol, d4%mchrg_model, error)
       if(allocated(error)) return
-   case(d4_ref%eeqbc)
+   case(d4_qmod%eeqbc)
       do isp = 1, mol%nid
          izp = mol%num(isp)
          call set_refq_eeqbc(d4%q(:, isp), izp)
          call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQBC model
-      call new_eeqbc2024_model(mol, d4%mchrg_model, error)  
+      call new_eeqbc2025_model(mol, d4%mchrg_model, error)  
       if(allocated(error)) return
-   case(d4_ref%gfn2)
+   case(d4_qmod%gfn2)
       do isp = 1, mol%nid
          izp = mol%num(isp)
          call set_refq_gfn2(d4%q(:, isp), izp)
@@ -236,7 +236,7 @@ end subroutine new_d4_model_with_checks
 
 !> Create new dispersion model from molecular structure input without
 !> checking for supported elements (old/compatibility version)
-subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
+subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, qmod)
    !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_no_checks
 
    !> Instance of the dispersion model
@@ -254,22 +254,16 @@ subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
    !> Weighting factor for coordination number interpolation
    real(wp), intent(in), optional :: wf
 
-   !> Reference charge selection
-   integer, intent(in), optional :: ref
+   !> Charge model selection
+   integer, intent(in), optional :: qmod
 
    integer :: isp, izp, iref, jsp, jzp, jref
-   integer :: mref, ref_charge
+   integer :: mref, tmp_qmod
    real(wp) :: aiw(23), c6
    real(wp), parameter :: thopi = 3.0_wp/pi
    type(error_type), allocatable :: error
 
    d4%ncoup = 1
-
-   if (present(ref)) then
-      ref_charge = ref
-   else
-      ref_charge = d4_ref%eeq
-   end if
 
    if (present(ga)) then
       d4%ga = ga
@@ -332,29 +326,35 @@ subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, ref)
       call set_refcn(d4%cn(:, isp), izp)
    end do
 
+   if (present(qmod)) then
+      tmp_qmod = qmod
+   else
+      tmp_qmod = d4_qmod%eeq
+   end if
+
    allocate(d4%q(mref, mol%nid))
    allocate(d4%aiw(23, mref, mol%nid))
-   if (ref_charge == d4_ref%gfn2) then
+   if (tmp_qmod == d4_qmod%gfn2) then
       do isp = 1, mol%nid
          izp = mol%num(isp)
          call set_refq_gfn2(d4%q(:, isp), izp)
          call set_refalpha_gfn2(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
-   else if (ref_charge == d4_ref%eeqbc) then
+   else if (tmp_qmod == d4_qmod%eeqbc) then
       do isp = 1, mol%nid
          izp = mol%num(isp)
          call set_refq_eeqbc(d4%q(:, isp), izp)
          call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQBC model
-      call new_eeqbc2024_model(mol, d4%mchrg_model, error)  
+      call new_eeqbc2025_model(mol, d4%mchrg_model, error)  
       if(allocated(error)) then
          write(error_unit, '("[Error]:", 1x, a)') error%message
          error stop
       end if
    else
-      if (ref_charge /= d4_ref%eeq) then
-         write(output_unit, '(a)') "[Info] Unsupported option for reference charge. Defaulting to EEQ charges."
+      if (tmp_qmod /= d4_qmod%eeq) then
+         write(output_unit, '(a)') "[Info] Unsupported option for charge model. Defaulting to EEQ charges."
       end if
       do isp = 1, mol%nid
          izp = mol%num(isp)

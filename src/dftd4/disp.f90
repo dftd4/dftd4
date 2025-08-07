@@ -21,7 +21,7 @@ module dftd4_disp
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_damping, only : damping_param
    use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : dispersion_model, d4_ref
+   use dftd4_model, only : dispersion_model
    use dftd4_ncoord, only : get_coordination_number, add_coordination_number_derivs
    use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type
