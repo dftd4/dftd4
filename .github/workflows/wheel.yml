@@ -1,95 +1,211 @@
 name: wheel
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "doc*/**"
+      - "./*.ya?ml"
+      - "**/*.adoc"
+      - "**/*.md"
+      - "**/*.rst"
 
-env:
-  # https://github.com/actions/checkout/issues/1809
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+  pull_request:
+    paths-ignore:
+      - "doc*/**"
+      - "./*.ya?ml"
+      - "**/*.adoc"
+      - "**/*.md"
+      - "**/*.rst"
+
+  workflow_dispatch:
+
+  release:
+    types: [published]
 
 jobs:
+  source:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install LAPACK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblapack-dev
+
+      - name: Setup Python
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: assets/ci/build-env.yaml
+
+      - run: |
+          meson setup _build
+          meson dist -C _build --no-tests --include-subprojects
+          mv _build/meson-dist/*.tar.xz .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dftd4-source
+          path: ./*.tar.xz
+          retention-days: 5
+
   sdist:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v2
-    - name: Reorganize repository
-      run: |
-        git config user.email ""
-        git config user.name "dummy"
-        git subtree add --prefix python/subprojects/dftd4 . HEAD
-        git mv {assets,python/dftd4}/parameters.toml
-        git commit -m "Python dist"
-    - run: |
-        pipx run build python/ --sdist --outdir .
-    - uses: actions/upload-artifact@v3
-      with:
-        name: dftd4-python-sdist
-        path: ./*.tar.gz
-        retention-days: 5
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-  manylinux:
+      - name: Install LAPACK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblapack-dev
+
+      - name: Setup Python
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: assets/ci/python-env.yaml
+          create-args: >-
+            meson-python
+            python-build
+
+      - name: Install LAPACK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblapack-dev
+
+      - name: Reorganize repository
+        run: |
+          git config user.email ""
+          git config user.name "dummy"
+          git subtree add --prefix python/subprojects/dftd4 . HEAD
+          git mv {assets,python/dftd4}/parameters.toml
+          git commit -m "Python dist"
+
+      - name: Build source distribution
+        run: |
+          python -m build python/ --sdist --outdir . -n
+
+      - name: Upload source distribution as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dftd4-python-sdist
+          path: ./*.tar.gz
+          retention-days: 5
+
+  wheels:
     needs:
       - sdist
-    runs-on: ubuntu-latest
-    container: condaforge/linux-anvil-cos7-x86_64
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - macos-13
+        python: ["39", "310", "311", "312", "313"]
+        include: # Python 3.7 and 3.8 is not supported on 'macos-latest'
+          - os: ubuntu-latest
+            python: "37"
+          - os: ubuntu-latest
+            python: "38"
+          - os: macos-13
+            python: "37"
+          - os: macos-13
+            python: "38"
 
     defaults:
       run:
-        shell: ${{ matrix.shell || 'bash -l {0}' }}
+        shell: bash -l {0}
 
     steps:
-    - name: Create environment
-      run: >-
-        mamba create -n wheel
-        --yes
-        c-compiler
-        fortran-compiler
-        python=${{ matrix.python }}
-        auditwheel
-        git
-        python
-        pip
-        python-build
-        pkgconfig
-        patchelf
-        cffi
-        numpy
-        meson
-        unzip
-        wheel
-    - name: Download sdist
-      uses: actions/download-artifact@v2
-      with:
-        name: dftd4-python-sdist
-    - name: Build wheel
-      run: |
-        conda activate wheel
-        set -ex
-        tar xvf dftd4-*.tar.gz
-        python -m build dftd4-*/ --wheel
-        auditwheel show dftd4-*/dist/*.whl
-        auditwheel repair -w . dftd4-*/dist/*.whl --plat ${{ env.plat }}
-      env:
-        plat: manylinux2014_x86_64
-    - uses: actions/upload-artifact@v3
-      with:
-        name: dftd4-python-${{ matrix.python }}
-        path: ./*.whl
-        retention-days: 5
+      # Set up Python to host 'cibuildwheel'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # Install 'cibuildwheel' as the driver for building wheels
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.23.3
+
+      # Download the source distribution from above
+      - name: Download sdist
+        uses: actions/download-artifact@v4
+        with:
+          name: dftd4-python-sdist
+
+      # Build wheels for all supported Python versions
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir . *.tar.gz
+        env:
+          CIBW_PLAT: ${{ contains(matrix.os, 'macos') && '-Dlapack=openblas' || '' }}
+          CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-13' && 'x86_64' || 'arm64' }}
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_BUILD: "*${{ matrix.python }}-*"
+          # MM: Package installation (yum install ...) works differently on musllinux
+          CIBW_SKIP: "*musllinux*"
+          # Control verbosity of the 'pip wheel' output
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BEFORE_ALL_LINUX: yum install -y lapack-devel
+
+          # Make sure there is exactly ONE libgfortran around to avoid 
+          # conflicts in delocation of the wheel
+          # 1. Remove any previously-installed gcc kegs so we start clean
+          # 2. Pin GCC to version 14, and old OpenBLAS compiled with GCC 14
+          # 3. Hide global symlinks (they create duplicate libgfortran.*.dylib)
+          #
+          # We avoid GCC 15 due to issues with compilation in subprojects.
+          CIBW_BEFORE_ALL_MACOS: |
+            brew uninstall --ignore-dependencies gcc@10 gcc@11 gcc@12 gcc@13 || true
+            brew autoremove -q || true
+            brew install gcc@14 openblas@0.3.23
+            rm -f /usr/local/lib/libgfortran*.dylib
+
+          # Set macOS variables to find gfortran, lapack, and avoid testing 
+          # against macOS earlier than 14 (see above)
+          CIBW_ENVIRONMENT_MACOS: >
+            CC=gcc-14 CXX=g++-14 FC=gfortran-14
+            PKG_CONFIG_PATH="$(brew --prefix openblas)/lib/pkgconfig"
+            LDFLAGS="-L$(brew --prefix openblas)/lib -L$(brew --prefix gcc@14)/lib/gcc/14"
+            CPPFLAGS="-I$(brew --prefix openblas)/include"
+            MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-13' && '13.0' || '14.0' }}
+
+          # Additional debug delocate command for finding duplicate libraries
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+            delocate-listdeps --all {wheel} &&
+            delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
+
+      # Upload the built wheels as artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dftd4-python-${{ matrix.os }}-${{ matrix.python }}
+          path: ./*.whl
+          retention-days: 5
 
   release:
     needs:
+      - source
       - sdist
-      - manylinux
+      - wheels
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
-          path: ${{ github.workspace }}  # This will download all files
+          path: ${{ github.workspace }} # This will download all files
 
       - name: Create SHA256 checksums
         run: |
@@ -111,7 +227,7 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
 
       - name: Upload assets
         uses: svenstaro/upload-release-action@v2
