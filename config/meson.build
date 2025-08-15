@@ -119,10 +119,17 @@ elif lapack_vendor == 'openblas'
 elif lapack_vendor == 'custom'
   custom_deps = []
   libs = get_option('custom_libraries')
-  if libs[0].startswith('-L')
+  if libs.length() == 0
+    warning(
+      'Custom LAPACK vendor selected, but no custom libraries provided. ' +
+      'Proceeding with empty list; relying on compiler wrapper or environment to supply BLAS/LAPACK. ' +
+      'If this is not intended, please specify custom libraries using the "-Dcustom_libraries" option.'
+    )
+  elif libs[0].startswith('-L')
+    libdir = libs[0].substring(2)
     foreach lib: libs
       if lib != libs[0]
-        custom_deps += cc.find_library(lib, dirs: libs[0].substring(2))
+        custom_deps += cc.find_library(lib, dirs: libdir)
       endif
     endforeach
   else
@@ -130,11 +137,13 @@ elif lapack_vendor == 'custom'
       custom_deps += cc.find_library(lib)
     endforeach
   endif
+
   if (not fc.links('external dsytrs; call dsytrs(); end', dependencies: (get_option('openmp') ? [custom_deps, omp_dep] : [custom_deps])))
     error('Custom LAPACK libraries do not link')
-  elif (not fc.links('external dsytrs; call dgemm(); end', dependencies: (get_option('openmp') ? [custom_deps, omp_dep] : [custom_deps])))
+  elif (not fc.links('external dgemm; call dgemm(); end', dependencies: (get_option('openmp') ? [custom_deps, omp_dep] : [custom_deps])))
     error('Custom BLAS libraries do not link')
   endif
+
   lib_deps += custom_deps
 
 else
