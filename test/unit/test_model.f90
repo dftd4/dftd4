@@ -117,7 +117,7 @@ subroutine test_gw_gen(error, mol, d4, ref, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(d4%mchrg_model, mol, error, q)
+         call get_charges(d4%mchrg, mol, error, q)
          if (allocated(error)) return
       end if
    end if
@@ -178,7 +178,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(d4%mchrg_model, mol, error, q)
+         call get_charges(d4%mchrg, mol, error, q)
          if (allocated(error)) return
       end if
    end if
@@ -287,7 +287,7 @@ subroutine test_pol_gen(error, mol, d4, ref, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(d4%mchrg_model, mol, error, q)
+         call get_charges(d4%mchrg, mol, error, q)
          if (allocated(error)) return
       end if
    end if
@@ -353,7 +353,7 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(d4%mchrg_model, mol, error, q)
+         call get_charges(d4%mchrg, mol, error, q)
          if (allocated(error)) return
       end if
    end if

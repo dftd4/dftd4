@@ -18,7 +18,7 @@
 module dftd4_model_type
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use multicharge, only : mchrg_model_type, mchargeModel
+   use multicharge, only : mchrg_model_type
    implicit none
    private
 
@@ -71,7 +71,7 @@ module dftd4_model_type
       real(wp), allocatable :: c6(:, :, :, :)
 
       !> Multicharge model
-      class(mchrg_model_type), allocatable :: mchrg_model 
+      class(mchrg_model_type), allocatable :: mchrg 
 
    contains
 

@@ -191,7 +191,7 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, qmod)
          call set_refalpha_eeq(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQ model
-      call new_eeq2019_model(mol, d4%mchrg_model, error)
+      call new_eeq2019_model(mol, d4%mchrg, error)
       if(allocated(error)) return
    case(d4_qmod%eeqbc)
       do isp = 1, mol%nid
@@ -200,7 +200,7 @@ subroutine new_d4_model_with_checks(error, d4, mol, ga, gc, wf, qmod)
          call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQBC model
-      call new_eeqbc2025_model(mol, d4%mchrg_model, error)  
+      call new_eeqbc2025_model(mol, d4%mchrg, error)  
       if(allocated(error)) return
    case(d4_qmod%gfn2)
       do isp = 1, mol%nid
@@ -347,7 +347,7 @@ subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, qmod)
          call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQBC model
-      call new_eeqbc2025_model(mol, d4%mchrg_model, error)  
+      call new_eeqbc2025_model(mol, d4%mchrg, error)  
       if(allocated(error)) then
          write(error_unit, '("[Error]:", 1x, a)') error%message
          error stop
@@ -362,7 +362,7 @@ subroutine new_d4_model_no_checks(d4, mol, ga, gc, wf, qmod)
          call set_refalpha_eeq(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQ model
-      call new_eeq2019_model(mol, d4%mchrg_model, error)
+      call new_eeq2019_model(mol, d4%mchrg, error)
       if(allocated(error)) then
          write(error_unit, '("[Error]:", 1x, a)') error%message
          error stop

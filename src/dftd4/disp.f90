@@ -74,7 +74,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    mref = maxval(disp%ref)
    grad = present(gradient).or.present(sigma)
 
-   if (.not. allocated(disp%mchrg_model)) then
+   if (.not. allocated(disp%mchrg)) then
       write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
       error stop
    end if
@@ -85,7 +85,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    allocate(q(mol%nat))
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
-   call get_charges(disp%mchrg_model, mol, error, q, dqdr, dqdL)
+   call get_charges(disp%mchrg, mol, error, q, dqdr, dqdL)
    if(allocated(error)) then
       write(error_unit, '("[Error]:", 1x, a)') error%message
       error stop
@@ -163,7 +163,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    real(wp), allocatable :: gwvec(:, :, :), lattr(:, :)
    type(error_type), allocatable :: error
 
-   if (.not. allocated(disp%mchrg_model)) then
+   if (.not. allocated(disp%mchrg)) then
       write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
       error stop
    end if
@@ -173,7 +173,7 @@ subroutine get_properties(mol, disp, cutoff, cn, q, c6, alpha)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
 
-   call get_charges(disp%mchrg_model, mol, error, q)
+   call get_charges(disp%mchrg, mol, error, q)
    if(allocated(error)) then
       write(error_unit, '("[Error]:", 1x, a)') error%message
       error stop
@@ -214,7 +214,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :), c6(:, :), lattr(:, :)
    type(error_type), allocatable :: error
 
-   if (.not. allocated(disp%mchrg_model)) then
+   if (.not. allocated(disp%mchrg)) then
       write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
       error stop
    end if
@@ -226,7 +226,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
 
    allocate(q(mol%nat))
-   call get_charges(disp%mchrg_model, mol, error, q)
+   call get_charges(disp%mchrg, mol, error, q)
    if(allocated(error)) then
       write(error_unit, '("[Error]:", 1x, a)') error%message
       error stop
