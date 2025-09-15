@@ -181,7 +181,7 @@ jobs:
             PKG_CONFIG_PATH="$(brew --prefix openblas)/lib/pkgconfig"
             LDFLAGS="-L$(brew --prefix openblas)/lib -L$(brew --prefix gcc@14)/lib/gcc/14"
             CPPFLAGS="-I$(brew --prefix openblas)/include"
-            MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-13' && '13.0' || '14.0' }}
+            MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-13' && '13.0' || '15.0' }}
 
           # Additional debug delocate command for finding duplicate libraries
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
