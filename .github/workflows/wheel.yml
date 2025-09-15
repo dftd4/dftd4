@@ -169,7 +169,7 @@ jobs:
           #
           # We avoid GCC 15 due to issues with compilation in subprojects.
           CIBW_BEFORE_ALL_MACOS: |
-            brew uninstall --ignore-dependencies gcc@11 gcc@12 gcc@13 || true
+            brew uninstall --ignore-dependencies gcc@12 gcc@13 || true
             brew autoremove -q || true
             brew install gcc@14 openblas@0.3.23
             rm -f /usr/local/lib/libgfortran*.dylib
