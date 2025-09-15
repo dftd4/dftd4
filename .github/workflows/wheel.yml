@@ -171,7 +171,7 @@ jobs:
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --ignore-dependencies gcc@10 gcc@11 gcc@12 gcc@13 || true
             brew autoremove -q || true
-            brew install gcc@14 openblas@0.3.23
+            brew install gcc@14 ${{ matrix.os == 'macos-13' && 'openblas' || 'openblas@0.3.23' }}
             rm -f /usr/local/lib/libgfortran*.dylib
 
           # Set macOS variables to find gfortran, lapack, and avoid testing 
