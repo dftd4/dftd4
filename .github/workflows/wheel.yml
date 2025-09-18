@@ -169,7 +169,7 @@ jobs:
           #
           # We avoid GCC 15 due to issues with compilation in subprojects.
           CIBW_BEFORE_ALL_MACOS: |
-            brew uninstall --ignore-dependencies gcc@10 gcc@11 gcc@12 gcc@13 || true
+            brew uninstall --ignore-dependencies gcc@12 gcc@13 || true
             brew autoremove -q || true
             brew install gcc@14 openblas@0.3.23
             rm -f /usr/local/lib/libgfortran*.dylib
@@ -181,7 +181,7 @@ jobs:
             PKG_CONFIG_PATH="$(brew --prefix openblas)/lib/pkgconfig"
             LDFLAGS="-L$(brew --prefix openblas)/lib -L$(brew --prefix gcc@14)/lib/gcc/14"
             CPPFLAGS="-I$(brew --prefix openblas)/include"
-            MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-13' && '13.0' || '14.0' }}
+            MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-13' && '13.0' || '15.0' }}
 
           # Additional debug delocate command for finding duplicate libraries
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
