@@ -34,7 +34,7 @@ if fc_id == 'gcc'
   )
 
   # gfortran "Interface mismatch" bug (119928)
-  if fc_id == 'gcc' and fc.version().version_compare('>=15.0') and fc.version().version_compare('<15.2')
+  if fc.version().version_compare('>=15.0') and fc.version().version_compare('<15.2')
     error('Unsupported GNU Fortran version ' + fc.version() +
           '. This release has a known issue (fixed in 15.2). ' +
           'Please use GCC >= 15.2 or < 15.0.')
