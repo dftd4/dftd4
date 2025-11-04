@@ -64,18 +64,6 @@ jobs:
             compiler: gnu
             version: 9
 
-          - os: macos-13
-            build: cmake
-            build-type: debug
-            compiler: gnu
-            version: 10
-
-          - os: macos-13
-            build: meson
-            build-type: debug
-            compiler: gnu
-            version: 10
-
           - os: ubuntu-latest
             build: meson
             build-type: coverage
@@ -91,11 +79,29 @@ jobs:
           - os: ubuntu-latest
             build: meson
             build-type: debug
+            compiler: gnu
+            version: 15
+
+          - os: ubuntu-latest
+            build: meson
+            build-type: debug
             compiler: intel
             version: 2021.2.0
 
           - os: ubuntu-latest
             build: fpm
+            build-type: debug
+            compiler: gnu
+            version: 10
+
+          - os: macos-13
+            build: cmake
+            build-type: debug
+            compiler: gnu
+            version: 10
+
+          - os: macos-13
+            build: meson
             build-type: debug
             compiler: gnu
             version: 10
