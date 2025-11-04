@@ -207,10 +207,6 @@ dftd4.git = "https://github.com/dftd4/dftd4"
 Note that the fpm build does not support exporting the C-API, it only provides access to the standalone binary.
 
 
-#### Note on Compilers
-
-
-
 ## Usage
 
 DFT-D4 calculations can be performed with the `dftd4` executable.
