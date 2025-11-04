@@ -33,16 +33,11 @@ if fc_id == 'gcc'
     language: 'fortran',
   )
 
-  # Work around GCC 15.1-15.2 gfortran "Interface mismatch" bug.
-  # Fixed on the GCC-15 branch in 15.2 (PR fortran/119928).
-  if fc.version().version_compare('>=15.0') and fc.version().version_compare('<15.2')
-    wa_flags = fc.get_supported_arguments([
-      '-Wno-external-argument-mismatch',
-      '-Wno-error=external-argument-mismatch',
-    ])
-    if wa_flags.length() > 0
-      add_project_arguments(wa_flags, language: 'fortran')
-    endif
+  # gfortran "Interface mismatch" bug (119928)
+  if fc_id == 'gcc' and fc.version().version_compare('>=15.0') and fc.version().version_compare('<15.2')
+    error('Unsupported GNU Fortran version ' + fc.version() +
+          '. This release has a known issue (fixed in 15.2). ' +
+          'Please use GCC >= 15.2 or < 15.0.')
   endif
 elif fc_id == 'intel'
   add_project_arguments(

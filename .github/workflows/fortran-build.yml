@@ -64,31 +64,37 @@ jobs:
             compiler: gnu
             version: 9
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             build: meson
             build-type: coverage
             compiler: gnu
             version: 9
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             build: meson
             build-type: debug
             compiler: gnu
             version: 10
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             build: meson
             build-type: debug
             compiler: gnu
-            version: 15
+            version: 13
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
+            build: meson
+            build-type: debug
+            compiler: gnu
+            version: 14
+
+          - os: ubuntu-24.04
             build: meson
             build-type: debug
             compiler: intel
             version: 2021.2.0
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             build: fpm
             build-type: debug
             compiler: gnu
