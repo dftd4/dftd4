@@ -99,6 +99,13 @@ a Fortran compiler supporting Fortran 2008 and one of the supported build system
 
 Currently this project supports GCC and Intel compilers.
 
+<details>
+<summary>Problematic Versions</summary>
+
+GCC versions 15.0.x - 15.1.x contain a [compiler bug](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119928) leading to "Interface mismatch" errors during compilation.
+
+</details>
+
 
 #### Building with meson
 

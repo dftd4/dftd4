@@ -39,7 +39,19 @@ set(
 )
 set(module-dir "${module-dir}" PARENT_SCOPE)
 
-# Compiler-specific configurations 
+# Compiler-specific configurations
+
+# gfortran "Interface mismatch" bug (119928)
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL "15.0"
+     AND CMAKE_Fortran_COMPILER_VERSION VERSION_LESS "15.2")
+    message(FATAL_ERROR
+      "Unsupported GNU Fortran version ${CMAKE_Fortran_COMPILER_VERSION}. "
+      "This release has a known issue (fixed in 15.2). "
+      "Please use GCC >= 15.2 or < 15.0, or a different Fortran compiler.")
+  endif()
+endif()
+
 if(
   "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI"
   OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "NVHPC"

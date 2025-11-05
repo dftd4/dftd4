@@ -99,6 +99,11 @@ To build this project from the source code in this repository you need to have
   - `meson <https://mesonbuild.com>`_ version 0.55 or newer
   - `CMake <https://cmake.org/>`_ version 3.9 or newer
 
+.. note::
+  
+   GCC versions 15.0.x–15.1.x contain a `compiler bug <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119928>`__ that can lead to "Interface mismatch" errors during compilation.
+
+
 First, get the source by cloning the repository
 
 .. code-block:: bash
