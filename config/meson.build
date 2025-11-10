@@ -169,7 +169,7 @@ endif
 # Create the tool chain library as subproject
 mctc_dep = dependency(
   'mctc-lib',
-  version: '>=0.4.1',
+  version: '0.5.1',
   fallback: ['mctc-lib', 'mctc_dep'],
   default_options: ['default_library=static'],
 )
@@ -178,7 +178,7 @@ lib_deps += mctc_dep
 # Create the electrostatic library as subproject
 multicharge_dep = dependency(
   'multicharge',
-  version: '>=0.4.0',
+  version: '0.5.0',
   fallback: ['multicharge', 'multicharge_dep'],
   default_options: ['default_library=static'],
 )
