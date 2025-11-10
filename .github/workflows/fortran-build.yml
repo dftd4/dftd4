@@ -341,7 +341,7 @@ jobs:
           BUILD_DIR: ${{ env.BUILD_DIR }}
 
       - name: Create package
-        if: ${{ matrix.build == 'meson' && matrix.version == 12 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
+        if: ${{ matrix.build == 'meson' && matrix.version == 14 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
         run: |
           tar cvf ${OUTPUT} _dist
           xz -T0 $OUTPUT
@@ -350,7 +350,7 @@ jobs:
           OUTPUT: dftd4-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}.tar
 
       - name: Upload package
-        if: ${{ matrix.build == 'meson' && matrix.version == 12 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
+        if: ${{ matrix.build == 'meson' && matrix.version == 14 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.DFTD4_OUTPUT }}
@@ -370,7 +370,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        gcc_v: [12]
+        gcc_v: [14]
         python_v: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
         include:
