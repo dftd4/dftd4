@@ -104,13 +104,13 @@ jobs:
             build: cmake
             build-type: debug
             compiler: gnu
-            version: 10
+            version: 14
 
           - os: macos-15-intel
             build: meson
             build-type: debug
             compiler: gnu
-            version: 10
+            version: 14
 
     defaults:
       run:
