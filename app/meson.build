@@ -110,6 +110,18 @@ test(
     '--func', 'b3lyp',
   ],
 )
+test(
+  'app-energy-d4-eeqbc',
+  app_tester,
+  args: [
+    dftd4_exe,
+    files('04-energy-d4-eeqbc.json'),
+    files('04-caffeine.xyz'),
+    '--noedisp',
+    '--func', 'tpssh', 
+    '--qmodel', 'eeqbc'
+  ],
+)
 
 # r2SCAN-3c modifies s9, ga, gc, hence, requiring additional tests:
 # - selection via functional name

@@ -40,6 +40,7 @@ module dftd4_help
       "   --wfactor <real>      Adjust weighting factor for interpolation (only D4)"//nl//&
       "                         (default: 6.0)"//nl//&
       "-m,--model <model>       Use specific D4 model (options: D4 (default), D4S)"//nl//&
+      "   --qmodel              Use specific charge model (options: EEQ (default), EEQBC)"//nl//&
       "-g,--grad [file]         Evaluate molecular gradient and virial,"//nl//&
       "                         write results to file (default: dftd4.txt),"//nl//&
       "                         attempts to add to Turbomole gradient and gradlatt files"//nl//&

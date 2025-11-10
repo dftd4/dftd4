@@ -18,10 +18,11 @@
 module dftd4_model_type
    use mctc_env, only : wp
    use mctc_io, only : structure_type
+   use multicharge, only : mchrg_model_type
    implicit none
    private
 
-   public :: dispersion_model, d4_ref
+   public :: dispersion_model, d4_qmod
 
 
    !> Abstract base dispersion model to evaluate C6 coefficients
@@ -68,6 +69,9 @@ module dftd4_model_type
 
       !> Reference C6 coefficients
       real(wp), allocatable :: c6(:, :, :, :)
+
+      !> Multicharge model
+      class(mchrg_model_type), allocatable :: mchrg 
 
    contains
 
@@ -152,7 +156,7 @@ module dftd4_model_type
 
 
    !> Possible reference charges for D4
-   type :: enum_ref
+   type :: enum_qmod
 
       !> Electronegativity equilibration charges
       integer :: eeq = 1
@@ -160,10 +164,13 @@ module dftd4_model_type
       !> GFN2-xTB Mulliken partial charges
       integer :: gfn2 = 2
 
-   end type enum_ref
+      !> Bond-Capcity Electronegativity equilibration charges
+      integer :: eeqbc = 3
+
+   end type enum_qmod
 
    !> Actual enumerator for D4 reference charges
-   type(enum_ref), parameter :: d4_ref = enum_ref()
-   !DEC$ ATTRIBUTES DLLEXPORT :: d4_ref
+   type(enum_qmod), parameter :: d4_qmod = enum_qmod()
+   !DEC$ ATTRIBUTES DLLEXPORT :: d4_qmod
 
 end module dftd4_model_type

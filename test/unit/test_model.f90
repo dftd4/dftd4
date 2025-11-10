@@ -15,18 +15,18 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_model
+   use dftd4_cutoff, only : get_lattice_points
+   use dftd4_data, only : get_covalent_rad
+   use dftd4_model, only : dispersion_model, new_dispersion_model, d4_qmod
+   use dftd4_model_d4, only : d4_model, new_d4_model
+   use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed
    use mctc_io_structure, only : new, structure_type
    use mctc_ncoord, only : new_ncoord, ncoord_type, cn_count
    use mstore, only : get_structure
-   use dftd4_charge, only : get_charges
-   use dftd4_cutoff, only : get_lattice_points
-   use dftd4_data, only : get_covalent_rad
-   use dftd4_model, only : dispersion_model, new_dispersion_model, d4_ref
-   use dftd4_model_d4, only : d4_model, new_d4_model
-   use dftd4_model_d4s, only : d4s_model, new_d4s_model
+   use multicharge, only : get_charges
    implicit none
    private
 
@@ -49,11 +49,13 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-D4-mb01", test_gw_d4_mb01), &
       & new_unittest("gw-D4S-mb01", test_gw_d4s_mb01), &
       & new_unittest("gw-D4-mb02", test_gw_d4_mb02), &
+      & new_unittest("gw-D4-EEQBC-mb02", test_gw_d4_eeqbc_mb02), &
       & new_unittest("gw-D4-mb03", test_gw_d4_mb03), &
       & new_unittest("dgw_D4-mb04", test_dgw_d4_mb04), &
       & new_unittest("dgw_D4S-mb04", test_dgw_d4s_mb04), &
       & new_unittest("dgw_D4-mb05", test_dgw_d4_mb05), &
       & new_unittest("dgw_D4S-mb05", test_dgw_d4s_mb05), &
+      & new_unittest("dgw_D4S-EEQBC-mb05", test_dgw_d4s_eeqbc_mb05), &
       & new_unittest("dgw_D4-mb06", test_dgw_d4_mb06), &
       & new_unittest("dgw_D4S-mb06", test_dgw_d4s_mb06), &
       & new_unittest("gw-D4-gfn2", test_gw_d4_mb07), &
@@ -115,7 +117,8 @@ subroutine test_gw_gen(error, mol, d4, ref, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(mol, q)
+         call get_charges(d4%mchrg, mol, error, q)
+         if (allocated(error)) return
       end if
    end if
 
@@ -175,7 +178,8 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(mol, q)
+         call get_charges(d4%mchrg, mol, error, q)
+         if (allocated(error)) return
       end if
    end if
 
@@ -283,7 +287,8 @@ subroutine test_pol_gen(error, mol, d4, ref, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(mol, q)
+         call get_charges(d4%mchrg, mol, error, q)
+         if (allocated(error)) return
       end if
    end if
 
@@ -348,7 +353,8 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
       if(present(qat)) then
          q(:) = qat
       else
-         call get_charges(mol, q)
+         call get_charges(d4%mchrg, mol, error, q)
+         if (allocated(error)) return
       end if
    end if
 
@@ -947,6 +953,54 @@ subroutine test_gw_d4_mb02(error)
 end subroutine test_gw_d4_mb02
 
 
+subroutine test_gw_d4_eeqbc_mb02(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   real(wp), parameter :: ref(5, 16, 1) = reshape([&
+      & 1.2595414807089E+00_wp, 3.4627651498328E-03_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 1.0254439271401E+00_wp, &
+      & 2.0298475069163E-03_wp, 4.5954321305318E-10_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 1.0048156894089E+00_wp, 1.8796029452983E-03_wp, &
+      & 3.0506495005117E-10_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 1.1020354818356E+00_wp, 6.7928862292002E-03_wp, 5.5690274492868E-08_wp, &
+      & 1.1605458622024E-03_wp, 0.0000000000000E+00_wp, 9.4187732431476E-01_wp, &
+      & 5.4832647054101E-03_wp, 1.7870363924972E-08_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 6.9350750294192E-01_wp, 1.9066093885080E-03_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 1.0650204821510E+00_wp, 2.9279828143293E-03_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 1.1303254622557E+00_wp, &
+      & 3.1075210134921E-03_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 9.6837394592909E-01_wp, 2.7666277695184E-03_wp, &
+      & 7.1117229823468E-10_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 7.1529148033840E-01_wp, 1.9664984822049E-03_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 9.9541854542085E-01_wp, &
+      & 1.8620015159966E-03_wp, 3.0220664483454E-10_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 8.9906533280080E-01_wp, 6.8945505568332E-03_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 1.1487780707026E+00_wp, 1.3509553061686E-02_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 1.0926349093356E+00_wp, &
+      & 3.0039011366331E-03_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 0.0000000000000E+00_wp, 1.1619247510000E+00_wp, 3.1943946238488E-03_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, 0.0000000000000E+00_wp, &
+      & 1.0447172264156E+00_wp, 2.0679073977604E-03_wp, 4.6816982905992E-10_wp, &
+      & 0.0000000000000E+00_wp, 0.0000000000000E+00_wp], &
+      & [5, 16, 1])
+
+   call get_structure(mol, "MB16-43", "02")
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%eeqbc)
+   if (allocated(error)) then 
+      call test_failed(error, "D4 model could not be created")
+      return
+   end if
+   call test_gw_gen(error, mol, d4, ref, with_cn=.false., with_q=.true.)
+
+end subroutine test_gw_d4_eeqbc_mb02
+
+
 subroutine test_gw_d4_mb03(error)
 
    !> Error handling
@@ -1080,6 +1134,26 @@ subroutine test_dgw_d4s_mb05(error)
 
 end subroutine test_dgw_d4s_mb05
 
+
+subroutine test_dgw_d4s_eeqbc_mb05(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+
+   call get_structure(mol, "MB16-43", "05")
+   call new_d4s_model(error, d4s, mol, qmod=d4_qmod%eeqbc)
+   if (allocated(error)) then 
+      call test_failed(error, "D4S model could not be created")
+      return
+   end if
+   call test_dgw_gen(error, mol, d4s, with_cn=.false., with_q=.true.)
+
+end subroutine test_dgw_d4s_eeqbc_mb05
+
+
 subroutine test_dgw_d4_mb06(error)
 
    !> Error handling
@@ -1174,7 +1248,7 @@ subroutine test_gw_d4_mb07(error)
    type(d4_model) :: d4
 
    call get_structure(mol, "MB16-43", "06")
-   call new_d4_model(error, d4, mol, ref=d4_ref%gfn2)
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%gfn2)
    if (allocated(error)) then 
       call test_failed(error, "D4 model could not be created")
       return
@@ -1201,7 +1275,7 @@ subroutine test_dgw_d4_mb08(error)
    type(d4_model) :: d4
 
    call get_structure(mol, "MB16-43", "08")
-   call new_d4_model(error, d4, mol, ref=d4_ref%gfn2)
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%gfn2)
    if (allocated(error)) then 
       call test_failed(error, "D4 model could not be created")
       return
@@ -1227,7 +1301,7 @@ subroutine test_dgw_d4s_mb08(error)
    type(d4s_model) :: d4s
 
    call get_structure(mol, "MB16-43", "08")
-   call new_d4s_model(error, d4s, mol, ref=d4_ref%gfn2)
+   call new_d4s_model(error, d4s, mol, qmod=d4_qmod%gfn2)
    if (allocated(error)) then 
       call test_failed(error, "D4S model could not be created")
       return

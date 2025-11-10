@@ -115,16 +115,16 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          - macos-13
+          - macos-15-intel
         python: ["39", "310", "311", "312", "313"]
         include: # Python 3.7 and 3.8 is not supported on 'macos-latest'
           - os: ubuntu-latest
             python: "37"
           - os: ubuntu-latest
             python: "38"
-          - os: macos-13
+          - os: macos-15-intel
             python: "37"
-          - os: macos-13
+          - os: macos-15-intel
             python: "38"
 
     defaults:
@@ -152,7 +152,7 @@ jobs:
         run: python -m cibuildwheel --output-dir . *.tar.gz
         env:
           CIBW_PLAT: ${{ contains(matrix.os, 'macos') && '-Dlapack=openblas' || '' }}
-          CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-13' && 'x86_64' || 'arm64' }}
+          CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-15-intel' && 'x86_64' || 'arm64' }}
           CIBW_ARCHS_LINUX: x86_64
           CIBW_BUILD: "*${{ matrix.python }}-*"
           # MM: Package installation (yum install ...) works differently on musllinux
@@ -181,7 +181,7 @@ jobs:
             PKG_CONFIG_PATH="$(brew --prefix openblas)/lib/pkgconfig"
             LDFLAGS="-L$(brew --prefix openblas)/lib -L$(brew --prefix gcc@14)/lib/gcc/14"
             CPPFLAGS="-I$(brew --prefix openblas)/include"
-            MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-13' && '13.0' || '15.0' }}
+            MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-15-intel' && '15.0' || '15.0' }}
 
           # Additional debug delocate command for finding duplicate libraries
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >

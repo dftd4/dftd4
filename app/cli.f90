@@ -57,6 +57,7 @@ module dftd4_cli
       real(wp) :: ga = 3.0_wp
       real(wp) :: gc = 2.0_wp
       real(wp) :: wf = 6.0_wp
+      character(len=:), allocatable :: charge_model
       logical :: pair_resolved = .false.
    end type run_config
    type, extends(cli_config) :: param_config
@@ -253,6 +254,14 @@ subroutine get_run_arguments(config, list, start, error)
          iarg = iarg + 1
          call get_argument_as_real(iarg, config%wf, error)
          if (allocated(error)) exit
+      case("--qmodel")
+         iarg = iarg + 1
+         call get_argument(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for charge model")
+            exit
+         end if
+         call move_alloc(arg, config%charge_model)
       case("-f", "--func")
          config%rational = .true.
          iarg = iarg + 1
