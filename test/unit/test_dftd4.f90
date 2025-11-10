@@ -235,7 +235,7 @@ subroutine test_pbed4_eeqbc_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4_model(d4, mol, qmod=d4_qmod%eeqbc)
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%eeqbc)
    call test_dftd4_gen(error, mol, d4, param, -1.7931287092741860E-002_wp)
 
 end subroutine test_pbed4_eeqbc_mb01
@@ -802,7 +802,7 @@ subroutine test_r2scan3c_mb01(error)
    real(wp), parameter :: ref = -5.7825025556386862E-003_wp
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4_model(d4, mol, ga=2.0_wp, gc=1.0_wp)
+   call new_d4_model(error, d4, mol, ga=2.0_wp, gc=1.0_wp)
    call test_dftd4_gen(error, mol, d4, param, ref)
 
 end subroutine test_r2scan3c_mb01
