@@ -17,6 +17,7 @@
 !> This is a compatibility module for dftd4 2.5.0 reproducing enough of the old 
 !> API to compile the interface with Vasp.
 module dftd4_compat
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_env, only : error_type, wp
    use mctc_io_math, only : matdet_3x3, matinv_3x3
    use dftd4, only: structure_type, new, d4_model, new_d4_model, rational_damping_param, &
@@ -105,12 +106,17 @@ subroutine d4_calculation(io, env, options, mol_, param_, res)
 
    type(structure_type) :: mol
    type(d4_model) :: d4
-   type(error_type) :: error
+   type(error_type), allocatable :: error
    type(rational_damping_param) :: param
    real(wp), allocatable :: energy, gradient(:, :), sigma(:, :)
 
    call new(mol, mol_%at, mol_%xyz, lattice=mol_%lattice)
    call new_d4_model(error, d4, mol, ga=options%g_a, gc=options%g_c, wf=options%wf)
+   if(allocated(error)) then
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
+   end if
+
    param = rational_damping_param(&
       & s6=param_%s6, &
       & s8=param_%s8, &

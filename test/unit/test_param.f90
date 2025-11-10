@@ -66,7 +66,7 @@ subroutine test_dftd4_gen(error, mol, param, ref)
    type(d4_model) :: d4
    real(wp) :: energy
 
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call get_dispersion(mol, d4, param, cutoff, energy)
 
    call check(error, energy, ref, thr=thr)
