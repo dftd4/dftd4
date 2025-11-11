@@ -25,7 +25,7 @@ DFT-D4 dispersion correction
    :target: https://codecov.io/gh/dftd4/dftd4
    :alt: Coverage
 
-This pages describe the usage and functionality of `dftd4`_ library.
+These pages describe usage and functionality of the `dftd4`_ library.
 The *dftd4* project provides an implementation of the generally applicable, charge dependent London-dispersion correction, termed DFT-D4.
 
 .. _dftd4: https://github.com/dftd4/dftd4

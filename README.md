@@ -238,6 +238,23 @@ dftd4 --pair-resolved mol.xyz
 For an overview over all command line arguments use the `--help` argument or checkout the [`dftd4(1)`](https://github.com/dftd4/dftd4/blob/main/man/dftd4.1.adoc) manpage.
 
 
+### Parallelism
+
+DFT-D4 calculations can be performed with shared-memory parallelism (OpenMP).
+
+The number of parallel threads can be set through environment variables.
+
+```sh
+export OMP_NUM_THREADS=4
+export MKL_NUM_THREADS=4  # Intel
+```
+
+For large calculations, additional speed-ups might be possible by enabling dynamic scheduling in OMP by setting `OMP_SCHEDULE=dynamic`.
+This might help particularly for versions <4.0.0 ([explanation](https://github.com/dftd4/dftd4/pull/319)).
+
+Note that DFT-D4 is not MPI parallelized.
+
+
 ## Parameters
 
 DFT-D4 is parametrized for plenty of density functionals.
