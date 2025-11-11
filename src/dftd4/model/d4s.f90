@@ -64,7 +64,7 @@ contains
 
 !> Create new D4S dispersion model from molecular structure input
 subroutine new_d4s_model(error, d4, mol, ga, gc, qmod)
-   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model_with_checks
+   !DEC$ ATTRIBUTES DLLEXPORT :: new_d4_model
 
    !> Instance of the dispersion model
    type(d4s_model), intent(out) :: d4
