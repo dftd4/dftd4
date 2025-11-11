@@ -150,7 +150,7 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
-   !$omp do schedule(runtime)
+   !$omp do schedule(dynamic)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
@@ -289,7 +289,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
    allocate(dEdq_local(size(dEdq, 1)), source=0.0_wp)
    allocate(gradient_local(size(gradient, 1), size(gradient, 2)), source=0.0_wp)
    allocate(sigma_local(size(sigma, 1), size(sigma, 2)), source=0.0_wp)
-   !$omp do schedule(runtime)
+   !$omp do schedule(dynamic)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
