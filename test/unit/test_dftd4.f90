@@ -218,7 +218,7 @@ subroutine test_pbed4_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -1.8578752883363366E-002_wp)
 
 end subroutine test_pbed4_mb01
@@ -235,7 +235,7 @@ subroutine test_pbed4_eeqbc_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4_model(d4, mol, qmod=d4_qmod%eeqbc)
+   call new_d4_model(error, d4, mol, qmod=d4_qmod%eeqbc)
    call test_dftd4_gen(error, mol, d4, param, -1.7931287092741860E-002_wp)
 
 end subroutine test_pbed4_eeqbc_mb01
@@ -252,7 +252,7 @@ subroutine test_pbed4s_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -1.9870451633183694E-002_wp)
 
 end subroutine test_pbed4s_mb01
@@ -269,7 +269,7 @@ subroutine test_pbed4s_eeqbc_mb01(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4s_model(d4s, mol, qmod=d4_qmod%eeqbc)
+   call new_d4s_model(error, d4s, mol, qmod=d4_qmod%eeqbc)
    call test_dftd4_gen(error, mol, d4s, param, -1.9357638452866848E-002_wp)
 
 end subroutine test_pbed4s_eeqbc_mb01
@@ -286,7 +286,7 @@ subroutine test_b97d4_mb02(error)
       & s8 = 1.69460052_wp, a1 = 0.28904684_wp, a2 = 4.13407323_wp)
 
    call get_structure(mol, "MB16-43", "02")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -8.9181168937810723E-002_wp)
 
 end subroutine test_b97d4_mb02
@@ -303,7 +303,7 @@ subroutine test_b97d4s_mb02(error)
       & s8 = 1.69460052_wp, a1 = 0.28904684_wp, a2 = 4.13407323_wp)
 
    call get_structure(mol, "MB16-43", "02")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -0.10354699373838475_wp)
 
 end subroutine test_b97d4s_mb02
@@ -320,7 +320,7 @@ subroutine test_tpssd4_mb03(error)
       & s8 = 1.91130849_wp, a1 = 0.43332851_wp, a2 = 4.56986797_wp)
 
    call get_structure(mol, "MB16-43", "03")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -2.4695638764787930E-002_wp)
 
 end subroutine test_tpssd4_mb03
@@ -337,7 +337,7 @@ subroutine test_tpssd4s_mb03(error)
       & s8 = 1.91130849_wp, a1 = 0.43332851_wp, a2 = 4.56986797_wp)
 
    call get_structure(mol, "MB16-43", "03")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -2.9321970435591389E-002_wp)
 
 end subroutine test_tpssd4s_mb03
@@ -354,7 +354,7 @@ subroutine test_pwpb95d4_mb04(error)
       & s8 = -0.34639127_wp, a1 = 0.41080636_wp, a2 = 3.83878274_wp)
 
    call get_structure(mol, "MB16-43", "04")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -9.5128100471706181E-003_wp)
 
 end subroutine test_pwpb95d4_mb04
@@ -371,7 +371,7 @@ subroutine test_pwpb95d4s_mb04(error)
       & s8 = -0.34639127_wp, a1 = 0.41080636_wp, a2 = 3.83878274_wp)
 
    call get_structure(mol, "MB16-43", "04")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -1.0003412660121589E-002_wp)
 
 end subroutine test_pwpb95d4s_mb04
@@ -388,7 +388,7 @@ subroutine test_b2plypd4_mb05(error)
       & s8 = 1.15117773_wp, a1 = 0.42666167_wp, a2 = 4.73635790_wp)
 
    call get_structure(mol, "MB16-43", "05")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numgrad(error, mol, d4, param)
 
 end subroutine test_b2plypd4_mb05
@@ -405,7 +405,7 @@ subroutine test_b2plypd4s_mb05(error)
       & s8 = 1.15117773_wp, a1 = 0.42666167_wp, a2 = 4.73635790_wp)
 
    call get_structure(mol, "MB16-43", "05")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_b2plypd4s_mb05
@@ -422,7 +422,7 @@ subroutine test_pw6b95d4_mb06(error)
       & s8 = -0.31629935_wp, a1 = 0.03999357_wp, a2 = 5.83690254_wp)
 
    call get_structure(mol, "MB16-43", "06")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numgrad(error, mol, d4, param)
 
 end subroutine test_pw6b95d4_mb06
@@ -439,7 +439,7 @@ subroutine test_pw6b95d4s_mb06(error)
       & s8 = -0.31629935_wp, a1 = 0.03999357_wp, a2 = 5.83690254_wp)
 
    call get_structure(mol, "MB16-43", "06")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_pw6b95d4s_mb06
@@ -456,7 +456,7 @@ subroutine test_olypd4_mb07(error)
       & s8 = 2.74836820_wp, a1 = 0.60184498_wp, a2 = 2.53292167_wp)
 
    call get_structure(mol, "MB16-43", "07")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numgrad(error, mol, d4, param)
 
 end subroutine test_olypd4_mb07
@@ -473,7 +473,7 @@ subroutine test_olypd4s_mb07(error)
       & s8 = 2.74836820_wp, a1 = 0.60184498_wp, a2 = 2.53292167_wp)
 
    call get_structure(mol, "MB16-43", "07")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_olypd4s_mb07
@@ -491,7 +491,7 @@ subroutine test_pbe0d4_mb08(error)
       & s8 = 1.20065498_wp, a1 = 0.40085597_wp, a2 = 5.02928789_wp)
 
    call get_structure(mol, "MB16-43", "08")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numsigma(error, mol, d4, param)
 
 end subroutine test_pbe0d4_mb08
@@ -508,7 +508,7 @@ subroutine test_pbe0d4s_mb08(error)
       & s8 = 1.20065498_wp, a1 = 0.40085597_wp, a2 = 5.02928789_wp)
 
    call get_structure(mol, "MB16-43", "08")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numsigma(error, mol, d4s, param)
 
 end subroutine test_pbe0d4s_mb08
@@ -526,7 +526,7 @@ subroutine test_rpbed4atm_mb09(error)
       & s8 = 1.31183787_wp, a1 = 0.46169493_wp, a2 = 3.15711757_wp)
 
    call get_structure(mol, "MB16-43", "09")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -4.5140422485299259E-002_wp)
 
 end subroutine test_rpbed4atm_mb09
@@ -543,7 +543,7 @@ subroutine test_rpbed4satm_mb09(error)
       & s8 = 1.31183787_wp, a1 = 0.46169493_wp, a2 = 3.15711757_wp)
 
    call get_structure(mol, "MB16-43", "09")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -4.7626123029052128E-002_wp)
 
 end subroutine test_rpbed4satm_mb09
@@ -561,7 +561,7 @@ subroutine test_b2gpplypd4atm_mb10(error)
       & s8 = 0.94633372_wp, a1 = 0.42907301_wp, a2 = 5.18802602_wp)
 
    call get_structure(mol, "MB16-43", "10")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -9.6812427202205668E-003_wp)
 
 end subroutine test_b2gpplypd4atm_mb10
@@ -578,7 +578,7 @@ subroutine test_b2gpplypd4satm_mb10(error)
       & s8 = 0.94633372_wp, a1 = 0.42907301_wp, a2 = 5.18802602_wp)
 
    call get_structure(mol, "MB16-43", "10")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -1.1490632914927183E-002_wp)
 
 end subroutine test_b2gpplypd4satm_mb10
@@ -595,7 +595,7 @@ subroutine test_lh14tcalpbed4atm_mb11(error)
       & s8 = 1.27677253_wp, a1 = 0.38128670_wp, a2 = 4.91698883_wp)
 
    call get_structure(mol, "MB16-43", "11")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -1.7460015867914524E-002_wp)
 
 end subroutine test_lh14tcalpbed4atm_mb11
@@ -612,7 +612,7 @@ subroutine test_lh14tcalpbed4satm_mb11(error)
       & s8 = 1.27677253_wp, a1 = 0.38128670_wp, a2 = 4.91698883_wp)
 
    call get_structure(mol, "MB16-43", "11")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -2.0329508047867848E-002_wp)
 
 end subroutine test_lh14tcalpbed4satm_mb11
@@ -629,7 +629,7 @@ subroutine test_b1b95d4atm_mb12(error)
       & s8 = 1.27701162_wp, a1 = 0.40554715_wp, a2 = 4.63323074_wp)
 
    call get_structure(mol, "MB16-43", "12")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, -2.5712178361964221E-002_wp)
 
 end subroutine test_b1b95d4atm_mb12
@@ -646,7 +646,7 @@ subroutine test_b1b95d4satm_mb12(error)
       & s8 = 1.27701162_wp, a1 = 0.40554715_wp, a2 = 4.63323074_wp)
 
    call get_structure(mol, "MB16-43", "12")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, -2.6528352555725724E-002_wp)
 
 end subroutine test_b1b95d4satm_mb12
@@ -664,7 +664,7 @@ subroutine test_m06ld4atm_mb13(error)
       & s8 = 0.59493760_wp, a1 = 0.71422359_wp, a2 = 6.35314182_wp)
 
    call get_structure(mol, "MB16-43", "13")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numgrad(error, mol, d4, param)
 
 end subroutine test_m06ld4atm_mb13
@@ -681,7 +681,7 @@ subroutine test_m06ld4satm_mb13(error)
       & s8 = 0.59493760_wp, a1 = 0.71422359_wp, a2 = 6.35314182_wp)
 
    call get_structure(mol, "MB16-43", "13")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_m06ld4satm_mb13
@@ -698,7 +698,7 @@ subroutine test_tpsshd4atm_mb14(error)
       & s8 = 1.85897750_wp, a1 = 0.44286966_wp, a2 = 4.60230534_wp)
 
    call get_structure(mol, "MB16-43", "14")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numgrad(error, mol, d4, param)
 
 end subroutine test_tpsshd4atm_mb14
@@ -715,7 +715,7 @@ subroutine test_tpsshd4satm_mb14(error)
       & s8 = 1.85897750_wp, a1 = 0.44286966_wp, a2 = 4.60230534_wp)
 
    call get_structure(mol, "MB16-43", "14")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_tpsshd4satm_mb14
@@ -732,7 +732,7 @@ subroutine test_hfd4atm_mb15(error)
       & s8 = 1.61679827_wp, a1 = 0.44959224_wp, a2 = 3.35743605_wp)
 
    call get_structure(mol, "MB16-43", "15")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numgrad(error, mol, d4, param)
 
 end subroutine test_hfd4atm_mb15
@@ -749,7 +749,7 @@ subroutine test_hfd4satm_mb15(error)
       & s8 = 1.61679827_wp, a1 = 0.44959224_wp, a2 = 3.35743605_wp)
 
    call get_structure(mol, "MB16-43", "15")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_hfd4satm_mb15
@@ -766,7 +766,7 @@ subroutine test_camb3lypd4atm_mb16(error)
       & s8 = 1.74407961_wp, a1 = 0.40137870_wp, a2 = 5.18731225_wp)
 
    call get_structure(mol, "MB16-43", "16")
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_numsigma(error, mol, d4, param)
 
 end subroutine test_camb3lypd4atm_mb16
@@ -783,7 +783,7 @@ subroutine test_camb3lypd4satm_mb16(error)
       & s8 = 1.74407961_wp, a1 = 0.40137870_wp, a2 = 5.18731225_wp)
 
    call get_structure(mol, "MB16-43", "16")
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_numsigma(error, mol, d4s, param)
 
 end subroutine test_camb3lypd4satm_mb16
@@ -802,7 +802,7 @@ subroutine test_r2scan3c_mb01(error)
    real(wp), parameter :: ref = -5.7825025556386862E-003_wp
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4_model(d4, mol, ga=2.0_wp, gc=1.0_wp)
+   call new_d4_model(error, d4, mol, ga=2.0_wp, gc=1.0_wp)
    call test_dftd4_gen(error, mol, d4, param, ref)
 
 end subroutine test_r2scan3c_mb01
@@ -821,7 +821,7 @@ subroutine test_r2scan3c_d4s_mb01(error)
    real(wp), parameter :: ref = -6.1176284425895639E-003_wp
 
    call get_structure(mol, "MB16-43", "01")
-   call new_d4s_model(d4s, mol, ga=2.0_wp, gc=1.0_wp)
+   call new_d4s_model(error, d4s, mol, ga=2.0_wp, gc=1.0_wp)
    call test_dftd4_gen(error, mol, d4s, param, ref)
 
 end subroutine test_r2scan3c_d4s_mb01
@@ -850,7 +850,7 @@ subroutine test_tpsshd4atm_amf3(error)
       & [3, nat])
 
    call new(mol, num, xyz)
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
 
    call test_dftd4_gen(error, mol, d4, param, ref)
    if (allocated(error)) return
@@ -885,7 +885,7 @@ subroutine test_tpsshd4satm_amf3(error)
       & [3, nat])
 
    call new(mol, num, xyz)
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
 
    call test_dftd4_gen(error, mol, d4s, param, ref)
    if (allocated(error)) return
@@ -934,7 +934,7 @@ subroutine test_actinides_d4(error)
       & [3, nat])
 
    call new(mol, num, xyz)
-   call new_d4_model(d4, mol)
+   call new_d4_model(error, d4, mol)
    call test_dftd4_gen(error, mol, d4, param, ref)
 
 end subroutine test_actinides_d4
@@ -976,7 +976,7 @@ subroutine test_actinides_d4s(error)
       & [3, nat])
 
    call new(mol, num, xyz)
-   call new_d4s_model(d4s, mol)
+   call new_d4s_model(error, d4s, mol)
    call test_dftd4_gen(error, mol, d4s, param, ref)
 
 end subroutine test_actinides_d4s
