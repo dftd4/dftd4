@@ -1,7 +1,7 @@
 DFT-D4 project
 ==============
 
-[![License](https://img.shields.io/github/license/dftd4/dftd4)](https://github.com/dftd4/dftd4/blob/master/COPYING.LESSER)
+[![License](https://img.shields.io/github/license/dftd4/dftd4?cacheSeconds=86400)](https://github.com/dftd4/dftd4/blob/main/COPYING.LESSER)
 [![Latest Version](https://img.shields.io/github/v/release/dftd4/dftd4)](https://github.com/dftd4/dftd4/releases/latest)
 [![Build Status](https://github.com/dftd4/dftd4/workflows/CI/badge.svg)](https://github.com/dftd4/dftd4/actions)
 [![Documentation Status](https://readthedocs.org/projects/dftd4/badge/?version=latest)](https://dftd4.readthedocs.io/en/latest/?badge=latest)
@@ -394,8 +394,6 @@ For convenience the type-generic macro ``dftd4_delete`` is available to free any
 
 
 ### Python API
-
-[![LGTM](https://img.shields.io/lgtm/grade/python/g/dftd4/dftd4.svg)](https://lgtm.com/projects/g/dftd4/dftd4/context:python)
 
 The Python API is disabled by default and can be built in-tree or out-of-tree.
 The in-tree build is mainly meant for end users and packages.
