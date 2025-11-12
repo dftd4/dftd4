@@ -200,7 +200,15 @@ jobs:
       - source
       - sdist
       - wheels
+
     runs-on: ubuntu-latest
+
+    environment: release
+
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -225,9 +233,9 @@ jobs:
         if: ${{ github.event_name == 'release' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+          verbose: true
 
       - name: Upload assets
         uses: svenstaro/upload-release-action@v2
@@ -243,5 +251,5 @@ jobs:
         if: ${{ github.event_name == 'release' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+          skip-existing: true
+          verbose: true
