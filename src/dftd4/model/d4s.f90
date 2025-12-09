@@ -360,7 +360,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                end do
 
                gwk = expw * norm
-               if (is_exceptional(gwk) .or. norm < 1e-7_wp) then
+               if (is_exceptional(gwk) .or. norm == 0.0_wp) then
                   maxcn = maxval(self%cn(:self%ref(izp), izp))
                   if (abs(maxcn - self%cn(iref, izp)) < 1e-12_wp) then
                      gwk = 1.0_wp
