@@ -299,7 +299,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
             end do
             
             gwk = expw * norm
-            if (is_exceptional(gwk) .or. norm < 1e-7_wp) then
+            if (is_exceptional(gwk) .or. norm == 0.0_wp) then
                maxcn = maxval(self%cn(:self%ref(izp), izp))
                if (abs(maxcn - self%cn(iref, izp)) < 1e-12_wp) then
                   gwk = 1.0_wp
@@ -317,7 +317,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
             ! far from all reference CNs. To ensure consistent behavior, we set 
             ! the norm to zero above.
             dgwk = norm * (expd - expw * dnorm * norm)
-            if (is_exceptional(dgwk) .or. norm < 1e-7_wp) then
+            if (is_exceptional(dgwk) .or. norm == 0.0_wp) then
                dgwk = 0.0_wp
             end if
             gwdcn(iref, iat, 1) = dgwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
