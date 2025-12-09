@@ -257,6 +257,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
    integer :: iat, izp, iref, igw
    real(wp) :: norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, maxcn
+   real(wp), parameter :: eps_norm = tiny(1._wp)**0.5_wp
 
    if (present(gwdcn) .and. present(gwdq)) then
       gwvec(:, :, :) = 0.0_wp
@@ -280,7 +281,13 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                dnorm = dnorm + 2*wf * (self%cn(iref, izp) - cn(iat)) * gw
             end do
          end do
-         norm = 1.0_wp / norm
+
+         if (abs(norm) > eps_norm) then
+            norm = 1.0_wp / norm
+         else
+            norm = 0.0_wp
+         end if
+
          do iref = 1, self%ref(izp)
             expw = 0.0_wp
             expd = 0.0_wp
@@ -290,8 +297,9 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                expw = expw + gw
                expd = expd + 2*wf * (self%cn(iref, izp) - cn(iat)) * gw
             end do
+            
             gwk = expw * norm
-            if (is_exceptional(gwk)) then
+            if (is_exceptional(gwk) .or. norm < 1e-7_wp) then
                maxcn = maxval(self%cn(:self%ref(izp), izp))
                if (abs(maxcn - self%cn(iref, izp)) < 1e-12_wp) then
                   gwk = 1.0_wp
@@ -299,11 +307,17 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                   gwk = 0.0_wp
                end if
             end if
+
             gwvec(iref, iat, 1) = gwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
             gwdq(iref, iat, 1) = gwk * dzeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
-
+            
+            ! This expression behaves differently for -O0 and -O3 optimization
+            ! levels for tiny norm values. It yields incorrect values for -O0 
+            ! due to fp underflow. These tiny values can occur if the CN is very
+            ! far from all reference CNs. To ensure consistent behavior, we set 
+            ! the norm to zero above.
             dgwk = norm * (expd - expw * dnorm * norm)
-            if (is_exceptional(dgwk)) then
+            if (is_exceptional(dgwk) .or. norm < 1e-7_wp) then
                dgwk = 0.0_wp
             end if
             gwdcn(iref, iat, 1) = dgwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
@@ -328,15 +342,22 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                norm = norm + weight_cn(wf, cn(iat), self%cn(iref, izp))
             end do
          end do
-         norm = 1.0_wp / norm
+
+         if (abs(norm) > eps_norm) then
+            norm = 1.0_wp / norm
+         else
+            norm = 0.0_wp
+         end if
+
          do iref = 1, self%ref(izp)
             expw = 0.0_wp
             do igw = 1, self%ngw(iref, izp)
                wf = igw * self%wf
                expw = expw + weight_cn(wf, cn(iat), self%cn(iref, izp))
             end do
+
             gwk = expw * norm
-            if (is_exceptional(gwk)) then
+            if (is_exceptional(gwk) .or. norm < 1e-7_wp) then
                maxcn = maxval(self%cn(:self%ref(izp), izp))
                if (abs(maxcn - self%cn(iref, izp)) < 1e-12_wp) then
                   gwk = 1.0_wp
@@ -344,6 +365,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                   gwk = 0.0_wp
                end if
             end if
+
             gwvec(iref, iat, 1) = gwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
          end do
       end do
