@@ -206,7 +206,7 @@ jobs:
     environment: release
 
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
@@ -237,6 +237,13 @@ jobs:
           skip-existing: true
           verbose: true
 
+      - name: Publish to PyPI
+        if: ${{ github.event_name == 'release' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+          verbose: true
+
       - name: Upload assets
         uses: svenstaro/upload-release-action@v2
         if: ${{ github.event_name == 'release' }}
@@ -246,10 +253,3 @@ jobs:
           file_glob: true
           tag: ${{ github.ref }}
           overwrite: true
-
-      - name: Publish to PyPI
-        if: ${{ github.event_name == 'release' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip-existing: true
-          verbose: true
