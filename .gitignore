@@ -40,6 +40,7 @@
 # Python files
 __pycache__
 .idea/
+.venv*
 
 # Project-specific files
 .EDISP
