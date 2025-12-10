@@ -25,13 +25,13 @@ Example
 -------
 >>> from dftd4.library import get_api_version
 >>> get_api_version()
-'4.0.0'
+'4.0.1'
 """
 
 import functools
 
 try:
-    from ._libdftd4 import ffi, lib
+    from ._libdftd4 import ffi, lib  # type: ignore
 except ImportError:
     raise ImportError("dftd4 C extension unimportable, cannot use C-API")
 
