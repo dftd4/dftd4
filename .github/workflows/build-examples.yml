@@ -32,6 +32,7 @@ jobs:
         example:
           - api-minimal-3.7.0
           - api-minimal-latest
+          - api-read-coord
 
     env:
       FC: gfortran

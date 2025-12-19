@@ -113,6 +113,22 @@ Dependencies are provided via Meson subprojects/wraps, CMake find modules, fpm, 
   ```
   then `use dftd4_*` modules (e.g., `dftd4_model`, `dftd4_damping`).
 
+#### Core Data Types
+- `structure_type` (`mctc_io`) - molecular structure container (numbers, positions, lattice, periodic flags).
+- `dispersion_model` (`dftd4_model_type`) - abstract base for D4/D4S dispersion models.
+- `d4_model` / `d4s_model` (`dftd4_model_d4`, `dftd4_model_d4s`) - concrete dispersion model instances.
+- `damping_param` (`dftd4_damping`) and `rational_damping_param` (`dftd4_damping_rational`) - damping configuration objects.
+- `realspace_cutoff` (`dftd4_cutoff`) - cutoff settings for CN, two-body, and three-body terms.
+- `error_type` (`mctc_env`) - error propagation across Fortran APIs.
+
+#### Core Functions
+- `read_structure` (`mctc_io`) - load a structure from disk into `structure_type`.
+- `new_d4_model` / `new_d4s_model` (`dftd4_model_d4`, `dftd4_model_d4s`) - construct dispersion models.
+- `get_rational_damping` (`dftd4_param`) - fetch damping parameters by functional name or ID.
+- `get_dispersion` (`dftd4_disp`) - compute dispersion energy (and optionally gradients/virial).
+- `get_pairwise_dispersion` (`dftd4_disp`) - compute pairwise-resolved energies.
+- `get_properties` (`dftd4_disp`) - compute CN, charges, C6, and polarizabilities.
+
 ### C API
 - Enable with `-Dapi=true`; interfaces live in `src/dftd4/api.f90`, header in `include/dftd4.h`.
 - Include the header and link with pkg-config:
@@ -156,6 +172,50 @@ meson test -C _build --print-errorlogs
 ctest --test-dir _build --output-on-failure
 fpm test
 ```
+
+### Python API Tests
+
+The Python tests live in `python/dftd4/test_*.py` and use `pytest`.
+
+Recommended setup (editable install into the venv + test; no optional deps):
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install meson meson-python ninja cffi numpy pkgconfig pytest
+
+meson setup --wipe _build \
+  -Dprefix="$VIRTUAL_ENV/_install" \
+  -Dlibdir=lib \
+  -Ddefault_library=shared \
+  -Dapi=true \
+  -Dpython=true \
+  -Dpython_version="$(command -v python3)" \
+  -Dbuildtype=debug
+meson compile -C _build
+meson install -C _build
+
+PKG_CONFIG_PATH="$VIRTUAL_ENV/_install/lib/pkgconfig:$PKG_CONFIG_PATH" \
+  pkg-config --modversion dftd4
+PKG_CONFIG_PATH="$VIRTUAL_ENV/_install/lib/pkgconfig:$PKG_CONFIG_PATH" \
+  python -m pip install -e python -Csetup-args="-Dbuildtype=debug"
+
+LD_LIBRARY_PATH="$VIRTUAL_ENV/_install/lib:$LD_LIBRARY_PATH" \
+  python -m pytest -vv --pyargs dftd4
+```
+
+Optional test modules require extra dependencies:
+- `test_ase.py` → `ase`
+- `test_qcschema.py` → `qcelemental`
+- `test_pyscf.py` → `pyscf`
+
+Out-of-tree build (Python-only):
+```bash
+cd python
+meson setup _build -Dpython_version=$(which python3)
+meson compile -C _build
+```
+Ensure `PKG_CONFIG_PATH` can find the installed `dftd4` library before building.
 
 ### Writing Tests
 
@@ -277,16 +337,45 @@ _build/app/dftd4 --func pbe0 --json --grad --noedisp struct.xyz
 _build/app/dftd4 --pair-resolved mol.xyz
 ```
 
+### Fortran API Example (compute D4 energy)
+```fortran
+program d4_energy
+   use mctc_env, only : wp, error_type
+   use mctc_io, only : structure_type, read_structure
+   use dftd4, only : d4_model, new_d4_model, damping_param, &
+      & get_rational_damping, realspace_cutoff, get_dispersion
+   implicit none
+
+   type(structure_type) :: mol
+   type(d4_model) :: model
+   class(damping_param), allocatable :: param
+   type(realspace_cutoff) :: cutoff
+   type(error_type), allocatable :: error
+   real(wp) :: energy
+
+   call read_structure(mol, "coord", error)
+   if (allocated(error)) then
+      write (*, '(a)') trim(error%message)
+      stop 1
+   end if
+
+   call new_d4_model(error, model, mol)
+   if (allocated(error)) then
+      write (*, '(a)') trim(error%message)
+      stop 1
+   end if
+
+   call get_rational_damping("pbe", param)
+   call get_dispersion(mol, model, param, cutoff, energy)
+
+   write (*, '(a,f18.12)') "D4 dispersion energy (Hartree): ", energy
+end program d4_energy
+```
+
 ### List Available Parameters
 ```bash
 _build/app/dftd4 param --list
 # or inspect assets/parameters.toml
-```
-
-### Python Extension (in-tree)
-```bash
-meson setup _build -Dpython=true -Dpython_version=$(which python3)
-meson compile -C _build
 ```
 
 ### Linking into Other Codes (e.g., VASP)

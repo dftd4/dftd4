@@ -18,9 +18,17 @@
 from typing import Any, Dict
 
 import numpy as np
-import qcelemental as qcel
-from dftd4.qcschema import run_qcschema
+import pytest
 from pytest import approx
+
+try:
+    import qcelemental as qcel
+    from dftd4.qcschema import run_qcschema
+    has_qcschema = True
+except ModuleNotFoundError:
+    has_qcschema = False
+
+pytestmark = pytest.mark.skipif(not has_qcschema, reason="requires qcelemental")
 
 
 def get_example_molecule() -> Dict[str, Any]:

@@ -24,11 +24,12 @@ try:
     import dftd4.pyscf as disp
     import pyscf
     from pyscf import gto, scf, pbc
+    has_pyscf = True
 except ModuleNotFoundError:
-    pyscf = None
+    has_pyscf = False
 
+pytestmark = pytest.mark.skipif(not has_pyscf, reason="requires pyscf")
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 @pytest.mark.parametrize("ecp", [None, "ccecp"])
 def test_energy_r2scan_d4(ecp: Union[None, str]) -> None:
     mol = gto.M(
@@ -58,7 +59,6 @@ def test_energy_r2scan_d4(ecp: Union[None, str]) -> None:
     d4 = disp.DFTD4Dispersion(mol, xc="r2SCAN")
     assert d4.kernel()[0] == approx(-0.005001101058518388, abs=1.0e-7)
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_energy_tpss_d4s() -> None:
     mol = gto.M(
         atom="""
@@ -84,7 +84,6 @@ def test_energy_tpss_d4s() -> None:
     d4 = disp.DFTD4Dispersion(mol, xc="TPSS", model="d4s")
     assert d4.kernel()[0] == approx(-0.016049411775539424, abs=1.0e-7)
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_gradient_b97m_d4() -> None:
     mol = gto.M(
         atom="""
@@ -132,7 +131,6 @@ def test_gradient_b97m_d4() -> None:
     d4 = disp.DFTD4Dispersion(mol, xc="b97m")
     assert d4.kernel()[1] == approx(ref, abs=1.0e-7)
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_gradient_blyp_d4s() -> None:
     mol = gto.M(
         atom="""
@@ -180,7 +178,6 @@ def test_gradient_blyp_d4s() -> None:
     assert d4.kernel()[1] == approx(ref, abs=1.0e-7)
 
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_energy_hf() -> None:
     mol = gto.M(
         atom="""
@@ -198,7 +195,6 @@ def test_energy_hf() -> None:
     assert mf.kernel() == approx(-110.91742452859162, abs=1.0e-8)
     assert "dispersion" in mf.scf_summary
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_energy_hf_d4s() -> None:
     mol = gto.M(
         atom="""
@@ -216,7 +212,6 @@ def test_energy_hf_d4s() -> None:
     assert mf.kernel() == approx(-110.91765211773482, abs=1.0e-8)
     assert "dispersion" in mf.scf_summary
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_gradient_hf() -> None:
     mol = gto.M(
         atom="""
@@ -241,7 +236,6 @@ def test_gradient_hf() -> None:
     grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
     assert grad.kernel() == approx(ref, abs=1.0e-7)
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_gradient_hf_d4s() -> None:
     mol = gto.M(
         atom="""
@@ -267,7 +261,6 @@ def test_gradient_hf_d4s() -> None:
     assert grad.kernel() == approx(ref, abs=1.0e-7)
 
 
-@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_pbc():
     mol = gto.M(
         atom="""

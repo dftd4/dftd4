@@ -15,11 +15,18 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-from ase.build import molecule
-from ase.calculators.emt import EMT
-from dftd4.ase import DFTD4
+import pytest
 from pytest import approx
 
+try:
+    from ase.build import molecule
+    from ase.calculators.emt import EMT
+    from dftd4.ase import DFTD4
+    has_ase = True
+except ModuleNotFoundError:
+    has_ase = False
+
+pytestmark = pytest.mark.skipif(not has_ase, reason="requires ase")
 
 def test_ase_scand4() -> None:
     thr = 1.0e-6
