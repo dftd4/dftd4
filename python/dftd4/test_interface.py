@@ -16,7 +16,6 @@
 
 import numpy as np
 from dftd4.interface import DampingParam, DispersionModel, Structure
-import pytest
 from pytest import approx, raises
 
 
@@ -203,7 +202,7 @@ def test_tpssd4s() -> None:
         ]
     )
 
-    model = DispersionModel(numbers, positions, model = "d4s")
+    model = DispersionModel(numbers, positions, model="d4s")
 
     res = model.get_dispersion(DampingParam(method="tpss"), grad=False)
 
@@ -523,7 +522,9 @@ def test_pair_resolved() -> None:
     )
 
     assert approx(res.get("additive pairwise energy"), abs=thr) == pair_disp2
-    assert approx(res.get("non-additive pairwise energy"), abs=thr) == pair_disp3
+    assert (
+        approx(res.get("non-additive pairwise energy"), abs=thr) == pair_disp3
+    )
 
 
 def test_properties() -> None:
@@ -632,20 +633,20 @@ def test_error_model() -> None:
     """Test the error for unknown dispersion model"""
     numbers = np.array(
         [
-            1, 
-            1, 
-            8, 
+            1,
+            1,
+            8,
         ]
     )
     positions = np.array(
         [
-            [-0.02298820517725,  0.00000000000000, -1.76188954246096], 
-            [ 1.65369502723146,  0.00000000000000,  0.60848805100320], 
-            [-0.10273226709885,  0.00000000000000,  0.07266269355725], 
+            [-0.02298820517725, 0.00000000000000, -1.76188954246096],
+            [1.65369502723146, 0.00000000000000, 0.60848805100320],
+            [-0.10273226709885, 0.00000000000000, 0.07266269355725],
         ]
     )
 
-    with pytest.raises(ValueError) as exc:
+    with raises(ValueError) as exc:
         DispersionModel(numbers, positions, model="D42")
-    
+
     assert "Unknown dispersion model" in str(exc)

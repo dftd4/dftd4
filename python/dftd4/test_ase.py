@@ -14,11 +14,22 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
+# pyright: reportPossiblyUnboundVariable=false
+# pylint: disable=possibly-used-before-assignment
+
 import numpy as np
-from ase.build import molecule
-from ase.calculators.emt import EMT
-from dftd4.ase import DFTD4
-from pytest import approx
+from pytest import approx, mark
+
+try:
+    from ase.build import molecule
+    from ase.calculators.emt import EMT
+    from dftd4.ase import DFTD4
+
+    has_ase = True
+except ModuleNotFoundError:
+    has_ase = False
+
+pytestmark = mark.skipif(not has_ase, reason="requires ase")
 
 
 def test_ase_scand4() -> None:
@@ -42,19 +53,24 @@ def test_ase_scand4() -> None:
     atoms = molecule("methylenecyclopropane")
     atoms.calc = DFTD4(method="SCAN")
 
-    assert approx(atoms.get_potential_energy(), abs=thr) == -0.021665446836610567
+    assert (
+        approx(atoms.get_potential_energy(), abs=thr) == -0.021665446836610567
+    )
     assert approx(atoms.get_forces(), abs=thr) == forces
 
     atoms.calc = DFTD4(method="SCAN").add_calculator(EMT())
     assert approx(atoms.get_potential_energy(), abs=thr) == 3.6624398683434225
 
     if hasattr(atoms.calc, "calcs"):
-        calcs = atoms.calc.calcs
+        calcs = atoms.calc.calcs  # type: ignore[attr-defined]
     else:
-        calcs = atoms.calc.mixer.calcs
+        calcs = atoms.calc.mixer.calcs  # type: ignore[attr-defined]
 
     energies = [calc.get_potential_energy() for calc in calcs]
-    assert approx(energies, abs=thr) == [-0.021665446836610563, 3.684105315180033]
+    assert approx(energies, abs=thr) == [
+        -0.021665446836610563,
+        3.684105315180033,
+    ]
 
 
 def test_ase_pbed4s() -> None:
@@ -63,16 +79,16 @@ def test_ase_pbed4s() -> None:
     forces = np.array(
         [
             [-1.05900228e-18, -1.47186433e-03, -2.08505399e-03],
-            [-8.94454333e-19,  1.47186433e-03, -2.08505399e-03],
-            [-2.48990627e-03, -1.06729670e-18,  2.15375860e-03],
-            [ 2.48990627e-03, -1.91047493e-19,  2.15375860e-03],
+            [-8.94454333e-19, 1.47186433e-03, -2.08505399e-03],
+            [-2.48990627e-03, -1.06729670e-18, 2.15375860e-03],
+            [2.48990627e-03, -1.91047493e-19, 2.15375860e-03],
             [-4.33024525e-22, -2.06112648e-03, -6.95481292e-05],
-            [ 2.47579260e-21, -2.26182709e-03, -5.56758674e-04],
-            [ 3.90654502e-20,  2.06112648e-03, -6.95481292e-05],
-            [ 4.57489295e-20,  2.26182709e-03, -5.56758674e-04],
-            [-1.57814347e-03,  6.44754156e-19,  5.57602199e-04],
-            [ 1.57814347e-03,  5.62735538e-19,  5.57602199e-04],
-       ]
+            [2.47579260e-21, -2.26182709e-03, -5.56758674e-04],
+            [3.90654502e-20, 2.06112648e-03, -6.95481292e-05],
+            [4.57489295e-20, 2.26182709e-03, -5.56758674e-04],
+            [-1.57814347e-03, 6.44754156e-19, 5.57602199e-04],
+            [1.57814347e-03, 5.62735538e-19, 5.57602199e-04],
+        ]
     )
 
     atoms = molecule("bicyclobutane")
@@ -85,12 +101,15 @@ def test_ase_pbed4s() -> None:
     assert approx(atoms.get_potential_energy(), abs=thr) == 3.364290912363593
 
     if hasattr(atoms.calc, "calcs"):
-        calcs = atoms.calc.calcs
+        calcs = atoms.calc.calcs  # type: ignore[attr-defined]
     else:
-        calcs = atoms.calc.mixer.calcs
+        calcs = atoms.calc.mixer.calcs  # type: ignore[attr-defined]
 
     energies = [calc.get_potential_energy() for calc in calcs]
-    assert approx(energies, abs=thr) == [-0.16377494406788423, 3.5280658564314775]
+    assert approx(energies, abs=thr) == [
+        -0.16377494406788423,
+        3.5280658564314775,
+    ]
 
 
 def test_ase_tpssd4() -> None:
@@ -122,10 +141,13 @@ def test_ase_tpssd4() -> None:
     atoms.calc = DFTD4(method="TPSS").add_calculator(EMT())
     assert approx(atoms.get_potential_energy(), abs=thr) == 4.864016486351274
 
-    if hasattr(atoms.calc, 'calcs'):
-        calcs = atoms.calc.calcs
+    if hasattr(atoms.calc, "calcs"):
+        calcs = atoms.calc.calcs  # type: ignore[attr-defined]
     else:
-        calcs = atoms.calc.mixer.calcs
+        calcs = atoms.calc.mixer.calcs  # type: ignore[attr-defined]
 
     energies = [calc.get_potential_energy() for calc in calcs]
-    assert approx(energies, abs=thr) == [-0.24206732765720396, 5.106083814008478]
+    assert approx(energies, abs=thr) == [
+        -0.24206732765720396,
+        5.106083814008478,
+    ]
