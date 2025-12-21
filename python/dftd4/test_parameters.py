@@ -69,7 +69,9 @@ def test_get_pw6b95() -> None:
         "a2": 5.83690254,
     }
     actual = get_damping_param(
-        "pw6b95", data_file=get_data_file_name(), defaults=["bj-eeq-two", "bj-eeq-mbd"]
+        "pw6b95",
+        data_file=get_data_file_name(),
+        defaults=["bj-eeq-two", "bj-eeq-mbd"],
     )
 
     for key in expected.keys():

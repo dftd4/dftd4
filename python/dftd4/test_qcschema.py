@@ -14,21 +14,23 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
+# pyright: reportPossiblyUnboundVariable=false
+# pylint: disable=possibly-used-before-assignment
 
 from typing import Any, Dict
 
 import numpy as np
-import pytest
-from pytest import approx
+from pytest import approx, mark
 
 try:
     import qcelemental as qcel
     from dftd4.qcschema import run_qcschema
+
     has_qcschema = True
 except ModuleNotFoundError:
     has_qcschema = False
 
-pytestmark = pytest.mark.skipif(not has_qcschema, reason="requires qcelemental")
+pytestmark = mark.skipif(not has_qcschema, reason="requires qcelemental")
 
 
 def get_example_molecule() -> Dict[str, Any]:
@@ -116,7 +118,6 @@ def test_energy_r2scan_3c() -> None:
 
     atomic_result = run_qcschema(atomic_input)
 
-    print(atomic_result)
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == -6.0533536923248e-03
 
@@ -222,8 +223,13 @@ def test_energy_m06l_d4() -> None:
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result, abs=thr) == -0.0013314656225517764
-    assert approx(atomic_result.extras["dftd4"]["partial charges"], abs=thr) == charges
+    assert (
+        approx(atomic_result.return_result, abs=thr) == -0.0013314656225517764
+    )
+    assert (
+        approx(atomic_result.extras["dftd4"]["partial charges"], abs=thr)
+        == charges
+    )
 
 
 def test_gradient_b97m_d4() -> None:
@@ -281,7 +287,6 @@ def test_gradient_tpss_d4s() -> None:
     )
     gradient = np.array(
         [
-            
             [-1.36067766e-04, -4.72731818e-04, -1.88160742e-04],
             [+2.00334329e-04, -3.77344166e-04, -1.54443106e-04],
             [+4.85748705e-04, -1.86465318e-04, -8.16713264e-05],

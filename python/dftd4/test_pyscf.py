@@ -14,21 +14,25 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
+# pyright: reportPossiblyUnboundVariable=false
+# pylint: disable=possibly-used-before-assignment
+
 from typing import Union
 
 import numpy as np
 import pytest
-from pytest import approx
+from pytest import approx, mark
 
 try:
     import dftd4.pyscf as disp
-    import pyscf
     from pyscf import gto, scf, pbc
+
     has_pyscf = True
 except ModuleNotFoundError:
     has_pyscf = False
 
-pytestmark = pytest.mark.skipif(not has_pyscf, reason="requires pyscf")
+pytestmark = mark.skipif(not has_pyscf, reason="requires pyscf")
+
 
 @pytest.mark.parametrize("ecp", [None, "ccecp"])
 def test_energy_r2scan_d4(ecp: Union[None, str]) -> None:
@@ -59,6 +63,7 @@ def test_energy_r2scan_d4(ecp: Union[None, str]) -> None:
     d4 = disp.DFTD4Dispersion(mol, xc="r2SCAN")
     assert d4.kernel()[0] == approx(-0.005001101058518388, abs=1.0e-7)
 
+
 def test_energy_tpss_d4s() -> None:
     mol = gto.M(
         atom="""
@@ -83,6 +88,7 @@ def test_energy_tpss_d4s() -> None:
 
     d4 = disp.DFTD4Dispersion(mol, xc="TPSS", model="d4s")
     assert d4.kernel()[0] == approx(-0.016049411775539424, abs=1.0e-7)
+
 
 def test_gradient_b97m_d4() -> None:
     mol = gto.M(
@@ -131,6 +137,7 @@ def test_gradient_b97m_d4() -> None:
     d4 = disp.DFTD4Dispersion(mol, xc="b97m")
     assert d4.kernel()[1] == approx(ref, abs=1.0e-7)
 
+
 def test_gradient_blyp_d4s() -> None:
     mol = gto.M(
         atom="""
@@ -151,10 +158,10 @@ def test_gradient_blyp_d4s() -> None:
              H    1.268062422  -2.604093417   0.551628052
              S    4.119569763   1.598928667  -1.391174777
              """,
-        spin=1
+        spin=1,
     )
     ref = np.array(
-        [  
+        [
             [-1.04361222e-04, -1.65054791e-04, -1.36662175e-04],
             [-1.41500522e-03, +1.89282651e-04, +2.16639105e-04],
             [-1.18067839e-04, +4.50543787e-04, +1.50087553e-03],
@@ -193,7 +200,8 @@ def test_energy_hf() -> None:
     )
     mf = disp.energy(scf.RHF(mol))
     assert mf.kernel() == approx(-110.91742452859162, abs=1.0e-8)
-    assert "dispersion" in mf.scf_summary
+    assert "dispersion" in mf.scf_summary  # type: ignore[attr-defined]
+
 
 def test_energy_hf_d4s() -> None:
     mol = gto.M(
@@ -210,7 +218,8 @@ def test_energy_hf_d4s() -> None:
     )
     mf = disp.energy(scf.RHF(mol), model="d4s")
     assert mf.kernel() == approx(-110.91765211773482, abs=1.0e-8)
-    assert "dispersion" in mf.scf_summary
+    assert "dispersion" in mf.scf_summary  # type: ignore[attr-defined]
+
 
 def test_gradient_hf() -> None:
     mol = gto.M(
@@ -235,6 +244,7 @@ def test_gradient_hf() -> None:
     )
     grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
     assert grad.kernel() == approx(ref, abs=1.0e-7)
+
 
 def test_gradient_hf_d4s() -> None:
     mol = gto.M(
@@ -281,7 +291,7 @@ def test_pbc():
         a=[[3, 0, 0], [0, 3, 0], [0, 0, 3]],
     )
 
-    xc = 'pbe'
+    xc = "pbe"
 
     e_mol_disp = disp.DFTD4Dispersion(mol, xc=xc).kernel()[0]
     e_pbc_disp = disp.DFTD4Dispersion(pmol, xc=xc).kernel()[0]
