@@ -53,7 +53,7 @@ Now you are ready to use `dftd4`.
 
 ### Spack package
 
-[![Spack](https://img.shields.io/spack/v/dftd4)](https://spack.readthedocs.io/en/latest/package_list.html#dftd4)
+[![Spack](https://img.shields.io/spack/v/dftd4)](https://packages.spack.io/package.html?name=dftd4)
 
 This project is available with [spack](https://spack.io) in its develop version.
 You can install and load `dftd4` with
