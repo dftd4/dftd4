@@ -255,8 +255,8 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
    !> derivative of the weighting function w.r.t. the charge scaling
    real(wp), intent(out), optional :: gwdq(:, :, :)
 
-   integer :: iat, izp, iref, igw
-   real(wp) :: norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, maxcn
+   integer :: iat, izp, iref, igw, best_ref
+   real(wp) :: norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, diff, best_diff
    real(wp), parameter :: eps_norm = tiny(1._wp)**0.5_wp
 
    if (present(gwdcn) .and. present(gwdq)) then
@@ -266,7 +266,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
       !$omp parallel do default(none) schedule(runtime) &
       !$omp shared(gwvec, gwdcn, gwdq, mol, self, cn, q) private(iat, izp, iref, &
-      !$omp& igw, norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, maxcn)
+      !$omp& igw, norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, diff, best_diff, best_ref)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          zi = self%zeff(izp)
@@ -288,6 +288,16 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
             norm = 0.0_wp
          end if
 
+         best_ref = 1
+         best_diff = huge(1.0_wp)
+         do iref = 1, self%ref(izp)
+            diff = abs(cn(iat) - self%cn(iref, izp))
+            if (diff < best_diff) then
+               best_diff = diff
+               best_ref = iref
+            end if
+         end do
+
          do iref = 1, self%ref(izp)
             expw = 0.0_wp
             expd = 0.0_wp
@@ -300,8 +310,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
             
             gwk = expw * norm
             if (is_exceptional(gwk) .or. norm == 0.0_wp) then
-               maxcn = maxval(self%cn(:self%ref(izp), izp))
-               if (abs(maxcn - self%cn(iref, izp)) < 1e-12_wp) then
+               if (iref == best_ref) then
                   gwk = 1.0_wp
                else
                   gwk = 0.0_wp
@@ -330,7 +339,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
       !$omp parallel do default(none) schedule(runtime) &
       !$omp shared(gwvec, mol, self, cn, q) &
-      !$omp private(iat, izp, iref, igw, norm, gw, expw, gwk, wf, zi, gi, maxcn)
+      !$omp private(iat, izp, iref, igw, norm, gw, expw, gwk, wf, zi, gi, diff, best_diff, best_ref)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          zi = self%zeff(izp)
@@ -349,6 +358,16 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
             norm = 0.0_wp
          end if
 
+         best_ref = 1
+         best_diff = huge(1.0_wp)
+         do iref = 1, self%ref(izp)
+            diff = abs(cn(iat) - self%cn(iref, izp))
+            if (diff < best_diff) then
+               best_diff = diff
+               best_ref = iref
+            end if
+         end do
+
          do iref = 1, self%ref(izp)
             expw = 0.0_wp
             do igw = 1, self%ngw(iref, izp)
@@ -358,8 +377,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
             gwk = expw * norm
             if (is_exceptional(gwk) .or. norm == 0.0_wp) then
-               maxcn = maxval(self%cn(:self%ref(izp), izp))
-               if (abs(maxcn - self%cn(iref, izp)) < 1e-12_wp) then
+               if (iref == best_ref) then
                   gwk = 1.0_wp
                else
                   gwk = 0.0_wp

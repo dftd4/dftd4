@@ -51,6 +51,7 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-D4-mb02", test_gw_d4_mb02), &
       & new_unittest("gw-D4-EEQBC-mb02", test_gw_d4_eeqbc_mb02), &
       & new_unittest("gw-D4-mb03", test_gw_d4_mb03), &
+      & new_unittest("gw-D4-mg-fallback", test_gw_d4_mg_fallback), &
       & new_unittest("dgw_D4-mb04", test_dgw_d4_mb04), &
       & new_unittest("dgw_D4S-mb04", test_dgw_d4s_mb04), &
       & new_unittest("dgw_D4-mb05", test_dgw_d4_mb05), &
@@ -1058,6 +1059,46 @@ subroutine test_gw_d4_mb03(error)
    call test_gw_gen(error, mol, d4, ref, with_cn=.true., with_q=.true.)
 
 end subroutine test_gw_d4_mb03
+
+
+subroutine test_gw_d4_mg_fallback(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+
+   integer, parameter :: nat = 1
+   character(len=4), parameter :: sym(nat) = [character(len=4) :: "Mg"]
+   real(wp), parameter :: xyz(3, nat) = reshape([&
+      & 0.0_wp, 0.0_wp, 0.0_wp], [3, nat])
+
+   real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :), expected(:, :, :)
+   integer :: mref
+
+   call new(mol, sym, xyz)
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) then 
+      call test_failed(error, "D4 model could not be created")
+      return
+   end if
+
+   mref = maxval(d4%ref)
+   allocate(cn(mol%nat), q(mol%nat), &
+      & gwvec(mref, mol%nat, d4%ncoup), expected(mref, mol%nat, d4%ncoup))
+   cn(:) = -1.0e8_wp
+   q(:) = 0.0_wp
+   expected(:, :, :) = 0.0_wp
+   expected(1, 1, 1) = 1.0_wp
+
+   call d4%weight_references(mol, cn, q, gwvec)
+
+   if (any(abs(gwvec - expected) > thr2)) then
+      call test_failed(error, "Reference fallback did not select closest CN")
+   end if
+
+end subroutine test_gw_d4_mg_fallback
 
 
 subroutine test_dgw_d4_mb04(error)
