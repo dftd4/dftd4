@@ -277,12 +277,81 @@ err:
     return 1;
 }
 
+int test_mbd_toggle(void)
+{
+    printf("Start test: mbd toggle check\n");
+    
+    // Setup molecule (same as test_example)
+    int const natoms = 7;
+    int const attyp[7] = { 6, 6, 6, 1, 1, 1, 1 };
+    double const coord[21] = {
+        +0.00000000000000, +0.00000000000000, -1.79755622305860,
+        +0.00000000000000, +0.00000000000000, +0.95338756106749,
+        +0.00000000000000, +0.00000000000000, +3.22281255790261,
+        -0.96412815539807, -1.66991895015711, -2.53624948351102,
+        -0.96412815539807, +1.66991895015711, -2.53624948351102,
+        +1.92825631079613, +0.00000000000000, -2.53624948351102,
+        +0.00000000000000, +0.00000000000000, +5.23010455462158 };
+
+    double energy_mbd_on = 0.0;
+    double energy_mbd_off = 0.0;
+    
+    dftd4_error error = dftd4_new_error();
+    dftd4_structure mol = dftd4_new_structure(error, natoms, attyp, coord, NULL, NULL, NULL);
+    dftd4_model disp = dftd4_new_d4_model(error, mol);
+    
+    // 1. Calculate with MBD = true -> s9 = 1.0
+    dftd4_param param_on = dftd4_load_rational_damping(error, "pbe", true);
+    if (dftd4_check_error(error)) goto err;
+    
+    dftd4_get_dispersion(error, mol, disp, param_on, &energy_mbd_on, NULL, NULL);
+    dftd4_delete(param_on);
+
+    // 2. Calculate with MBD = false -> s9 = 0.0
+    dftd4_param param_off = dftd4_load_rational_damping(error, "pbe", false);
+    if (dftd4_check_error(error)) goto err;
+
+    dftd4_get_dispersion(error, mol, disp, param_off, &energy_mbd_off, NULL, NULL);
+    dftd4_delete(param_off);
+
+    // 3. Comparison
+    // If the bug exists (https://github.com/dftd4/dftd4/issues/333), 'false' 
+    // is treated as 'true', and energies will be identical. The difference 
+    // will be small though because the ATM term itself is small.
+    printf("Energy (MBD=on):  %.8f\n", energy_mbd_on);
+    printf("Energy (MBD=off): %.8f\n", energy_mbd_off);
+
+    double diff = energy_mbd_on - energy_mbd_off;
+    if (diff < 0) diff = -diff;
+
+    if (diff < 1e-10) {
+        printf("[Fatal] MBD toggle failed. Energies are identical (Diff: %e)\n", diff);
+        goto err;
+    }
+
+    // Cleanup
+    dftd4_delete(disp);
+    dftd4_delete(mol);
+    dftd4_delete(error);
+    return 0;
+
+err:
+    if (dftd4_check_error(error)) {
+        show_error(error);
+    }
+    dftd4_delete(disp);
+    dftd4_delete(mol);
+    dftd4_delete(error);
+    return 1;
+}
+
 int main(void)
 {
     int stat = 0;
     stat += test_uninitialized_error();
     stat += test_uninitialized_structure();
     stat += test_example();
+    stat += test_mbd_toggle();
 
     return stat == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
