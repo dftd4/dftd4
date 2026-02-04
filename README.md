@@ -338,13 +338,13 @@ pkg-config --modversion dftd4
 
 If your ``dftd4`` installation is not findable, you have to update your environment variables.
 One option is to provide a module file for your ``dftd4`` installation.
-The example module file below can be placed in your ``MODULEPATH`` to provide access to an installation in ``~/opt/dftd4/4.0.1``.
+The example module file below can be placed in your ``MODULEPATH`` to provide access to an installation in ``~/opt/dftd4/4.0.2``.
 Retry the above comment after loading the ``dftd4`` module and adjust the module file until ``pkg-config`` finds your installation.
 
 ```lua
--- dftd4/4.0.1.lua
+-- dftd4/4.0.2.lua
 local name = "dftd4"
-local version = "4.0.1"
+local version = "4.0.2"
 local prefix = pathJoin(os.getenv("HOME"), "opt", name, version)
 local libdir = "lib"  -- or lib64
 
