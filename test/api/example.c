@@ -315,7 +315,7 @@ int test_mbd_toggle(void)
 
     // 2. Calculate with MBD = false -> s9 = 0.0
     dftd4_param param_off = dftd4_load_rational_damping(error, "pbe", false);
-    if (param_off || dftd4_check_error(error)) goto err;
+    if (!param_off || dftd4_check_error(error)) goto err;
 
     dftd4_get_dispersion(error, mol, disp, param_off, &energy_mbd_off, NULL, NULL);
     if (dftd4_check_error(error)) goto err;
