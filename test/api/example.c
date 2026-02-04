@@ -296,22 +296,29 @@ int test_mbd_toggle(void)
     double energy_mbd_on = 0.0;
     double energy_mbd_off = 0.0;
     
+    // 0. Common setup
     dftd4_error error = dftd4_new_error();
+
     dftd4_structure mol = dftd4_new_structure(error, natoms, attyp, coord, NULL, NULL, NULL);
+    if (!mol || dftd4_check_error(error)) goto err;
+
     dftd4_model disp = dftd4_new_d4_model(error, mol);
+    if (!disp || dftd4_check_error(error)) goto err;
     
     // 1. Calculate with MBD = true -> s9 = 1.0
     dftd4_param param_on = dftd4_load_rational_damping(error, "pbe", true);
-    if (dftd4_check_error(error)) goto err;
+    if (!param_on || dftd4_check_error(error)) goto err;
     
     dftd4_get_dispersion(error, mol, disp, param_on, &energy_mbd_on, NULL, NULL);
+    if (dftd4_check_error(error)) goto err;
     dftd4_delete(param_on);
 
     // 2. Calculate with MBD = false -> s9 = 0.0
     dftd4_param param_off = dftd4_load_rational_damping(error, "pbe", false);
-    if (dftd4_check_error(error)) goto err;
+    if (param_off || dftd4_check_error(error)) goto err;
 
     dftd4_get_dispersion(error, mol, disp, param_off, &energy_mbd_off, NULL, NULL);
+    if (dftd4_check_error(error)) goto err;
     dftd4_delete(param_off);
 
     // 3. Comparison
