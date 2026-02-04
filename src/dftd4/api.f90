@@ -544,7 +544,12 @@ function load_rational_damping_api(verror, charptr, atm) &
 
    call c_f_character(charptr, method)
 
-   if (atm) s9 = 1.0_wp
+   if (atm) then
+      s9 = 1.0_wp
+   else
+      s9 = 0.0_wp
+   end if
+
    call get_rational_damping(method, tmp, s9)
    if (.not.allocated(tmp)) then
       call fatal_error(error%ptr, "Functional '"//method//"' not known")

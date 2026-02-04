@@ -84,19 +84,19 @@ subroutine ascii_atomic_references(unit, mol, disp)
 
    mref = maxval(disp%ref)
    write(unit, '(a,":")') "Atomic reference systems (in atomic units)"
-   write(unit, '(70("-"))')
+   write(unit, '(76("-"))')
    write(unit, '(a4, 5x)', advance='no') "Z"
    do iref = 1, 2
-      write(unit, '(a4, 2(1x, a7), 1x, a9)', advance='no') &
+      write(unit, '(a4, 2(1x, a7), 1x, a12)', advance='no') &
          "#", "CN", "q+Z", "C6(AA)"
    end do
    write(unit, '(a)')
-   write(unit, '(70("-"))')
+   write(unit, '(76("-"))')
    do isp = 1, mol%nid
       write(unit, '(i4, 1x, a4)', advance='no') &
          & mol%num(isp), mol%sym(isp)
       do iref = 1, disp%ref(isp)
-         write(unit, '(i4, 2(1x, f7.4), 1x, f9.4)', advance='no') &
+         write(unit, '(i4, 2(1x, f7.4), 1x, f12.4)', advance='no') &
             iref, disp%cn(iref, isp), disp%q(iref, isp) + disp%zeff(isp), &
             disp%c6(iref, iref, isp, isp)
          if (iref == 2 .and. disp%ref(isp) > 2) then
@@ -111,7 +111,7 @@ subroutine ascii_atomic_references(unit, mol, disp)
       end do
       write(unit, '(a)')
    end do
-   write(unit, '(70("-"))')
+   write(unit, '(76("-"))')
    write(unit, '(a)')
 
 end subroutine ascii_atomic_references
@@ -145,21 +145,23 @@ subroutine ascii_system_properties(unit, mol, disp, cn, q, c6, alpha)
    real(wp) :: sum_c8
 
    sum_c8 = 0.0_wp
+
    write(unit, '(a,":")') "Atomic properties (in atomic units)"
-   write(unit, '(71("-"))')
-   write(unit, '(a6,1x,a4,5x,*(1x,a10))') "#", "Z", "CN", "q", "C6(AA)", &
-      & "C8(AA)", "alpha(0)"
-   write(unit, '(71("-"))')
+   write(unit, '(76("-"))')
+   write(unit, '(a6,1x,a4,5x, 2(1x,a10), 1x,a11, 1x,a13, 1x,a10)') &
+      "#", "Z", "CN", "q", "C6(AA)", "C8(AA)", "alpha(0)"
+   write(unit, '(76("-"))')
+
    do iat = 1, mol%nat
       isp = mol%id(iat)
-      write(unit, '(i6,1x,i4,1x,a4,*(1x,f10.4))') &
+      write(unit, '(i6,1x,i4,1x,a4, 2(1x,f10.4), 1x,f11.4, 1x,f13.4, 1x,f10.4)') &
          & iat, mol%num(isp), mol%sym(isp), cn(iat), q(iat), c6(iat, iat), &
          & c6(iat, iat)*3*disp%r4r2(isp)**2, alpha(iat)
       do jat = 1, mol%nat
          sum_c8 = sum_c8 + 3*c6(jat, iat)*disp%r4r2(mol%id(jat))*disp%r4r2(isp)
       end do
    end do
-   write(unit, '(71("-"))')
+   write(unit, '(76("-"))')
    write(unit, '(a)')
 
    write(unit, '(a,":")') "Molecular properties (in atomic units)"
