@@ -237,7 +237,7 @@ Now you are ready to use ``dftd4``, check if you can import it with
    >>> import dftd4
    >>> from dftd4.libdftd4 import get_api_version
    >>> get_api_version()
-   '4.0.1'
+   '4.0.2'
 
 
 Building the extension module
