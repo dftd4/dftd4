@@ -14,7 +14,6 @@ Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
 ## Installing
 
 A statically linked binary distribution for Linux platforms is available at the [latest release](https://github.com/dftd4/dftd4/releases/latest) tag.
-Bleeding edge releases of the latest source from this repository are available on the [continuous release tag](https://github.com/dftd4/dftd4/releases/tag/bleed).
 
 
 ### Conda package
@@ -252,7 +251,7 @@ export MKL_NUM_THREADS=4  # Intel
 For large calculations, additional speed-ups might be possible by enabling dynamic scheduling in OMP by setting `OMP_SCHEDULE=dynamic`.
 This might help particularly for versions <4.0.0 ([explanation](https://github.com/dftd4/dftd4/pull/319)).
 
-Note that DFT-D4 is not MPI parallelized.
+Note that DFT-D4 is not MPI parallelized, and there are currently no plans to implement MPI parallelism.
 
 
 ## Parameters
@@ -288,6 +287,7 @@ Since there has been some confusion concerning the different ωB97X functionals,
 - [ωB97X-3c](https://doi.org/10.1063/5.0133026) (Composite "3c" method based on ωB97X-V, parameters: `wb97x-3c`)
 
 Note that the ωB97X parameters (`wb97x-2008`) cannot be used for the ωB97X-V functional (`wb97x`, `wb97x-rev`).
+
 We recommend the revised D4 parameters for ωB97X-V (`wb97x-rev`).
 
 </details>
