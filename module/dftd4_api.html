@@ -1,0 +1,2470 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Documentation for DFT-D4">
+    <meta name="author" content="Grimme group Bonn" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>dftd4_api &ndash; DFT-D4</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">DFT-D4 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>dftd4_api
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 5.0% of total for modules and submodules.">571 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/api.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/api.f90.html'>api.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">dftd4_api</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_api.html#variable-debug">debug</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#variable-namespace">namespace</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#types-0"
+         aria-expanded="false" aria-controls="types-0">
+         <h4 class="card-header bg-primary text-white">Derived Types</h4>
+      </a>
+      <div id="types-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_api.html#type-vp_error">vp_error</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#type-vp_model">vp_model</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#type-vp_param">vp_param</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#type-vp_structure">vp_structure</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#funcs-0"
+         aria-expanded="false" aria-controls="funcs-0">
+         <h4 class="card-header bg-primary text-white">Functions</h4>
+      </a>
+      <div id="funcs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-check_error_api">check_error_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-custom_d4_model_api">custom_d4_model_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-custom_d4s_model_api">custom_d4s_model_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-get_version_api">get_version_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-load_rational_damping_api">load_rational_damping_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-new_d4_model_api">new_d4_model_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-new_d4s_model_api">new_d4s_model_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-new_error_api">new_error_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-new_rational_damping_api">new_rational_damping_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-new_structure_api">new_structure_api</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-c_f_character">c_f_character</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-delete_error_api">delete_error_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-delete_model_api">delete_model_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-delete_param_api">delete_param_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-delete_structure_api">delete_structure_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-f_c_character">f_c_character</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-get_dispersion_api">get_dispersion_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-get_error_api">get_error_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-get_numerical_hessian_api">get_numerical_hessian_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-get_pairwise_dispersion_api">get_pairwise_dispersion_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-get_properties_api">get_properties_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-update_structure_api">update_structure_api</a>
+            <a class="list-group-item" href="../module/dftd4_api.html#proc-verify_structure">verify_structure</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      <p>Definition of the public C-API of dftd4</p>
+<div class="codehilite"><pre><span></span><code><span class="cm">/* This file is part of dftd4.</span>
+<span class="cm"> * SPDX-Identifier: LGPL-3.0-or-later</span>
+<span class="cm"> *</span>
+<span class="cm"> * dftd4 is free software: you can redistribute it and/or modify it under</span>
+<span class="cm"> * the terms of the GNU Lesser General Public License as published by</span>
+<span class="cm"> * the Free Software Foundation, either version 3 of the License, or</span>
+<span class="cm"> * (at your option) any later version.</span>
+<span class="cm"> *</span>
+<span class="cm"> * dftd4 is distributed in the hope that it will be useful,</span>
+<span class="cm"> * but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="cm"> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="cm"> * GNU Lesser General Public License for more details.</span>
+<span class="cm"> *</span>
+<span class="cm"> * You should have received a copy of the GNU Lesser General Public License</span>
+<span class="cm"> * along with dftd4.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="cm">**/</span>
+<span class="cp">#pragma once</span>
+
+<span class="cp">#ifdef __cplusplus</span>
+<span class="cp">#define DFTD4_API_ENTRY extern &quot;C&quot;</span>
+<span class="cp">#else</span>
+<span class="cp">#define DFTD4_API_ENTRY extern</span>
+<span class="cp">#ifndef DFTD4_CFFI</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+<span class="cp">#define DFTD4_API_CALL</span>
+<span class="cp">#define DFTD4_API_SUFFIX__V_3_0</span>
+<span class="cp">#define DFTD4_API_SUFFIX__V_3_1</span>
+<span class="cp">#define DFTD4_API_SUFFIX__V_3_2</span>
+<span class="cp">#define DFTD4_API_SUFFIX__V_3_3</span>
+<span class="cp">#define DFTD4_API_SUFFIX__V_3_4</span>
+<span class="cp">#define DFTD4_API_SUFFIX__V_3_5</span>
+<span class="cp">#define DFTD4_API_SUFFIX__V_4_0</span>
+
+<span class="c1">/// Error handle class</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_dftd4_error</span><span class="o">*</span><span class="w"> </span><span class="n">dftd4_error</span><span class="p">;</span>
+
+<span class="c1">/// Molecular structure data class</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_dftd4_structure</span><span class="o">*</span><span class="w"> </span><span class="n">dftd4_structure</span><span class="p">;</span>
+
+<span class="c1">/// Dispersion model class</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_dftd4_model</span><span class="o">*</span><span class="w"> </span><span class="n">dftd4_model</span><span class="p">;</span>
+
+<span class="c1">/// Damping parameter class</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_dftd4_param</span><span class="o">*</span><span class="w"> </span><span class="n">dftd4_param</span><span class="p">;</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * Type generic macro for convenience</span>
+<span class="cm">**/</span>
+
+<span class="cp">#define dftd4_delete(ptr) _Generic((ptr), \</span>
+<span class="cp">                       dftd4_error: dftd4_delete_error, \</span>
+<span class="cp">                   dftd4_structure: dftd4_delete_structure, \</span>
+<span class="cp">                       dftd4_model: dftd4_delete_model, \</span>
+<span class="cp">                       dftd4_param: dftd4_delete_param \</span>
+<span class="cp">                                  )(&amp;ptr)</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * Global API queries</span>
+<span class="cm">**/</span>
+
+<span class="c1">/// Obtain library version as major * 10000 + minor + 100 + patch</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_get_version</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * Error handle class</span>
+<span class="cm">**/</span>
+
+<span class="c1">/// Create new error handle object</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_error</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_new_error</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Check error handle status</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_check_error</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Get error message from error handle</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_get_error</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="cm">/* buffer */</span><span class="p">,</span>
+<span class="w">                </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="w"> </span><span class="cm">/* buffersize */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Delete error handle object</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_delete_error</span><span class="p">(</span><span class="n">dftd4_error</span><span class="o">*</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * Molecular structure data class</span>
+<span class="cm">**/</span>
+
+<span class="c1">/// Create new molecular structure data (quantities in Bohr)</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_new_structure</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="cm">/* natoms */</span><span class="p">,</span>
+<span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="w"> </span><span class="cm">/* numbers [natoms] */</span><span class="p">,</span>
+<span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* positions [natoms][3] */</span><span class="p">,</span>
+<span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* charge */</span><span class="p">,</span>
+<span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* lattice [3][3] */</span><span class="p">,</span>
+<span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="o">*</span><span class="w"> </span><span class="cm">/* periodic [3] */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Delete molecular structure data</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_delete_structure</span><span class="p">(</span><span class="n">dftd4_structure</span><span class="o">*</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Update coordinates and lattice parameters (quantities in Bohr)</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_update_structure</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                       </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">,</span>
+<span class="w">                       </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* positions [natoms][3] */</span><span class="p">,</span>
+<span class="w">                       </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* lattice [3][3] */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * Dispersion model class</span>
+<span class="cm">**/</span>
+
+<span class="c1">/// Create new D4 dispersion model</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_model</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_new_d4_model</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Create new D4 dispersion model</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_model</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_new_d4s_model</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_4_0</span><span class="p">;</span>
+
+<span class="c1">/// Create new D4 dispersion model</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_model</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_custom_d4_model</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* ga */</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* gc */</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* wf */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_1</span><span class="p">;</span>
+
+<span class="c1">/// Create new D4 dispersion model</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_model</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_custom_d4s_model</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* ga */</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* gc */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_4_0</span><span class="p">;</span>
+
+
+<span class="c1">/// Delete dispersion model</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_delete_model</span><span class="p">(</span><span class="n">dftd4_model</span><span class="o">*</span><span class="w"> </span><span class="cm">/* disp */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * Damping parameter class</span>
+<span class="cm">**/</span>
+
+<span class="c1">/// Create new rational damping parameters</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_param</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_new_rational_damping</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                           </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* s6 */</span><span class="p">,</span>
+<span class="w">                           </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* s8 */</span><span class="p">,</span>
+<span class="w">                           </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* s9 */</span><span class="p">,</span>
+<span class="w">                           </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* a1 */</span><span class="p">,</span>
+<span class="w">                           </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* a2 */</span><span class="p">,</span>
+<span class="w">                           </span><span class="kt">double</span><span class="w"> </span><span class="cm">/* alp */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Load rational damping parameters from internal storage</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="n">dftd4_param</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_load_rational_damping</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                            </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="cm">/* method */</span><span class="p">,</span>
+<span class="w">                            </span><span class="kt">bool</span><span class="w"> </span><span class="cm">/* mdb */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Delete damping parameters</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_delete_param</span><span class="p">(</span><span class="n">dftd4_param</span><span class="o">*</span><span class="w"> </span><span class="cm">/* param */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * Perform dispersion calculations</span>
+<span class="cm">**/</span>
+
+<span class="c1">/// Evaluate properties related to the dispersion model</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_get_properties</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">dftd4_model</span><span class="w"> </span><span class="cm">/* disp */</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* cn[n] */</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* charges[n] */</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* c6[n*n] */</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* alpha[n] */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_1</span><span class="p">;</span>
+
+<span class="c1">/// Evaluate the dispersion energy and its derivative</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_get_dispersion</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">dftd4_model</span><span class="w"> </span><span class="cm">/* disp */</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">dftd4_param</span><span class="w"> </span><span class="cm">/* param */</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* energy */</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* gradient[n][3] */</span><span class="p">,</span>
+<span class="w">                     </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* sigma[3][3] */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_0</span><span class="p">;</span>
+
+<span class="c1">/// Evaluate the dispersion hessian numerically</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_get_numerical_hessian</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                            </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">,</span>
+<span class="w">                            </span><span class="n">dftd4_model</span><span class="w"> </span><span class="cm">/* disp */</span><span class="p">,</span>
+<span class="w">                            </span><span class="n">dftd4_param</span><span class="w"> </span><span class="cm">/* param */</span><span class="p">,</span>
+<span class="w">                            </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* hess[n][3][n][3] */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_5</span><span class="p">;</span>
+
+<span class="c1">/// Evaluate the pairwise representation of the dispersion energy</span>
+<span class="n">DFTD4_API_ENTRY</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">DFTD4_API_CALL</span>
+<span class="n">dftd4_get_pairwise_dispersion</span><span class="p">(</span><span class="n">dftd4_error</span><span class="w"> </span><span class="cm">/* error */</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">dftd4_structure</span><span class="w"> </span><span class="cm">/* mol */</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">dftd4_model</span><span class="w"> </span><span class="cm">/* disp */</span><span class="p">,</span>
+<span class="w">                              </span><span class="n">dftd4_param</span><span class="w"> </span><span class="cm">/* param */</span><span class="p">,</span>
+<span class="w">                              </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* pair_energy2[n][n] */</span><span class="p">,</span>
+<span class="w">                              </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="cm">/* pair_energy3[n][n] */</span><span class="p">)</span><span class="w"> </span><span class="n">DFTD4_API_SUFFIX__V_3_2</span><span class="p">;</span>
+</code></pre></div>
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='https://grimme-lab.github.io/mctc-lib/module/mctc_env.html'>mctc_env</a></li>
+                  <li class="list-inline-item"><a href='dftd4_utils.html'>dftd4_utils</a></li>
+                  <li class="list-inline-item"><a href='dftd4_model_d4.html'>dftd4_model_d4</a></li>
+                  <li class="list-inline-item"><a href='dftd4_damping.html'>dftd4_damping</a></li>
+                  <li class="list-inline-item"><a href='http://fortranwiki.org/fortran/show/iso_c_binding'>iso_c_binding</a></li>
+                  <li class="list-inline-item"><a href='dftd4_cutoff.html'>dftd4_cutoff</a></li>
+                  <li class="list-inline-item"><a href='dftd4_disp.html'>dftd4_disp</a></li>
+                  <li class="list-inline-item"><a href='dftd4_damping_rational.html'>dftd4_damping_rational</a></li>
+                  <li class="list-inline-item"><a href='dftd4_model.html'>dftd4_model</a></li>
+                  <li class="list-inline-item"><a href='dftd4_param.html'>dftd4_param</a></li>
+                  <li class="list-inline-item"><a href='dftd4_version.html'>dftd4_version</a></li>
+                  <li class="list-inline-item"><a href='dftd4_model_d4s.html'>dftd4_model_d4s</a></li>
+                  <li class="list-inline-item"><a href='dftd4_numdiff.html'>dftd4_numdiff</a></li>
+                  <li class="list-inline-item">mctc_io_structure</li>
+              </ul>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      
+      <br>
+
+
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-debug"></span>
+              logical,
+            </td>
+              <td>private,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>debug</strong></td>
+<td> =</td>
+                <td>.false.</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-namespace"></span>
+              character(len=*),
+            </td>
+              <td>private,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>namespace</strong></td>
+<td> =</td>
+                <td>&#34;dftd4_&#34;</td>
+            <td>
+                <p>Namespace for C routines</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
+
+
+
+
+        <section>
+          <h2>Derived Types</h2>
+              <div class="card">
+    <div class="card-header codesum">
+      <span class="anchor" id="type-vp_error"></span>
+      <h3>
+        type, public&nbsp;::&nbsp;
+        <a href='../type/vp_error.html'>vp_error</a>
+        
+      </h3>
+    </div>
+    <div class="card-body">
+      <p>Void pointer to error handle</p>
+
+        <h4>Components</h4>
+          <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ptr"></span>
+              type(error_type),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>ptr</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Actual payload</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum">
+      <span class="anchor" id="type-vp_model"></span>
+      <h3>
+        type, public&nbsp;::&nbsp;
+        <a href='../type/vp_model.html'>vp_model</a>
+        
+      </h3>
+    </div>
+    <div class="card-body">
+      <p>Void pointer to dispersion model</p>
+
+        <h4>Components</h4>
+          <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ptr~3"></span>
+              class(<a href='../type/dispersion_model.html'>dispersion_model</a>),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>ptr</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Actual payload</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum">
+      <span class="anchor" id="type-vp_param"></span>
+      <h3>
+        type, public&nbsp;::&nbsp;
+        <a href='../type/vp_param.html'>vp_param</a>
+        
+      </h3>
+    </div>
+    <div class="card-body">
+      <p>Void pointer to damping parameters</p>
+
+        <h4>Components</h4>
+          <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ptr~4"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>ptr</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Actual payload</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum">
+      <span class="anchor" id="type-vp_structure"></span>
+      <h3>
+        type, public&nbsp;::&nbsp;
+        <a href='../type/vp_structure.html'>vp_structure</a>
+        
+      </h3>
+    </div>
+    <div class="card-body">
+      <p>Void pointer to molecular structure data</p>
+
+        <h4>Components</h4>
+          <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ptr~2"></span>
+              type(structure_type),
+            </td>
+              <td>public</td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>ptr</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Actual payload</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Functions</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-check_error_api"></span> <h3>public  function <a href='../proc/check_error_api.html'>check_error_api</a>(verror) result(status) bind(C, name=namespace//"check_error")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Check error handle status</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~3"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>integer(kind=c_int)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-custom_d4_model_api"></span> <h3>public  function <a href='../proc/custom_d4_model_api.html'>custom_d4_model_api</a>(verror, vmol, ga, gc, wf) result(vdisp) bind(C, name=namespace//"custom_d4_model")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create new custom D4 dispersion model</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~9"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~6"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ga~11"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>ga</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-gc~11"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>gc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-wf~9"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>wf</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-custom_d4s_model_api"></span> <h3>public  function <a href='../proc/custom_d4s_model_api.html'>custom_d4s_model_api</a>(verror, vmol, ga, gc) result(vdisp) bind(C, name=namespace//"custom_d4s_model")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create new custom D4S dispersion model</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~10"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~7"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-ga~12"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>ga</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-gc~12"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>gc</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_version_api"></span> <h3>public  function <a href='../proc/get_version_api.html'>get_version_api</a>() result(version) bind(C, name=namespace//"get_version")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Obtain library version as major * 10000 + minor + 100 + patch</p>
+
+  <h4>Arguments</h4>
+    <em>None</em>
+    <h4>
+    Return Value
+    <small>integer(kind=c_int)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-load_rational_damping_api"></span> <h3>public  function <a href='../proc/load_rational_damping_api.html'>load_rational_damping_api</a>(verror, charptr, atm) result(vparam) bind(C, name=namespace//"load_rational_damping")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Load rational damping parameters from internal storage</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~12"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-charptr~2"></span>
+              character(kind=c_char, len=1),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>charptr</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-atm"></span>
+              logical(kind=c_bool),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>atm</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_d4_model_api"></span> <h3>public  function <a href='../proc/new_d4_model_api.html'>new_d4_model_api</a>(verror, vmol) result(vdisp) bind(C, name=namespace//"new_d4_model")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create new D4 dispersion model</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~7"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~4"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_d4s_model_api"></span> <h3>public  function <a href='../proc/new_d4s_model_api.html'>new_d4s_model_api</a>(verror, vmol) result(vdisp) bind(C, name=namespace//"new_d4s_model")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create new D4S dispersion model</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~8"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~5"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_error_api"></span> <h3>public  function <a href='../proc/new_error_api.html'>new_error_api</a>() result(verror) bind(C, name=namespace//"new_error")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create new error handle object</p>
+
+  <h4>Arguments</h4>
+    <em>None</em>
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_rational_damping_api"></span> <h3>public  function <a href='../proc/new_rational_damping_api.html'>new_rational_damping_api</a>(verror, s6, s8, s9, a1, a2, alp) result(vparam) bind(C, name=namespace//"new_rational_damping")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create new rational damping parameters</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~11"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s6~5"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>s6</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s8~5"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>s8</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9~7"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-a1~5"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>a1</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-a2~5"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>a2</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-alp~5"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>alp</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_structure_api"></span> <h3>public  function <a href='../proc/new_structure_api.html'>new_structure_api</a>(verror, natoms, numbers, positions, c_charge, c_lattice, c_periodic) result(vmol) bind(C, name=namespace//"new_structure")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create new molecular structure data (quantities in Bohr)</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~5"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-natoms"></span>
+              integer(kind=c_int),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>natoms</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-numbers"></span>
+              integer(kind=c_int),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>numbers</strong>(natoms)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-positions"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>positions</strong>(3,natoms)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_charge"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_charge</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_lattice"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_lattice</strong>(3,3)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_periodic"></span>
+              logical(kind=c_bool),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_periodic</strong>(3)</td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(c_ptr)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-c_f_character"></span> <h3>private  subroutine <a href='../proc/c_f_character.html'>c_f_character</a>(rhs, lhs)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-rhs~2"></span>
+              character(kind=c_char, len=1),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>rhs</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-lhs~2"></span>
+              character(kind=c_char, len=:),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>lhs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-delete_error_api"></span> <h3>public  subroutine <a href='../proc/delete_error_api.html'>delete_error_api</a>(verror) bind(C, name=namespace//"delete_error")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Delete error handle object</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~2"></span>
+              type(c_ptr),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-delete_model_api"></span> <h3>public  subroutine <a href='../proc/delete_model_api.html'>delete_model_api</a>(vdisp) bind(C, name=namespace//"delete_model")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Delete dispersion model</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vdisp~5"></span>
+              type(c_ptr),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>vdisp</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-delete_param_api"></span> <h3>public  subroutine <a href='../proc/delete_param_api.html'>delete_param_api</a>(vparam) bind(C, name=namespace//"delete_param")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Delete damping parameters</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vparam~3"></span>
+              type(c_ptr),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>vparam</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-delete_structure_api"></span> <h3>public  subroutine <a href='../proc/delete_structure_api.html'>delete_structure_api</a>(vmol) bind(C, name=namespace//"delete_structure")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Delete molecular structure data</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~2"></span>
+              type(c_ptr),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-f_c_character"></span> <h3>private  subroutine <a href='../proc/f_c_character.html'>f_c_character</a>(rhs, lhs, len)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-rhs"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>rhs</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-lhs"></span>
+              character(kind=c_char, len=1),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>lhs</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-len"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>len</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_dispersion_api"></span> <h3>public  subroutine <a href='../proc/get_dispersion_api.html'>get_dispersion_api</a>(verror, vmol, vdisp, vparam, energy, c_gradient, c_sigma) bind(C, name=namespace//"get_dispersion")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Calculate dispersion</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~13"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~8"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vdisp~6"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vdisp</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vparam~4"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vparam</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-energy~15"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>energy</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_gradient"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_gradient</strong>(3,*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_sigma"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_sigma</strong>(3,3)</td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_error_api"></span> <h3>public  subroutine <a href='../proc/get_error_api.html'>get_error_api</a>(verror, charptr, buffersize) bind(C, name=namespace//"get_error")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Get error message from error handle</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~4"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-charptr"></span>
+              character(kind=c_char, len=1),
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>charptr</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-buffersize~2"></span>
+              integer(kind=c_int),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>buffersize</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_numerical_hessian_api"></span> <h3>private  subroutine <a href='../proc/get_numerical_hessian_api.html'>get_numerical_hessian_api</a>(verror, vmol, vdisp, vparam, c_hessian) bind(C, name=namespace//"get_numerical_hessian")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Calculate hessian numerically</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~14"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~9"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vdisp~7"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vdisp</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vparam~5"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vparam</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_hessian"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_hessian</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_pairwise_dispersion_api"></span> <h3>public  subroutine <a href='../proc/get_pairwise_dispersion_api.html'>get_pairwise_dispersion_api</a>(verror, vmol, vdisp, vparam, c_pair_energy2, c_pair_energy3) bind(C, name=namespace//"get_pairwise_dispersion")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Calculate pairwise representation of dispersion energy</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~15"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~10"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vdisp~8"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vdisp</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vparam~6"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vparam</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_pair_energy2"></span>
+              type(c_ptr),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>c_pair_energy2</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_pair_energy3"></span>
+              type(c_ptr),
+            </td>
+<td>intent(in),</td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>c_pair_energy3</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_properties_api"></span> <h3>public  subroutine <a href='../proc/get_properties_api.html'>get_properties_api</a>(verror, vmol, vdisp, c_cn, c_charges, c_c6, c_alpha) bind(C, name=namespace//"get_properties")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Calculate dispersion</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~16"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~11"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vdisp~9"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vdisp</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_cn"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_cn</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_charges"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_charges</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_c6"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_c6</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-c_alpha"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(out),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>c_alpha</strong>(*)</td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-update_structure_api"></span> <h3>public  subroutine <a href='../proc/update_structure_api.html'>update_structure_api</a>(verror, vmol, positions, lattice) bind(C, name=namespace//"update_structure")  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Update coordinates and lattice parameters (quantities in Bohr)</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-verror~6"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>verror</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-vmol~3"></span>
+              type(c_ptr),
+            </td>
+<td></td>
+              <td></td>            <td>
+              value
+            </td>
+            <td>::</td>
+            <td><strong>vmol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-positions~2"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>positions</strong>(3,*)</td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-lattice~7"></span>
+              real(kind=c_double),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>lattice</strong>(3,3)</td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-verify_structure"></span> <h3>private  subroutine <a href='../proc/verify_structure.html'>verify_structure</a>(error, mol)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Cold fusion check</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error~26"></span>
+              type(error_type),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>error</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mol~45"></span>
+              type(structure_type),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mol</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              DFT-D4
+ was developed by Grimme group Bonn<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-14 16:11 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

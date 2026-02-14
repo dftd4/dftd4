@@ -1,0 +1,996 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Documentation for DFT-D4">
+    <meta name="author" content="Grimme group Bonn" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>All Procedures &ndash; DFT-D4
+</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">DFT-D4 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12" id='text'>
+			 <h1>Procedures</h1>
+			 <table class="table table-striped">
+			 <thead><tr><th>Procedure</th><th>Location</th><th>Procedure Type</th><th>Description</th></tr></thead>
+			 <tbody>
+			   <tr>
+                 <td><a href='../proc/add_coordination_number_derivs.html'>add_coordination_number_derivs</a></td>
+                 <td><a href='../module/dftd4_ncoord.html'>dftd4_ncoord</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/allocate.html'>allocate</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/ascii_atomic_radii.html'>ascii_atomic_radii</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/ascii_atomic_references.html'>ascii_atomic_references</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/ascii_damping_param.html'>ascii_damping_param</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/ascii_pairwise.html'>ascii_pairwise</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/ascii_results.html'>ascii_results</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/ascii_system_properties.html'>ascii_system_properties</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/blas_gemv.html'>blas_gemv</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Interface</td>
+                 <td><p>Performs one of the matrix-vector operations</p><a href="../interface/blas_gemv.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/c_f_character.html'>c_f_character</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/calculate_distances.html'>calculate_distances</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/check_error_api.html'>check_error_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Check error handle status</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/custom_d4_model_api.html'>custom_d4_model_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Create new custom D4 dispersion model</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/custom_d4s_model_api.html'>custom_d4s_model_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Create new custom D4S dispersion model</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4_calculation.html'>d4_calculation</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4_dgemv.html'>d4_dgemv</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4_dgemv312.html'>d4_dgemv312</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4_dgemv321.html'>d4_dgemv321</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/d4_gemv.html'>d4_gemv</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Interface</td>
+                 <td><p>Performs one of the matrix-vector operations</p><a href="../interface/d4_gemv.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4_sgemv.html'>d4_sgemv</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4_sgemv312.html'>d4_sgemv312</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4_sgemv321.html'>d4_sgemv321</a></td>
+                 <td><a href='../module/dftd4_blas.html'>dftd4_blas</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/d4par.html'>d4par</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/delete_error_api.html'>delete_error_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Delete error handle object</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/delete_model_api.html'>delete_model_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Delete dispersion model</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/delete_param_api.html'>delete_param_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Delete damping parameters</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/delete_structure_api.html'>delete_structure_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Delete molecular structure data</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/dlat_to_cell.html'>dlat_to_cell</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/dlat_to_dvol.html'>dlat_to_dvol</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Function</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/dlat_to_rlat.html'>dlat_to_rlat</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/dzeta.html'>dzeta</a></td>
+                 <td><a href='../module/dftd4_model_utils.html'>dftd4_model_utils</a></td>
+                 <td>Function</td>
+                 <td><p>derivative of charge scaling function w.r.t. charge</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/f_c_character.html'>f_c_character</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/generate_wsc.html'>generate_wsc</a></td>
+                 <td><a href='../sourcefile/compat.f90.html'>compat.f90</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_atm_dispersion.html'>get_atm_dispersion</a></td>
+                 <td><a href='../module/dftd4_damping_atm.html'>dftd4_damping_atm</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_atm_dispersion_derivs.html'>get_atm_dispersion_derivs</a></td>
+                 <td><a href='../module/dftd4_damping_atm.html'>dftd4_damping_atm</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_atm_dispersion_energy.html'>get_atm_dispersion_energy</a></td>
+                 <td><a href='../module/dftd4_damping_atm.html'>dftd4_damping_atm</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_atomic_c6.html'>get_atomic_c6</a></td>
+                 <td><a href='../module/dftd4_model_d4.html'>dftd4_model_d4</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate atomic dispersion coefficients and their derivatives w.r.t.
+the coordination numbers and atomic partial charges.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_atomic_c6~2.html'>get_atomic_c6</a></td>
+                 <td><a href='../module/dftd4_model_d4s.html'>dftd4_model_d4s</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate atomic dispersion coefficients and their derivatives w.r.t.
+the coordination numbers and atomic partial charges.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_coordination_number.html'>get_coordination_number</a></td>
+                 <td><a href='../module/dftd4_ncoord.html'>dftd4_ncoord</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Geometric fractional coordination number, supports error function counting.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_covalent_rad.html'>get_covalent_rad</a></td>
+                 <td><a href='../module/dftd4_data_covrad.html'>dftd4_data_covrad</a></td>
+                 <td>Interface</td>
+                 <td><p>Covalent radii for DFT-D3 coordination number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_covalent_rad_num.html'>get_covalent_rad_num</a></td>
+                 <td><a href='../module/dftd4_data_covrad.html'>dftd4_data_covrad</a></td>
+                 <td>Function</td>
+                 <td><p>Get covalent radius for a given atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_covalent_rad_sym.html'>get_covalent_rad_sym</a></td>
+                 <td><a href='../module/dftd4_data_covrad.html'>dftd4_data_covrad</a></td>
+                 <td>Function</td>
+                 <td><p>Get covalent radius for a given element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_d4eeq_bj_parameter.html'>get_d4eeq_bj_parameter</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_d4eeq_bjatm_parameter.html'>get_d4eeq_bjatm_parameter</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dftd4_version.html'>get_dftd4_version</a></td>
+                 <td><a href='../module/dftd4_version.html'>dftd4_version</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Getter function to retrieve dftd4 version</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dispersion.html'>get_dispersion</a></td>
+                 <td><a href='../module/dftd4_disp.html'>dftd4_disp</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Wrapper to handle the evaluation of dispersion energy and derivatives</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dispersion2.html'>get_dispersion2</a></td>
+                 <td><a href='../module/dftd4_damping_rational.html'>dftd4_damping_rational</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dispersion3.html'>get_dispersion3</a></td>
+                 <td><a href='../module/dftd4_damping_rational.html'>dftd4_damping_rational</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dispersion_api.html'>get_dispersion_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate dispersion</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dispersion_derivs.html'>get_dispersion_derivs</a></td>
+                 <td><a href='../module/dftd4_damping_rational.html'>dftd4_damping_rational</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dispersion_energy.html'>get_dispersion_energy</a></td>
+                 <td><a href='../module/dftd4_damping_rational.html'>dftd4_damping_rational</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_dispersion_hessian.html'>get_dispersion_hessian</a></td>
+                 <td><a href='../module/dftd4_numdiff.html'>dftd4_numdiff</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluate hessian matrix by numerical differention</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_effective_charge.html'>get_effective_charge</a></td>
+                 <td><a href='../module/dftd4_data_zeff.html'>dftd4_data_zeff</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_effective_charge_num.html'>get_effective_charge_num</a></td>
+                 <td><a href='../module/dftd4_data_zeff.html'>dftd4_data_zeff</a></td>
+                 <td>Function</td>
+                 <td><p>Get effective nuclear charge for a given atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_effective_charge_sym.html'>get_effective_charge_sym</a></td>
+                 <td><a href='../module/dftd4_data_zeff.html'>dftd4_data_zeff</a></td>
+                 <td>Function</td>
+                 <td><p>Get effective nuclear charge for a given element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_electronegativity.html'>get_electronegativity</a></td>
+                 <td><a href='../module/dftd4_data_en.html'>dftd4_data_en</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_electronegativity_num.html'>get_electronegativity_num</a></td>
+                 <td><a href='../module/dftd4_data_en.html'>dftd4_data_en</a></td>
+                 <td>Function</td>
+                 <td><p>Get electronegativity for a given atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_electronegativity_sym.html'>get_electronegativity_sym</a></td>
+                 <td><a href='../module/dftd4_data_en.html'>dftd4_data_en</a></td>
+                 <td>Function</td>
+                 <td><p>Get electronegativity for a given element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_error_api.html'>get_error_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Get error message from error handle</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_functional_id.html'>get_functional_id</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Function</td>
+                 <td><p>Get the unique identifier for most functionals, returns none if
+the functional was not known at the time I implemented this mapping</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_functionals.html'>get_functionals</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Collect all supported functionals</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_hardness.html'>get_hardness</a></td>
+                 <td><a href='../module/dftd4_data_hardness.html'>dftd4_data_hardness</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_hardness_num.html'>get_hardness_num</a></td>
+                 <td><a href='../module/dftd4_data_hardness.html'>dftd4_data_hardness</a></td>
+                 <td>Function</td>
+                 <td><p>Get chemical hardness for a given atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_hardness_sym.html'>get_hardness_sym</a></td>
+                 <td><a href='../module/dftd4_data_hardness.html'>dftd4_data_hardness</a></td>
+                 <td>Function</td>
+                 <td><p>Get chemical hardness for a given element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_lattice_points.html'>get_lattice_points</a></td>
+                 <td><a href='../module/dftd4_cutoff.html'>dftd4_cutoff</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_lattice_points_cutoff.html'>get_lattice_points_cutoff</a></td>
+                 <td><a href='../module/dftd4_cutoff.html'>dftd4_cutoff</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Create lattice points within a given cutoff</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_lattice_points_rep_3d.html'>get_lattice_points_rep_3d</a></td>
+                 <td><a href='../module/dftd4_cutoff.html'>dftd4_cutoff</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Generate lattice points from repeatitions</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_nref.html'>get_nref</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_nref_num.html'>get_nref_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Function</td>
+                 <td><p>Get number of references for a given atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_nref_sym.html'>get_nref_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Function</td>
+                 <td><p>Get number of references for a given element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_numerical_hessian_api.html'>get_numerical_hessian_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate hessian numerically</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_pairwise_dispersion.html'>get_pairwise_dispersion</a></td>
+                 <td><a href='../module/dftd4_disp.html'>dftd4_disp</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Wrapper to handle the evaluation of pairwise representation of the dispersion energy</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_pairwise_dispersion2.html'>get_pairwise_dispersion2</a></td>
+                 <td><a href='../module/dftd4_damping_rational.html'>dftd4_damping_rational</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression projected on atomic pairs</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_pairwise_dispersion3.html'>get_pairwise_dispersion3</a></td>
+                 <td><a href='../module/dftd4_damping_rational.html'>dftd4_damping_rational</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluation of the dispersion energy expression</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_pairwise_dispersion_api.html'>get_pairwise_dispersion_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate pairwise representation of dispersion energy</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_polarizabilities.html'>get_polarizabilities</a></td>
+                 <td><a href='../module/dftd4_model_d4.html'>dftd4_model_d4</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate atomic polarizabilities and their derivatives w.r.t.
+the coordination numbers and atomic partial charges.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_polarizabilities~2.html'>get_polarizabilities</a></td>
+                 <td><a href='../module/dftd4_model_d4s.html'>dftd4_model_d4s</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate atomic polarizabilities and their derivatives w.r.t.
+the coordination numbers and atomic partial charges.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_properties.html'>get_properties</a></td>
+                 <td><a href='../module/dftd4_disp.html'>dftd4_disp</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Wrapper to handle the evaluation of properties related to this dispersion model</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_properties_api.html'>get_properties_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate dispersion</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_r4r2_val.html'>get_r4r2_val</a></td>
+                 <td><a href='../module/dftd4_data_r4r2.html'>dftd4_data_r4r2</a></td>
+                 <td>Interface</td>
+                 <td><p>Get r4/r2 expectation value</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_r4r2_val_num.html'>get_r4r2_val_num</a></td>
+                 <td><a href='../module/dftd4_data_r4r2.html'>dftd4_data_r4r2</a></td>
+                 <td>Function</td>
+                 <td><p>Get r4/r2 expectation value for a given atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_r4r2_val_sym.html'>get_r4r2_val_sym</a></td>
+                 <td><a href='../module/dftd4_data_r4r2.html'>dftd4_data_r4r2</a></td>
+                 <td>Function</td>
+                 <td><p>Get r4/r2 expectation value for a given element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_rational_damping.html'>get_rational_damping</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Interface</td>
+                 <td><p>Retrieve rational damping parameters from functional name or ID</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_rational_damping_id.html'>get_rational_damping_id</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Retrieve rational damping parameters from functional ID</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_rational_damping_name.html'>get_rational_damping_name</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Retrieve rational damping parameters from functional name</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_translations.html'>get_translations</a></td>
+                 <td><a href='../module/dftd4_cutoff.html'>dftd4_cutoff</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Generate a supercell based on a realspace cutoff, this subroutine
+doesn&rsquo;t know anything about the convergence behaviour of the
+associated property.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_version_api.html'>get_version_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Obtain library version as major * 10000 + minor + 100 + patch</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/get_wfpair_val.html'>get_wfpair_val</a></td>
+                 <td><a href='../module/dftd4_data_wfpair.html'>dftd4_data_wfpair</a></td>
+                 <td>Interface</td>
+                 <td><p>Get pairwise CN weighting factors</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_wfpair_val_num.html'>get_wfpair_val_num</a></td>
+                 <td><a href='../module/dftd4_data_wfpair.html'>dftd4_data_wfpair</a></td>
+                 <td>Function</td>
+                 <td><p>Get pairwise CN weighting factor for a given atomic number pair</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_wfpair_val_sym.html'>get_wfpair_val_sym</a></td>
+                 <td><a href='../module/dftd4_data_wfpair.html'>dftd4_data_wfpair</a></td>
+                 <td>Function</td>
+                 <td><p>Get pairwise CN weighting factor for a given element symbol pair</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/getline.html'>getline</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td><p>reads a line from unit into an allocatable character</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/is_exceptional.html'>is_exceptional</a></td>
+                 <td><a href='../module/dftd4_model_utils.html'>dftd4_model_utils</a></td>
+                 <td>Function</td>
+                 <td><p>Check whether we are dealing with an exceptional value, NaN or Inf</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/json_results.html'>json_results</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/load_rational_damping_api.html'>load_rational_damping_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Load rational damping parameters from internal storage</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/lowercase.html'>lowercase</a></td>
+                 <td><a href='../module/dftd4_utils.html'>dftd4_utils</a></td>
+                 <td>Function</td>
+                 <td><p>Convert string to lower case</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_d4_model.html'>new_d4_model</a></td>
+                 <td><a href='../module/dftd4_model_d4.html'>dftd4_model_d4</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Create new D4 dispersion model from molecular structure input</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_d4_model_api.html'>new_d4_model_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Create new D4 dispersion model</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_d4s_model.html'>new_d4s_model</a></td>
+                 <td><a href='../module/dftd4_model_d4s.html'>dftd4_model_d4s</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Create new D4S dispersion model from molecular structure input</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_d4s_model_api.html'>new_d4s_model_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Create new D4S dispersion model</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_dispersion_model.html'>new_dispersion_model</a></td>
+                 <td><a href='../module/dftd4_model.html'>dftd4_model</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Wrapper for creating a new dispersion model (D4 or D4S) from molecular 
+structure input using a given model string. Defaults to D4 if no model
+is specified.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_error_api.html'>new_error_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Create new error handle object</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_funcgroup.html'>new_funcgroup</a></td>
+                 <td><a href='../module/dftd4_param.html'>dftd4_param</a></td>
+                 <td>Function</td>
+                 <td><p>Create a new group of functional names</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_rational_damping_api.html'>new_rational_damping_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Create new rational damping parameters</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/new_structure_api.html'>new_structure_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Function</td>
+                 <td><p>Create new molecular structure data (quantities in Bohr)</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refalpha_eeq.html'>set_refalpha_eeq</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refalpha_eeq_num.html'>set_refalpha_eeq_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference polarizibility for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refalpha_eeq_sym.html'>set_refalpha_eeq_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference polarizibility for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refalpha_eeqbc.html'>set_refalpha_eeqbc</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refalpha_eeqbc_num.html'>set_refalpha_eeqbc_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference polarizibility for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refalpha_eeqbc_sym.html'>set_refalpha_eeqbc_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference polarizibility for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refalpha_gfn2.html'>set_refalpha_gfn2</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refalpha_gfn2_num.html'>set_refalpha_gfn2_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference polarizibility for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refalpha_gfn2_sym.html'>set_refalpha_gfn2_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference polarizibility for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refcn.html'>set_refcn</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refcn_num.html'>set_refcn_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference coordination numbers for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refcn_sym.html'>set_refcn_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference coordination numbers for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refgw.html'>set_refgw</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refgw_num.html'>set_refgw_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the number of gaussian weights for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refgw_sym.html'>set_refgw_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the number of gaussian weights for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refq_eeq.html'>set_refq_eeq</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refq_eeq_num.html'>set_refq_eeq_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference partial charges for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refq_eeq_sym.html'>set_refq_eeq_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference partial charges for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refq_eeqbc.html'>set_refq_eeqbc</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refq_eeqbc_num.html'>set_refq_eeqbc_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference partial charges for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refq_eeqbc_sym.html'>set_refq_eeqbc_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference partial charges for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../interface/set_refq_gfn2.html'>set_refq_gfn2</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Interface</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refq_gfn2_num.html'>set_refq_gfn2_num</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference partial charges for an atomic number</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/set_refq_gfn2_sym.html'>set_refq_gfn2_sym</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Set the reference partial charges for an element symbol</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/shift_back_abc.html'>shift_back_abc</a></td>
+                 <td><a href='../module/dftd4_utils.html'>dftd4_utils</a></td>
+                 <td>Function</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/tagged_result.html'>tagged_result</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/trapzd.html'>trapzd</a></td>
+                 <td><a href='../module/dftd4_model_utils.html'>dftd4_model_utils</a></td>
+                 <td>Function</td>
+                 <td><p>numerical Casimir&ndash;Polder integration</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/triple_scale.html'>triple_scale</a></td>
+                 <td><a href='../module/dftd4_damping_rational.html'>dftd4_damping_rational</a></td>
+                 <td>Function</td>
+                 <td><p>Logic exercise to distribute a triple energy to atomwise energies.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/triple_scale~2.html'>triple_scale</a></td>
+                 <td><a href='../module/dftd4_damping_atm.html'>dftd4_damping_atm</a></td>
+                 <td>Function</td>
+                 <td><p>Logic exercise to distribute a triple energy to atomwise energies.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/turbomole_gradient.html'>turbomole_gradient</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/turbomole_gradlatt.html'>turbomole_gradlatt</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/update_structure_api.html'>update_structure_api</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Update coordinates and lattice parameters (quantities in Bohr)</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/verify_structure.html'>verify_structure</a></td>
+                 <td><a href='../module/dftd4_api.html'>dftd4_api</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Cold fusion check</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/weight_cn.html'>weight_cn</a></td>
+                 <td><a href='../module/dftd4_model_utils.html'>dftd4_model_utils</a></td>
+                 <td>Function</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/weight_references.html'>weight_references</a></td>
+                 <td><a href='../module/dftd4_model_d4.html'>dftd4_model_d4</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate the weights of the reference system and the derivatives w.r.t.
+coordination number for later use.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/weight_references~2.html'>weight_references</a></td>
+                 <td><a href='../module/dftd4_model_d4s.html'>dftd4_model_d4s</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculate the weights of the reference system and the derivatives w.r.t.
+coordination number for later use.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/wrap_back.html'>wrap_back</a></td>
+                 <td><a href='../module/dftd4_compat.html'>dftd4_compat</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/wrap_to_central_cell.html'>wrap_to_central_cell</a></td>
+                 <td><a href='../module/dftd4_utils.html'>dftd4_utils</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/write_json_array.html'>write_json_array</a></td>
+                 <td><a href='../module/dftd4_output.html'>dftd4_output</a></td>
+                 <td>Subroutine</td>
+                 <td></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/zeta.html'>zeta</a></td>
+                 <td><a href='../module/dftd4_model_utils.html'>dftd4_model_utils</a></td>
+                 <td>Function</td>
+                 <td><p>charge scaling function</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/zeta~2.html'>zeta</a></td>
+                 <td><a href='../module/dftd4_reference.html'>dftd4_reference</a></td>
+                 <td>Function</td>
+                 <td><p>charge scaling function</p></td>
+               </tr>
+			 </tbody></table>
+             
+        </div>
+      </div>
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              DFT-D4
+ was developed by Grimme group Bonn<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-14 16:11 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

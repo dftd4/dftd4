@@ -1,0 +1,285 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Documentation for DFT-D4">
+    <meta name="author" content="Grimme group Bonn" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>zeff.f90 &ndash; DFT-D4</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">DFT-D4 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>zeff.f90
+      <small>Source File</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.2% of total for source files.">28 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/zeff.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+            <li class="breadcrumb-item active" aria-current="page">zeff.f90</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#mods-0"
+         aria-expanded="false" aria-controls="mods-0">
+         <h4 class="card-header bg-primary text-white">Modules</h4>
+      </a>
+      <div id="mods-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_data_zeff.html">dftd4_data_zeff</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../sourcefile/zeff.f90.html#src">zeff.f90</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    <div class="col-md-9" id='text'>
+      
+      <br>
+
+      <section>
+        <h2><span class="anchor" id="src"></span>Source Code</h2>
+        <div class="hl codehilite"><pre><span></span><a id="ln-1" name="ln-1" href="#ln-1"></a><span class="c">! This file is part of dftd4.</span>
+<a id="ln-2" name="ln-2" href="#ln-2"></a><span class="c">! SPDX-Identifier: LGPL-3.0-or-later</span>
+<a id="ln-3" name="ln-3" href="#ln-3"></a><span class="c">!</span>
+<a id="ln-4" name="ln-4" href="#ln-4"></a><span class="c">! dftd4 is free software: you can redistribute it and/or modify it under</span>
+<a id="ln-5" name="ln-5" href="#ln-5"></a><span class="c">! the terms of the GNU Lesser General Public License as published by</span>
+<a id="ln-6" name="ln-6" href="#ln-6"></a><span class="c">! the Free Software Foundation, either version 3 of the License, or</span>
+<a id="ln-7" name="ln-7" href="#ln-7"></a><span class="c">! (at your option) any later version.</span>
+<a id="ln-8" name="ln-8" href="#ln-8"></a><span class="c">!</span>
+<a id="ln-9" name="ln-9" href="#ln-9"></a><span class="c">! dftd4 is distributed in the hope that it will be useful,</span>
+<a id="ln-10" name="ln-10" href="#ln-10"></a><span class="c">! but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<a id="ln-11" name="ln-11" href="#ln-11"></a><span class="c">! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<a id="ln-12" name="ln-12" href="#ln-12"></a><span class="c">! GNU Lesser General Public License for more details.</span>
+<a id="ln-13" name="ln-13" href="#ln-13"></a><span class="c">!</span>
+<a id="ln-14" name="ln-14" href="#ln-14"></a><span class="c">! You should have received a copy of the GNU Lesser General Public License</span>
+<a id="ln-15" name="ln-15" href="#ln-15"></a><span class="c">! along with dftd4.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<a id="ln-16" name="ln-16" href="#ln-16"></a>
+<a id="ln-17" name="ln-17" href="#ln-17"></a><span class="k">module </span><span class="n">dftd4_data_zeff</span>
+<a id="ln-18" name="ln-18" href="#ln-18"></a><span class="w">   </span><span class="k">use </span><span class="n">mctc_env</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">wp</span>
+<a id="ln-19" name="ln-19" href="#ln-19"></a><span class="w">   </span><span class="k">use </span><span class="n">mctc_io_symbols</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">to_number</span>
+<a id="ln-20" name="ln-20" href="#ln-20"></a><span class="w">   </span><span class="k">implicit none</span>
+<a id="ln-21" name="ln-21" href="#ln-21"></a><span class="k">   private</span>
+<a id="ln-22" name="ln-22" href="#ln-22"></a>
+<a id="ln-23" name="ln-23" href="#ln-23"></a><span class="k">   public</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">get_effective_charge</span>
+<a id="ln-24" name="ln-24" href="#ln-24"></a>
+<a id="ln-25" name="ln-25" href="#ln-25"></a>
+<a id="ln-26" name="ln-26" href="#ln-26"></a><span class="w">   </span><span class="k">interface </span><span class="n">get_effective_charge</span>
+<a id="ln-27" name="ln-27" href="#ln-27"></a><span class="w">      </span><span class="k">module procedure</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">get_effective_charge_num</span>
+<a id="ln-28" name="ln-28" href="#ln-28"></a><span class="w">      </span><span class="k">module procedure</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">get_effective_charge_sym</span>
+<a id="ln-29" name="ln-29" href="#ln-29"></a><span class="w">   </span><span class="k">end interface </span><span class="n">get_effective_charge</span>
+<a id="ln-30" name="ln-30" href="#ln-30"></a>
+<a id="ln-31" name="ln-31" href="#ln-31"></a>
+<a id="ln-32" name="ln-32" href="#ln-32"></a><span class="w">   </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">max_elem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">118</span>
+<a id="ln-33" name="ln-33" href="#ln-33"></a>
+<a id="ln-34" name="ln-34" href="#ln-34"></a>
+<a id="ln-35" name="ln-35" href="#ln-35"></a><span class="w">  </span><span class="c">!&gt; Effective nuclear charges from the def2-ECPs used for calculating the </span>
+<a id="ln-36" name="ln-36" href="#ln-36"></a><span class="w">  </span><span class="c">!&gt; reference polarizabilities for DFT-D4.</span>
+<a id="ln-37" name="ln-37" href="#ln-37"></a><span class="w">  </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">effective_nuclear_charge</span><span class="p">(</span><span class="n">max_elem</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">&amp;</span>
+<a id="ln-38" name="ln-38" href="#ln-38"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">   </span><span class="mi">1</span><span class="p">,</span><span class="w">                                                 </span><span class="mi">2</span><span class="p">,</span><span class="w">  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! H-He</span>
+<a id="ln-39" name="ln-39" href="#ln-39"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">   </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">                               </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="w">  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Li-Ne</span>
+<a id="ln-40" name="ln-40" href="#ln-40"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">  </span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="w">                              </span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="w">  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Na-Ar</span>
+<a id="ln-41" name="ln-41" href="#ln-41"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">  </span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="mi">27</span><span class="p">,</span><span class="mi">28</span><span class="p">,</span><span class="mi">29</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">33</span><span class="p">,</span><span class="mi">34</span><span class="p">,</span><span class="mi">35</span><span class="p">,</span><span class="mi">36</span><span class="p">,</span><span class="w">  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! K-Kr</span>
+<a id="ln-42" name="ln-42" href="#ln-42"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">   </span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="w">  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Rb-Xe</span>
+<a id="ln-43" name="ln-43" href="#ln-43"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">   </span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">33</span><span class="p">,</span><span class="mi">34</span><span class="p">,</span><span class="mi">35</span><span class="p">,</span><span class="mi">36</span><span class="p">,</span><span class="mi">37</span><span class="p">,</span><span class="mi">38</span><span class="p">,</span><span class="mi">39</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">41</span><span class="p">,</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">,</span><span class="w">  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Cs-Lu</span>
+<a id="ln-44" name="ln-44" href="#ln-44"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">  </span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Hf-Rn</span>
+<a id="ln-45" name="ln-45" href="#ln-45"></a><span class="w">    </span><span class="c">!  just copy &amp; paste from above</span>
+<a id="ln-46" name="ln-46" href="#ln-46"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">   </span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">33</span><span class="p">,</span><span class="mi">34</span><span class="p">,</span><span class="mi">35</span><span class="p">,</span><span class="mi">36</span><span class="p">,</span><span class="mi">37</span><span class="p">,</span><span class="mi">38</span><span class="p">,</span><span class="mi">39</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">41</span><span class="p">,</span><span class="mi">42</span><span class="p">,</span><span class="mi">43</span><span class="p">,</span><span class="w">  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Fr-Lr</span>
+<a id="ln-47" name="ln-47" href="#ln-47"></a><span class="w">    </span><span class="p">&amp;</span><span class="w">  </span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">]</span><span class="w"> </span><span class="c">! Rf-Og</span>
+<a id="ln-48" name="ln-48" href="#ln-48"></a>
+<a id="ln-49" name="ln-49" href="#ln-49"></a><span class="k">contains</span>
+<a id="ln-50" name="ln-50" href="#ln-50"></a>
+<a id="ln-51" name="ln-51" href="#ln-51"></a>
+<a id="ln-52" name="ln-52" href="#ln-52"></a><span class="c">!&gt; Get effective nuclear charge for a given element symbol</span>
+<a id="ln-53" name="ln-53" href="#ln-53"></a><span class="k">elemental function </span><span class="n">get_effective_charge_sym</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">zeff</span><span class="p">)</span>
+<a id="ln-54" name="ln-54" href="#ln-54"></a>
+<a id="ln-55" name="ln-55" href="#ln-55"></a><span class="w">   </span><span class="c">!&gt; Element symbol</span>
+<a id="ln-56" name="ln-56" href="#ln-56"></a><span class="w">   </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sym</span>
+<a id="ln-57" name="ln-57" href="#ln-57"></a>
+<a id="ln-58" name="ln-58" href="#ln-58"></a><span class="w">   </span><span class="c">!&gt; Effective nuclear charge</span>
+<a id="ln-59" name="ln-59" href="#ln-59"></a><span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">zeff</span>
+<a id="ln-60" name="ln-60" href="#ln-60"></a>
+<a id="ln-61" name="ln-61" href="#ln-61"></a><span class="w">   </span><span class="n">zeff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_effective_charge</span><span class="p">(</span><span class="n">to_number</span><span class="p">(</span><span class="n">sym</span><span class="p">))</span>
+<a id="ln-62" name="ln-62" href="#ln-62"></a>
+<a id="ln-63" name="ln-63" href="#ln-63"></a><span class="k">end function </span><span class="n">get_effective_charge_sym</span>
+<a id="ln-64" name="ln-64" href="#ln-64"></a>
+<a id="ln-65" name="ln-65" href="#ln-65"></a>
+<a id="ln-66" name="ln-66" href="#ln-66"></a><span class="c">!&gt; Get effective nuclear charge for a given atomic number</span>
+<a id="ln-67" name="ln-67" href="#ln-67"></a><span class="k">elemental function </span><span class="n">get_effective_charge_num</span><span class="p">(</span><span class="n">num</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">zeff</span><span class="p">)</span>
+<a id="ln-68" name="ln-68" href="#ln-68"></a>
+<a id="ln-69" name="ln-69" href="#ln-69"></a><span class="w">   </span><span class="c">!&gt; Atomic number</span>
+<a id="ln-70" name="ln-70" href="#ln-70"></a><span class="w">   </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">num</span>
+<a id="ln-71" name="ln-71" href="#ln-71"></a>
+<a id="ln-72" name="ln-72" href="#ln-72"></a><span class="w">   </span><span class="c">!&gt; Effective nuclear charge</span>
+<a id="ln-73" name="ln-73" href="#ln-73"></a><span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">zeff</span>
+<a id="ln-74" name="ln-74" href="#ln-74"></a>
+<a id="ln-75" name="ln-75" href="#ln-75"></a><span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">num</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">.</span><span class="nb">and</span><span class="p">.</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">effective_nuclear_charge</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<a id="ln-76" name="ln-76" href="#ln-76"></a><span class="k">      </span><span class="n">zeff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">effective_nuclear_charge</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+<a id="ln-77" name="ln-77" href="#ln-77"></a><span class="w">   </span><span class="k">else</span>
+<a id="ln-78" name="ln-78" href="#ln-78"></a><span class="k">      </span><span class="n">zeff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_wp</span>
+<a id="ln-79" name="ln-79" href="#ln-79"></a><span class="w">   </span><span class="k">end if</span>
+<a id="ln-80" name="ln-80" href="#ln-80"></a>
+<a id="ln-81" name="ln-81" href="#ln-81"></a><span class="k">end function </span><span class="n">get_effective_charge_num</span>
+<a id="ln-82" name="ln-82" href="#ln-82"></a>
+<a id="ln-83" name="ln-83" href="#ln-83"></a>
+<a id="ln-84" name="ln-84" href="#ln-84"></a><span class="k">end module </span><span class="n">dftd4_data_zeff</span>
+</pre></div>
+
+      </section>
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              DFT-D4
+ was developed by Grimme group Bonn<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-14 16:11 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

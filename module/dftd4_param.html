@@ -1,0 +1,1436 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Documentation for DFT-D4">
+    <meta name="author" content="Grimme group Bonn" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>dftd4_param &ndash; DFT-D4</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">DFT-D4 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>dftd4_param
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 6.4% of total for modules and submodules.">722 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/param.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/param.f90.html'>param.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">dftd4_param</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_param.html#variable-df_enum">df_enum</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#enums-0"
+         aria-expanded="false" aria-controls="enums-0">
+         <h4 class="card-header bg-primary text-white">Enumerations</h4>
+      </a>
+      <div id="enums-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_param.html#enum-__unnamed__"><em>unnamed</em></a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#inters-0"
+         aria-expanded="false" aria-controls="inters-0">
+         <h4 class="card-header bg-primary text-white">Interfaces</h4>
+      </a>
+      <div id="inters-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_param.html#interface-get_rational_damping">get_rational_damping</a>
+        </div>
+      </div>
+    </div>
+
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#types-0"
+         aria-expanded="false" aria-controls="types-0">
+         <h4 class="card-header bg-primary text-white">Derived Types</h4>
+      </a>
+      <div id="types-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_param.html#type-functional_group">functional_group</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#funcs-0"
+         aria-expanded="false" aria-controls="funcs-0">
+         <h4 class="card-header bg-primary text-white">Functions</h4>
+      </a>
+      <div id="funcs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_param.html#proc-get_functional_id">get_functional_id</a>
+            <a class="list-group-item" href="../module/dftd4_param.html#proc-new_funcgroup">new_funcgroup</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_param.html#proc-get_d4eeq_bj_parameter">get_d4eeq_bj_parameter</a>
+            <a class="list-group-item" href="../module/dftd4_param.html#proc-get_d4eeq_bjatm_parameter">get_d4eeq_bjatm_parameter</a>
+            <a class="list-group-item" href="../module/dftd4_param.html#proc-get_functionals">get_functionals</a>
+            <a class="list-group-item" href="../module/dftd4_param.html#proc-get_rational_damping_id">get_rational_damping_id</a>
+            <a class="list-group-item" href="../module/dftd4_param.html#proc-get_rational_damping_name">get_rational_damping_name</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='https://grimme-lab.github.io/mctc-lib/module/mctc_env.html'>mctc_env</a></li>
+                  <li class="list-inline-item"><a href='dftd4_utils.html'>dftd4_utils</a></li>
+                  <li class="list-inline-item"><a href='dftd4_damping_rational.html'>dftd4_damping_rational</a></li>
+                  <li class="list-inline-item"><a href='dftd4_damping.html'>dftd4_damping</a></li>
+              </ul>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      
+      <br>
+
+
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-df_enum"></span>
+              integer,
+            </td>
+              <td>private,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>df_enum</strong></td>
+<td> =</td>
+                <td>kind(p_invalid)</td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Enumerations</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="enum-__unnamed__"></span><h3>enum, bind(c)</h3></div>
+    <div class="card-body">
+      <h4>Enumerators</h4>
+      <table class="table table-striped varlist">
+        <tbody>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_invalid</strong></td><td> = </td><td>0</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_hf</strong></td><td> = </td><td>1</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_blyp</strong></td><td> = </td><td>2</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_bpbe</strong></td><td> = </td><td>3</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_bp</strong></td><td> = </td><td>4</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_bpw</strong></td><td> = </td><td>5</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lb94</strong></td><td> = </td><td>6</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mpwlyp</strong></td><td> = </td><td>7</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mpwpw</strong></td><td> = </td><td>8</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_olyp</strong></td><td> = </td><td>9</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_opbe</strong></td><td> = </td><td>10</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pbe</strong></td><td> = </td><td>11</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_rpbe</strong></td><td> = </td><td>12</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revpbe</strong></td><td> = </td><td>13</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pw86pbe</strong></td><td> = </td><td>14</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_rpw86pbe</strong></td><td> = </td><td>15</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pw91</strong></td><td> = </td><td>16</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pwp</strong></td><td> = </td><td>17</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_xlyp</strong></td><td> = </td><td>18</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b97</strong></td><td> = </td><td>19</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_tpss</strong></td><td> = </td><td>20</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revtpss</strong></td><td> = </td><td>21</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_scan</strong></td><td> = </td><td>22</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_rscan</strong></td><td> = </td><td>23</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan</strong></td><td> = </td><td>24</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b1lyp</strong></td><td> = </td><td>25</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b3lyp</strong></td><td> = </td><td>26</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_bhlyp</strong></td><td> = </td><td>27</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b1p</strong></td><td> = </td><td>28</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b3p</strong></td><td> = </td><td>29</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b1pw</strong></td><td> = </td><td>30</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b3pw</strong></td><td> = </td><td>31</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_o3lyp</strong></td><td> = </td><td>32</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revpbe0</strong></td><td> = </td><td>33</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revpbe38</strong></td><td> = </td><td>34</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pbe0</strong></td><td> = </td><td>35</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pwp1</strong></td><td> = </td><td>36</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pw1pw</strong></td><td> = </td><td>37</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mpw1pw</strong></td><td> = </td><td>38</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mpw1lyp</strong></td><td> = </td><td>39</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pw6b95</strong></td><td> = </td><td>40</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_tpssh</strong></td><td> = </td><td>41</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_tpss0</strong></td><td> = </td><td>42</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_x3lyp</strong></td><td> = </td><td>43</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_m06l</strong></td><td> = </td><td>44</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_m06</strong></td><td> = </td><td>45</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b97d</strong></td><td> = </td><td>46</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wb97</strong></td><td> = </td><td>47</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wb97x_2008</strong></td><td> = </td><td>48</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b97m</strong></td><td> = </td><td>49</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wb97m</strong></td><td> = </td><td>50</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_camb3lyp</strong></td><td> = </td><td>51</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lcblyp</strong></td><td> = </td><td>52</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lh07tsvwn</strong></td><td> = </td><td>53</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lh07ssvwn</strong></td><td> = </td><td>54</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lh12ctssirpw92</strong></td><td> = </td><td>55</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lh12ctssifpw92</strong></td><td> = </td><td>56</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lh14tcalpbe</strong></td><td> = </td><td>57</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lh20t</strong></td><td> = </td><td>58</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b2plyp</strong></td><td> = </td><td>59</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b2gpplyp</strong></td><td> = </td><td>60</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mpw2plyp</strong></td><td> = </td><td>61</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pwpb95</strong></td><td> = </td><td>62</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dsdblyp</strong></td><td> = </td><td>63</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dsdpbe</strong></td><td> = </td><td>64</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dsdpbeb95</strong></td><td> = </td><td>65</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dsdpbep86</strong></td><td> = </td><td>66</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dsdsvwn</strong></td><td> = </td><td>67</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dodblyp</strong></td><td> = </td><td>68</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dodpbe</strong></td><td> = </td><td>69</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dodpbeb95</strong></td><td> = </td><td>70</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dodpbep86</strong></td><td> = </td><td>71</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dodsvwn</strong></td><td> = </td><td>72</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pbe0_2</strong></td><td> = </td><td>73</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pbe0_dh</strong></td><td> = </td><td>74</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_hsesol</strong></td><td> = </td><td>75</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dftb_3ob</strong></td><td> = </td><td>76</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dftb_mio</strong></td><td> = </td><td>77</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dftb_ob2</strong></td><td> = </td><td>78</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dftb_matsci</strong></td><td> = </td><td>79</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_dftb_pbc</strong></td><td> = </td><td>80</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_b1b95</strong></td><td> = </td><td>81</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pbesol</strong></td><td> = </td><td>82</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_hse06</strong></td><td> = </td><td>83</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mpwb1k</strong></td><td> = </td><td>84</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_hse03</strong></td><td> = </td><td>85</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revtpssh</strong></td><td> = </td><td>86</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mn12sx</strong></td><td> = </td><td>87</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_glyp</strong></td><td> = </td><td>88</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_mpw1b95</strong></td><td> = </td><td>89</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revpbe0dh</strong></td><td> = </td><td>90</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revtpss0</strong></td><td> = </td><td>91</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revdsdpbep86</strong></td><td> = </td><td>92</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revdsdpbe</strong></td><td> = </td><td>93</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revdsdblyp</strong></td><td> = </td><td>94</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_revdodpbep86</strong></td><td> = </td><td>95</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_am05</strong></td><td> = </td><td>96</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_hse12</strong></td><td> = </td><td>97</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_hse12s</strong></td><td> = </td><td>98</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scanh</strong></td><td> = </td><td>99</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan0</strong></td><td> = </td><td>100</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan50</strong></td><td> = </td><td>101</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan_3c</strong></td><td> = </td><td>102</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_camqtp01</strong></td><td> = </td><td>103</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lcwpbe</strong></td><td> = </td><td>104</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_lcwpbeh</strong></td><td> = </td><td>105</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wb97x_rev</strong></td><td> = </td><td>106</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wb97m_rev</strong></td><td> = </td><td>107</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wb97x_3c</strong></td><td> = </td><td>108</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wr2scan</strong></td><td> = </td><td>109</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan0_dh</strong></td><td> = </td><td>110</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan_cidh</strong></td><td> = </td><td>111</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan_qidh</strong></td><td> = </td><td>112</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_r2scan0_2</strong></td><td> = </td><td>113</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pr2scan50</strong></td><td> = </td><td>114</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_pr2scan69</strong></td><td> = </td><td>115</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_kpr2scan50</strong></td><td> = </td><td>116</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wpr2scan50</strong></td><td> = </td><td>117</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_wb97x</strong></td><td> = </td><td>118</td><td></td>
+            </tr>
+            <tr>
+              <td>enumerator</td><td>::</td>
+              <td><strong>p_last</strong></td><td> = </td><td>119</td><td></td>
+            </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Interfaces</h2>
+              <div class="card">
+    <div class="card-header bg-light codesum">
+      <span class="anchor" id="interface-get_rational_damping"></span>
+      <h3>public        interface <a href='../interface/get_rational_damping.html'>get_rational_damping</a> 
+      </h3>
+    </div>
+      <div class="card-body">
+        <p>Retrieve rational damping parameters from functional name or ID</p>
+      </div>
+    <ul class="list-group">
+          <li class="list-group-item">
+                <h3>
+    private  subroutine <a href='../proc/get_rational_damping_name.html'>get_rational_damping_name</a>(functional, param, s9)  
+
+    </h3>
+    
+  <p>Retrieve rational damping parameters from functional name</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-functional"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>functional</strong></td>
+            <td>
+<p>Functional name for which to retrieve the damping parameters</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+<p>Damping parameters for the functional</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+<p>Scaling factor for the three-body term</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+          </li>
+          <li class="list-group-item">
+                <h3>
+    private  subroutine <a href='../proc/get_rational_damping_id.html'>get_rational_damping_id</a>(id, param, s9)  
+
+    </h3>
+    
+  <p>Retrieve rational damping parameters from functional ID</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-id~2"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>id</strong></td>
+            <td>
+<p>Functional ID for which to retrieve the damping parameters</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param~2"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+<p>Damping parameters for the functional</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9~2"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+<p>Scaling factor for the three-body term</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+          </li>
+    </ul>
+  </div>
+
+        </section>
+        <br>
+
+
+        <section>
+          <h2>Derived Types</h2>
+              <div class="card">
+    <div class="card-header codesum">
+      <span class="anchor" id="type-functional_group"></span>
+      <h3>
+        type, public&nbsp;::&nbsp;
+        <a href='../type/functional_group.html'>functional_group</a>
+        
+      </h3>
+    </div>
+    <div class="card-body">
+      <p>Group different spellings/names of functionals</p>
+
+        <h4>Components</h4>
+          <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-names"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>names</strong>(:)</td>
+                <td></td>
+                <td></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Functions</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_functional_id"></span> <h3>public pure function <a href='../proc/get_functional_id.html'>get_functional_id</a>(df) result(num)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Get the unique identifier for most functionals, returns none if
+the functional was not known at the time I implemented this mapping</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-df"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>df</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>integer(kind=df_enum)</small>
+    </h4>
+    
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_funcgroup"></span> <h3>private  function <a href='../proc/new_funcgroup.html'>new_funcgroup</a>(input_names) result(group)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create a new group of functional names</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-input_names"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>input_names</strong>(:)</td>
+            <td>
+<p>List of spellings/names of the functional</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(<a href='../type/functional_group.html'>functional_group</a>)</small>
+    </h4>
+    <p>Functional with possibly different spellings</p>
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_d4eeq_bj_parameter"></span> <h3>private  subroutine <a href='../proc/get_d4eeq_bj_parameter.html'>get_d4eeq_bj_parameter</a>(dfnum, param, s9)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-dfnum"></span>
+              integer(kind=df_enum),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>dfnum</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param~3"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9~3"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_d4eeq_bjatm_parameter"></span> <h3>private  subroutine <a href='../proc/get_d4eeq_bjatm_parameter.html'>get_d4eeq_bjatm_parameter</a>(dfnum, param, s9)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-dfnum~2"></span>
+              integer(kind=df_enum),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>dfnum</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param~4"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9~4"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_functionals"></span> <h3>public  subroutine <a href='../proc/get_functionals.html'>get_functionals</a>(funcs)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Collect all supported functionals</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-funcs"></span>
+              type(<a href='../type/functional_group.html'>functional_group</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>funcs</strong>(:)</td>
+            <td>
+<p>Collection of functionals with possibly different spellings/names</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_rational_damping_id"></span> <h3>private  subroutine <a href='../proc/get_rational_damping_id.html'>get_rational_damping_id</a>(id, param, s9)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Retrieve rational damping parameters from functional ID</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-id~2"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>id</strong></td>
+            <td>
+<p>Functional ID for which to retrieve the damping parameters</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param~2"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+<p>Damping parameters for the functional</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9~2"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+<p>Scaling factor for the three-body term</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_rational_damping_name"></span> <h3>private  subroutine <a href='../proc/get_rational_damping_name.html'>get_rational_damping_name</a>(functional, param, s9)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Retrieve rational damping parameters from functional name</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-functional"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>functional</strong></td>
+            <td>
+<p>Functional name for which to retrieve the damping parameters</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+<p>Damping parameters for the functional</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+<p>Scaling factor for the three-body term</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              DFT-D4
+ was developed by Grimme group Bonn<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-14 16:11 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,501 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Documentation for DFT-D4">
+    <meta name="author" content="Grimme group Bonn" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>get_functional_id &ndash; DFT-D4</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">DFT-D4 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>get_functional_id
+      <small>Function</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 6.3% of total for procedures.">244 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/param.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/param.f90.html'>param.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/dftd4_param.html'>dftd4_param</a></li>
+            <li class="breadcrumb-item active" aria-current="page">get_functional_id</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/get_functional_id.html#src">get_functional_id</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public pure function get_functional_id(df) result(num)  
+</h2>
+    
+
+    <p>Get the unique identifier for most functionals, returns none if
+the functional was not known at the time I implemented this mapping</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-df"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>df</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <h3>Return Value
+        <small>
+          <span class="anchor" id="variable-num"></span>
+          integer(kind=df_enum)
+        </small>
+      </h3>
+      
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="k">pure function </span><span class="n">get_functional_id</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+<span class="w">   </span><span class="kt">integer</span><span class="p">(</span><span class="n">df_enum</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">num</span>
+<span class="w">   </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">df</span>
+<span class="w">   </span><span class="k">select case</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="w">   </span><span class="k">case </span><span class="n">default</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_invalid</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;hf&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_hf</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;am05&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_am05:gga_c_am05&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_am05</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;blyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_b88:gga_c_lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_blyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;bpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_b88:gga_c_pbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_bpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b-p&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;bp86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;bp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b-p86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_b88:gga_c_p86&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_bp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;bpw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b-pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_b88:gga_c_pw91&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_bpw</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lb94&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_lb&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no gga_c_lb</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lb94</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mpwlyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mpw-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_mpw91:gga_c_lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mpwlyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mpwpw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mpw-pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mpwpw91&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_mpw91:gga_c_pw91&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mpwpw</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;o-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;olyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_optx:gga_c_lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_olyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;opbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_optx:gga_c_pbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_opbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_pbe:gga_c_pbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;rpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_rpbe:gga_c_pbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_rpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_pbe_r:gga_c_pbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pbesol&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_pbe_sol:gga_c_pbe_sol&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pbesol</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pw86pbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_pw86:gga_c_pbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pw86pbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;rpw86pbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_rpw86:gga_c_pbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_rpw86pbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pw91&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_pw91:gga_c_pw91&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pw91</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pwp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pw-p&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pw91p86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_pw91:gga_c_p86&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pwp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;x-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;xlyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_xc_xlyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_xlyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b97&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b97&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b97</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b97d&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_xc_b97_d&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b97d</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;tpss&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_c_tpss:mgga_x_tpss&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_tpss</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revtpss&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_c_revtpss:mgga_x_revtpss&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revtpss</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_x_scan:mgga_c_scan&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_scan</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;rscan&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_x_rscan:mgga_c_rscan&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_rscan</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_x_r2scan:mgga_c_r2scan&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scanh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scanh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_r2scanh&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scanh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan0&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan0&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_r2scan0&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan0</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan50&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan50&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_r2scan50&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan50</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan-3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan-3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r2scan_3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan_3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r2scan3c&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan_3c</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b1lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b1-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b1lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b1lyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b3-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b3lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b3lyp3&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b3lyp5&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b3lyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;bh-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;bhlyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_bhandh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_bhandhlyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_bhlyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b1p&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b1-p&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b1p86&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! 0.75 b88 + 0.25 hf; p86 (nonloc) + pw81 (loc)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b1p</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b3p&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b3-p&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b3p86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b3p86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b3p86_nwchem&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b3p</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b1pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b1-pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b1pw91&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b1pw91&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b1pw</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b3pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b3-pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b3pw91&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_b3pw91&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b3pw</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;o3-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;o3lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_o3lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_o3lyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revpbe0&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revpbe0</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revpbe38&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revpbe38</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pbe0&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_pbeh&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pbe0</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pwp1&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pwp1</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pw1pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pw1-pw&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pw1pw</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mpw1pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mpw1-pw&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mpw1pw91&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_mpw1pw&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mpw1pw</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mpw1lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mpw1-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_mpw1lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mpw1lyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pw6b95&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_pw6b95&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pw6b95</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;tpssh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_tpssh&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_tpssh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;tpss0&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_tpss0&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_tpss0</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;x3-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;x3lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_x3lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_x3lyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;m06&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_x_m06:mgga_c_m06&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_m06</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;m06l&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_x_m06_l:mgga_c_m06_l&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_m06l</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mn12sx&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mn12-sx&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_c_mn12_sx:mgga_c_mn12_sx&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mn12sx</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;cam-b3lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;camb3lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_cam_b3lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_camb3lyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;cam-qtp01&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;camqtp01&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;camqtp(01)&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;cam-qtp(01)&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_cam_qtp_01&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_camqtp01</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lc-blyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lcblyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_lc_blyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lcblyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lc-wpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lcwpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lc-ωpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lcωpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lc-omegapbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lcomegapbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_lc_wpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_lc_wpbe08_whs&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_lc_wpbe_whs&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_lrc_wpbe&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lcwpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lc-wpbeh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lcwpbeh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lc-ωpbeh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lcωpbeh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lc-omegapbeh&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;lcomegapbeh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_lc_wpbeh_whs&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_lrc_wpbeh&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lcwpbeh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lh07tsvwn&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lh07t-svwn&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lh07tsvwn</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lh07ssvwn&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lh07s-svwn&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lh07ssvwn</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lh12ctssirpw92&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lh12ct-ssirpw92&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lh12ctssirpw92</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lh12ctssifpw92&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lh12ct-ssifpw92&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lh12ctssifpw92</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lh14tcalpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lh14t-calpbe&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lh14tcalpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lh20t&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lh20t</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b2plyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b2-plyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;xc_hyb_gga_xc_b2plyp&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! only in code</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b2plyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b2gpplyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;b2gp-plyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;xc_hyb_gga_xc_b2gpplyp&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! only in code</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b2gpplyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mpw2plyp&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mpw2plyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pwpb95&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pwpb95</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dsdblyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dsd-blyp&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dsdblyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dsdpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dsd-pbe&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dsdpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dsdpbeb95&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dsd-pbeb95&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dsdpbeb95</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dsdpbep86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dsd-pbep86&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dsdpbep86</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dsdsvwn&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dsd-svwn&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dsdsvwn</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dodblyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dod-blyp&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dodblyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dodpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dod-pbe&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dodpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dodpbeb95&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dod-pbeb95&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dodpbeb95</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dodpbep86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dod-pbep86&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dodpbep86</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dodsvwn&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dod-svwn&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dodsvwn</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pbe02&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pbe0-2&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pbe0_2</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pbe0dh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pbe0-dh&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pbe0_dh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dftb3&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dftb(3ob)&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dftb_3ob</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dftb(mio)&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dftb_mio</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dftb(pbc)&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dftb_pbc</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;dftb(matsci)&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dftb_matsci</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;lc-dftb&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dftb(ob2)&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_dftb_ob2</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b1b95&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_b88b95&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b1b95</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mpwb1k&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_mpwb1k&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mpwb1k</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;mpw1b95&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_mpw1b95&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_mpw1b95</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;hse03&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_hse03&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_hse03</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;hse06&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_hse06&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_hse06</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;hse12&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_hse12&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_hse12</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;hse12s&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_hse12s&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_hse12s</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;hsesol&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_hse_sol&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_hsesol</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;glyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g-lyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gga_x_g96:gga_c_lyp&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_glyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revpbe0dh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;revpbe0-dh&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revpbe0dh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revtpssh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_revtpssh&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revtpssh</span>
+<span class="w">    </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revtpss0&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revtpss0</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revdsd-pbep86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;revdsdpbep86&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revdsdpbep86</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revdsd-pbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;revdsd-pbepbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;revdsdpbe&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;revdsdpbepbe&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revdsdpbe</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revdsd-blyp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;revdsdblyp&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revdsdblyp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;revdod-pbep86&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;revdodpbep86&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_revdodpbep86</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;b97m&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mgga_xc_b97m_v&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_b97m</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wb97m&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97m&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97m&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_mgga_xc_wb97m_v&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wb97m</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wb97m-rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97m-rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97m-rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;wb97m_rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97m_rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;omegab97m_rev&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! D4 re-parametrization</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wb97m_rev</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wb97&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_wb97&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wb97</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wb97x-2008&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97x-2008&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97x-2008&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_wb97x&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;wb97x_2008&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97x_2008&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97x_2008&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wb97x_2008</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wb97x&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97x&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97x&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hyb_gga_xc_wb97x_v&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wb97x</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wb97x-rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97x-rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97x-rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;wb97x_rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97x_rev&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;omegab97x_rev&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! D4 re-parametrization</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wb97x_rev</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wb97x-3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97x-3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;omegab97x-3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;wb97x_3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ωb97x_3c&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="s1">&#39;omegab97x_3c&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wb97x_3c</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wr2scan&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;wr²scan&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wr2scan</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan0-dh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan0-dh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r2scan0dh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan0dh&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan0_dh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan-cidh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan-cidh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r2scancidh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scancidh&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan_cidh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan-qidh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan-qidh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r2scanqidh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scanqidh&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan_qidh</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;r2scan0-2&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan0-2&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r2scan02&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;r²scan02&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_r2scan0_2</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pr2scan50&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pr²scan50&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pr2scan50</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;pr2scan69&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pr²scan69&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pr2scan69</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;kpr2scan50&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;kpr²scan50&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_kpr2scan50</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="s1">&#39;wpr2scan50&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;wpr²scan50&#39;</span><span class="p">)</span><span class="w"> </span><span class="c">! no libxc</span>
+<span class="w">      </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_wpr2scan50</span>
+<span class="w">   </span><span class="k">end select</span>
+<span class="k">end function </span><span class="n">get_functional_id</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              DFT-D4
+ was developed by Grimme group Bonn<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-14 16:11 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

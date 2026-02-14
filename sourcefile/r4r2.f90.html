@@ -1,0 +1,310 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Documentation for DFT-D4">
+    <meta name="author" content="Grimme group Bonn" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>r4r2.f90 &ndash; DFT-D4</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">DFT-D4 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>r4r2.f90
+      <small>Source File</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.3% of total for source files.">31 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/r4r2.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+            <li class="breadcrumb-item active" aria-current="page">r4r2.f90</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#mods-0"
+         aria-expanded="false" aria-controls="mods-0">
+         <h4 class="card-header bg-primary text-white">Modules</h4>
+      </a>
+      <div id="mods-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd4_data_r4r2.html">dftd4_data_r4r2</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../sourcefile/r4r2.f90.html#src">r4r2.f90</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    <div class="col-md-9" id='text'>
+      
+      <br>
+
+      <section>
+        <h2><span class="anchor" id="src"></span>Source Code</h2>
+        <div class="hl codehilite"><pre><span></span><a id="ln-1" name="ln-1" href="#ln-1"></a><span class="c">! This file is part of dftd4.</span>
+<a id="ln-2" name="ln-2" href="#ln-2"></a><span class="c">! SPDX-Identifier: LGPL-3.0-or-later</span>
+<a id="ln-3" name="ln-3" href="#ln-3"></a><span class="c">!</span>
+<a id="ln-4" name="ln-4" href="#ln-4"></a><span class="c">! dftd4 is free software: you can redistribute it and/or modify it under</span>
+<a id="ln-5" name="ln-5" href="#ln-5"></a><span class="c">! the terms of the Lesser GNU General Public License as published by</span>
+<a id="ln-6" name="ln-6" href="#ln-6"></a><span class="c">! the Free Software Foundation, either version 3 of the License, or</span>
+<a id="ln-7" name="ln-7" href="#ln-7"></a><span class="c">! (at your option) any later version.</span>
+<a id="ln-8" name="ln-8" href="#ln-8"></a><span class="c">!</span>
+<a id="ln-9" name="ln-9" href="#ln-9"></a><span class="c">! dftd4 is distributed in the hope that it will be useful,</span>
+<a id="ln-10" name="ln-10" href="#ln-10"></a><span class="c">! but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<a id="ln-11" name="ln-11" href="#ln-11"></a><span class="c">! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<a id="ln-12" name="ln-12" href="#ln-12"></a><span class="c">! Lesser GNU General Public License for more details.</span>
+<a id="ln-13" name="ln-13" href="#ln-13"></a><span class="c">!</span>
+<a id="ln-14" name="ln-14" href="#ln-14"></a><span class="c">! You should have received a copy of the Lesser GNU General Public License</span>
+<a id="ln-15" name="ln-15" href="#ln-15"></a><span class="c">! along with dftd4.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<a id="ln-16" name="ln-16" href="#ln-16"></a>
+<a id="ln-17" name="ln-17" href="#ln-17"></a><span class="k">module </span><span class="n">dftd4_data_r4r2</span>
+<a id="ln-18" name="ln-18" href="#ln-18"></a><span class="w">   </span><span class="k">use </span><span class="n">mctc_env</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">wp</span>
+<a id="ln-19" name="ln-19" href="#ln-19"></a><span class="w">   </span><span class="k">use </span><span class="n">mctc_io_convert</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">aatoau</span>
+<a id="ln-20" name="ln-20" href="#ln-20"></a><span class="w">   </span><span class="k">use </span><span class="n">mctc_io_symbols</span><span class="p">,</span><span class="w"> </span><span class="k">only</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">to_number</span>
+<a id="ln-21" name="ln-21" href="#ln-21"></a><span class="w">   </span><span class="k">implicit none</span>
+<a id="ln-22" name="ln-22" href="#ln-22"></a><span class="k">   private</span>
+<a id="ln-23" name="ln-23" href="#ln-23"></a>
+<a id="ln-24" name="ln-24" href="#ln-24"></a><span class="k">   public</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">get_r4r2_val</span>
+<a id="ln-25" name="ln-25" href="#ln-25"></a>
+<a id="ln-26" name="ln-26" href="#ln-26"></a>
+<a id="ln-27" name="ln-27" href="#ln-27"></a><span class="w">   </span><span class="c">!&gt; Get r4/r2 expectation value</span>
+<a id="ln-28" name="ln-28" href="#ln-28"></a><span class="w">   </span><span class="k">interface </span><span class="n">get_r4r2_val</span>
+<a id="ln-29" name="ln-29" href="#ln-29"></a><span class="w">      </span><span class="k">module procedure</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">get_r4r2_val_num</span>
+<a id="ln-30" name="ln-30" href="#ln-30"></a><span class="w">      </span><span class="k">module procedure</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">get_r4r2_val_sym</span>
+<a id="ln-31" name="ln-31" href="#ln-31"></a><span class="w">   </span><span class="k">end interface </span><span class="n">get_r4r2_val</span>
+<a id="ln-32" name="ln-32" href="#ln-32"></a>
+<a id="ln-33" name="ln-33" href="#ln-33"></a>
+<a id="ln-34" name="ln-34" href="#ln-34"></a><span class="w">   </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">max_elem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">118</span>
+<a id="ln-35" name="ln-35" href="#ln-35"></a>
+<a id="ln-36" name="ln-36" href="#ln-36"></a><span class="w">   </span><span class="c">!  PBE0/def2-QZVP atomic values calculated by S. Grimme in Gaussian (2010)</span>
+<a id="ln-37" name="ln-37" href="#ln-37"></a><span class="w">   </span><span class="c">!  rare gases recalculated by J. Mewes with PBE0/aug-cc-pVQZ in Dirac (2018)</span>
+<a id="ln-38" name="ln-38" href="#ln-38"></a><span class="w">   </span><span class="c">!  He: 3.4698 -&gt; 3.5544, Ne: 3.1036 -&gt; 3.7943, Ar: 5.6004 -&gt; 5.6638,</span>
+<a id="ln-39" name="ln-39" href="#ln-39"></a><span class="w">   </span><span class="c">!  Kr: 6.1971 -&gt; 6.2312, Xe: 7.5152 -&gt; 8.8367</span>
+<a id="ln-40" name="ln-40" href="#ln-40"></a><span class="w">   </span><span class="c">!  not replaced but recalculated (PBE0/cc-pVQZ) were</span>
+<a id="ln-41" name="ln-41" href="#ln-41"></a><span class="w">   </span><span class="c">!   H: 8.0589 -&gt;10.9359, Li:29.0974 -&gt;39.7226, Be:14.8517 -&gt;17.7460</span>
+<a id="ln-42" name="ln-42" href="#ln-42"></a><span class="w">   </span><span class="c">!  also new super heavies Cn,Nh,Fl,Lv,Og</span>
+<a id="ln-43" name="ln-43" href="#ln-43"></a><span class="w">   </span><span class="c">!  Am-Rg calculated at 4c-PBE/Dyall-AE4Z (Dirac 2022)</span>
+<a id="ln-44" name="ln-44" href="#ln-44"></a><span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">r4_over_r2</span><span class="p">(</span><span class="n">max_elem</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w">  </span><span class="p">&amp;</span>
+<a id="ln-45" name="ln-45" href="#ln-45"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">  </span><span class="mf">8.0589_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">3.4698_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! H,He</span>
+<a id="ln-46" name="ln-46" href="#ln-46"></a><span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="mi">2</span><span class="mf">9.0974_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">4.8517_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">1.8799_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">7.8715_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5588_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">4.7566_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">3.8025_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">3.1036_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Li-Ne</span>
+<a id="ln-47" name="ln-47" href="#ln-47"></a><span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="mi">2</span><span class="mf">6.1552_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.2304_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.7210_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">2.7442_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.5361_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.1652_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">6.7463_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">5.6004_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Na-Ar</span>
+<a id="ln-48" name="ln-48" href="#ln-48"></a><span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="mi">2</span><span class="mf">9.2012_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">2.3934_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! K,Ca</span>
+<a id="ln-49" name="ln-49" href="#ln-49"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">           </span><span class="mi">1</span><span class="mf">9.0598_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">6.8590_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">5.4023_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">2.5589_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">3.4788_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Sc-</span>
+<a id="ln-50" name="ln-50" href="#ln-50"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">           </span><span class="mi">1</span><span class="mf">2.2309_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">1.2809_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.5569_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.1428_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.4907_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! -Zn</span>
+<a id="ln-51" name="ln-51" href="#ln-51"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">                      </span><span class="mi">1</span><span class="mf">3.4606_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.8544_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.9386_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.1350_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">7.1251_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">6.1971_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Ga-Kr</span>
+<a id="ln-52" name="ln-52" href="#ln-52"></a><span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="mi">3</span><span class="mf">0.0162_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">4.4103_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Rb,Sr</span>
+<a id="ln-53" name="ln-53" href="#ln-53"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">2</span><span class="mf">0.3537_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.4780_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">3.5528_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">1.8451_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">1.0355_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Y-</span>
+<a id="ln-54" name="ln-54" href="#ln-54"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">1</span><span class="mf">0.1997_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.5414_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0061_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.6417_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.9975_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! -Cd</span>
+<a id="ln-55" name="ln-55" href="#ln-55"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">                       </span><span class="mi">1</span><span class="mf">4.0834_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">1.8333_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.0179_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.3844_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.4110_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">7.5152_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! In-Xe</span>
+<a id="ln-56" name="ln-56" href="#ln-56"></a><span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="mi">3</span><span class="mf">2.7622_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">7.5708_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Cs,Ba</span>
+<a id="ln-57" name="ln-57" href="#ln-57"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">2</span><span class="mf">3.1671_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">1.6003_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">0.9615_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">0.4562_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">0.1010_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">9.7475_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">9.4828_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! La-Eu</span>
+<a id="ln-58" name="ln-58" href="#ln-58"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">1</span><span class="mf">5.6013_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">9.2362_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.4717_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.8321_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.4237_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.1954_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">7.1631_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Gd-Yb</span>
+<a id="ln-59" name="ln-59" href="#ln-59"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">1</span><span class="mf">4.5716_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">5.8758_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">3.8989_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">2.4834_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">1.4421_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Lu-</span>
+<a id="ln-60" name="ln-60" href="#ln-60"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">1</span><span class="mf">0.2671_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.3549_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">7.8496_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">7.3278_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">7.4820_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! -Hg</span>
+<a id="ln-61" name="ln-61" href="#ln-61"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">                       </span><span class="mi">1</span><span class="mf">3.5124_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">1.6554_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.0959_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.7340_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.8584_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0125_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Tl-Rn</span>
+<a id="ln-62" name="ln-62" href="#ln-62"></a><span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="mi">2</span><span class="mf">9.8135_wp</span><span class="p">,</span><span class="mi">2</span><span class="mf">6.3157_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Fr,Ra</span>
+<a id="ln-63" name="ln-63" href="#ln-63"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">1</span><span class="mf">9.1885_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">5.8542_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">6.1305_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">5.6161_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">5.1226_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">6.1576_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">4.6510_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Ac-Am</span>
+<a id="ln-64" name="ln-64" href="#ln-64"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">1</span><span class="mf">4.7178_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">3.9108_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">3.5623_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">3.2326_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">2.9189_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">2.6133_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">2.3142_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Cm-No</span>
+<a id="ln-65" name="ln-65" href="#ln-65"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">            </span><span class="mi">1</span><span class="mf">4.8326_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">2.3771_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.6378_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.3638_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.2297_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Lr-</span>
+<a id="ln-66" name="ln-66" href="#ln-66"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">             </span><span class="mf">7.5667_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">6.9456_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">6.3946_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">5.9159_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">5.4929_wp</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! -Cn</span>
+<a id="ln-67" name="ln-67" href="#ln-67"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">                        </span><span class="mf">6.7286_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">6.5144_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.9169_wp</span><span class="p">,</span><span class="mi">1</span><span class="mf">0.3600_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">9.4723_wp</span><span class="p">,</span><span class="w"> </span><span class="mf">8.6641_wp</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="c">! Nh-Og</span>
+<a id="ln-68" name="ln-68" href="#ln-68"></a>
+<a id="ln-69" name="ln-69" href="#ln-69"></a><span class="w">   </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">idum</span>
+<a id="ln-70" name="ln-70" href="#ln-70"></a><span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sqrt_z_r4_over_r2</span><span class="p">(</span><span class="n">max_elem</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">&amp;</span>
+<a id="ln-71" name="ln-71" href="#ln-71"></a><span class="w">      </span><span class="p">&amp;</span><span class="w">  </span><span class="nb">sqrt</span><span class="p">(</span><span class="mf">0.5_wp</span><span class="o">*</span><span class="p">(</span><span class="n">r4_over_r2</span><span class="o">*</span><span class="p">[(</span><span class="nb">sqrt</span><span class="p">(</span><span class="kt">real</span><span class="p">(</span><span class="n">idum</span><span class="p">,</span><span class="n">wp</span><span class="p">)),</span><span class="n">idum</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">max_elem</span><span class="p">)]))</span>
+<a id="ln-72" name="ln-72" href="#ln-72"></a>
+<a id="ln-73" name="ln-73" href="#ln-73"></a>
+<a id="ln-74" name="ln-74" href="#ln-74"></a><span class="k">contains</span>
+<a id="ln-75" name="ln-75" href="#ln-75"></a>
+<a id="ln-76" name="ln-76" href="#ln-76"></a>
+<a id="ln-77" name="ln-77" href="#ln-77"></a><span class="c">!&gt; Get r4/r2 expectation value for a given element symbol</span>
+<a id="ln-78" name="ln-78" href="#ln-78"></a><span class="k">elemental function </span><span class="n">get_r4r2_val_sym</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">rad</span><span class="p">)</span>
+<a id="ln-79" name="ln-79" href="#ln-79"></a>
+<a id="ln-80" name="ln-80" href="#ln-80"></a><span class="w">   </span><span class="c">!&gt; Element symbol</span>
+<a id="ln-81" name="ln-81" href="#ln-81"></a><span class="w">   </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sym</span>
+<a id="ln-82" name="ln-82" href="#ln-82"></a>
+<a id="ln-83" name="ln-83" href="#ln-83"></a><span class="w">   </span><span class="c">!&gt; r4/r2 expectation value</span>
+<a id="ln-84" name="ln-84" href="#ln-84"></a><span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">rad</span>
+<a id="ln-85" name="ln-85" href="#ln-85"></a>
+<a id="ln-86" name="ln-86" href="#ln-86"></a><span class="w">   </span><span class="n">rad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_r4r2_val</span><span class="p">(</span><span class="n">to_number</span><span class="p">(</span><span class="n">sym</span><span class="p">))</span>
+<a id="ln-87" name="ln-87" href="#ln-87"></a>
+<a id="ln-88" name="ln-88" href="#ln-88"></a><span class="k">end function </span><span class="n">get_r4r2_val_sym</span>
+<a id="ln-89" name="ln-89" href="#ln-89"></a>
+<a id="ln-90" name="ln-90" href="#ln-90"></a>
+<a id="ln-91" name="ln-91" href="#ln-91"></a><span class="c">!&gt; Get r4/r2 expectation value for a given atomic number</span>
+<a id="ln-92" name="ln-92" href="#ln-92"></a><span class="k">elemental function </span><span class="n">get_r4r2_val_num</span><span class="p">(</span><span class="n">num</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">rad</span><span class="p">)</span>
+<a id="ln-93" name="ln-93" href="#ln-93"></a>
+<a id="ln-94" name="ln-94" href="#ln-94"></a><span class="w">   </span><span class="c">!&gt; Atomic number</span>
+<a id="ln-95" name="ln-95" href="#ln-95"></a><span class="w">   </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">num</span>
+<a id="ln-96" name="ln-96" href="#ln-96"></a>
+<a id="ln-97" name="ln-97" href="#ln-97"></a><span class="w">   </span><span class="c">!&gt; r4/r2 expectation value</span>
+<a id="ln-98" name="ln-98" href="#ln-98"></a><span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">rad</span>
+<a id="ln-99" name="ln-99" href="#ln-99"></a>
+<a id="ln-100" name="ln-100" href="#ln-100"></a><span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">num</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">.</span><span class="nb">and</span><span class="p">.</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">sqrt_z_r4_over_r2</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<a id="ln-101" name="ln-101" href="#ln-101"></a><span class="k">      </span><span class="n">rad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt_z_r4_over_r2</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+<a id="ln-102" name="ln-102" href="#ln-102"></a><span class="w">   </span><span class="k">else</span>
+<a id="ln-103" name="ln-103" href="#ln-103"></a><span class="k">      </span><span class="n">rad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_wp</span>
+<a id="ln-104" name="ln-104" href="#ln-104"></a><span class="w">   </span><span class="k">end if</span>
+<a id="ln-105" name="ln-105" href="#ln-105"></a>
+<a id="ln-106" name="ln-106" href="#ln-106"></a><span class="k">end function </span><span class="n">get_r4r2_val_num</span>
+<a id="ln-107" name="ln-107" href="#ln-107"></a>
+<a id="ln-108" name="ln-108" href="#ln-108"></a>
+<a id="ln-109" name="ln-109" href="#ln-109"></a><span class="k">end module </span><span class="n">dftd4_data_r4r2</span>
+</pre></div>
+
+      </section>
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              DFT-D4
+ was developed by Grimme group Bonn<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-14 16:11 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>
