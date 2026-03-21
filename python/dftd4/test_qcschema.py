@@ -102,20 +102,20 @@ def test_energy_r2scan_d4s(schver) -> None:
     thr = 1e-9
 
     if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=get_example_molecule(),
-            driver="energy",
-            model={
+        atomic_input = {
+            "molecule": get_example_molecule(),
+            "driver": "energy",
+            "model": {
                 "method": "r2scan",
-            },
-            keywords={
+             },
+            "keywords": {
                 "level_hint": "d4s",
             },
-        )
+        }
     elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=get_example_molecule(),
-            specification= {
+        atomic_input = {
+            "molecule": get_example_molecule(),
+            "specification": {
                 "driver": "energy",
                 "model": {
                     "method": "r2scan",
@@ -124,7 +124,7 @@ def test_energy_r2scan_d4s(schver) -> None:
                     "level_hint": "d4s",
                 },
             }
-        )
+        }
 
     atomic_result = run_qcschema(atomic_input)
 
