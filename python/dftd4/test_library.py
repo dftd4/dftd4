@@ -16,7 +16,6 @@
 
 
 from dftd4.library import get_api_version
-from pkg_resources import parse_version
 
 from dftd4 import __version__
 
@@ -24,4 +23,6 @@ from dftd4 import __version__
 def test_api_version() -> None:
     """Ensure that the API version is compatible."""
 
-    assert parse_version(get_api_version()) == parse_version(__version__)
+    from packaging.version import parse
+
+    assert parse(get_api_version()) == parse(__version__)
