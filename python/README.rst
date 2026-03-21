@@ -65,6 +65,8 @@ QCSchema Integration
 
 This Python API natively understands QCSchema and the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
 If the QCElemental package is installed the ``dftd4.qcschema`` module becomes importable and provides the ``run_qcschema`` function.
+If the QCElemental package is >=0.50.0, ``dftd4.qcschema`` supports QCSchema v1 and v2, returning whichever version was submitted.
+Note that only QCSchema v2 works with Python 3.14+ due to Pydantic restrictions.
 
 .. code:: python
 
