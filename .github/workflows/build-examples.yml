@@ -59,7 +59,7 @@ jobs:
           GCC_V: ${{ env.GCC_V }}
 
       - name: Setup fpm
-        uses: fortran-lang/setup-fpm@v7  # fpm 0.11.0
+        uses: fortran-lang/setup-fpm@v9  # fpm 0.11.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
