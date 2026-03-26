@@ -17,10 +17,11 @@
 # pyright: reportPossiblyUnboundVariable=false
 # pylint: disable=possibly-used-before-assignment
 
+import sys
 from typing import Any, Dict
 
 import numpy as np
-from pytest import approx, mark
+from pytest import approx, mark, param
 
 try:
     import qcelemental as qcel
@@ -31,6 +32,8 @@ except ModuleNotFoundError:
     has_qcschema = False
 
 pytestmark = mark.skipif(not has_qcschema, reason="requires qcelemental")
+v1_available = mark.skipif(sys.version_info >= (3, 14), reason="QCSchema v1 not available for py314+")
+v2_available = mark.skipif(not hasattr(qcel.models, "v2"), reason="QCSchema v2 not available in current QCElemental")
 
 
 def get_example_molecule() -> Dict[str, Any]:
@@ -59,16 +62,31 @@ def get_example_molecule() -> Dict[str, Any]:
     }
 
 
-def test_energy_r2scan_d4() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_energy_r2scan_d4(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule=get_example_molecule(),
-        driver="energy",
-        model={
-            "method": "r2scan",
-        },
-    )
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=get_example_molecule(),
+            driver="energy",
+            model={
+                "method": "r2scan",
+            },
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=get_example_molecule(),
+            specification=qcel.models.v2.AtomicSpecification(
+                driver="energy",
+                model={
+                    "method": "r2scan",
+                },
+            )
+        )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -76,19 +94,37 @@ def test_energy_r2scan_d4() -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.005001101011286166
 
 
-def test_energy_r2scan_d4s() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_energy_r2scan_d4s(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule=get_example_molecule(),
-        driver="energy",
-        model={
-            "method": "r2scan",
-        },
-        keywords={
-            "level_hint": "d4s",
-        },
-    )
+    if schver == 1:
+        atomic_input = {
+            "molecule": get_example_molecule(),
+            "driver": "energy",
+            "model": {
+                "method": "r2scan",
+             },
+            "keywords": {
+                "level_hint": "d4s",
+            },
+        }
+    elif schver == 2:
+        atomic_input = {
+            "molecule": get_example_molecule(),
+            "specification": {
+                "driver": "energy",
+                "model": {
+                    "method": "r2scan",
+                },
+                "keywords": {
+                    "level_hint": "d4s",
+                },
+            }
+        }
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -96,25 +132,43 @@ def test_energy_r2scan_d4s() -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.00509785822000568
 
 
-def test_energy_r2scan_3c() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_energy_r2scan_3c(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule=get_example_molecule(),
-        driver="energy",
-        model={"method": "d4"},
-        keywords={
-            "params_tweaks": {
-                "s6": 1.00,
-                "s8": 0.00,
-                "s9": 2.00,
-                "a1": 0.42,
-                "a2": 5.65,
-                "ga": 2.00,
-                "gc": 1.00,
+    tweaks = {
+        "s6": 1.00,
+        "s8": 0.00,
+        "s9": 2.00,
+        "a1": 0.42,
+        "a2": 5.65,
+        "ga": 2.00,
+        "gc": 1.00,
+    }
+
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=get_example_molecule(),
+            driver="energy",
+            model={"method": "d4"},
+            keywords={
+                "params_tweaks": tweaks
             },
-        },
-    )
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=get_example_molecule(),
+            specification=qcel.models.v2.AtomicSpecification(
+                driver="energy",
+                model={"method": "d4"},
+                keywords={
+                    "params_tweaks": tweaks
+                },
+            )
+        )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -122,21 +176,37 @@ def test_energy_r2scan_3c() -> None:
     assert approx(atomic_result.return_result, abs=thr) == -6.0533536923248e-03
 
 
-def test_energy_lh20t_d4() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_energy_lh20t_d4(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule=get_example_molecule(),
-        driver="energy",
-        model={"method": ""},
-        keywords={
-            "params_tweaks": {
-                "s8": 0.113,
-                "a1": 0.479,
-                "a2": 4.635,
-            },
+    keywords = {
+        "params_tweaks": {
+            "s8": 0.113,
+            "a1": 0.479,
+            "a2": 4.635,
         },
-    )
+    }
+
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=get_example_molecule(),
+            driver="energy",
+            model={"method": ""},
+            keywords=keywords
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=get_example_molecule(),
+            specification=qcel.models.v2.AtomicSpecification(
+                driver="energy",
+                model={"method": ""},
+                keywords=keywords
+            )
+        )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -144,22 +214,43 @@ def test_energy_lh20t_d4() -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.010064263146257654
 
 
-def test_energy_lh20t_d4s() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_energy_lh20t_d4s(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule=get_example_molecule(),
-        driver="energy",
-        model={"method": ""},
-        keywords={
-            "params_tweaks": {
-                "s8": 0.113,
-                "a1": 0.479,
-                "a2": 4.635,
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=get_example_molecule(),
+            driver="energy",
+            model={"method": ""},
+            keywords={
+                "params_tweaks": {
+                    "s8": 0.113,
+                    "a1": 0.479,
+                    "a2": 4.635,
+                },
+                "level_hint": "d4s",
             },
-            "level_hint": "d4s",
-        },
-    )
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=get_example_molecule(),
+            specification={
+                "driver": "energy",
+                "model": {"method": ""},
+                "keywords": {
+                    "params_tweaks": {
+                        "s8": 0.113,
+                        "a1": 0.479,
+                        "a2": 4.635,
+                    },
+                    "level_hint": "d4s",
+                },
+            },
+        )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -167,39 +258,59 @@ def test_energy_lh20t_d4s() -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.010252088837042048
 
 
-def test_energy_m06l_d4() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_energy_m06l_d4(schver) -> None:
     thr = 1e-6
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": "Li Cl F H H Na B H C H H F C H H H".split(" "),
-            "geometry": [
-                [+2.06521084486823, +0.08218432748393, -3.31794862285397],
-                [-2.32042477766402, -5.46684392277772, -4.04262137940086],
-                [+2.26054697581965, -3.03018226193694, -4.64150015772052],
-                [-0.14839777550969, -0.43671669092912, +5.46349590128611],
-                [+1.25506764958846, +3.72255296450239, +3.12461655723367],
-                [-3.70871338035337, -1.70938913801338, -1.44451499871032],
-                [-0.50789889989427, -0.08663524018430, +3.25334078665520],
-                [+1.95889668026174, -0.69562876271128, +1.49780663184774],
-                [-0.13609934796341, +2.63877103476555, +2.01392332556491],
-                [-2.03651637484513, -1.53932035918944, +2.35235290216748],
-                [+1.01732693290435, +4.50598465234050, -1.41360090365614],
-                [-1.21371363315079, +1.45147299379122, -2.46002878669847],
-                [+0.99959759042027, +2.58862220349908, -0.61148816085282],
-                [+1.82755250562899, -1.68931361321449, +2.62013289657120],
-                [-1.90490242357524, +3.74722938063725, +2.11670736907658],
-                [+0.59246743346417, -4.08278756806328, -4.51067336050986],
-            ],
-        },
-        driver="energy",
-        model={
-            "method": "m06l",
-        },
-        keywords={
-            "property": True,
-        },
-    )
+    molecule={
+        "symbols": "Li Cl F H H Na B H C H H F C H H H".split(" "),
+        "geometry": [
+            [+2.06521084486823, +0.08218432748393, -3.31794862285397],
+            [-2.32042477766402, -5.46684392277772, -4.04262137940086],
+            [+2.26054697581965, -3.03018226193694, -4.64150015772052],
+            [-0.14839777550969, -0.43671669092912, +5.46349590128611],
+            [+1.25506764958846, +3.72255296450239, +3.12461655723367],
+            [-3.70871338035337, -1.70938913801338, -1.44451499871032],
+            [-0.50789889989427, -0.08663524018430, +3.25334078665520],
+            [+1.95889668026174, -0.69562876271128, +1.49780663184774],
+            [-0.13609934796341, +2.63877103476555, +2.01392332556491],
+            [-2.03651637484513, -1.53932035918944, +2.35235290216748],
+            [+1.01732693290435, +4.50598465234050, -1.41360090365614],
+            [-1.21371363315079, +1.45147299379122, -2.46002878669847],
+            [+0.99959759042027, +2.58862220349908, -0.61148816085282],
+            [+1.82755250562899, -1.68931361321449, +2.62013289657120],
+            [-1.90490242357524, +3.74722938063725, +2.11670736907658],
+            [+0.59246743346417, -4.08278756806328, -4.51067336050986],
+        ],
+    }
+
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=molecule,
+            driver="energy",
+            model={
+                "method": "m06l",
+            },
+            keywords={
+                "property": True,
+            },
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=molecule,
+            specification=qcel.models.v2.AtomicSpecification(
+                driver="energy",
+                model={
+                    "method": "m06l",
+                },
+                keywords={
+                    "property": True,
+                },
+            ),
+        )
 
     charges = [
         +6.4130068073040725e-1,
@@ -232,17 +343,34 @@ def test_energy_m06l_d4() -> None:
     )
 
 
-def test_gradient_b97m_d4() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_gradient_b97m_d4(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule=get_example_molecule(),
-        driver="gradient",
-        model={
-            "method": "b97m-D4",
-        },
-        keywords={},
-    )
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=get_example_molecule(),
+            driver="gradient",
+            model={
+                "method": "b97m-D4",
+            },
+            keywords={},
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=get_example_molecule(),
+            specification={
+                "driver": "gradient",
+                "model": {
+                    "method": "b97m-D4",
+                },
+                "keywords": {},
+            }
+        )
+
     gradient = np.array(
         [
             [-2.44611355e-04, -5.62668284e-04, -2.23387025e-04],
@@ -272,19 +400,38 @@ def test_gradient_b97m_d4() -> None:
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-def test_gradient_tpss_d4s() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_gradient_tpss_d4s(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule=get_example_molecule(),
-        driver="gradient",
-        model={
-            "method": "TPSS",
-        },
-        keywords={
-            "level_hint": "d4s",
-        },
-    )
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=get_example_molecule(),
+            driver="gradient",
+            model={
+                "method": "TPSS",
+            },
+            keywords={
+                "level_hint": "d4s",
+            },
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=get_example_molecule(),
+            specification=qcel.models.v2.AtomicSpecification(
+                driver="gradient",
+                model={
+                    "method": "TPSS",
+                },
+                keywords={
+                    "level_hint": "d4s",
+                },
+            )
+        )
+
     gradient = np.array(
         [
             [-1.36067766e-04, -4.72731818e-04, -1.88160742e-04],
@@ -313,28 +460,32 @@ def test_gradient_tpss_d4s() -> None:
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-def test_gradient_tpss_d4() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_gradient_tpss_d4(schver) -> None:
     thr = 1.0e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": "O C C F O F H".split(),
-            "geometry": [
-                [+4.877023733, -3.909030492, +1.796260143],
-                [+6.112318716, -2.778558610, +0.091330457],
-                [+7.360520527, -4.445334728, -1.932830640],
-                [+7.978801077, -6.767751279, -1.031771494],
-                [+6.374499300, -0.460299457, -0.213142194],
-                [+5.637581753, -4.819746139, -3.831249370],
-                [+9.040657008, -3.585225944, -2.750722946],
-            ],
-            "molecular_charge": -1,
-        },
-        driver="gradient",
-        model={
+    molecule={
+        "symbols": "O C C F O F H".split(),
+        "geometry": [
+            [+4.877023733, -3.909030492, +1.796260143],
+            [+6.112318716, -2.778558610, +0.091330457],
+            [+7.360520527, -4.445334728, -1.932830640],
+            [+7.978801077, -6.767751279, -1.031771494],
+            [+6.374499300, -0.460299457, -0.213142194],
+            [+5.637581753, -4.819746139, -3.831249370],
+            [+9.040657008, -3.585225944, -2.750722946],
+        ],
+        "molecular_charge": -1,
+    }
+    spec = {
+        "driver": "gradient",
+        "model": {
             "method": "",
         },
-        keywords={
+        "keywords": {
             "params_tweaks": {
                 "s8": 1.76596355,
                 "a1": 0.42822303,
@@ -342,7 +493,19 @@ def test_gradient_tpss_d4() -> None:
             },
             "pair_resolved": True,
         },
-    )
+    }
+
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=molecule,
+            **spec,
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=molecule,
+            specification=spec,
+        )
+
     gradient = np.array(
         [
             [-1.47959449e-04, +2.95411758e-05, +2.69548700e-04],
@@ -371,30 +534,53 @@ def test_gradient_tpss_d4() -> None:
     )
 
 
-def test_error_noargs() -> None:
-    atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": "C C C C N C S H H H H H".split(),
-            "geometry": [
-                [-2.56745685564671, -0.02509985979910, 0.00000000000000],
-                [-1.39177582455797, +2.27696188880014, 0.00000000000000],
-                [+1.27784995624894, +2.45107479759386, 0.00000000000000],
-                [+2.62801937615793, +0.25927727028120, 0.00000000000000],
-                [+1.41097033661123, -1.99890996077412, 0.00000000000000],
-                [-1.17186102298849, -2.34220576284180, 0.00000000000000],
-                [-2.39505990368378, -5.22635838332362, 0.00000000000000],
-                [+2.41961980455457, -3.62158019253045, 0.00000000000000],
-                [-2.51744374846065, +3.98181713686746, 0.00000000000000],
-                [+2.24269048384775, +4.24389473203647, 0.00000000000000],
-                [+4.66488984573956, +0.17907568006409, 0.00000000000000],
-                [-4.60044244782237, -0.17794734637413, 0.00000000000000],
-            ],
-        },
-        driver="energy",
-        model={"method": ""},
-        keywords={},
-    )
-    error = qcel.models.ComputeError(
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_error_noargs(schver) -> None:
+    molecule={
+        "symbols": "C C C C N C S H H H H H".split(),
+        "geometry": [
+            [-2.56745685564671, -0.02509985979910, 0.00000000000000],
+            [-1.39177582455797, +2.27696188880014, 0.00000000000000],
+            [+1.27784995624894, +2.45107479759386, 0.00000000000000],
+            [+2.62801937615793, +0.25927727028120, 0.00000000000000],
+            [+1.41097033661123, -1.99890996077412, 0.00000000000000],
+            [-1.17186102298849, -2.34220576284180, 0.00000000000000],
+            [-2.39505990368378, -5.22635838332362, 0.00000000000000],
+            [+2.41961980455457, -3.62158019253045, 0.00000000000000],
+            [-2.51744374846065, +3.98181713686746, 0.00000000000000],
+            [+2.24269048384775, +4.24389473203647, 0.00000000000000],
+            [+4.66488984573956, +0.17907568006409, 0.00000000000000],
+            [-4.60044244782237, -0.17794734637413, 0.00000000000000],
+        ],
+    }
+
+    if schver == 1:
+        from qcelemental.models import ComputeError
+
+        atomic_input = qcel.models.AtomicInput(
+            molecule=molecule,
+            driver="energy",
+            model={"method": ""},
+            keywords={},
+        )
+    elif schver == 2:
+        from qcelemental.models.v2 import ComputeError
+
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=molecule,
+            specification={
+                "driver": "energy",
+                "model": {"method": ""},
+                "keywords": {},
+            }
+        )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
+
+    error = ComputeError(
         error_type="input error",
         error_message="Method name or complete damping parameter set required",
     )
@@ -405,34 +591,61 @@ def test_error_noargs() -> None:
     assert atomic_result.error == error
 
 
-def test_error_nomethod() -> None:
-    atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": "C C C C N C S H H H H H".split(),
-            "geometry": [
-                [-2.56745685564671, -0.02509985979910, 0.00000000000000],
-                [-1.39177582455797, +2.27696188880014, 0.00000000000000],
-                [+1.27784995624894, +2.45107479759386, 0.00000000000000],
-                [+2.62801937615793, +0.25927727028120, 0.00000000000000],
-                [+1.41097033661123, -1.99890996077412, 0.00000000000000],
-                [-1.17186102298849, -2.34220576284180, 0.00000000000000],
-                [-2.39505990368378, -5.22635838332362, 0.00000000000000],
-                [+2.41961980455457, -3.62158019253045, 0.00000000000000],
-                [-2.51744374846065, +3.98181713686746, 0.00000000000000],
-                [+2.24269048384775, +4.24389473203647, 0.00000000000000],
-                [+4.66488984573956, +0.17907568006409, 0.00000000000000],
-                [-4.60044244782237, -0.17794734637413, 0.00000000000000],
-            ],
-        },
-        driver="energy",
-        model={
-            "method": "this-method-does-not-exist",
-        },
-        keywords={
-            "level_hint": "D4",
-        },
-    )
-    error = qcel.models.ComputeError(
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_error_nomethod(schver) -> None:
+    molecule={
+        "symbols": "C C C C N C S H H H H H".split(),
+        "geometry": [
+            [-2.56745685564671, -0.02509985979910, 0.00000000000000],
+            [-1.39177582455797, +2.27696188880014, 0.00000000000000],
+            [+1.27784995624894, +2.45107479759386, 0.00000000000000],
+            [+2.62801937615793, +0.25927727028120, 0.00000000000000],
+            [+1.41097033661123, -1.99890996077412, 0.00000000000000],
+            [-1.17186102298849, -2.34220576284180, 0.00000000000000],
+            [-2.39505990368378, -5.22635838332362, 0.00000000000000],
+            [+2.41961980455457, -3.62158019253045, 0.00000000000000],
+            [-2.51744374846065, +3.98181713686746, 0.00000000000000],
+            [+2.24269048384775, +4.24389473203647, 0.00000000000000],
+            [+4.66488984573956, +0.17907568006409, 0.00000000000000],
+            [-4.60044244782237, -0.17794734637413, 0.00000000000000],
+        ],
+    }
+
+    if schver == 1:
+        from qcelemental.models import ComputeError
+
+        atomic_input = qcel.models.AtomicInput(
+            molecule=molecule,
+            driver="energy",
+            model={
+                "method": "this-method-does-not-exist",
+            },
+            keywords={
+                "level_hint": "D4",
+            },
+        )
+    elif schver == 2:
+        from qcelemental.models.v2 import ComputeError
+
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=molecule,
+            specification = qcel.models.v2.AtomicSpecification(
+                driver="energy",
+                model={
+                    "method": "this-method-does-not-exist",
+                },
+                keywords={
+                    "level_hint": "D4",
+                },
+            )
+        )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
+
+    error = ComputeError(
         error_type="input error",
         error_message="Functional 'this-method-does-not-exist' not known",
     )
@@ -443,34 +656,60 @@ def test_error_nomethod() -> None:
     assert atomic_result.error == error
 
 
-def test_error_level() -> None:
-    atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": "C C C C N C S H H H H H".split(),
-            "geometry": [
-                [-2.56745685564671, -0.02509985979910, 0.00000000000000],
-                [-1.39177582455797, +2.27696188880014, 0.00000000000000],
-                [+1.27784995624894, +2.45107479759386, 0.00000000000000],
-                [+2.62801937615793, +0.25927727028120, 0.00000000000000],
-                [+1.41097033661123, -1.99890996077412, 0.00000000000000],
-                [-1.17186102298849, -2.34220576284180, 0.00000000000000],
-                [-2.39505990368378, -5.22635838332362, 0.00000000000000],
-                [+2.41961980455457, -3.62158019253045, 0.00000000000000],
-                [-2.51744374846065, +3.98181713686746, 0.00000000000000],
-                [+2.24269048384775, +4.24389473203647, 0.00000000000000],
-                [+4.66488984573956, +0.17907568006409, 0.00000000000000],
-                [-4.60044244782237, -0.17794734637413, 0.00000000000000],
-            ],
-        },
-        driver="energy",
-        model={
-            "method": "SCAN",
-        },
-        keywords={
-            "level_hint": "D42",
-        },
-    )
-    error = qcel.models.ComputeError(
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_error_level(schver) -> None:
+    molecule={
+        "symbols": "C C C C N C S H H H H H".split(),
+        "geometry": [
+            [-2.56745685564671, -0.02509985979910, 0.00000000000000],
+            [-1.39177582455797, +2.27696188880014, 0.00000000000000],
+            [+1.27784995624894, +2.45107479759386, 0.00000000000000],
+            [+2.62801937615793, +0.25927727028120, 0.00000000000000],
+            [+1.41097033661123, -1.99890996077412, 0.00000000000000],
+            [-1.17186102298849, -2.34220576284180, 0.00000000000000],
+            [-2.39505990368378, -5.22635838332362, 0.00000000000000],
+            [+2.41961980455457, -3.62158019253045, 0.00000000000000],
+            [-2.51744374846065, +3.98181713686746, 0.00000000000000],
+            [+2.24269048384775, +4.24389473203647, 0.00000000000000],
+            [+4.66488984573956, +0.17907568006409, 0.00000000000000],
+            [-4.60044244782237, -0.17794734637413, 0.00000000000000],
+        ],
+    }
+    if schver == 1:
+        from qcelemental.models import ComputeError
+
+        atomic_input = qcel.models.AtomicInput(
+            molecule=molecule,
+            driver="energy",
+            model={
+                "method": "SCAN",
+            },
+            keywords={
+                "level_hint": "D42",
+            },
+        )
+    elif schver == 2:
+        from qcelemental.models.v2 import ComputeError
+
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=molecule,
+            specification=qcel.models.v2.AtomicSpecification(
+                driver="energy",
+                model={
+                    "method": "SCAN",
+                },
+                keywords={
+                    "level_hint": "D42",
+                },
+            )
+        )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
+
+    error = ComputeError(
         error_type="input error",
         error_message="Level 'D42' is invalid for this dispersion correction",
     )
@@ -481,30 +720,47 @@ def test_error_level() -> None:
     assert atomic_result.error == error
 
 
-def test_ghost_pbe_d4() -> None:
+@mark.parametrize("schver", [
+    param(1, marks=v1_available),
+    param(2, marks=v2_available),
+])
+def test_ghost_pbe_d4(schver) -> None:
     thr = 1e-9
 
-    atomic_input = qcel.models.AtomicInput(
-        molecule={
-            "symbols": "Pb H H H H Bi H H H".split(),
-            "geometry": [
-                [-0.00000020988889, -4.98043478877778, +0.00000000000000],
-                [+3.06964045311111, -6.06324400177778, +0.00000000000000],
-                [-1.53482054188889, -6.06324400177778, -2.65838526500000],
-                [-1.53482054188889, -6.06324400177778, +2.65838526500000],
-                [-0.00000020988889, -1.72196703577778, +0.00000000000000],
-                [-0.00000020988889, +4.77334244722222, +0.00000000000000],
-                [+1.35700257511111, +6.70626379422222, -2.35039772300000],
-                [-2.71400388988889, +6.70626379422222, +0.00000000000000],
-                [+1.35700257511111, +6.70626379422222, +2.35039772300000],
-            ],
-            "real": [True] * 5 + [False] * 4,
-        },
-        driver="gradient",
-        model={
-            "method": "pbe",
-        },
-    )
+    molecule={
+        "symbols": "Pb H H H H Bi H H H".split(),
+        "geometry": [
+            [-0.00000020988889, -4.98043478877778, +0.00000000000000],
+            [+3.06964045311111, -6.06324400177778, +0.00000000000000],
+            [-1.53482054188889, -6.06324400177778, -2.65838526500000],
+            [-1.53482054188889, -6.06324400177778, +2.65838526500000],
+            [-0.00000020988889, -1.72196703577778, +0.00000000000000],
+            [-0.00000020988889, +4.77334244722222, +0.00000000000000],
+            [+1.35700257511111, +6.70626379422222, -2.35039772300000],
+            [-2.71400388988889, +6.70626379422222, +0.00000000000000],
+            [+1.35700257511111, +6.70626379422222, +2.35039772300000],
+        ],
+        "real": [True] * 5 + [False] * 4,
+    }
+
+    if schver == 1:
+        atomic_input = qcel.models.AtomicInput(
+            molecule=molecule,
+            driver="gradient",
+            model={
+                "method": "pbe",
+            },
+        )
+    elif schver == 2:
+        atomic_input = qcel.models.v2.AtomicInput(
+            molecule=molecule,
+            specification={
+                "driver": "gradient",
+                "model": {
+                    "method": "pbe",
+                },
+            }
+        )
     gradient = np.array(
         [
             [+0.00000000e-0, +2.76351835e-7, +0.00000000e-0],
