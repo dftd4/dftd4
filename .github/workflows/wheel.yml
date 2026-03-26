@@ -143,7 +143,7 @@ jobs:
 
       # Download the source distribution from above
       - name: Download sdist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: dftd4-python-sdist
 
@@ -211,7 +211,7 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: ${{ github.workspace }} # This will download all files
 
