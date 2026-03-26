@@ -127,11 +127,11 @@ def run_qcschema(
         atomic_input = qcel.models.AtomicInput(**input_data)
 
     if (schver := atomic_input.schema_version) == 1:
-        from qcelemental.models import AtomicInput, AtomicResult, ComputeError
+        from qcelemental.models import AtomicResult, ComputeError
 
         ret_data = atomic_input.dict()
     elif schver == 2:
-        from qcelemental.models.v2 import AtomicInput, AtomicResult, ComputeError, FailedOperation
+        from qcelemental.models.v2 import AtomicResult, ComputeError, FailedOperation
 
         ret_data = {"input_data": atomic_input, "extras": {}, "molecule": atomic_input.molecule}
 
@@ -177,7 +177,7 @@ def run_qcschema(
 
     # Obtain the parameters for the damping function
     _input_param = atin_keywords.get("params_tweaks", {"method": _method})
-    if(_level.lower() == "d4s"):
+    if _level.lower() == "d4s":
         _model_param = {
             key: _input_param.pop(key, default)
             for key, default in (
@@ -249,7 +249,7 @@ def run_qcschema(
             error=ComputeError(
                 error_type="input error", error_message=str(e)
             ),
-        ),
+        )
 
     ret_data.update(
         provenance=provenance,
