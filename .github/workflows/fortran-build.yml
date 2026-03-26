@@ -358,7 +358,7 @@ jobs:
 
       - name: Upload coverage report
         if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -468,6 +468,6 @@ jobs:
       - run: pip3 install coverage
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
