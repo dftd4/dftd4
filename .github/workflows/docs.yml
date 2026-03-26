@@ -50,7 +50,7 @@ jobs:
         run: ford ford.md
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@4.1.6
+        uses: JamesIves/github-pages-deploy-action@v4.8.0
         if: ${{ github.event_name == 'push' && steps.deploy-on-push.outputs.result != '0' }}
         with:
           branch: gh-pages
