@@ -206,6 +206,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      actions: read
 
     steps:
       - name: Download artifacts
