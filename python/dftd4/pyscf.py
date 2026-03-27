@@ -21,7 +21,7 @@ Compatibility layer for supporting DFT-D4 in `pyscf <https://pyscf.org/>`_.
 """
 
 try:
-    from pyscf import lib, gto
+    from pyscf import gto, lib
     from pyscf.grad import rhf as rhf_grad
 except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
@@ -70,7 +70,9 @@ class DFTD4Dispersion(lib.StreamObject):
     array(-0.0050011)
     """
 
-    def __init__(self, mol, xc: str = "hf", atm: bool = True, model: str = "d4"):
+    def __init__(
+        self, mol, xc: str = "hf", atm: bool = True, model: str = "d4"
+    ):
         self.mol = mol
         self.verbose = mol.verbose
         self.xc = xc
@@ -103,7 +105,7 @@ class DFTD4Dispersion(lib.StreamObject):
 
         lattice = None
         periodic = None
-        if hasattr(mol, 'lattice_vectors'):
+        if hasattr(mol, "lattice_vectors"):
             lattice = mol.lattice_vectors()
             periodic = np.array([True, True, True], dtype=bool)
 
@@ -160,7 +162,7 @@ def energy(mf, model: str = "d4"):
     ----------
     mf
         The method to which DFT-D4 corrections will be applied.
-    model 
+    model
         The DFT-D4 model to use (D4S or D4 (default)).
 
     Returns
@@ -197,9 +199,11 @@ def energy(mf, model: str = "d4"):
 
     with_dftd4 = DFTD4Dispersion(
         mf.mol,
-        xc="hf"
-        if isinstance(mf, casci.CASCI)
-        else getattr(mf, "xc", "HF").upper().replace(" ", ""),
+        xc=(
+            "hf"
+            if isinstance(mf, casci.CASCI)
+            else getattr(mf, "xc", "HF").upper().replace(" ", "")
+        ),
         model=model,
     )
 

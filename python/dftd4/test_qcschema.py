@@ -25,6 +25,7 @@ from pytest import approx, mark, param
 
 try:
     import qcelemental as qcel
+
     from dftd4.qcschema import run_qcschema
 
     has_qcschema = True
@@ -32,8 +33,13 @@ except ModuleNotFoundError:
     has_qcschema = False
 
 pytestmark = mark.skipif(not has_qcschema, reason="requires qcelemental")
-v1_available = mark.skipif(sys.version_info >= (3, 14), reason="QCSchema v1 not available for py314+")
-v2_available = mark.skipif(not hasattr(qcel.models, "v2"), reason="QCSchema v2 not available in current QCElemental")
+v1_available = mark.skipif(
+    sys.version_info >= (3, 14), reason="QCSchema v1 not available for py314+"
+)
+v2_available = mark.skipif(
+    not hasattr(qcel.models, "v2"),
+    reason="QCSchema v2 not available in current QCElemental",
+)
 
 
 def get_example_molecule() -> Dict[str, Any]:
@@ -62,10 +68,10 @@ def get_example_molecule() -> Dict[str, Any]:
     }
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_energy_r2scan_d4(schver: int) -> None:
     thr = 1e-9
 
@@ -85,7 +91,7 @@ def test_energy_r2scan_d4(schver: int) -> None:
                 model={
                     "method": "r2scan",
                 },
-            )
+            ),
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -96,10 +102,10 @@ def test_energy_r2scan_d4(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.005001101011286166
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_energy_r2scan_d4s(schver: int) -> None:
     thr = 1e-9
 
@@ -109,7 +115,7 @@ def test_energy_r2scan_d4s(schver: int) -> None:
             "driver": "energy",
             "model": {
                 "method": "r2scan",
-             },
+            },
             "keywords": {
                 "level_hint": "d4s",
             },
@@ -125,7 +131,7 @@ def test_energy_r2scan_d4s(schver: int) -> None:
                 "keywords": {
                     "level_hint": "d4s",
                 },
-            }
+            },
         }
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -136,10 +142,10 @@ def test_energy_r2scan_d4s(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.00509785822000568
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_energy_r2scan_3c(schver: int) -> None:
     thr = 1e-9
 
@@ -158,9 +164,7 @@ def test_energy_r2scan_3c(schver: int) -> None:
             molecule=get_example_molecule(),
             driver="energy",
             model={"method": "d4"},
-            keywords={
-                "params_tweaks": tweaks
-            },
+            keywords={"params_tweaks": tweaks},
         )
     elif schver == 2:
         atomic_input = qcel.models.v2.AtomicInput(
@@ -168,10 +172,8 @@ def test_energy_r2scan_3c(schver: int) -> None:
             specification=qcel.models.v2.AtomicSpecification(
                 driver="energy",
                 model={"method": "d4"},
-                keywords={
-                    "params_tweaks": tweaks
-                },
-            )
+                keywords={"params_tweaks": tweaks},
+            ),
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -182,10 +184,10 @@ def test_energy_r2scan_3c(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -6.0533536923248e-03
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_energy_lh20t_d4(schver: int) -> None:
     thr = 1e-9
 
@@ -202,16 +204,14 @@ def test_energy_lh20t_d4(schver: int) -> None:
             molecule=get_example_molecule(),
             driver="energy",
             model={"method": ""},
-            keywords=keywords
+            keywords=keywords,
         )
     elif schver == 2:
         atomic_input = qcel.models.v2.AtomicInput(
             molecule=get_example_molecule(),
             specification=qcel.models.v2.AtomicSpecification(
-                driver="energy",
-                model={"method": ""},
-                keywords=keywords
-            )
+                driver="energy", model={"method": ""}, keywords=keywords
+            ),
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -222,10 +222,10 @@ def test_energy_lh20t_d4(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.010064263146257654
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_energy_lh20t_d4s(schver: int) -> None:
     thr = 1e-9
 
@@ -268,14 +268,14 @@ def test_energy_lh20t_d4s(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.010252088837042048
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_energy_m06l_d4(schver: int) -> None:
     thr = 1e-6
 
-    molecule={
+    molecule = {
         "symbols": "Li Cl F H H Na B H C H H F C H H H".split(" "),
         "geometry": [
             [+2.06521084486823, +0.08218432748393, -3.31794862285397],
@@ -355,10 +355,10 @@ def test_energy_m06l_d4(schver: int) -> None:
     )
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_gradient_b97m_d4(schver: int) -> None:
     thr = 1e-9
 
@@ -380,7 +380,7 @@ def test_gradient_b97m_d4(schver: int) -> None:
                     "method": "b97m-D4",
                 },
                 "keywords": {},
-            }
+            },
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -414,10 +414,10 @@ def test_gradient_b97m_d4(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_gradient_tpss_d4s(schver: int) -> None:
     thr = 1e-9
 
@@ -443,7 +443,7 @@ def test_gradient_tpss_d4s(schver: int) -> None:
                 keywords={
                     "level_hint": "d4s",
                 },
-            )
+            ),
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -476,14 +476,14 @@ def test_gradient_tpss_d4s(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_gradient_tpss_d4(schver: int) -> None:
     thr = 1.0e-9
 
-    molecule={
+    molecule = {
         "symbols": "O C C F O F H".split(),
         "geometry": [
             [+4.877023733, -3.909030492, +1.796260143],
@@ -523,7 +523,7 @@ def test_gradient_tpss_d4(schver: int) -> None:
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
-    
+
     gradient = np.array(
         [
             [-1.47959449e-04, +2.95411758e-05, +2.69548700e-04],
@@ -552,12 +552,12 @@ def test_gradient_tpss_d4(schver: int) -> None:
     )
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_error_noargs(schver: int) -> None:
-    molecule={
+    molecule = {
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
             [-2.56745685564671, -0.02509985979910, 0.00000000000000],
@@ -593,7 +593,7 @@ def test_error_noargs(schver: int) -> None:
                 "driver": "energy",
                 "model": {"method": ""},
                 "keywords": {},
-            }
+            },
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -609,12 +609,12 @@ def test_error_noargs(schver: int) -> None:
     assert atomic_result.error == error
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_error_nomethod(schver: int) -> None:
-    molecule={
+    molecule = {
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
             [-2.56745685564671, -0.02509985979910, 0.00000000000000],
@@ -650,7 +650,7 @@ def test_error_nomethod(schver: int) -> None:
 
         atomic_input = qcel.models.v2.AtomicInput(
             molecule=molecule,
-            specification = qcel.models.v2.AtomicSpecification(
+            specification=qcel.models.v2.AtomicSpecification(
                 driver="energy",
                 model={
                     "method": "this-method-does-not-exist",
@@ -658,7 +658,7 @@ def test_error_nomethod(schver: int) -> None:
                 keywords={
                     "level_hint": "D4",
                 },
-            )
+            ),
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -674,12 +674,12 @@ def test_error_nomethod(schver: int) -> None:
     assert atomic_result.error == error
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_error_level(schver: int) -> None:
-    molecule={
+    molecule = {
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
             [-2.56745685564671, -0.02509985979910, 0.00000000000000],
@@ -722,7 +722,7 @@ def test_error_level(schver: int) -> None:
                 keywords={
                     "level_hint": "D42",
                 },
-            )
+            ),
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")
@@ -738,14 +738,14 @@ def test_error_level(schver: int) -> None:
     assert atomic_result.error == error
 
 
-@mark.parametrize("schver", [
-    param(1, marks=v1_available),
-    param(2, marks=v2_available),
-])
+@mark.parametrize(
+    "schver",
+    [param(1, marks=v1_available), param(2, marks=v2_available)],
+)
 def test_ghost_pbe_d4(schver: int) -> None:
     thr = 1e-9
 
-    molecule={
+    molecule = {
         "symbols": "Pb H H H H Bi H H H".split(),
         "geometry": [
             [-0.00000020988889, -4.98043478877778, +0.00000000000000],
@@ -777,7 +777,7 @@ def test_ghost_pbe_d4(schver: int) -> None:
                 "model": {
                     "method": "pbe",
                 },
-            }
+            },
         )
     else:
         raise RuntimeError(f"QCSchema v{schver} NYI")

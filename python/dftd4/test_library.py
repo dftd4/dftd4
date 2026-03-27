@@ -15,9 +15,8 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from dftd4.library import get_api_version
-
 from dftd4 import __version__
+from dftd4.library import get_api_version
 
 
 def test_api_version() -> None:

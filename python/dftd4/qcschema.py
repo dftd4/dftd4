@@ -111,7 +111,9 @@ _clean_dashlevel = str.maketrans("", "", "()")
 
 
 def run_qcschema(
-    input_data: Union[dict, qcel.models.AtomicInput, "qcel.models.v2.AtomicInput"]
+    input_data: Union[
+        dict, qcel.models.AtomicInput, "qcel.models.v2.AtomicInput"
+    ],
 ) -> Union[qcel.models.AtomicResult, "qcel.models.v2.AtomicResult"]:
     """Perform disperson correction based on an atomic inputmodel"""
 
@@ -131,9 +133,17 @@ def run_qcschema(
 
         ret_data = atomic_input.dict()
     elif schver == 2:
-        from qcelemental.models.v2 import AtomicResult, ComputeError, FailedOperation
+        from qcelemental.models.v2 import (
+            AtomicResult,
+            ComputeError,
+            FailedOperation,
+        )
 
-        ret_data = {"input_data": atomic_input, "extras": {}, "molecule": atomic_input.molecule}
+        ret_data = {
+            "input_data": atomic_input,
+            "extras": {},
+            "molecule": atomic_input.molecule,
+        }
 
     provenance = {
         "creator": "dftd4",
@@ -146,14 +156,16 @@ def run_qcschema(
 
     # Since it is a level hint we a forgiving if it is not present,
     # we are much less forgiving if the wrong level is hinted here.
-    atin_keywords = atomic_input.keywords if schver == 1 else atomic_input.specification.keywords
+    atin_keywords = (
+        atomic_input.keywords
+        if schver == 1
+        else atomic_input.specification.keywords
+    )
     _level = atin_keywords.get("level_hint", "d4")
     if _level.lower() not in _available_levels:
         error = ComputeError(
             error_type="input error",
-            error_message="Level '{}' is invalid for this dispersion correction".format(
-                _level
-            ),
+            error_message=f"Level '{_level}' is invalid for this dispersion correction",
         )
         if schver == 1:
             ret_data.update(
@@ -168,7 +180,11 @@ def run_qcschema(
             return FailedOperation(input_data=atomic_input, error=error)
 
     # Check if the method is provided and strip the “dashlevel” from the method
-    _method = atomic_input.model.method.split("-") if schver == 1 else atomic_input.specification.model.method.split("-")
+    _method = (
+        atomic_input.model.method.split("-")
+        if schver == 1
+        else atomic_input.specification.model.method.split("-")
+    )
     if _method[-1].lower().translate(_clean_dashlevel) == _level.lower():
         _method.pop()
     _method = "-".join(_method)
@@ -202,11 +218,15 @@ def run_qcschema(
             atomic_input.molecule.atomic_numbers[atomic_input.molecule.real],
             atomic_input.molecule.geometry[atomic_input.molecule.real],
             atomic_input.molecule.molecular_charge,
-            model = _level,
+            model=_level,
             **_model_param,
         )
 
-        driver = atomic_input.driver if schver == 1 else atomic_input.specification.driver
+        driver = (
+            atomic_input.driver
+            if schver == 1
+            else atomic_input.specification.driver
+        )
         res = disp.get_dispersion(
             param=param,
             grad=driver == "gradient",
@@ -246,9 +266,7 @@ def run_qcschema(
 
     except (RuntimeError, TypeError) as e:
         ret_data.update(
-            error=ComputeError(
-                error_type="input error", error_message=str(e)
-            ),
+            error=ComputeError(error_type="input error", error_message=str(e)),
         )
 
     ret_data.update(
