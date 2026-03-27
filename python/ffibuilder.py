@@ -30,6 +30,7 @@ ourselves using pkg-config.
 """
 
 import os
+
 import cffi
 
 library = "dftd4"
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     header_file = sys.argv[1]
     module_name = sys.argv[2]
 
-    with open(header_file) as f:
+    with open(header_file, encoding="utf-8") as f:
         cdefs = f.read()
 else:
     import subprocess
@@ -55,9 +56,11 @@ else:
         import pkgconfig
 
         if not pkgconfig.exists(library):
-            raise ModuleNotFoundError("Unable to find pkg-config package 'dftd4'")
+            raise ModuleNotFoundError(
+                "Unable to find pkg-config package 'dftd4'"
+            )
         if pkgconfig.installed(library, "< 3.0"):
-            raise Exception(
+            raise RuntimeError(
                 "Installed 'dftd4' version is too old, 3.0 or newer is required"
             )
 

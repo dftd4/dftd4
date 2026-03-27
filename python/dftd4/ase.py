@@ -126,7 +126,7 @@ class DFTD4(Calculator):
         "method": None,
         "params_tweaks": {},
         "cache_api": True,
-        "model" : "d4"
+        "model": "d4",
     }
 
     _disp = None

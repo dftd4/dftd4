@@ -15,8 +15,9 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-from dftd4.interface import DampingParam, DispersionModel, Structure
 from pytest import approx, raises
+
+from dftd4.interface import DampingParam, DispersionModel, Structure
 
 
 def test_rational_damping_noargs() -> None:

@@ -15,8 +15,9 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from dftd4.parameters import get_all_damping_params, get_damping_param
 from pytest import approx
+
+from dftd4.parameters import get_all_damping_params, get_damping_param
 
 
 def get_data_file_name() -> str:

@@ -25,7 +25,7 @@ from pytest import approx, mark
 
 try:
     import dftd4.pyscf as disp
-    from pyscf import gto, scf, pbc
+    from pyscf import gto, pbc, scf
 
     has_pyscf = True
 except ModuleNotFoundError:

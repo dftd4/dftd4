@@ -55,7 +55,14 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
     if not exists(data_file):
         # for Windows install layout
         data_file = join(
-            dirname(__file__), "..", "..", "..", "Library", "share", "dftd4", base_name
+            dirname(__file__),
+            "..",
+            "..",
+            "..",
+            "Library",
+            "share",
+            "dftd4",
+            base_name,
         )
         if not exists(data_file):
             data_file = join(dirname(__file__), base_name)
@@ -63,7 +70,9 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
     return data_file
 
 
-def _get_params(entry: dict, base: dict, defaults: list, keep_meta=False) -> dict:
+def _get_params(
+    entry: dict, base: dict, defaults: list, keep_meta=False
+) -> dict:
     """Retrive the parameters from the data base, make sure the default
     values are applied correctly in the process. In case we have multiple
     defaults search for the first of the list defined for this method."""
@@ -74,7 +83,8 @@ def _get_params(entry: dict, base: dict, defaults: list, keep_meta=False) -> dic
             params.update(**entry[default])
             if not keep_meta:
                 for key in ("mbd", "damping", "doi"):
-                    if key in params: del params[key]
+                    if key in params:
+                        del params[key]
             return params
         except KeyError:
             continue
@@ -111,7 +121,9 @@ def get_damping_param(
 
 
 def get_all_damping_params(
-    defaults: Optional[list] = None, data_file: Optional[str] = None, keep_meta=False
+    defaults: Optional[list] = None,
+    data_file: Optional[str] = None,
+    keep_meta=False,
 ) -> dict:
     """Provide dictionary with all damping parameters available from parameter file"""
     global _data_base
