@@ -51,6 +51,8 @@ module dftd4_damping_rational
 
    end type rational_damping_param
 
+   real(wp), parameter :: sixth = 1.0_wp / 6.0_wp
+
 
 contains
 
@@ -478,7 +480,7 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
-   real(wp) :: cutoff2, c9, dE
+   real(wp) :: cutoff2, c9, dE, alp3
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -486,9 +488,10 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
 
    if (abs(self%s9) < epsilon(1.0_wp)) return
    cutoff2 = cutoff*cutoff
+   alp3 = self%alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, r4r2, cutoff2, self) &
+   !$omp shared(mol, trans, c6, r4r2, cutoff2, alp3, self) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
    !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
@@ -519,22 +522,25 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, r4r2, c6, energy)
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
+
+                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr) 
+                  !          - mol%xyz(:, jat) - trans(:, jtr)
+                  vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
+
                   r2 = r2ij*r2ik*r2jk
                   r1 = sqrt(r2)
                   r3 = r2 * r1
                   r5 = r3 * r2
 
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(self%alp / 3.0_wp))
+                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**alp3)
                   ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
                      & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
 
                   rr = ang*fdmp
 
-                  dE = rr * c9 * triple/6
+                  dE = rr * c9 * triple * sixth
                   energy_local(jat, iat) = energy_local(jat, iat) - dE
                   energy_local(kat, iat) = energy_local(kat, iat) - dE
                   energy_local(iat, jat) = energy_local(iat, jat) - dE

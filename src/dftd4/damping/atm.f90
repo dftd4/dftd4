@@ -24,6 +24,7 @@ module dftd4_damping_atm
 
    public :: get_atm_dispersion
 
+   real(wp), parameter :: third = 1.0_wp / 3.0_wp
 
 contains
 
@@ -134,16 +135,17 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
-   real(wp) :: cutoff2, c9, dE
+   real(wp) :: cutoff2, c9, dE, alp3
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
    real(wp), allocatable :: energy_local(:)
 
    cutoff2 = cutoff*cutoff
+   alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, a1, a2, alp, r4r2, cutoff2) &
+   !$omp shared(mol, trans, c6, s9, a1, a2, alp3, r4r2, cutoff2) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
    !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
@@ -174,25 +176,28 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
+
+                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr) 
+                  !          - mol%xyz(:, jat) - trans(:, jtr)
+                  vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
+
                   r2 = r2ij*r2ik*r2jk
                   r1 = sqrt(r2)
                   r3 = r2 * r1
                   r5 = r3 * r2
 
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(alp / 3.0_wp))
-                  ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
+                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**alp3)
+                  ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik) &
                      & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
 
                   rr = ang*fdmp
 
-                  dE = rr * c9 * triple
-                  energy_local(iat) = energy_local(iat) - dE/3
-                  energy_local(jat) = energy_local(jat) - dE/3
-                  energy_local(kat) = energy_local(kat) - dE/3
+                  dE = rr * c9 * triple * third
+                  energy_local(iat) = energy_local(iat) - dE
+                  energy_local(jat) = energy_local(jat) - dE
+                  energy_local(kat) = energy_local(kat) - dE
                end do
             end do
          end do
@@ -263,7 +268,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang
-   real(wp) :: cutoff2, c9, dE, dGij(3), dGjk(3), dGik(3), dS(3, 3)
+   real(wp) :: cutoff2, alp3, c9, dE, dE_third, dGij(3), dGjk(3), dGik(3), dS(3, 3)
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -274,13 +279,15 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
    real(wp), allocatable :: sigma_local(:, :)
 
    cutoff2 = cutoff*cutoff
+   alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, a1, a2, alp, r4r2, cutoff2, dc6dcn, dc6dq) &
+   !$omp shared(mol, trans, c6, s9, a1, a2, alp, alp3, r4r2, cutoff2, &
+   !$omp& dc6dcn, dc6dq) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
-   !$omp& r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang, c9, dE, dGij, dGjk, &
-   !$omp& dGik, dS) &
+   !$omp& r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang, c9, dE, dE_third, dGij, &
+   !$omp& dGjk, dGik, dS) &
    !$omp shared(energy, gradient, sigma, dEdcn, dEdq) &
    !$omp private(energy_local, gradient_local, sigma_local, dEdcn_local, &
    !$omp& dEdq_local)
@@ -313,22 +320,25 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
+
+                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr) 
+                  !          - mol%xyz(:, jat) - trans(:, jtr)
+                  vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
+
                   r2 = r2ij*r2ik*r2jk
                   r1 = sqrt(r2)
                   r3 = r2 * r1
                   r5 = r3 * r2
 
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(alp / 3.0_wp))
+                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**alp3)
                   ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
                      & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
 
                   rr = ang*fdmp
 
-                  dfdmp = -2.0_wp * alp * (r0 / r1)**(alp / 3.0_wp) * fdmp**2
+                  dfdmp = -2.0_wp * alp * (r0 / r1)**alp3 * fdmp**2
 
                   ! d/drij
                   dang = -0.375_wp * (r2ij**3 + r2ij**2 * (r2jk + r2ik)&
@@ -352,9 +362,10 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
                   dGjk(:) = c9 * (-dang * fdmp + ang * dfdmp) / r2jk * vjk
 
                   dE = rr * c9 * triple
-                  energy_local(iat) = energy_local(iat) - dE/3
-                  energy_local(jat) = energy_local(jat) - dE/3
-                  energy_local(kat) = energy_local(kat) - dE/3
+                  dE_third = dE * third
+                  energy_local(iat) = energy_local(iat) - dE_third
+                  energy_local(jat) = energy_local(jat) - dE_third
+                  energy_local(kat) = energy_local(kat) - dE_third
 
                   gradient_local(:, iat) = gradient_local(:, iat) - dGij - dGik
                   gradient_local(:, jat) = gradient_local(:, jat) + dGij - dGjk
