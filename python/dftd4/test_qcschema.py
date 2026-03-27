@@ -66,7 +66,7 @@ def get_example_molecule() -> Dict[str, Any]:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_energy_r2scan_d4(schver) -> None:
+def test_energy_r2scan_d4(schver: int) -> None:
     thr = 1e-9
 
     if schver == 1:
@@ -87,6 +87,8 @@ def test_energy_r2scan_d4(schver) -> None:
                 },
             )
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -98,7 +100,7 @@ def test_energy_r2scan_d4(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_energy_r2scan_d4s(schver) -> None:
+def test_energy_r2scan_d4s(schver: int) -> None:
     thr = 1e-9
 
     if schver == 1:
@@ -125,6 +127,8 @@ def test_energy_r2scan_d4s(schver) -> None:
                 },
             }
         }
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -136,7 +140,7 @@ def test_energy_r2scan_d4s(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_energy_r2scan_3c(schver) -> None:
+def test_energy_r2scan_3c(schver: int) -> None:
     thr = 1e-9
 
     tweaks = {
@@ -169,6 +173,8 @@ def test_energy_r2scan_3c(schver) -> None:
                 },
             )
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -180,7 +186,7 @@ def test_energy_r2scan_3c(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_energy_lh20t_d4(schver) -> None:
+def test_energy_lh20t_d4(schver: int) -> None:
     thr = 1e-9
 
     keywords = {
@@ -207,6 +213,8 @@ def test_energy_lh20t_d4(schver) -> None:
                 keywords=keywords
             )
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -218,7 +226,7 @@ def test_energy_lh20t_d4(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_energy_lh20t_d4s(schver) -> None:
+def test_energy_lh20t_d4s(schver: int) -> None:
     thr = 1e-9
 
     if schver == 1:
@@ -251,6 +259,8 @@ def test_energy_lh20t_d4s(schver) -> None:
                 },
             },
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -262,7 +272,7 @@ def test_energy_lh20t_d4s(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_energy_m06l_d4(schver) -> None:
+def test_energy_m06l_d4(schver: int) -> None:
     thr = 1e-6
 
     molecule={
@@ -311,6 +321,8 @@ def test_energy_m06l_d4(schver) -> None:
                 },
             ),
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     charges = [
         +6.4130068073040725e-1,
@@ -347,7 +359,7 @@ def test_energy_m06l_d4(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_gradient_b97m_d4(schver) -> None:
+def test_gradient_b97m_d4(schver: int) -> None:
     thr = 1e-9
 
     if schver == 1:
@@ -370,6 +382,8 @@ def test_gradient_b97m_d4(schver) -> None:
                 "keywords": {},
             }
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     gradient = np.array(
         [
@@ -404,7 +418,7 @@ def test_gradient_b97m_d4(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_gradient_tpss_d4s(schver) -> None:
+def test_gradient_tpss_d4s(schver: int) -> None:
     thr = 1e-9
 
     if schver == 1:
@@ -431,6 +445,8 @@ def test_gradient_tpss_d4s(schver) -> None:
                 },
             )
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     gradient = np.array(
         [
@@ -464,7 +480,7 @@ def test_gradient_tpss_d4s(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_gradient_tpss_d4(schver) -> None:
+def test_gradient_tpss_d4(schver: int) -> None:
     thr = 1.0e-9
 
     molecule={
@@ -505,7 +521,9 @@ def test_gradient_tpss_d4(schver) -> None:
             molecule=molecule,
             specification=spec,
         )
-
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
+    
     gradient = np.array(
         [
             [-1.47959449e-04, +2.95411758e-05, +2.69548700e-04],
@@ -538,7 +556,7 @@ def test_gradient_tpss_d4(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_error_noargs(schver) -> None:
+def test_error_noargs(schver: int) -> None:
     molecule={
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
@@ -595,7 +613,7 @@ def test_error_noargs(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_error_nomethod(schver) -> None:
+def test_error_nomethod(schver: int) -> None:
     molecule={
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
@@ -660,7 +678,7 @@ def test_error_nomethod(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_error_level(schver) -> None:
+def test_error_level(schver: int) -> None:
     molecule={
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
@@ -724,7 +742,7 @@ def test_error_level(schver) -> None:
     param(1, marks=v1_available),
     param(2, marks=v2_available),
 ])
-def test_ghost_pbe_d4(schver) -> None:
+def test_ghost_pbe_d4(schver: int) -> None:
     thr = 1e-9
 
     molecule={
@@ -761,6 +779,9 @@ def test_ghost_pbe_d4(schver) -> None:
                 },
             }
         )
+    else:
+        raise RuntimeError(f"QCSchema v{schver} NYI")
+
     gradient = np.array(
         [
             [+0.00000000e-0, +2.76351835e-7, +0.00000000e-0],
