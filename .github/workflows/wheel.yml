@@ -116,14 +116,12 @@ jobs:
           - ubuntu-latest
           - macos-latest
           - macos-15-intel
-        python: ["39", "310", "311", "312", "313"]
-        include: # Python 3.7 and 3.8 is not supported on 'macos-latest'
-          - os: ubuntu-latest
-            python: "37"
+        python: ["39", "310", "311", "312", "313", "314"]
+        # Python 3.7 and 3.8 is not supported on 'macos-latest'
+        # Python 3.7 not support for cibuildwheel 3.0
+        include: 
           - os: ubuntu-latest
             python: "38"
-          - os: macos-15-intel
-            python: "37"
           - os: macos-15-intel
             python: "38"
 
@@ -139,7 +137,7 @@ jobs:
 
       # Install 'cibuildwheel' as the driver for building wheels
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.23.3
+        run: python -m pip install cibuildwheel>=3
 
       # Download the source distribution from above
       - name: Download sdist
@@ -155,7 +153,7 @@ jobs:
           CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-15-intel' && 'x86_64' || 'arm64' }}
           CIBW_ARCHS_LINUX: x86_64
           CIBW_BUILD: "*${{ matrix.python }}-*"
-          # MM: Package installation (yum install ...) works differently on musllinux
+          # Different package manager on musllinux
           CIBW_SKIP: "*musllinux*"
           # Control verbosity of the 'pip wheel' output
           CIBW_BUILD_VERBOSITY: 1
@@ -208,6 +206,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      actions: read
 
     steps:
       - name: Download artifacts
