@@ -351,7 +351,7 @@ jobs:
 
       - name: Upload package
         if: ${{ matrix.build == 'meson' && matrix.version == 14 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.DFTD4_OUTPUT }}
           path: ${{ env.DFTD4_OUTPUT }}

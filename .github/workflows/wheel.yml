@@ -51,7 +51,7 @@ jobs:
           meson dist -C _build --no-tests --include-subprojects
           mv _build/meson-dist/*.tar.xz .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dftd4-source
           path: ./*.tar.xz
@@ -99,7 +99,7 @@ jobs:
           python -m build python/ --sdist --outdir . -n
 
       - name: Upload source distribution as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dftd4-python-sdist
           path: ./*.tar.gz
@@ -187,7 +187,7 @@ jobs:
             delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
 
       # Upload the built wheels as artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dftd4-python-${{ matrix.os }}-${{ matrix.python }}
           path: ./*.whl
