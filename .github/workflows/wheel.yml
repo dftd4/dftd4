@@ -42,7 +42,7 @@ jobs:
           sudo apt-get install -y liblapack-dev
 
       - name: Setup Python
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v3
         with:
           environment-file: assets/ci/build-env.yaml
 
@@ -74,7 +74,7 @@ jobs:
           sudo apt-get install -y liblapack-dev
 
       - name: Setup Python
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v3
         with:
           environment-file: assets/ci/python-env.yaml
           create-args: >-
