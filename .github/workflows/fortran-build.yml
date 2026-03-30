@@ -214,7 +214,7 @@ jobs:
       - name: Cache Intel install
         if: ${{ matrix.compiler == 'intel' }}
         id: cache-install
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /opt/intel/oneapi
           key: install-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}
