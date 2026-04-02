@@ -18,83 +18,179 @@
 # pylint: disable=possibly-used-before-assignment
 
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
-from pytest import approx, mark, param
+import pytest
+from pytest import approx
 
 try:
-    import qcelemental as qcel
-
-    from dftd4.qcschema import run_qcschema
-
-    has_qcschema = True
+    from dftd4.qcschema import run_qcschema, qcel_v1, qcel_v2
 except ModuleNotFoundError:
-    has_qcschema = False
+    qcel_v1 = None
+    qcel_v2 = None
 
-pytestmark = mark.skipif(not has_qcschema, reason="requires qcelemental")
-v1_available = mark.skipif(
-    sys.version_info >= (3, 14), reason="QCSchema v1 not available for py314+"
+v1_available = pytest.mark.skipif(
+    qcel_v1 is None, reason="QCSchema v1 not available for py314+"
 )
-v2_available = mark.skipif(
-    not hasattr(qcel.models, "v2"),
-    reason="QCSchema v2 not available in current QCElemental",
+v2_available = pytest.mark.skipif(
+    qcel_v2 is None, reason="QCSchema v2 not available in current QCElemental"
 )
 
 
-def get_example_molecule() -> Dict[str, Any]:
-    return {
-        "symbols": "C C C C C C I H H H H H S H C H H H".split(" "),
-        "geometry": [
-            [-1.42754169820131, -1.50508961850828, -1.93430551124333],
-            [+1.19860572924150, -1.66299114873979, -2.03189643761298],
-            [+2.65876001301880, +0.37736955363609, -1.23426391650599],
-            [+1.50963368042358, +2.57230374419743, -0.34128058818180],
-            [-1.12092277855371, +2.71045691257517, -0.25246348639234],
-            [-2.60071517756218, +0.67879949508239, -1.04550707592673],
-            [-2.86169588073340, +5.99660765711210, +1.08394899986031],
-            [+2.09930989272956, -3.36144811062374, -2.72237695164263],
-            [+2.64405246349916, +4.15317840474646, +0.27856972788526],
-            [+4.69864865613751, +0.26922271535391, -1.30274048619151],
-            [-4.63786461351839, +0.79856258572808, -0.96906659938432],
-            [-2.57447518692275, -3.08132039046931, -2.54875517521577],
-            [-5.88211879210329, 11.88491819358157, +2.31866455902233],
-            [-8.18022701418703, 10.95619984550779, +1.83940856333092],
-            [-5.08172874482867, 12.66714386256482, -0.92419491629867],
-            [-3.18311711399702, 13.44626574330220, -0.86977613647871],
-            [-5.07177399637298, 10.99164969235585, -2.10739192258756],
-            [-6.35955320518616, 14.08073002965080, -1.68204314084441],
-        ],
-    }
+def get_molecule(name: str) -> Dict[str, Any]:
+    if name == "molecule1":
+        return {
+            "symbols": "C C C C C C I H H H H H S H C H H H".split(" "),
+            "geometry": [
+                [-1.42754169820131, -1.50508961850828, -1.93430551124333],
+                [+1.19860572924150, -1.66299114873979, -2.03189643761298],
+                [+2.65876001301880, +0.37736955363609, -1.23426391650599],
+                [+1.50963368042358, +2.57230374419743, -0.34128058818180],
+                [-1.12092277855371, +2.71045691257517, -0.25246348639234],
+                [-2.60071517756218, +0.67879949508239, -1.04550707592673],
+                [-2.86169588073340, +5.99660765711210, +1.08394899986031],
+                [+2.09930989272956, -3.36144811062374, -2.72237695164263],
+                [+2.64405246349916, +4.15317840474646, +0.27856972788526],
+                [+4.69864865613751, +0.26922271535391, -1.30274048619151],
+                [-4.63786461351839, +0.79856258572808, -0.96906659938432],
+                [-2.57447518692275, -3.08132039046931, -2.54875517521577],
+                [-5.88211879210329, 11.88491819358157, +2.31866455902233],
+                [-8.18022701418703, 10.95619984550779, +1.83940856333092],
+                [-5.08172874482867, 12.66714386256482, -0.92419491629867],
+                [-3.18311711399702, 13.44626574330220, -0.86977613647871],
+                [-5.07177399637298, 10.99164969235585, -2.10739192258756],
+                [-6.35955320518616, 14.08073002965080, -1.68204314084441],
+            ],
+        }
+    if name == "molecule2":
+        return {
+            "symbols": "Li Cl F H H Na B H C H H F C H H H".split(" "),
+            "geometry": [
+                [+2.06521084486823, +0.08218432748393, -3.31794862285397],
+                [-2.32042477766402, -5.46684392277772, -4.04262137940086],
+                [+2.26054697581965, -3.03018226193694, -4.64150015772052],
+                [-0.14839777550969, -0.43671669092912, +5.46349590128611],
+                [+1.25506764958846, +3.72255296450239, +3.12461655723367],
+                [-3.70871338035337, -1.70938913801338, -1.44451499871032],
+                [-0.50789889989427, -0.08663524018430, +3.25334078665520],
+                [+1.95889668026174, -0.69562876271128, +1.49780663184774],
+                [-0.13609934796341, +2.63877103476555, +2.01392332556491],
+                [-2.03651637484513, -1.53932035918944, +2.35235290216748],
+                [+1.01732693290435, +4.50598465234050, -1.41360090365614],
+                [-1.21371363315079, +1.45147299379122, -2.46002878669847],
+                [+0.99959759042027, +2.58862220349908, -0.61148816085282],
+                [+1.82755250562899, -1.68931361321449, +2.62013289657120],
+                [-1.90490242357524, +3.74722938063725, +2.11670736907658],
+                [+0.59246743346417, -4.08278756806328, -4.51067336050986],
+            ],
+        }
+    if name == "molecule3":
+        return {
+            "symbols": "O C C F O F H".split(),
+            "geometry": [
+                [+4.877023733, -3.909030492, +1.796260143],
+                [+6.112318716, -2.778558610, +0.091330457],
+                [+7.360520527, -4.445334728, -1.932830640],
+                [+7.978801077, -6.767751279, -1.031771494],
+                [+6.374499300, -0.460299457, -0.213142194],
+                [+5.637581753, -4.819746139, -3.831249370],
+                [+9.040657008, -3.585225944, -2.750722946],
+            ],
+            "molecular_charge": -1,
+        }
+    if name == "molecule4":
+        return {
+            "symbols": "C C C C N C S H H H H H".split(),
+            "geometry": [
+                [-2.56745685564671, -0.02509985979910, 0.00000000000000],
+                [-1.39177582455797, +2.27696188880014, 0.00000000000000],
+                [+1.27784995624894, +2.45107479759386, 0.00000000000000],
+                [+2.62801937615793, +0.25927727028120, 0.00000000000000],
+                [+1.41097033661123, -1.99890996077412, 0.00000000000000],
+                [-1.17186102298849, -2.34220576284180, 0.00000000000000],
+                [-2.39505990368378, -5.22635838332362, 0.00000000000000],
+                [+2.41961980455457, -3.62158019253045, 0.00000000000000],
+                [-2.51744374846065, +3.98181713686746, 0.00000000000000],
+                [+2.24269048384775, +4.24389473203647, 0.00000000000000],
+                [+4.66488984573956, +0.17907568006409, 0.00000000000000],
+                [-4.60044244782237, -0.17794734637413, 0.00000000000000],
+            ],
+        }
+    if name == "counterpoise":
+        return {
+            "symbols": "Pb H H H H Bi H H H".split(),
+            "geometry": [
+                [-0.00000020988889, -4.98043478877778, +0.00000000000000],
+                [+3.06964045311111, -6.06324400177778, +0.00000000000000],
+                [-1.53482054188889, -6.06324400177778, -2.65838526500000],
+                [-1.53482054188889, -6.06324400177778, +2.65838526500000],
+                [-0.00000020988889, -1.72196703577778, +0.00000000000000],
+                [-0.00000020988889, +4.77334244722222, +0.00000000000000],
+                [+1.35700257511111, +6.70626379422222, -2.35039772300000],
+                [-2.71400388988889, +6.70626379422222, +0.00000000000000],
+                [+1.35700257511111, +6.70626379422222, +2.35039772300000],
+            ],
+            "real": [True] * 5 + [False] * 4,
+        }
+
+    raise ValueError(f"Unknown molecule name: {name}")
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
+def get_atomic_input(
+    version: int,
+    molecule: Dict[str, Any],
+    driver: str,
+    method: str,
+    keywords: Optional[Dict[str, Any]] = None,
+    qcel_object: bool = False,
+):
+    keywords = {} if keywords is None else keywords
+
+    if version == 1:
+        input_data = {
+            "molecule": molecule,
+            "driver": driver,
+            "model": {"method": method},
+            "keywords": keywords,
+        }
+        if qcel_object:
+            return qcel_v1.AtomicInput(**input_data)
+        return input_data
+
+    if version == 2:
+        input_data = {
+            "molecule": molecule,
+            "specification": {
+                "driver": driver,
+                "model": {"method": method},
+                "keywords": keywords,
+            },
+        }
+        if qcel_object:
+            return qcel_v2.AtomicInput(**input_data)
+        return input_data
+
+    raise ValueError(f"Unsupported version: {version}")
+
+
+@pytest.fixture(
+    params=[pytest.param(1, marks=v1_available), pytest.param(2, marks=v2_available)]
 )
-def test_energy_r2scan_d4(schver: int) -> None:
+def qcsk_version(request):
+    return request.param
+
+
+def test_energy_r2scan_d4(qcsk_version: int) -> None:
     thr = 1e-9
 
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=get_example_molecule(),
-            driver="energy",
-            model={
-                "method": "r2scan",
-            },
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=get_example_molecule(),
-            specification=qcel.models.v2.AtomicSpecification(
-                driver="energy",
-                model={
-                    "method": "r2scan",
-                },
-            ),
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule1"),
+        driver="energy",
+        method="r2scan",
+        qcel_object=True,
+    )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -102,39 +198,16 @@ def test_energy_r2scan_d4(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.005001101011286166
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_energy_r2scan_d4s(schver: int) -> None:
+def test_energy_r2scan_d4s(qcsk_version: int) -> None:
     thr = 1e-9
 
-    if schver == 1:
-        atomic_input = {
-            "molecule": get_example_molecule(),
-            "driver": "energy",
-            "model": {
-                "method": "r2scan",
-            },
-            "keywords": {
-                "level_hint": "d4s",
-            },
-        }
-    elif schver == 2:
-        atomic_input = {
-            "molecule": get_example_molecule(),
-            "specification": {
-                "driver": "energy",
-                "model": {
-                    "method": "r2scan",
-                },
-                "keywords": {
-                    "level_hint": "d4s",
-                },
-            },
-        }
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule1"),
+        driver="energy",
+        method="r2scan",
+        keywords={"level_hint": "d4s"},
+    )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -142,11 +215,7 @@ def test_energy_r2scan_d4s(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.00509785822000568
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_energy_r2scan_3c(schver: int) -> None:
+def test_energy_r2scan_3c(qcsk_version: int) -> None:
     thr = 1e-9
 
     tweaks = {
@@ -159,24 +228,14 @@ def test_energy_r2scan_3c(schver: int) -> None:
         "gc": 1.00,
     }
 
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=get_example_molecule(),
-            driver="energy",
-            model={"method": "d4"},
-            keywords={"params_tweaks": tweaks},
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=get_example_molecule(),
-            specification=qcel.models.v2.AtomicSpecification(
-                driver="energy",
-                model={"method": "d4"},
-                keywords={"params_tweaks": tweaks},
-            ),
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule1"),
+        driver="energy",
+        method="d4",
+        keywords={"params_tweaks": tweaks},
+        qcel_object=True,
+    )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -184,37 +243,23 @@ def test_energy_r2scan_3c(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -6.0533536923248e-03
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_energy_lh20t_d4(schver: int) -> None:
+def test_energy_lh20t_d4(qcsk_version: int) -> None:
     thr = 1e-9
 
-    keywords = {
-        "params_tweaks": {
-            "s8": 0.113,
-            "a1": 0.479,
-            "a2": 4.635,
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule1"),
+        driver="energy",
+        method="",
+        keywords={
+            "params_tweaks": {
+                "s8": 0.113,
+                "a1": 0.479,
+                "a2": 4.635,
+            },
         },
-    }
-
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=get_example_molecule(),
-            driver="energy",
-            model={"method": ""},
-            keywords=keywords,
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=get_example_molecule(),
-            specification=qcel.models.v2.AtomicSpecification(
-                driver="energy", model={"method": ""}, keywords=keywords
-            ),
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+        qcel_object=True,
+    )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -222,45 +267,24 @@ def test_energy_lh20t_d4(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.010064263146257654
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_energy_lh20t_d4s(schver: int) -> None:
+def test_energy_lh20t_d4s(qcsk_version: int) -> None:
     thr = 1e-9
 
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=get_example_molecule(),
-            driver="energy",
-            model={"method": ""},
-            keywords={
-                "params_tweaks": {
-                    "s8": 0.113,
-                    "a1": 0.479,
-                    "a2": 4.635,
-                },
-                "level_hint": "d4s",
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule1"),
+        driver="energy",
+        method="",
+        keywords={
+            "params_tweaks": {
+                "s8": 0.113,
+                "a1": 0.479,
+                "a2": 4.635,
             },
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=get_example_molecule(),
-            specification={
-                "driver": "energy",
-                "model": {"method": ""},
-                "keywords": {
-                    "params_tweaks": {
-                        "s8": 0.113,
-                        "a1": 0.479,
-                        "a2": 4.635,
-                    },
-                    "level_hint": "d4s",
-                },
-            },
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+            "level_hint": "d4s",
+        },
+        qcel_object=True,
+    )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -268,61 +292,17 @@ def test_energy_lh20t_d4s(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == -0.010252088837042048
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_energy_m06l_d4(schver: int) -> None:
+def test_energy_m06l_d4(qcsk_version: int) -> None:
     thr = 1e-6
 
-    molecule = {
-        "symbols": "Li Cl F H H Na B H C H H F C H H H".split(" "),
-        "geometry": [
-            [+2.06521084486823, +0.08218432748393, -3.31794862285397],
-            [-2.32042477766402, -5.46684392277772, -4.04262137940086],
-            [+2.26054697581965, -3.03018226193694, -4.64150015772052],
-            [-0.14839777550969, -0.43671669092912, +5.46349590128611],
-            [+1.25506764958846, +3.72255296450239, +3.12461655723367],
-            [-3.70871338035337, -1.70938913801338, -1.44451499871032],
-            [-0.50789889989427, -0.08663524018430, +3.25334078665520],
-            [+1.95889668026174, -0.69562876271128, +1.49780663184774],
-            [-0.13609934796341, +2.63877103476555, +2.01392332556491],
-            [-2.03651637484513, -1.53932035918944, +2.35235290216748],
-            [+1.01732693290435, +4.50598465234050, -1.41360090365614],
-            [-1.21371363315079, +1.45147299379122, -2.46002878669847],
-            [+0.99959759042027, +2.58862220349908, -0.61148816085282],
-            [+1.82755250562899, -1.68931361321449, +2.62013289657120],
-            [-1.90490242357524, +3.74722938063725, +2.11670736907658],
-            [+0.59246743346417, -4.08278756806328, -4.51067336050986],
-        ],
-    }
-
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=molecule,
-            driver="energy",
-            model={
-                "method": "m06l",
-            },
-            keywords={
-                "property": True,
-            },
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=molecule,
-            specification=qcel.models.v2.AtomicSpecification(
-                driver="energy",
-                model={
-                    "method": "m06l",
-                },
-                keywords={
-                    "property": True,
-                },
-            ),
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule2"),
+        driver="energy",
+        method="m06l",
+        keywords={"property": True},
+        qcel_object=True,
+    )
 
     charges = [
         +6.4130068073040725e-1,
@@ -346,44 +326,21 @@ def test_energy_m06l_d4(schver: int) -> None:
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert (
-        approx(atomic_result.return_result, abs=thr) == -0.0013314656225517764
-    )
-    assert (
-        approx(atomic_result.extras["dftd4"]["partial charges"], abs=thr)
-        == charges
-    )
+    assert approx(atomic_result.return_result, abs=thr) == -0.0013314656225517764
+    assert approx(atomic_result.extras["dftd4"]["partial charges"], abs=thr) == charges
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_gradient_b97m_d4(schver: int) -> None:
+def test_gradient_b97m_d4(qcsk_version: int) -> None:
     thr = 1e-9
 
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=get_example_molecule(),
-            driver="gradient",
-            model={
-                "method": "b97m-D4",
-            },
-            keywords={},
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=get_example_molecule(),
-            specification={
-                "driver": "gradient",
-                "model": {
-                    "method": "b97m-D4",
-                },
-                "keywords": {},
-            },
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule1"),
+        driver="gradient",
+        method="b97m-D4",
+        keywords={},
+        qcel_object=True,
+    )
 
     gradient = np.array(
         [
@@ -414,39 +371,17 @@ def test_gradient_b97m_d4(schver: int) -> None:
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_gradient_tpss_d4s(schver: int) -> None:
+def test_gradient_tpss_d4s(qcsk_version: int) -> None:
     thr = 1e-9
 
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=get_example_molecule(),
-            driver="gradient",
-            model={
-                "method": "TPSS",
-            },
-            keywords={
-                "level_hint": "d4s",
-            },
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=get_example_molecule(),
-            specification=qcel.models.v2.AtomicSpecification(
-                driver="gradient",
-                model={
-                    "method": "TPSS",
-                },
-                keywords={
-                    "level_hint": "d4s",
-                },
-            ),
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule1"),
+        driver="gradient",
+        method="TPSS",
+        keywords={"level_hint": "d4s"},
+        qcel_object=True,
+    )
 
     gradient = np.array(
         [
@@ -472,36 +407,20 @@ def test_gradient_tpss_d4s(schver: int) -> None:
     )
 
     atomic_result = run_qcschema(atomic_input)
+
     assert atomic_result.success
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_gradient_tpss_d4(schver: int) -> None:
+def test_gradient_tpss_d4(qcsk_version: int) -> None:
     thr = 1.0e-9
 
-    molecule = {
-        "symbols": "O C C F O F H".split(),
-        "geometry": [
-            [+4.877023733, -3.909030492, +1.796260143],
-            [+6.112318716, -2.778558610, +0.091330457],
-            [+7.360520527, -4.445334728, -1.932830640],
-            [+7.978801077, -6.767751279, -1.031771494],
-            [+6.374499300, -0.460299457, -0.213142194],
-            [+5.637581753, -4.819746139, -3.831249370],
-            [+9.040657008, -3.585225944, -2.750722946],
-        ],
-        "molecular_charge": -1,
-    }
-    spec = {
-        "driver": "gradient",
-        "model": {
-            "method": "",
-        },
-        "keywords": {
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("molecule3"),
+        driver="gradient",
+        method="",
+        keywords={
             "params_tweaks": {
                 "s8": 1.76596355,
                 "a1": 0.42822303,
@@ -509,20 +428,8 @@ def test_gradient_tpss_d4(schver: int) -> None:
             },
             "pair_resolved": True,
         },
-    }
-
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=molecule,
-            **spec,
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=molecule,
-            specification=spec,
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+        qcel_object=True,
+    )
 
     gradient = np.array(
         [
@@ -545,58 +452,30 @@ def test_gradient_tpss_d4(schver: int) -> None:
     assert "virial" in atomic_result.extras["dftd4"]
     assert "additive pairwise energy" in atomic_result.extras["dftd4"]
     assert "non-additive pairwise energy" in atomic_result.extras["dftd4"]
-    assert (
-        approx(atomic_result.extras["dftd4"]["energy"])
-        == atomic_result.extras["dftd4"]["additive pairwise energy"].sum()
+    assert approx(atomic_result.extras["dftd4"]["energy"]) == (
+        atomic_result.extras["dftd4"]["additive pairwise energy"].sum()
         + atomic_result.extras["dftd4"]["non-additive pairwise energy"].sum()
     )
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_error_noargs(schver: int) -> None:
-    molecule = {
-        "symbols": "C C C C N C S H H H H H".split(),
-        "geometry": [
-            [-2.56745685564671, -0.02509985979910, 0.00000000000000],
-            [-1.39177582455797, +2.27696188880014, 0.00000000000000],
-            [+1.27784995624894, +2.45107479759386, 0.00000000000000],
-            [+2.62801937615793, +0.25927727028120, 0.00000000000000],
-            [+1.41097033661123, -1.99890996077412, 0.00000000000000],
-            [-1.17186102298849, -2.34220576284180, 0.00000000000000],
-            [-2.39505990368378, -5.22635838332362, 0.00000000000000],
-            [+2.41961980455457, -3.62158019253045, 0.00000000000000],
-            [-2.51744374846065, +3.98181713686746, 0.00000000000000],
-            [+2.24269048384775, +4.24389473203647, 0.00000000000000],
-            [+4.66488984573956, +0.17907568006409, 0.00000000000000],
-            [-4.60044244782237, -0.17794734637413, 0.00000000000000],
-        ],
-    }
+def test_error_noargs(qcsk_version: int) -> None:
+    molecule = get_molecule("molecule4")
 
-    if schver == 1:
+    if qcsk_version == 1:
         from qcelemental.models import ComputeError
-
-        atomic_input = qcel.models.AtomicInput(
-            molecule=molecule,
-            driver="energy",
-            model={"method": ""},
-            keywords={},
-        )
-    elif schver == 2:
+    elif qcsk_version == 2:
         from qcelemental.models.v2 import ComputeError
-
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=molecule,
-            specification={
-                "driver": "energy",
-                "model": {"method": ""},
-                "keywords": {},
-            },
-        )
     else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+        raise RuntimeError(f"QCSchema v{qcsk_version} NYI")
+
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=molecule,
+        driver="energy",
+        method="",
+        keywords={},
+        qcel_object=True,
+    )
 
     error = ComputeError(
         error_type="input error",
@@ -609,59 +488,24 @@ def test_error_noargs(schver: int) -> None:
     assert atomic_result.error == error
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_error_nomethod(schver: int) -> None:
-    molecule = {
-        "symbols": "C C C C N C S H H H H H".split(),
-        "geometry": [
-            [-2.56745685564671, -0.02509985979910, 0.00000000000000],
-            [-1.39177582455797, +2.27696188880014, 0.00000000000000],
-            [+1.27784995624894, +2.45107479759386, 0.00000000000000],
-            [+2.62801937615793, +0.25927727028120, 0.00000000000000],
-            [+1.41097033661123, -1.99890996077412, 0.00000000000000],
-            [-1.17186102298849, -2.34220576284180, 0.00000000000000],
-            [-2.39505990368378, -5.22635838332362, 0.00000000000000],
-            [+2.41961980455457, -3.62158019253045, 0.00000000000000],
-            [-2.51744374846065, +3.98181713686746, 0.00000000000000],
-            [+2.24269048384775, +4.24389473203647, 0.00000000000000],
-            [+4.66488984573956, +0.17907568006409, 0.00000000000000],
-            [-4.60044244782237, -0.17794734637413, 0.00000000000000],
-        ],
-    }
+def test_error_nomethod(qcsk_version: int) -> None:
+    molecule = get_molecule("molecule4")
 
-    if schver == 1:
+    if qcsk_version == 1:
         from qcelemental.models import ComputeError
-
-        atomic_input = qcel.models.AtomicInput(
-            molecule=molecule,
-            driver="energy",
-            model={
-                "method": "this-method-does-not-exist",
-            },
-            keywords={
-                "level_hint": "D4",
-            },
-        )
-    elif schver == 2:
+    elif qcsk_version == 2:
         from qcelemental.models.v2 import ComputeError
-
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=molecule,
-            specification=qcel.models.v2.AtomicSpecification(
-                driver="energy",
-                model={
-                    "method": "this-method-does-not-exist",
-                },
-                keywords={
-                    "level_hint": "D4",
-                },
-            ),
-        )
     else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+        raise RuntimeError(f"QCSchema v{qcsk_version} NYI")
+
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=molecule,
+        driver="energy",
+        method="this-method-does-not-exist",
+        keywords={"level_hint": "D4"},
+        qcel_object=True,
+    )
 
     error = ComputeError(
         error_type="input error",
@@ -674,58 +518,24 @@ def test_error_nomethod(schver: int) -> None:
     assert atomic_result.error == error
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_error_level(schver: int) -> None:
-    molecule = {
-        "symbols": "C C C C N C S H H H H H".split(),
-        "geometry": [
-            [-2.56745685564671, -0.02509985979910, 0.00000000000000],
-            [-1.39177582455797, +2.27696188880014, 0.00000000000000],
-            [+1.27784995624894, +2.45107479759386, 0.00000000000000],
-            [+2.62801937615793, +0.25927727028120, 0.00000000000000],
-            [+1.41097033661123, -1.99890996077412, 0.00000000000000],
-            [-1.17186102298849, -2.34220576284180, 0.00000000000000],
-            [-2.39505990368378, -5.22635838332362, 0.00000000000000],
-            [+2.41961980455457, -3.62158019253045, 0.00000000000000],
-            [-2.51744374846065, +3.98181713686746, 0.00000000000000],
-            [+2.24269048384775, +4.24389473203647, 0.00000000000000],
-            [+4.66488984573956, +0.17907568006409, 0.00000000000000],
-            [-4.60044244782237, -0.17794734637413, 0.00000000000000],
-        ],
-    }
-    if schver == 1:
+def test_error_level(qcsk_version: int) -> None:
+    molecule = get_molecule("molecule4")
+
+    if qcsk_version == 1:
         from qcelemental.models import ComputeError
-
-        atomic_input = qcel.models.AtomicInput(
-            molecule=molecule,
-            driver="energy",
-            model={
-                "method": "SCAN",
-            },
-            keywords={
-                "level_hint": "D42",
-            },
-        )
-    elif schver == 2:
+    elif qcsk_version == 2:
         from qcelemental.models.v2 import ComputeError
-
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=molecule,
-            specification=qcel.models.v2.AtomicSpecification(
-                driver="energy",
-                model={
-                    "method": "SCAN",
-                },
-                keywords={
-                    "level_hint": "D42",
-                },
-            ),
-        )
     else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+        raise RuntimeError(f"QCSchema v{qcsk_version} NYI")
+
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=molecule,
+        driver="energy",
+        method="SCAN",
+        keywords={"level_hint": "D42"},
+        qcel_object=True,
+    )
 
     error = ComputeError(
         error_type="input error",
@@ -738,49 +548,16 @@ def test_error_level(schver: int) -> None:
     assert atomic_result.error == error
 
 
-@mark.parametrize(
-    "schver",
-    [param(1, marks=v1_available), param(2, marks=v2_available)],
-)
-def test_ghost_pbe_d4(schver: int) -> None:
+def test_ghost_pbe_d4(qcsk_version: int) -> None:
     thr = 1e-9
 
-    molecule = {
-        "symbols": "Pb H H H H Bi H H H".split(),
-        "geometry": [
-            [-0.00000020988889, -4.98043478877778, +0.00000000000000],
-            [+3.06964045311111, -6.06324400177778, +0.00000000000000],
-            [-1.53482054188889, -6.06324400177778, -2.65838526500000],
-            [-1.53482054188889, -6.06324400177778, +2.65838526500000],
-            [-0.00000020988889, -1.72196703577778, +0.00000000000000],
-            [-0.00000020988889, +4.77334244722222, +0.00000000000000],
-            [+1.35700257511111, +6.70626379422222, -2.35039772300000],
-            [-2.71400388988889, +6.70626379422222, +0.00000000000000],
-            [+1.35700257511111, +6.70626379422222, +2.35039772300000],
-        ],
-        "real": [True] * 5 + [False] * 4,
-    }
-
-    if schver == 1:
-        atomic_input = qcel.models.AtomicInput(
-            molecule=molecule,
-            driver="gradient",
-            model={
-                "method": "pbe",
-            },
-        )
-    elif schver == 2:
-        atomic_input = qcel.models.v2.AtomicInput(
-            molecule=molecule,
-            specification={
-                "driver": "gradient",
-                "model": {
-                    "method": "pbe",
-                },
-            },
-        )
-    else:
-        raise RuntimeError(f"QCSchema v{schver} NYI")
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=get_molecule("counterpoise"),
+        driver="gradient",
+        method="pbe",
+        qcel_object=True,
+    )
 
     gradient = np.array(
         [
