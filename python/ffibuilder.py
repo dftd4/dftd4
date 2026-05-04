@@ -59,9 +59,9 @@ else:
             raise ModuleNotFoundError(
                 "Unable to find pkg-config package 'dftd4'"
             )
-        if pkgconfig.installed(library, "< 3.0"):
+        if pkgconfig.installed(library, "< 4.0"):
             raise RuntimeError(
-                "Installed 'dftd4' version is too old, 3.0 or newer is required"
+                "Installed 'dftd4' version is too old, 4.0 or newer is required"
             )
 
         kwargs = pkgconfig.parse(library)

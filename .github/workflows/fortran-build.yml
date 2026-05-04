@@ -299,7 +299,7 @@ jobs:
           --no-rebuild
           --num-processes 1
           --suite dftd4
-          -t 2
+          -t 10
         env:
           OMP_NUM_THREADS: 1,2,1
           BUILD_DIR: ${{ env.BUILD_DIR }}
@@ -313,7 +313,7 @@ jobs:
           --no-rebuild
           --num-processes 1
           --suite dftd4
-          -t 2
+          -t 10
           --benchmark
         env:
           BUILD_DIR: ${{ env.BUILD_DIR }}
