@@ -48,7 +48,9 @@ subroutine collect_periodic(testsuite)
       & new_unittest("BLYP-D4", test_blypd4_adaman), &
       & new_unittest("BLYP-D4S", test_blypd4s_adaman), &
       & new_unittest("TPSS-D4", test_tpssd4_ammonia), &
+      & new_unittest("TPSS-D4+ATM", test_tpssd4atm_ammonia), &
       & new_unittest("TPSS-D4S", test_tpssd4s_ammonia), &
+      & new_unittest("TPSS-D4S+ATM", test_tpssd4satm_ammonia), &
       & new_unittest("SCAN-D4", test_scand4_anthracene), &
       & new_unittest("SCAN-D4S", test_scand4s_anthracene) &
       & ]
@@ -283,6 +285,41 @@ subroutine test_tpssd4s_ammonia(error)
    call test_numgrad(error, mol, d4s, param)
 
 end subroutine test_tpssd4s_ammonia
+
+
+subroutine test_tpssd4atm_ammonia(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
+      & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
+
+   call get_structure(mol, "X23", "ammonia")
+   call new_d4_model(error, d4, mol)
+   call test_numgrad(error, mol, d4, param)
+
+end subroutine test_tpssd4atm_ammonia
+
+subroutine test_tpssd4satm_ammonia(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4s_model) :: d4s
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
+      & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
+
+   call get_structure(mol, "X23", "ammonia")
+   call new_d4s_model(error, d4s, mol)
+   call test_numgrad(error, mol, d4s, param)
+
+end subroutine test_tpssd4satm_ammonia
 
 
 subroutine test_scand4_anthracene(error)

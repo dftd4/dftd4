@@ -367,9 +367,12 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, a1, a2, alp, r4r2, 
                   energy_local(jat) = energy_local(jat) - dE_third
                   energy_local(kat) = energy_local(kat) - dE_third
 
-                  gradient_local(:, iat) = gradient_local(:, iat) - dGij - dGik
-                  gradient_local(:, jat) = gradient_local(:, jat) + dGij - dGjk
-                  gradient_local(:, kat) = gradient_local(:, kat) + dGik + dGjk
+                  gradient_local(:, iat) = gradient_local(:, iat) &
+                     & - (dGij + dGik) * triple
+                  gradient_local(:, jat) = gradient_local(:, jat) &
+                     & + (dGij - dGjk) * triple
+                  gradient_local(:, kat) = gradient_local(:, kat) &
+                     & + (dGik + dGjk) * triple
 
                   dS(:, :) = spread(dGij, 1, 3) * spread(vij, 2, 3)&
                      & + spread(dGik, 1, 3) * spread(vik, 2, 3)&
