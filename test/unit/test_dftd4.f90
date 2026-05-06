@@ -76,13 +76,13 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("CAM-B3LYP-D4-ATM", test_camb3lypd4atm_mb16), &
       & new_unittest("CAM-B3LYP-D4S-ATM", test_camb3lypd4satm_mb16), &
       & new_unittest("r2SCAN-3c", test_r2scan3c_mb01), &
-       & new_unittest("r2SCAN-3c-D4S", test_r2scan3c_d4s_mb01), &
-       & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
-       & new_unittest("TPSSh-D4S-ATM-AmF3", test_tpsshd4satm_amf3), &
-       & new_unittest("smooth cutoff", test_smooth_cutoff), &
-       & new_unittest("Actinides-D4", test_actinides_d4), &
-       & new_unittest("Actinides-D4S", test_actinides_d4s) &
-       & ]
+      & new_unittest("r2SCAN-3c-D4S", test_r2scan3c_d4s_mb01), &
+      & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
+      & new_unittest("TPSSh-D4S-ATM-AmF3", test_tpsshd4satm_amf3), &
+      & new_unittest("smooth cutoff", test_smooth_cutoff), &
+      & new_unittest("Actinides-D4", test_actinides_d4), &
+      & new_unittest("Actinides-D4S", test_actinides_d4s) &
+      & ]
 
 end subroutine collect_dftd4
 

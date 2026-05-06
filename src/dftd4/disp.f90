@@ -110,9 +110,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    end if
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-   call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, &
-      & disp%r4r2, &
-       & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
+   call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, disp%r4r2, &
+      & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
    if (grad) then
       call d4_gemv(dqdr, dEdq, gradient, beta=1.0_wp)
       call d4_gemv(dqdL, dEdq, sigma, beta=1.0_wp)
@@ -123,9 +122,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    call disp%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
-      & disp%r4r2, &
-       & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
+   call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, disp%r4r2, &
+      & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
    if (grad) then
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
          & disp%rcov, disp%en, dEdcn, gradient, sigma)
@@ -244,8 +242,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    energy3(:, :) = 0.0_wp
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
    call param%get_pairwise_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, &
-      & disp%r4r2, &
-       & c6, energy2)
+      & disp%r4r2, c6, energy2)
 
    q(:) = 0.0_wp
    call disp%weight_references(mol, cn, q, gwvec)
@@ -253,8 +250,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
    call param%get_pairwise_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
-      & disp%r4r2, &
-       & c6, energy3)
+      & disp%r4r2, c6, energy3)
 
 end subroutine get_pairwise_dispersion
 
