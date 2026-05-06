@@ -99,6 +99,7 @@ pure subroutine smooth_cutoff(r, cutoff, width, sw, dswdr)
          dswdr = 0.0_wp
       else
          x = (cutoff - r) / effective_width
+         ! Quintic Hermite switch with zero first derivatives at both boundaries.
          sw = x**3 * (10.0_wp + x*(-15.0_wp + 6.0_wp*x))
          dswdr = -30.0_wp * x**2 * (1.0_wp - x)**2 / effective_width
       end if

@@ -106,6 +106,8 @@ from ase.units import Bohr, Hartree
 from .interface import DampingParam, DispersionModel
 
 
+# Fallbacks for incomplete realspace_cutoff dictionaries; an empty dict keeps
+# the library defaults untouched.
 DEFAULT_DISP2_CUTOFF = 60.0 * Bohr
 DEFAULT_DISP3_CUTOFF = 40.0 * Bohr
 DEFAULT_CN_CUTOFF = 30.0 * Bohr
