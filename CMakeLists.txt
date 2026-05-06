@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.14)
 project(
   "dftd4"
   LANGUAGES "Fortran"
-  VERSION "4.1.1"
+  VERSION "4.2.0"
   DESCRIPTION "Generally Applicable Atomic-Charge Dependent London Dispersion Correction"
 )
 

@@ -24,10 +24,10 @@ module dftd4_version
 
 
    !> String representation of the dftd4 version
-   character(len=*), parameter :: dftd4_version_string = "4.1.1"
+   character(len=*), parameter :: dftd4_version_string = "4.2.0"
 
    !> Numeric representation of the dftd4 version
-   integer, parameter :: dftd4_version_compact(3) = [4, 1, 1]
+   integer, parameter :: dftd4_version_compact(3) = [4, 2, 0]
 
 
 contains
