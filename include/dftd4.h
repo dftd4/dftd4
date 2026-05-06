@@ -32,6 +32,7 @@
 #define DFTD4_API_SUFFIX__V_3_4
 #define DFTD4_API_SUFFIX__V_3_5
 #define DFTD4_API_SUFFIX__V_4_0
+#define DFTD4_API_SUFFIX__V_4_2
 
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;
@@ -151,7 +152,7 @@ dftd4_set_model_realspace_cutoff(dftd4_error /* error */,
                                  dftd4_model /* disp */,
                                  double /* disp2 */,
                                  double /* disp3 */,
-                                 double /* cn */) DFTD4_API_SUFFIX__V_4_0;
+                                 double /* cn */) DFTD4_API_SUFFIX__V_4_2;
 
 /// Set realspace cutoffs with smoothing widths (quantities in Bohr)
 DFTD4_API_ENTRY void DFTD4_API_CALL
@@ -161,7 +162,7 @@ dftd4_set_model_realspace_cutoff_smooth(dftd4_error /* error */,
                                         double /* disp3 */,
                                         double /* cn */,
                                         double /* width2 */,
-                                        double /* width3 */) DFTD4_API_SUFFIX__V_4_0;
+                                        double /* width3 */) DFTD4_API_SUFFIX__V_4_2;
 
 /*
  * Damping parameter class
