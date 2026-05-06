@@ -303,6 +303,7 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, r4r2, c6, dc6d
             edisp0 = self%s6*t6 + self%s8*rrij*t8
             gdisp0 = self%s6*d6 + self%s8*rrij*d8
             edisp = sw * edisp0
+            ! Product rule for d(sw(r)*edisp0(r2))/dr2.
             gdisp = sw * gdisp0 + dswdr * edisp0 / r
 
             dE = -c6ij*edisp * 0.5_wp

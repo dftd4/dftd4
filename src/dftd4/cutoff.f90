@@ -32,6 +32,12 @@ module dftd4_cutoff
    !> Three-body interaction cutoff
    real(wp), parameter :: disp3_default = 40.0_wp
 
+   !> Coefficients for the quintic smoothstep polynomial 10*x^3 - 15*x^4 + 6*x^5
+   real(wp), parameter :: smoothstep3 = 10.0_wp
+   real(wp), parameter :: smoothstep4 = -15.0_wp
+   real(wp), parameter :: smoothstep5 = 6.0_wp
+   real(wp), parameter :: smoothstep_deriv = 30.0_wp
+
 
    !> Collection of real space cutoffs
    type :: realspace_cutoff
@@ -100,8 +106,8 @@ pure subroutine smooth_cutoff(r, cutoff, width, sw, dswdr)
       else
          x = (cutoff - r) / effective_width
          ! Quintic Hermite switch with zero first derivatives at both boundaries.
-         sw = x**3 * (10.0_wp + x*(-15.0_wp + 6.0_wp*x))
-         dswdr = -30.0_wp * x**2 * (1.0_wp - x)**2 / effective_width
+         sw = x**3 * (smoothstep3 + x*(smoothstep4 + smoothstep5*x))
+         dswdr = -smoothstep_deriv * x**2 * (1.0_wp - x)**2 / effective_width
       end if
    end if
 
