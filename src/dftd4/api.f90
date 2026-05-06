@@ -76,7 +76,7 @@ module dftd4_api
       !> Actual payload
       class(dispersion_model), allocatable :: ptr
 
-      !> Realspace cutoff used in calculations through the C API
+      !> Realspace cutoff used by C API calculation entry points
       type(realspace_cutoff) :: cutoff
    end type vp_model
 

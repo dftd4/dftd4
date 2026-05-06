@@ -28,6 +28,7 @@ module test_dftd4
 
    real(wp), parameter :: thr = 100*epsilon(1.0_wp)
    real(wp), parameter :: thr2 = sqrt(epsilon(1.0_wp))
+   real(wp), parameter :: smooth_diff_thr = 1.0e-10_wp
 
 
 contains
@@ -246,7 +247,7 @@ subroutine test_smooth_cutoff(error)
    call get_dispersion(mol, d4, param, sharp, esharp)
    call get_dispersion(mol, d4, param, smooth, esmooth)
 
-   if (abs(esharp - esmooth) < 1.0e-10_wp) then
+   if (abs(esharp - esmooth) < smooth_diff_thr) then
       call test_failed(error, "Smooth cutoff does not change dispersion energy")
       return
    end if

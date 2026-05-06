@@ -106,6 +106,11 @@ from ase.units import Bohr, Hartree
 from .interface import DampingParam, DispersionModel
 
 
+DEFAULT_DISP2_CUTOFF = 60.0 * Bohr
+DEFAULT_DISP3_CUTOFF = 40.0 * Bohr
+DEFAULT_CN_CUTOFF = 30.0 * Bohr
+
+
 class DFTD4(Calculator):
     """
     ASE calculator for DFT-D4 related methods.
@@ -240,9 +245,9 @@ class DFTD4(Calculator):
 
         try:
             disp.set_realspace_cutoff(
-                disp2=cutoff.get("disp2", 60.0 * Bohr) / Bohr,
-                disp3=cutoff.get("disp3", 40.0 * Bohr) / Bohr,
-                cn=cutoff.get("cn", 30.0 * Bohr) / Bohr,
+                disp2=cutoff.get("disp2", DEFAULT_DISP2_CUTOFF) / Bohr,
+                disp3=cutoff.get("disp3", DEFAULT_DISP3_CUTOFF) / Bohr,
+                cn=cutoff.get("cn", DEFAULT_CN_CUTOFF) / Bohr,
                 width2=cutoff.get("width2", 0.0) / Bohr,
                 width3=cutoff.get("width3", 0.0) / Bohr,
             )

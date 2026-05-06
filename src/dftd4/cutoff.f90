@@ -88,6 +88,7 @@ pure subroutine smooth_cutoff(r, cutoff, width, sw, dswdr)
       sw = 1.0_wp
       dswdr = 0.0_wp
    else
+      ! Keep the switching interval within the physical range 0 <= r <= cutoff.
       effective_width = min(width, cutoff)
       inner = cutoff - effective_width
       if (r <= inner) then
