@@ -112,8 +112,8 @@ subroutine get_dispersion2(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, dc
       & .and. present(dEdq) .and. present(gradient) .and. present(sigma)
 
    if (grad) then
-      call get_dispersion_derivs(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, dc6dq, &
-          & energy, dEdcn, dEdq, gradient, sigma)
+      call get_dispersion_derivs(self, mol, trans, cutoff, width, r4r2, c6, &
+         & dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
    else
       call get_dispersion_energy(self, mol, trans, cutoff, width, r4r2, c6, energy)
    end if
@@ -389,9 +389,9 @@ subroutine get_dispersion3(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, dc
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
-   call get_atm_dispersion(mol, trans, cutoff, width, self%s9, self%a1, self%a2, &
-       & self%alp, r4r2, c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, &
-       & gradient, sigma)
+   call get_atm_dispersion(mol, trans, cutoff, width, self%s9, self%a1, &
+      & self%a2, self%alp, r4r2, c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, &
+      & gradient, sigma)
 
 end subroutine get_dispersion3
 

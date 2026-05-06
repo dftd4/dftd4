@@ -707,7 +707,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    ! Evaluate energy, gradient (optional), and 
    ! sigma (optional) analytically
    call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
-       & energy, gradient, sigma)
+      & energy, gradient, sigma)
 
    if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -769,8 +769,8 @@ subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
    ! Evaluate hessian numerically 
    hessian = reshape(c_hessian(:9*nat_sq), &
                     &(/3, mol%ptr%nat, 3, mol%ptr%nat/))
-    call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
-     & disp%cutoff, hessian)
+   call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
+      & disp%cutoff, hessian)
    c_hessian(:9*nat_sq) = reshape(hessian, (/9*nat_sq/))
 
 end subroutine get_numerical_hessian_api
@@ -824,8 +824,8 @@ subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
    call c_f_pointer(c_pair_energy2, pair_energy2, [mol%ptr%nat, mol%ptr%nat])
    call c_f_pointer(c_pair_energy3, pair_energy3, [mol%ptr%nat, mol%ptr%nat])
 
-    call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
-       & pair_energy2, pair_energy3)
+   call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
+      & pair_energy2, pair_energy3)
 
 end subroutine get_pairwise_dispersion_api
 
@@ -869,7 +869,7 @@ subroutine get_properties_api(verror, vmol, vdisp, &
 
    allocate(cn(mol%ptr%nat), charges(mol%ptr%nat), alpha(mol%ptr%nat), &
       & c6(mol%ptr%nat, mol%ptr%nat))
-    call get_properties(mol%ptr, disp%ptr, disp%cutoff, cn, charges, c6, alpha)
+   call get_properties(mol%ptr, disp%ptr, disp%cutoff, cn, charges, c6, alpha)
 
    if (present(c_cn)) then
       c_cn(:size(cn)) = cn

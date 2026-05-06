@@ -92,11 +92,11 @@ subroutine get_atm_dispersion(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, 
       & .and. present(dEdq) .and. present(gradient) .and. present(sigma)
 
    if (grad) then
-      call get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, &
-          & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
+      call get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, a1, a2, &
+         & alp, r4r2, c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
    else
-      call get_atm_dispersion_energy(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, &
-          & c6, energy)
+      call get_atm_dispersion_energy(mol, trans, cutoff, width, s9, a1, a2, &
+         & alp, r4r2, c6, energy)
    end if
 
 end subroutine get_atm_dispersion
