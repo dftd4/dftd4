@@ -96,7 +96,7 @@ jobs:
 
       - name: Build source distribution
         run: |
-          python -m build python/ --sdist --outdir . -n
+          python -m build python/ --sdist --outdir . -n -Cdist-args="--include-subprojects"
 
       - name: Upload source distribution as artifact
         uses: actions/upload-artifact@v7
