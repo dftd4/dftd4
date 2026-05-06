@@ -270,6 +270,32 @@ def test_pbed4() -> None:
     assert approx(res.get("energy"), abs=thr) == -0.028415184156428127
 
 
+def test_smooth_realspace_cutoff() -> None:
+    """Check smooth cutoff support in the Python API"""
+
+    numbers = np.array([6, 6, 6, 1, 1, 1, 1])
+    positions = np.array(
+        [
+            [+0.00000000000000, +0.00000000000000, -1.79755622305860],
+            [+0.00000000000000, +0.00000000000000, +0.95338756106749],
+            [+0.00000000000000, +0.00000000000000, +3.22281255790261],
+            [-0.96412815539807, -1.66991895015711, -2.53624948351102],
+            [-0.96412815539807, +1.66991895015711, -2.53624948351102],
+            [+1.92825631079613, +0.00000000000000, -2.53624948351102],
+            [+0.00000000000000, +0.00000000000000, +5.23010455462158],
+        ]
+    )
+
+    param = DampingParam(method="pbe")
+    model = DispersionModel(numbers, positions)
+    ref = model.get_dispersion(param, grad=False).get("energy")
+
+    model.set_realspace_cutoff(disp2=4.0, disp3=4.0, cn=30.0, width2=2.0, width3=2.0)
+    res = model.get_dispersion(param, grad=False).get("energy")
+
+    assert res != approx(ref)
+
+
 def test_r2scan3c() -> None:
     """Use r2SCAN-3c for a mindless molecule"""
     thr = 1.0e-8

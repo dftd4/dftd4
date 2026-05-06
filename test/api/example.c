@@ -119,6 +119,10 @@ int test_example(void)
     if (!disp) {
         goto err;
     }
+    dftd4_set_model_realspace_cutoff_smooth(error, disp, 60.0, 40.0, 30.0, 1.0, 1.0);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
 
     // C6 coefficients
     dftd4_get_properties(error, mol, disp, NULL, NULL, c6, NULL);

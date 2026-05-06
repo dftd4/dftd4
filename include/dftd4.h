@@ -145,6 +145,24 @@ dftd4_custom_d4s_model(dftd4_error /* error */,
 DFTD4_API_ENTRY void DFTD4_API_CALL
 dftd4_delete_model(dftd4_model* /* disp */) DFTD4_API_SUFFIX__V_3_0;
 
+/// Set realspace cutoffs (quantities in Bohr)
+DFTD4_API_ENTRY void DFTD4_API_CALL
+dftd4_set_model_realspace_cutoff(dftd4_error /* error */,
+                                 dftd4_model /* disp */,
+                                 double /* disp2 */,
+                                 double /* disp3 */,
+                                 double /* cn */) DFTD4_API_SUFFIX__V_4_0;
+
+/// Set realspace cutoffs with smoothing widths (quantities in Bohr)
+DFTD4_API_ENTRY void DFTD4_API_CALL
+dftd4_set_model_realspace_cutoff_smooth(dftd4_error /* error */,
+                                        dftd4_model /* disp */,
+                                        double /* disp2 */,
+                                        double /* disp3 */,
+                                        double /* cn */,
+                                        double /* width2 */,
+                                        double /* width3 */) DFTD4_API_SUFFIX__V_4_0;
+
 /*
  * Damping parameter class
 **/

@@ -75,12 +75,13 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("CAM-B3LYP-D4-ATM", test_camb3lypd4atm_mb16), &
       & new_unittest("CAM-B3LYP-D4S-ATM", test_camb3lypd4satm_mb16), &
       & new_unittest("r2SCAN-3c", test_r2scan3c_mb01), &
-      & new_unittest("r2SCAN-3c-D4S", test_r2scan3c_d4s_mb01), &
-      & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
-      & new_unittest("TPSSh-D4S-ATM-AmF3", test_tpsshd4satm_amf3), &
-      & new_unittest("Actinides-D4", test_actinides_d4), &
-      & new_unittest("Actinides-D4S", test_actinides_d4s) &
-      & ]
+       & new_unittest("r2SCAN-3c-D4S", test_r2scan3c_d4s_mb01), &
+       & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
+       & new_unittest("TPSSh-D4S-ATM-AmF3", test_tpsshd4satm_amf3), &
+       & new_unittest("smooth cutoff", test_smooth_cutoff), &
+       & new_unittest("Actinides-D4", test_actinides_d4), &
+       & new_unittest("Actinides-D4S", test_actinides_d4s) &
+       & ]
 
 end subroutine collect_dftd4
 
@@ -115,7 +116,7 @@ subroutine test_dftd4_gen(error, mol, d4, param, ref)
 end subroutine test_dftd4_gen
 
 
-subroutine test_numgrad(error, mol, d4, param)
+subroutine test_numgrad(error, mol, d4, param, cutoff)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -129,25 +130,32 @@ subroutine test_numgrad(error, mol, d4, param)
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in), optional :: cutoff
+
    integer :: iat, ic
    real(wp) :: energy, er, el, sigma(3, 3)
    real(wp), allocatable :: gradient(:, :), numgrad(:, :)
+   type(realspace_cutoff) :: cutoff_
    real(wp), parameter :: step = 1.0e-6_wp
+
+   cutoff_ = realspace_cutoff()
+   if (present(cutoff)) cutoff_ = cutoff
 
    allocate(gradient(3, mol%nat), numgrad(3, mol%nat))
 
    do iat = 1, mol%nat
       do ic = 1, 3
          mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
-         call get_dispersion(mol, d4, param, realspace_cutoff(), er)
+         call get_dispersion(mol, d4, param, cutoff_, er)
          mol%xyz(ic, iat) = mol%xyz(ic, iat) - 2*step
-         call get_dispersion(mol, d4, param, realspace_cutoff(), el)
+         call get_dispersion(mol, d4, param, cutoff_, el)
          mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
          numgrad(ic, iat) = 0.5_wp*(er - el)/step
       end do
    end do
 
-   call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, sigma)
+   call get_dispersion(mol, d4, param, cutoff_, energy, gradient, sigma)
 
    if (any(abs(gradient - numgrad) > thr2)) then
       call test_failed(error, "Gradient of dispersion energy does not match")
@@ -157,7 +165,7 @@ subroutine test_numgrad(error, mol, d4, param)
 end subroutine test_numgrad
 
 
-subroutine test_numsigma(error, mol, d4, param)
+subroutine test_numsigma(error, mol, d4, param, cutoff)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -171,12 +179,19 @@ subroutine test_numsigma(error, mol, d4, param)
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in), optional :: cutoff
+
    integer :: ic, jc
    real(wp) :: energy, er, el, sigma(3, 3), eps(3, 3), numsigma(3, 3)
    real(wp), allocatable :: gradient(:, :), xyz(:, :)
+   type(realspace_cutoff) :: cutoff_
    real(wp), parameter :: unity(3, 3) = reshape(&
       & [1, 0, 0, 0, 1, 0, 0, 0, 1], [3, 3])
    real(wp), parameter :: step = 1.0e-6_wp
+
+   cutoff_ = realspace_cutoff()
+   if (present(cutoff)) cutoff_ = cutoff
 
    allocate(gradient(3, mol%nat), xyz(3, mol%nat))
 
@@ -186,17 +201,17 @@ subroutine test_numsigma(error, mol, d4, param)
       do jc = 1, 3
          eps(jc, ic) = eps(jc, ic) + step
          mol%xyz(:, :) = matmul(eps, xyz)
-         call get_dispersion(mol, d4, param, realspace_cutoff(), er)
+         call get_dispersion(mol, d4, param, cutoff_, er)
          eps(jc, ic) = eps(jc, ic) - 2*step
          mol%xyz(:, :) = matmul(eps, xyz)
-         call get_dispersion(mol, d4, param, realspace_cutoff(), el)
+         call get_dispersion(mol, d4, param, cutoff_, el)
          eps(jc, ic) = eps(jc, ic) + step
          mol%xyz(:, :) = xyz
          numsigma(jc, ic) = 0.5_wp*(er - el)/step
       end do
    end do
 
-   call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, sigma)
+   call get_dispersion(mol, d4, param, cutoff_, energy, gradient, sigma)
 
    if (any(abs(sigma - numsigma) > thr2)) then
       call test_failed(error, "Strain derivatives do not match")
@@ -204,6 +219,52 @@ subroutine test_numsigma(error, mol, d4, param)
    end if
 
 end subroutine test_numsigma
+
+
+subroutine test_smooth_cutoff(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
+      & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
+   type(realspace_cutoff) :: sharp, smooth
+   real(wp) :: esharp, esmooth
+   real(wp), allocatable :: pair2(:, :), pair3(:, :)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+
+   sharp = realspace_cutoff(disp2=8.0_wp, disp3=8.0_wp)
+   smooth = realspace_cutoff(disp2=8.0_wp, disp3=8.0_wp, &
+      & width2=4.0_wp, width3=4.0_wp)
+
+   call get_dispersion(mol, d4, param, sharp, esharp)
+   call get_dispersion(mol, d4, param, smooth, esmooth)
+
+   if (abs(esharp - esmooth) < 1.0e-10_wp) then
+      call test_failed(error, "Smooth cutoff does not change dispersion energy")
+      return
+   end if
+
+   allocate(pair2(mol%nat, mol%nat), pair3(mol%nat, mol%nat))
+   call get_pairwise_dispersion(mol, d4, param, smooth, pair2, pair3)
+   call check(error, sum(pair2) + sum(pair3), esmooth, thr=thr2)
+   if (allocated(error)) then
+      call test_failed(error, "Smooth pairwise dispersion does not match energy")
+      return
+   end if
+
+   call test_numgrad(error, mol, d4, param, smooth)
+   if (allocated(error)) return
+
+   call test_numsigma(error, mol, d4, param, smooth)
+
+end subroutine test_smooth_cutoff
 
 
 subroutine test_pbed4_mb01(error)

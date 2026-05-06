@@ -41,6 +41,7 @@ Supported keywords are
  params_tweaks            None         Optional dict with the damping parameters
  cache_api                True         Reuse generate API objects (recommended)
  model                    d4           Used dispersion Model (D4S or D4 (default))
+ realspace_cutoff         None         Optional realspace cutoff settings
 ======================== ============ ============================================
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
@@ -62,6 +63,10 @@ the ATM scaling if the method is provided in the model.
 Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
 for damping parameters of a given method and prefers special two-body only
 damping parameters if available!
+
+The realspace_cutoff dict can contain ``disp2``, ``disp3``, and ``cn`` cutoffs,
+as well as smooth cutoff widths ``width2`` and ``width3``. Values are expected
+in Angstrom.
 
 Example
 -------
@@ -127,6 +132,7 @@ class DFTD4(Calculator):
         "params_tweaks": {},
         "cache_api": True,
         "model": "d4",
+        "realspace_cutoff": {},
     }
 
     _disp = None
@@ -225,6 +231,24 @@ class DFTD4(Calculator):
 
         return disp
 
+    def _apply_realspace_cutoff(self, disp: DispersionModel) -> None:
+        """Apply optional realspace cutoff settings to the API calculator."""
+
+        cutoff = self.parameters.get("realspace_cutoff")
+        if not cutoff:
+            return
+
+        try:
+            disp.set_realspace_cutoff(
+                disp2=cutoff.get("disp2", 60.0 * Bohr) / Bohr,
+                disp3=cutoff.get("disp3", 40.0 * Bohr) / Bohr,
+                cn=cutoff.get("cn", 30.0 * Bohr) / Bohr,
+                width2=cutoff.get("width2", 0.0) / Bohr,
+                width3=cutoff.get("width3", 0.0) / Bohr,
+            )
+        except RuntimeError:
+            raise InputError("Cannot update realspace cutoff for dftd4")
+
     def _create_damping_param(self) -> DampingParam:
         """Create a new API damping parameter object"""
 
@@ -255,6 +279,7 @@ class DFTD4(Calculator):
 
         if self._disp is None:
             self._disp = self._create_api_calculator()
+        self._apply_realspace_cutoff(self._disp)
 
         _dpar = self._create_damping_param()
 

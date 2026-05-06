@@ -34,7 +34,7 @@ module dftd4_damping
 
    abstract interface
       !> Evaluation of the dispersion energy expression
-      subroutine dispersion_interface(self, mol, trans, cutoff, r4r2, &
+      subroutine dispersion_interface(self, mol, trans, cutoff, width, r4r2, &
             & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
          import :: structure_type, damping_param, wp
 
@@ -49,6 +49,9 @@ module dftd4_damping
 
          !> Real space cutoff
          real(wp), intent(in) :: cutoff
+
+         !> Width of smooth cutoff
+         real(wp), intent(in) :: width
 
          !> Expectation values for r4 over r2 operator
          real(wp), intent(in) :: r4r2(:)
@@ -79,7 +82,7 @@ module dftd4_damping
       end subroutine dispersion_interface
 
       !> Evaluation of the pairwise representation of the dispersion energy
-      subroutine pairwise_dispersion_interface(self, mol, trans, cutoff, r4r2, c6, energy)
+      subroutine pairwise_dispersion_interface(self, mol, trans, cutoff, width, r4r2, c6, energy)
          import :: structure_type, damping_param, wp
 
          !> Damping parameters
@@ -93,6 +96,9 @@ module dftd4_damping
 
          !> Real space cutoff
          real(wp), intent(in) :: cutoff
+
+         !> Width of smooth cutoff
+         real(wp), intent(in) :: width
 
          !> Expectation values for r4 over r2 operator
          real(wp), intent(in) :: r4r2(:)

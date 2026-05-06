@@ -48,6 +48,7 @@ module dftd4_api
    public :: vp_model
    public :: new_d4_model_api, custom_d4_model_api, delete_model_api
    public :: new_d4s_model_api, custom_d4s_model_api
+   public :: set_model_realspace_cutoff_api, set_model_realspace_cutoff_smooth_api
 
    public :: vp_param
    public :: new_rational_damping_api , load_rational_damping_api
@@ -74,6 +75,9 @@ module dftd4_api
    type :: vp_model
       !> Actual payload
       class(dispersion_model), allocatable :: ptr
+
+      !> Realspace cutoff used in calculations through the C API
+      type(realspace_cutoff) :: cutoff
    end type vp_model
 
    !> Void pointer to damping parameters
@@ -486,6 +490,59 @@ subroutine delete_model_api(vdisp) &
 end subroutine delete_model_api
 
 
+!> Set realspace cutoffs for usage in dispersion calculations
+subroutine set_model_realspace_cutoff_api(verror, vdisp, disp2, disp3, cn) &
+      & bind(C, name=namespace//"set_model_realspace_cutoff")
+   !DEC$ ATTRIBUTES DLLEXPORT :: set_model_realspace_cutoff_api
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   real(c_double), value, intent(in) :: disp2
+   real(c_double), value, intent(in) :: disp3
+   real(c_double), value, intent(in) :: cn
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   disp%cutoff = realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn)
+end subroutine set_model_realspace_cutoff_api
+
+
+!> Set realspace cutoffs with smoothing widths for usage in dispersion calculations
+subroutine set_model_realspace_cutoff_smooth_api(verror, vdisp, disp2, disp3, cn, &
+      & width2, width3) bind(C, name=namespace//"set_model_realspace_cutoff_smooth")
+   !DEC$ ATTRIBUTES DLLEXPORT :: set_model_realspace_cutoff_smooth_api
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   real(c_double), value, intent(in) :: disp2
+   real(c_double), value, intent(in) :: disp3
+   real(c_double), value, intent(in) :: cn
+   real(c_double), value, intent(in) :: width2
+   real(c_double), value, intent(in) :: width3
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   disp%cutoff = realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn, &
+      & width2=width2, width3=width3)
+end subroutine set_model_realspace_cutoff_smooth_api
+
+
 !> Create new rational damping parameters
 function new_rational_damping_api(verror, s6, s8, s9, a1, a2, alp) &
       & result(vparam) &
@@ -649,8 +706,8 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
 
    ! Evaluate energy, gradient (optional), and 
    ! sigma (optional) analytically
-   call get_dispersion(mol%ptr, disp%ptr, param%ptr, realspace_cutoff(), &
-      & energy, gradient, sigma)
+   call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
+       & energy, gradient, sigma)
 
    if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -712,8 +769,8 @@ subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
    ! Evaluate hessian numerically 
    hessian = reshape(c_hessian(:9*nat_sq), &
                     &(/3, mol%ptr%nat, 3, mol%ptr%nat/))
-   call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
-    & realspace_cutoff(), hessian)
+    call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
+     & disp%cutoff, hessian)
    c_hessian(:9*nat_sq) = reshape(hessian, (/9*nat_sq/))
 
 end subroutine get_numerical_hessian_api
@@ -767,8 +824,8 @@ subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
    call c_f_pointer(c_pair_energy2, pair_energy2, [mol%ptr%nat, mol%ptr%nat])
    call c_f_pointer(c_pair_energy3, pair_energy3, [mol%ptr%nat, mol%ptr%nat])
 
-   call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, realspace_cutoff(), &
-      & pair_energy2, pair_energy3)
+    call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
+       & pair_energy2, pair_energy3)
 
 end subroutine get_pairwise_dispersion_api
 
@@ -812,7 +869,7 @@ subroutine get_properties_api(verror, vmol, vdisp, &
 
    allocate(cn(mol%ptr%nat), charges(mol%ptr%nat), alpha(mol%ptr%nat), &
       & c6(mol%ptr%nat, mol%ptr%nat))
-   call get_properties(mol%ptr, disp%ptr, realspace_cutoff(), cn, charges, c6, alpha)
+    call get_properties(mol%ptr, disp%ptr, disp%cutoff, cn, charges, c6, alpha)
 
    if (present(c_cn)) then
       c_cn(:size(cn)) = cn

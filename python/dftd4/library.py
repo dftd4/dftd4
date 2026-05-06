@@ -157,6 +157,15 @@ def load_rational_damping(method, mbd):
     )
 
 
+def set_model_realspace_cutoff(
+    disp, disp2, disp3, cn, width2=0.0, width3=0.0
+) -> None:
+    """Set the realspace cutoff for the dispersion model"""
+    return error_check(lib.dftd4_set_model_realspace_cutoff_smooth)(
+        disp, disp2, disp3, cn, width2, width3
+    )
+
+
 update_structure = error_check(lib.dftd4_update_structure)
 get_dispersion = error_check(lib.dftd4_get_dispersion)
 get_pairwise_dispersion = error_check(lib.dftd4_get_pairwise_dispersion)

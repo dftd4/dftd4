@@ -154,6 +154,29 @@ Recreating a structure object requires to recreate the dispersion model as well.
 
    Delete dispersion model
 
+.. c:function:: void dftd4_set_model_realspace_cutoff(dftd4_error error, dftd4_model disp, double disp2, double disp3, double cn);
+
+   :param error: Error handle
+   :param disp: Dispersion model handle
+   :param disp2: Cutoff for two-body dispersion
+   :param disp3: Cutoff for three-body dispersion
+   :param cn: Cutoff for coordination number calculation
+
+   Set realspace cutoffs for usage in dispersion calculations
+
+.. c:function:: void dftd4_set_model_realspace_cutoff_smooth(dftd4_error error, dftd4_model disp, double disp2, double disp3, double cn, double width2, double width3);
+
+   :param error: Error handle
+   :param disp: Dispersion model handle
+   :param disp2: Cutoff for two-body dispersion
+   :param disp3: Cutoff for three-body dispersion
+   :param cn: Cutoff for coordination number calculation
+   :param width2: Smoothing width for two-body dispersion cutoff
+   :param width3: Smoothing width for three-body dispersion cutoff
+
+   Set realspace cutoffs and optional smoothing widths for usage in dispersion calculations.
+   Smoothing is active for a contribution when the corresponding width is larger than zero.
+
 
 Damping parameters
 ------------------
