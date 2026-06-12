@@ -117,13 +117,6 @@ jobs:
           - macos-latest
           - macos-15-intel
         python: ["39", "310", "311", "312", "313", "314"]
-        # Python 3.7 and 3.8 is not supported on 'macos-latest'
-        # Python 3.7 not support for cibuildwheel 3.0
-        include: 
-          - os: ubuntu-latest
-            python: "38"
-          - os: macos-15-intel
-            python: "38"
 
     defaults:
       run:

@@ -14,33 +14,23 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-add_subdirectory("damping")
-add_subdirectory("data")
-add_subdirectory("model")
-
-set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
-
-list(
-  APPEND srcs
-  "${dir}/blas.F90"
-  "${dir}/cutoff.f90"
-  "${dir}/damping.f90"
-  "${dir}/data.f90"
-  "${dir}/disp.f90"
-  "${dir}/model.f90"
-  "${dir}/ncoord.f90"
-  "${dir}/numdiff.f90"
-  "${dir}/output.f90"
-  "${dir}/param.f90"
-  "${dir}/reference.f90"
-  "${dir}/utils.f90"
-  "${dir}/version.f90"
-)
-if(DFTD4_WITH_API)
-  list(APPEND srcs "${dir}/api.f90")
-endif()
-if(DFTD4_WITH_API_V2)
-  list(APPEND srcs "${dir}/compat.f90")
+if ((BLA_VENDOR MATCHES ^Intel) OR (DEFINED ENV{MKLROOT}))
+  enable_language("C")
 endif()
 
-set(srcs "${srcs}" PARENT_SCOPE)
+if(WITH_ILP64)
+  set(BLA_SIZEOF_INTEGER 8)
+endif()
+
+if(NOT LAPACK_FOUND)
+  find_package("LAPACK")
+
+  if(NOT TARGET "BLAS::BLAS")
+    find_package("custom-blas")
+  endif()
+
+  if(NOT TARGET "LAPACK::LAPACK")
+    add_library("LAPACK::LAPACK" INTERFACE IMPORTED)
+    target_link_libraries("LAPACK::LAPACK" INTERFACE "${LAPACK_LIBRARIES}" "BLAS::BLAS")
+  endif()
+endif()
