@@ -16,10 +16,24 @@
 
 option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
 
-option(WITH_API "Enable support for C API via iso_c_binding module" TRUE)
-option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" TRUE)
-option(WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" FALSE)
-option(WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" FALSE)
+if(NOT DEFINED WITH_API)
+  set(WITH_API TRUE)
+endif()
+if(NOT DEFINED WITH_OpenMP)
+  set(WITH_OpenMP TRUE)
+endif()
+if(NOT DEFINED WITH_ILP64)
+  set(WITH_ILP64 FALSE)
+endif()
+if(NOT DEFINED WITH_API_V2)
+  set(WITH_API_V2 FALSE)
+endif()
+option(DFTD4_WITH_API "Enable support for C API via iso_c_binding module" ${WITH_API})
+option(DFTD4_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
+option(DFTD4_WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" ${WITH_ILP64})
+option(DFTD4_WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" ${WITH_API_V2})
+set(DFTD4_USE_MULTICHARGE TRUE)
+set(DFTD4_USE_MCTCLIB TRUE)
 if(NOT DEFINED "${PROJECT_NAME}-dependeny-method")
   set(
     "${PROJECT_NAME}-dependency-method"
@@ -87,7 +101,7 @@ install(
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/template.cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/template-config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )

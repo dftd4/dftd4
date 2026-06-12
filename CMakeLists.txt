@@ -29,13 +29,13 @@ include(GNUInstallDirs)
 # General configuration information
 add_subdirectory("config")
 
-if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
+if(NOT TARGET "OpenMP::OpenMP_Fortran" AND DFTD4_WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
-if(WITH_ILP64 AND BLAS_LIBRARIES)
+if(DFTD4_WITH_ILP64 AND BLAS_LIBRARIES)
   message(STATUS "Using LAPACK/BLAS ILP64 interface")
-elseif(WITH_ILP64)
+elseif(DFTD4_WITH_ILP64)
   message(FATAL_ERROR "ILP64 support needs BLAS_LIBRARIES")
 endif()
 
@@ -68,6 +68,7 @@ add_library(
   "${PROJECT_NAME}-lib"
   "${srcs}"
 )
+add_library("${PROJECT_NAME}::${PROJECT_NAME}-lib" ALIAS "${PROJECT_NAME}-lib")
 set_target_properties(
   "${PROJECT_NAME}-lib"
   PROPERTIES
@@ -81,7 +82,7 @@ target_link_libraries(
   "${PROJECT_NAME}-lib"
   PUBLIC
   "${lib-deps}"
-  "$<$<BOOL:${WITH_OpenMP}>:OpenMP::OpenMP_Fortran>"
+  "$<$<BOOL:${DFTD4_WITH_OpenMP}>:OpenMP::OpenMP_Fortran>"
 )
 target_include_directories(
   "${PROJECT_NAME}-lib"
@@ -97,7 +98,7 @@ target_include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/dftd4
 )
 
-if(WITH_ILP64)
+if(DFTD4_WITH_ILP64)
   target_compile_definitions(
     "${PROJECT_NAME}-lib"
     PUBLIC -DIK=i8)
@@ -112,6 +113,7 @@ add_subdirectory("app")
 
 # Export targets for other projects
 add_library("${PROJECT_NAME}" INTERFACE)
+add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
 install(
   TARGETS
@@ -134,7 +136,7 @@ install(
   "${CMAKE_CURRENT_BINARY_DIR}/include/"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
 )
-if(WITH_API)
+if(DFTD4_WITH_API)
   enable_language("C")
   install(
     DIRECTORY
