@@ -71,8 +71,10 @@ macro(
           "${${_pkg_uc}_BINARY_DIR}"
         )
 
-        add_library("${package}::${package}" INTERFACE IMPORTED)
-        target_link_libraries("${package}::${package}" INTERFACE "${package}")
+        if(NOT TARGET "${package}::${package}")
+          add_library("${package}::${package}" INTERFACE IMPORTED)
+          target_link_libraries("${package}::${package}" INTERFACE "${package}")
+        endif()
 
         # We need the module directory in the subproject before we finish the configure stage
         if(NOT EXISTS "${${_pkg_uc}_BINARY_DIR}/include")
@@ -93,8 +95,10 @@ macro(
       )
       FetchContent_MakeAvailable("${_pkg_lc}")
 
-      add_library("${package}::${package}" INTERFACE IMPORTED)
-      target_link_libraries("${package}::${package}" INTERFACE "${package}")
+      if(NOT TARGET "${package}::${package}")
+        add_library("${package}::${package}" INTERFACE IMPORTED)
+        target_link_libraries("${package}::${package}" INTERFACE "${package}")
+      endif()
 
       # We need the module directory in the subproject before we finish the configure stage
       FetchContent_GetProperties("${_pkg_lc}" BINARY_DIR "${_pkg_uc}_BINARY_DIR")
