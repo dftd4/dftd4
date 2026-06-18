@@ -101,10 +101,7 @@ from ase.calculators.calculator import (
     all_changes,
 )
 from ase.calculators.mixing import SumCalculator
-from ase.units import Bohr as _Bohr, Hartree as _Hartree
-
-Bohr = float(_Bohr)
-Hartree = float(_Hartree)
+from ase.units import Bohr, Hartree
 
 from .interface import DampingParam, DispersionModel
 
