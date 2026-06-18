@@ -8,7 +8,7 @@ import dftd4
 
 project = "DFT-D4"
 author = "Grimme group"
-copyright = f"2017–2024 {author}"
+copyright = f"2017–2026 {author}"
 
 extensions = [
     "sphinx_copybutton",
@@ -44,7 +44,7 @@ html_static_path = ["_static"]
 templates_path = ["_templates"]
 
 autodoc_typehints = "none"
-autodoc_mock_imports = ["dftd4.library", "numpy", "ase", "qcelemental", "pyscf"]
+autodoc_mock_imports = ["dftd4.library"]
 autosummary_generate = True
 napoleon_google_docstring = False
 napoleon_use_param = False
