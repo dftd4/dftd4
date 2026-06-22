@@ -148,7 +148,7 @@ if qcel_v2 is not None:
 
 
 def run_qcschema(input_data):
-    """Perform disperson correction based on an atomic inputmodel"""
+    """Perform dispersion correction based on an atomic inputmodel"""
 
     if qcel_v2 is not None and isinstance(input_data, qcel_v2.AtomicInput):
         atomic_input = input_data

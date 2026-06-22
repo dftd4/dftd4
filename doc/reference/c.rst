@@ -3,7 +3,7 @@ C API
 
 The C API bindings are provided by using the ``iso_c_binding`` intrinsic module.
 Generally, objects are exported as opaque pointers and can only be manipulated within the library.
-The API user is required to delete all objects created in the library by using the provided deconstructor functions to avoid mamory leaks.
+The API user is required to delete all objects created in the library by using the provided deconstructor functions to avoid memory leaks.
 
 Overall four classes of objects are provided by the library
 
@@ -13,7 +13,7 @@ Overall four classes of objects are provided by the library
   used to represent the system specific information and geometry data,
   only the latter are mutable for the user
 - dispersion model objects (``dftd4_model``),
-  general model for calculating dispersion releated properties
+  general model for calculating dispersion related properties
 - damping function objects (``dftd4_param``)
   polymorphic objects to represent the actual method parametrisation
 
@@ -252,6 +252,6 @@ To evaluate dispersion energies or related properties the `dftd4_get_dispersion`
    :param disp: Dispersion model handle
    :param param: Damping function parameter handle
    :param energy: Pairwise additive dispersion energies
-   :param energy: Pairwise non-addititive dispersion energies
+   :param energy: Pairwise non-additive dispersion energies
 
    Evaluate the pairwise representation of the dispersion energy
