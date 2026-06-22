@@ -44,6 +44,23 @@ Supported keywords are
  realspace_cutoff         None         Optional realspace cutoff settings
 ======================== ============ ============================================
 
+Example
+-------
+>>> from ase.build import molecule
+>>> from dftd4.ase import DFTD4
+>>> atoms = molecule('H2O')
+>>> atoms.calc = DFTD4(method="TPSS")
+>>> atoms.get_potential_energy()
+-0.007310393443152083
+>>> atoms.calc.set(method="PBE")
+{'method': 'PBE'}
+>>> atoms.get_potential_energy()
+-0.005358475432239303
+>>> atoms.get_forces()
+array([[-0.        , -0.        ,  0.00296845],
+       [-0.        ,  0.00119152, -0.00148423],
+       [-0.        , -0.00119152, -0.00148423]])
+
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided
 
@@ -64,26 +81,46 @@ Disabling the three-body dispersion (s9=0.0) changes the internal selection rule
 for damping parameters of a given method and prefers special two-body only
 damping parameters if available!
 
+Example
+-------
+>>> from dftd4.ase import DFTD4
+>>> calc = DFTD4(params_tweaks={"s8": 0.5, "a1": 0.4, "a2": 4.0})
+>>> calc.set(params_tweaks={"s8": 0.6, "a1": 0.5, "a2": 3.0})
+{'params_tweaks': {'s8': 0.6, 'a1': 0.5, 'a2': 3.0}}
+>>> calc.set(params_tweaks={}, method="TPSS")
+{'params_tweaks': {}, 'method': 'TPSS'}
+
+The realspace_cutoff option defines all cutoff values used for computing
+realspace summations.
+
+======== ============= ===================================================
+ Name     Default       Description
+======== ============= ===================================================
+ disp2    60.0 * Bohr   Cutoff for the pairwise dispersion energy
+ disp3    40.0 * Bohr   Cutoff for the three-body dispersion energy
+ cn       30.0 * Bohr   Cutoff for the coordination number calculation
+ width2   0.0           Smooth cutoff width for the pairwise dispersion
+ width3   0.0           Smooth cutoff width for the three-body dispersion
+======== ============= ===================================================
+
 The realspace_cutoff dict can contain ``disp2``, ``disp3``, and ``cn`` cutoffs,
 as well as smooth cutoff widths ``width2`` and ``width3``. Values are expected
 in Angstrom.
+To set values in Bohr, e.g. to match the default values, use the ASE units module
+for converting them. By multiplying with Bohr the values are converted to Angstrom.
+An empty dict will reset the cutoff values to the library defaults.
+The smooth cutoff widths are optional but highly recommended to avoid discontinuities
+especially for small cutoff values or periodic systems.
 
 Example
 -------
->>> from ase.build import molecule
+>>> from ase.units import Bohr
 >>> from dftd4.ase import DFTD4
->>> atoms = molecule('H2O')
->>> atoms.calc = DFTD4(method="TPSS")
->>> atoms.get_potential_energy()
--0.007310393443152083
->>> atoms.calc.set(method="PBE")
-{'method': 'PBE'}
->>> atoms.get_potential_energy()
--0.005358475432239303
->>> atoms.get_forces()
-array([[-0.        , -0.        ,  0.00296845],
-       [-0.        ,  0.00119152, -0.00148423],
-       [-0.        , -0.00119152, -0.00148423]])
+>>> calc = DFTD4(method="TPSS")
+>>> calc.set(realspace_cutoff={"width2": 0.05 * Bohr, "width3": 0.05 * Bohr})
+{'realspace_cutoff': {'width2': 0.02645886052819206, 'width3': 0.02645886052819206}}
+>>> calc.set(realspace_cutoff={})  # reset to library defaults
+{'realspace_cutoff': {}}
 """
 
 try:
