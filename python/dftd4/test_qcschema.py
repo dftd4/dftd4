@@ -17,7 +17,6 @@
 # pyright: reportPossiblyUnboundVariable=false
 # pylint: disable=possibly-used-before-assignment
 
-import sys
 from typing import Any, Dict, Optional
 
 import numpy as np

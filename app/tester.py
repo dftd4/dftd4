@@ -10,7 +10,7 @@ supposed to be used by meson for testing purposes only.
 try:
     import subprocess, sys, json, os, pytest
 except ImportError:
-    exit(77)
+    raise SystemExit(77)
 
 if len(sys.argv) < 4:
     raise RuntimeError("Requires at least four arguments")
