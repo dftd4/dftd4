@@ -79,7 +79,7 @@ module dftd4_argument
       end subroutine get_argument_interface
    end interface
 
-   !> Token identifyin response files
+   !> Token identifying response files
    character(len=*), parameter :: response_token = "@"
 
    !> Initial size for the resizer of the argument list
@@ -169,7 +169,7 @@ recursive subroutine get_response_file(self, resp, stat)
    class(argument_list), intent(inout) :: self
    !> Name of the response file to be appended
    character(len=*), intent(in) :: resp
-   !> Status of reading the reponse file
+   !> Status of reading the response file
    integer, intent(out) :: stat
 
    integer :: unit, info, istat

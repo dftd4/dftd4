@@ -14,7 +14,7 @@
 ! You should have received a copy of the Lesser GNU General Public License
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-!> Numerical differentation of DFT-D4 model
+!> Numerical differentiation of DFT-D4 model
 module dftd4_numdiff
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
@@ -31,7 +31,7 @@ module dftd4_numdiff
 contains
 
 
-!> Evaluate hessian matrix by numerical differention
+!> Evaluate hessian matrix by numerical differentiation
 subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_hessian
 

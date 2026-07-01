@@ -698,7 +698,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       sigma = c_sigma(:3, :3)
    ! Still needs to be passed into dispersion subroutines,
    ! just won't be returned through the API. 
-   ! Would need to refactor disperision
+   ! Would need to refactor dispersion
    ! subroutines to make sigma truly optional. 
    else if (has_grad) then
       allocate(sigma(3,3)) 

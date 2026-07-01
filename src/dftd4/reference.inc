@@ -1,5 +1,5 @@
 ! This file is computer generated, please do not modify it here, but
-! generate it anew with the appropiate tool! (1906)
+! generate it anew with the appropriate tool! (1906)
 ! SEC null  - - - - - - - - - - - - - - - - - - - - - - - - - - - - 1710
       data secq   (2)   /    1.0000000_wp /; data sscale(2)/  0.0000000_wp/
       data seccnD3(2)   /    0.9117922_wp /; data seccn (2)/  0.8943405_wp/

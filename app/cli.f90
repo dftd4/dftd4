@@ -69,7 +69,7 @@ contains
 
 subroutine get_arguments(config, error)
 
-   !> Configuation data
+   !> Configuration data
    class(cli_config), allocatable, intent(out) :: config
 
    !> Error handling
@@ -131,7 +131,7 @@ end subroutine get_arguments
 !> Read configuration for the single point driver
 subroutine get_run_arguments(config, list, start, error)
 
-   !> Configuation data
+   !> Configuration data
    type(run_config), intent(out) :: config
 
    !> List of command line arguments
@@ -314,7 +314,7 @@ end subroutine get_run_arguments
 
 subroutine get_param_arguments(config, list, start, error)
 
-   !> Configuation data
+   !> Configuration data
    type(param_config), intent(out) :: config
 
    !> List of command line arguments

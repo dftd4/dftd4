@@ -70,11 +70,11 @@ class Structure:
     ):
         """Create new molecular structure data"""
         if positions.size % 3 != 0:
-            raise ValueError("Expected tripels of cartesian coordinates")
+            raise ValueError("Expected triples of cartesian coordinates")
 
         if 3 * numbers.size != positions.size:
             raise ValueError(
-                "Dimension missmatch between numbers and positions"
+                "Dimension mismatch between numbers and positions"
             )
 
         self._natoms = len(numbers)
@@ -130,7 +130,7 @@ class Structure:
         """
 
         if 3 * len(self) != positions.size:
-            raise ValueError("Dimension missmatch for positions")
+            raise ValueError("Dimension mismatch for positions")
         _positions = np.ascontiguousarray(positions, dtype="float")
 
         if lattice is not None:
@@ -222,7 +222,7 @@ class DampingParam:
         Create damping function API object from user provided parameters.
         This object represent a rational damping function and requires
         at least the 's8', 'a1', and 'a2' parameters as input.
-        Additonally, the parameters 's6', 's9', and 'alp' can be overwritten.
+        Additionally, the parameters 's6', 's9', and 'alp' can be overwritten.
         The user provided damping parameters will be used unchecked.
 
         Example
@@ -244,7 +244,7 @@ class DispersionModel(Structure):
 
     Representation of a dispersion model to evaluate C6 coefficients.
     The model is coupled to the molecular structure it has been created
-    from and cannot be transfered to another molecular structure without
+    from and cannot be transferred to another molecular structure without
     recreating it.
 
     Example
@@ -389,7 +389,7 @@ class DispersionModel(Structure):
         """
         Evaluate dispersion related properties, like polarizabilities and C6 coefficients.
         Will also return the coordination numbers and partial charges used to derive
-        the polarizabilities. Only the static polarizibility is return at the moment.
+        the polarizabilities. Only the static polarizability is return at the moment.
 
         Example
         -------
