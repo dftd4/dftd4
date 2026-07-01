@@ -138,6 +138,13 @@ jobs:
         with:
           name: dftd4-python-sdist
 
+      # Determine macOS version for CIBW deployment target
+      - name: Determine macOS Deployment Target
+        if: contains(matrix.os, 'macos')
+        run: |
+          VERSION="$(sw_vers -productVersion | cut -d. -f1)"
+          echo "DYNAMIC_MACOS_TARGET=${VERSION}.0" >> $GITHUB_ENV
+
       # Build wheels for all supported Python versions
       - name: Build wheels
         run: python -m cibuildwheel --output-dir . *.tar.gz
@@ -165,6 +172,8 @@ jobs:
             brew install gcc@14 openblas@0.3.23
             rm -f /usr/local/lib/libgfortran*.dylib
 
+          MACOSX_DEPLOYMENT_TARGET: ${{ env.DYNAMIC_MACOS_TARGET }}
+
           # Set macOS variables to find gfortran, lapack, and avoid testing 
           # against macOS earlier than 14 (see above)
           CIBW_ENVIRONMENT_MACOS: >
@@ -172,7 +181,7 @@ jobs:
             PKG_CONFIG_PATH="$(brew --prefix openblas)/lib/pkgconfig"
             LDFLAGS="-L$(brew --prefix openblas)/lib -L$(brew --prefix gcc@14)/lib/gcc/14"
             CPPFLAGS="-I$(brew --prefix openblas)/include"
-            MACOSX_DEPLOYMENT_TARGET="$(sw_vers -productVersion | cut -d. -f1)"
+            MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET}"
 
           # Additional debug delocate command for finding duplicate libraries
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
