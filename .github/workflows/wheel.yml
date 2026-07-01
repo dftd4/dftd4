@@ -120,7 +120,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -l -eo pipefail {0}
 
     steps:
       # Set up Python to host 'cibuildwheel'
@@ -143,7 +143,15 @@ jobs:
         if: contains(matrix.os, 'macos')
         run: |
           VERSION="$(sw_vers -productVersion | cut -d. -f1)"
+          
+          # Check if empty before injecting it into environment
+          if [[ -z "$VERSION" ]]; then
+            echo "::error::Failed to determine macOS version"
+            exit 1
+          fi
+          
           echo "DYNAMIC_MACOS_TARGET=${VERSION}.0" >> $GITHUB_ENV
+          echo "macOS version determined: ${VERSION}.0"
 
       # Build wheels for all supported Python versions
       - name: Build wheels
