@@ -326,9 +326,17 @@ jobs:
         env:
           OMP_NUM_THREADS: 1,2,1
 
+      # Use gcovr for more control instead of `ninja -C $BUILD_DIR coverage`.
+      # Option `--include-internal-functions` required to cover mangled Fortran
+      # symbols (e.g., `__dftd4_damping_rational_MOD_get_dispersion2`). 
       - name: Create coverage report
         if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
-        run: ninja -C $BUILD_DIR coverage
+        run: |
+          gcovr $BUILD_DIR \
+            --root . \
+            --include-internal-functions
+            -e "subprojects/" -e "test/"
+            -x -o coverage.xml
         env:
           BUILD_DIR: ${{ env.BUILD_DIR }}
 
@@ -372,6 +380,9 @@ jobs:
         if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
         uses: codecov/codecov-action@v7
         with:
+          fail_ci_if_error: false
+          files: coverage.xml
+          flags: fortran
           token: ${{ secrets.CODECOV_TOKEN }}
 
   python:
