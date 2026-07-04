@@ -334,8 +334,8 @@ jobs:
         run: |
           gcovr $BUILD_DIR \
             --root . \
-            --include-internal-functions
-            -e "subprojects/" -e "test/"
+            --include-internal-functions \
+            -e "subprojects/" -e "test/" \
             -x -o coverage.xml
         env:
           BUILD_DIR: ${{ env.BUILD_DIR }}
