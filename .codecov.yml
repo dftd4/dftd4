@@ -1,9 +1,8 @@
 fixes:
   - "/home/runner/work/dftd4/dftd4::"
 
-# Only cover core library
+# Only cover core library (`app` and `src` directories)
 ignore:
-  - "app/"
   - "assets/"
   - "build/"
   - "config/"
@@ -13,4 +12,3 @@ ignore:
   - "python/"
   - "subprojects/"
   - "test/"
-
