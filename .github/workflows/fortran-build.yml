@@ -253,6 +253,7 @@ jobs:
           --prefix=$PWD/_dist
           --libdir=lib
           --warnlevel=0
+          -Dopenmp=false
           -Db_coverage=$COVERAGE
           $MESON_ARGS
         env:
