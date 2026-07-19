@@ -32,7 +32,7 @@ module dftd4_data_zeff
    integer, parameter :: max_elem = 118
 
 
-  !> Effective nuclear charges from the def2-ECPs used for calculating the 
+  !> Effective nuclear charges from the def2-ECPs used for calculating the
   !> reference polarizabilities for DFT-D4.
   real(wp), parameter :: effective_nuclear_charge(max_elem) = [ &
     &   1,                                                 2,  & ! H-He

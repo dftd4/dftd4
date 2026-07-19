@@ -14,12 +14,12 @@
 ! You should have received a copy of the Lesser GNU General Public License
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-!> Utility functions for the dispersion models 
+!> Utility functions for the dispersion models
 module dftd4_model_utils
    use ieee_arithmetic, only : ieee_is_nan
    use mctc_env, only : wp
    implicit none
-   
+
    public :: is_exceptional, weight_cn, zeta, dzeta, trapzd
 
 contains
@@ -54,7 +54,7 @@ elemental function zeta(a, c, qref, qmod)
       zeta = exp( a )
    else
       zeta = exp( a * ( 1.0_wp - exp( c * ( 1.0_wp - qref/qmod ) ) ) )
-   endif
+   end if
 
 end function zeta
 
@@ -73,7 +73,7 @@ elemental function dzeta(a, c, qref, qmod)
    else
       dzeta = - a * c * exp( c * ( 1.0_wp - qref/qmod ) ) &
          & * zeta(a,c,qref,qmod) * qref / ( qmod**2 )
-   endif
+   end if
 
 end function dzeta
 

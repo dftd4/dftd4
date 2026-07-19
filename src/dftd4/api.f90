@@ -20,9 +20,6 @@
 !>{!./include/dftd4.h!}
 !>```
 module dftd4_api
-   use iso_c_binding
-   use mctc_env, only : wp, error_type, fatal_error
-   use mctc_io_structure, only : structure_type, new
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
@@ -34,6 +31,9 @@ module dftd4_api
    use dftd4_param, only : get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell
    use dftd4_version, only : get_dftd4_version
+   use iso_c_binding
+   use mctc_env, only : wp, error_type, fatal_error
+   use mctc_io_structure, only : structure_type, new
    implicit none
    private
 
@@ -339,7 +339,7 @@ function new_d4_model_api(verror, vmol) &
       deallocate(tmp)
    else
       allocate(disp)
-      call move_alloc(tmp, disp%ptr)   
+      call move_alloc(tmp, disp%ptr)
       vdisp = c_loc(disp)
    end if
 
@@ -379,7 +379,7 @@ function new_d4s_model_api(verror, vmol) &
       deallocate(tmp)
    else
       allocate(disp)
-      call move_alloc(tmp, disp%ptr)   
+      call move_alloc(tmp, disp%ptr)
       vdisp = c_loc(disp)
    end if
 
@@ -422,7 +422,7 @@ function custom_d4_model_api(verror, vmol, ga, gc, wf) &
       deallocate(tmp)
    else
       allocate(disp)
-      call move_alloc(tmp, disp%ptr)   
+      call move_alloc(tmp, disp%ptr)
       vdisp = c_loc(disp)
    end if
 
@@ -464,7 +464,7 @@ function custom_d4s_model_api(verror, vmol, ga, gc) &
       deallocate(tmp)
    else
       allocate(disp)
-      call move_alloc(tmp, disp%ptr)   
+      call move_alloc(tmp, disp%ptr)
       vdisp = c_loc(disp)
    end if
 
@@ -688,39 +688,39 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       return
    end if
 
-   has_grad = present(c_gradient) 
+   has_grad = present(c_gradient)
    if (has_grad) then
       gradient = c_gradient(:3, :mol%ptr%nat)
-   endif
+   end if
 
-   has_sigma = present(c_sigma) 
+   has_sigma = present(c_sigma)
    if (has_sigma) then
       sigma = c_sigma(:3, :3)
    ! Still needs to be passed into dispersion subroutines,
-   ! just won't be returned through the API. 
+   ! just won't be returned through the API.
    ! Would need to refactor dispersion
-   ! subroutines to make sigma truly optional. 
+   ! subroutines to make sigma truly optional.
    else if (has_grad) then
-      allocate(sigma(3,3)) 
-   endif
+      allocate(sigma(3,3))
+   end if
 
-   ! Evaluate energy, gradient (optional), and 
+   ! Evaluate energy, gradient (optional), and
    ! sigma (optional) analytically
    call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
       & energy, gradient, sigma)
 
    if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
-   endif
+   end if
 
    if (has_sigma) then
       c_sigma(:3, :3) = sigma
-   endif
+   end if
 
 end subroutine get_dispersion_api
 
 !> Calculate hessian numerically
-subroutine get_numerical_hessian_api(verror, vmol, vdisp, & 
+subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
                                    & vparam, c_hessian) &
       & bind(C, name=namespace//"get_numerical_hessian")
    !DEC$ ATTRIBUTES DLLEXPORT :: get_numerical_hessian_api
@@ -766,12 +766,12 @@ subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
       return
    end if
 
-   ! Evaluate hessian numerically 
+   ! Evaluate hessian numerically
    hessian = reshape(c_hessian(:9*nat_sq), &
-                    &(/3, mol%ptr%nat, 3, mol%ptr%nat/))
+                    &[3, mol%ptr%nat, 3, mol%ptr%nat])
    call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
       & disp%cutoff, hessian)
-   c_hessian(:9*nat_sq) = reshape(hessian, (/9*nat_sq/))
+   c_hessian(:9*nat_sq) = reshape(hessian, [9*nat_sq])
 
 end subroutine get_numerical_hessian_api
 

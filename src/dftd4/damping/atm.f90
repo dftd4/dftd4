@@ -190,7 +190,7 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, a1, a2, alp,
                   rik = sqrt(r2ik)
                   call smooth_cutoff(rik, cutoff, width, swik, dswdr)
 
-                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr) 
+                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr)
                   !          - mol%xyz(:, jat) - trans(:, jtr)
                   vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
@@ -349,7 +349,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, a1, a2, alp,
                   rik = sqrt(r2ik)
                   call smooth_cutoff(rik, cutoff, width, swik, dswikdr)
 
-                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr) 
+                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr)
                   !          - mol%xyz(:, jat) - trans(:, jtr)
                   vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)

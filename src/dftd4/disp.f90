@@ -60,7 +60,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    !> Dispersion virial
    real(wp), intent(out), contiguous, optional :: sigma(:, :)
- 
+
    logical :: grad
    integer :: mref
    real(wp), allocatable :: cn(:)

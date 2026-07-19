@@ -15,14 +15,14 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd4_output
-   use mctc_env, only : wp
-   use mctc_io, only : structure_type
-   use mctc_io_convert, only : autoaa, autokcal, autoev
-   use mctc_io_math, only : matinv_3x3
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
    use dftd4_model, only : dispersion_model
    use dftd4_version, only : get_dftd4_version
+   use mctc_env, only : wp
+   use mctc_io, only : structure_type
+   use mctc_io_convert, only : autoaa, autokcal, autoev
+   use mctc_io_math, only : matinv_3x3
    implicit none
    private
 
@@ -51,11 +51,11 @@ subroutine ascii_atomic_radii(unit, mol, disp)
 
    write(unit, '(a,":")') "Atomic data, radii in Ångström"
    write(unit, '(54("-"))')
-   write(unit, '(a4,5x,*(1x,a10))') &
+   write(unit, "(a4,5x,*(1x,a10))") &
       "Z", "R(cov)", "r4/r2", "hardness", "EN"
    write(unit, '(54("-"))')
    do isp = 1, mol%nid
-      write(unit, '(i4, 1x, a4, *(1x,f10.4))') &
+      write(unit, "(i4, 1x, a4, *(1x,f10.4))") &
          & mol%num(isp), mol%sym(isp), &
          & disp%rcov(isp)*autoaa, &
          & disp%r4r2(isp)*autoaa, &
@@ -63,7 +63,7 @@ subroutine ascii_atomic_radii(unit, mol, disp)
          & disp%en(isp)
    end do
    write(unit, '(54("-"))')
-   write(unit, '(a)')
+   write(unit, "(a)")
 
 end subroutine ascii_atomic_radii
 
@@ -85,34 +85,34 @@ subroutine ascii_atomic_references(unit, mol, disp)
    mref = maxval(disp%ref)
    write(unit, '(a,":")') "Atomic reference systems (in atomic units)"
    write(unit, '(76("-"))')
-   write(unit, '(a4, 5x)', advance='no') "Z"
+   write(unit, "(a4, 5x)", advance="no") "Z"
    do iref = 1, 2
-      write(unit, '(a4, 2(1x, a7), 1x, a12)', advance='no') &
+      write(unit, "(a4, 2(1x, a7), 1x, a12)", advance="no") &
          "#", "CN", "q+Z", "C6(AA)"
    end do
-   write(unit, '(a)')
+   write(unit, "(a)")
    write(unit, '(76("-"))')
    do isp = 1, mol%nid
-      write(unit, '(i4, 1x, a4)', advance='no') &
+      write(unit, "(i4, 1x, a4)", advance="no") &
          & mol%num(isp), mol%sym(isp)
       do iref = 1, disp%ref(isp)
-         write(unit, '(i4, 2(1x, f7.4), 1x, f12.4)', advance='no') &
+         write(unit, "(i4, 2(1x, f7.4), 1x, f12.4)", advance="no") &
             iref, disp%cn(iref, isp), disp%q(iref, isp) + disp%zeff(isp), &
             disp%c6(iref, iref, isp, isp)
          if (iref == 2 .and. disp%ref(isp) > 2) then
-            write(unit, '(/,9x)', advance='no')
+            write(unit, "(/,9x)", advance="no")
          end if
          if (iref == 4 .and. disp%ref(isp) > 4) then
-            write(unit, '(/,9x)', advance='no')
+            write(unit, "(/,9x)", advance="no")
          end if
          if (iref == 6 .and. disp%ref(isp) > 6) then
-            write(unit, '(/,9x)', advance='no')
+            write(unit, "(/,9x)", advance="no")
          end if
       end do
-      write(unit, '(a)')
+      write(unit, "(a)")
    end do
    write(unit, '(76("-"))')
-   write(unit, '(a)')
+   write(unit, "(a)")
 
 end subroutine ascii_atomic_references
 
@@ -148,13 +148,13 @@ subroutine ascii_system_properties(unit, mol, disp, cn, q, c6, alpha)
 
    write(unit, '(a,":")') "Atomic properties (in atomic units)"
    write(unit, '(76("-"))')
-   write(unit, '(a6,1x,a4,5x, 2(1x,a10), 1x,a11, 1x,a13, 1x,a10)') &
+   write(unit, "(a6,1x,a4,5x, 2(1x,a10), 1x,a11, 1x,a13, 1x,a10)") &
       "#", "Z", "CN", "q", "C6(AA)", "C8(AA)", "alpha(0)"
    write(unit, '(76("-"))')
 
    do iat = 1, mol%nat
       isp = mol%id(iat)
-      write(unit, '(i6,1x,i4,1x,a4, 2(1x,f10.4), 1x,f11.4, 1x,f13.4, 1x,f10.4)') &
+      write(unit, "(i6,1x,i4,1x,a4, 2(1x,f10.4), 1x,f11.4, 1x,f13.4, 1x,f10.4)") &
          & iat, mol%num(isp), mol%sym(isp), cn(iat), q(iat), c6(iat, iat), &
          & c6(iat, iat)*3*disp%r4r2(isp)**2, alpha(iat)
       do jat = 1, mol%nat
@@ -162,15 +162,15 @@ subroutine ascii_system_properties(unit, mol, disp, cn, q, c6, alpha)
       end do
    end do
    write(unit, '(76("-"))')
-   write(unit, '(a)')
+   write(unit, "(a)")
 
    write(unit, '(a,":")') "Molecular properties (in atomic units)"
    write(unit, '(40("-"))')
-   write(unit, '(1x, a, t20, f19.4)') &
+   write(unit, "(1x, a, t20, f19.4)") &
       "molecular C6",  sum(c6), &
       "molecular C8",  sum_c8
    write(unit, '(40("-"))')
-   write(unit, '(a)')
+   write(unit, "(a)")
 
 end subroutine ascii_system_properties
 
@@ -196,32 +196,32 @@ subroutine ascii_results(unit, mol, energy, gradient, sigma)
 
    write(unit, '(a,":", t25, es20.13, 1x, a)') &
       & "Dispersion energy", energy, "Eh"
-   write(unit, '(a)')
+   write(unit, "(a)")
    if (grad) then
       write(unit, '(a,":", t25, es20.13, 1x, a)') &
          & "Gradient norm", norm2(gradient), "Eh/a0"
       write(unit, '(50("-"))')
-      write(unit, '(a6,1x,a4,5x,*(1x,a10))') "#", "Z", "dE/dx", "dE/dy", "dE/dz"
+      write(unit, "(a6,1x,a4,5x,*(1x,a10))") "#", "Z", "dE/dx", "dE/dy", "dE/dz"
       write(unit, '(50("-"))')
       do iat = 1, mol%nat
          isp = mol%id(iat)
-         write(unit, '(i6,1x,i4,1x,a4,*(es11.3))') &
+         write(unit, "(i6,1x,i4,1x,a4,*(es11.3))") &
             & iat, mol%num(isp), mol%sym(isp), gradient(:, iat)
       end do
       write(unit, '(50("-"))')
-      write(unit, '(a)')
+      write(unit, "(a)")
 
       write(unit, '(a,":")') &
          & "Virial"
       write(unit, '(50("-"))')
-      write(unit, '(a15,1x,*(1x,a10))') "component", "x", "y", "z"
+      write(unit, "(a15,1x,*(1x,a10))") "component", "x", "y", "z"
       write(unit, '(50("-"))')
       do iat = 1, 3
-         write(unit, '(2x,4x,1x,a4,1x,4x,*(es11.3))') &
+         write(unit, "(2x,4x,1x,a4,1x,4x,*(es11.3))") &
             & comp(iat), sigma(:, iat)
       end do
       write(unit, '(50("-"))')
-      write(unit, '(a)')
+      write(unit, "(a)")
    end if
 
 end subroutine ascii_results
@@ -247,7 +247,7 @@ subroutine ascii_pairwise(unit, mol, pair_disp2, pair_disp3)
 
    write(unit, '(a,":")') "Pairwise representation of dispersion (in kcal/mol)"
    write(unit, '(82("-"))')
-   write(unit, '(2(a6,1x,a4,5x),*(1x,a10:,1x,a7))') &
+   write(unit, "(2(a6,1x,a4,5x),*(1x,a10:,1x,a7))") &
       "#", "Z", "#", "Z", "additive", "(rel.)", "non-add.", "(rel.)", "total"
    write(unit, '(82("-"))')
    do iat = 1, mol%nat
@@ -274,7 +274,7 @@ subroutine ascii_pairwise(unit, mol, pair_disp2, pair_disp3)
       & e3 * autokcal, nint(e3/disp*100), &
       & disp * autokcal
    write(unit, '(82("-"))')
-   write(unit, '(a)')
+   write(unit, "(a)")
 
 end subroutine ascii_pairwise
 
@@ -298,12 +298,12 @@ subroutine ascii_damping_param(unit, param, method)
          write(unit, '(a, "-")', advance="no") method
       end if
       if (abs(param%s9) > 0) then
-         write(unit, '(a)') "D4-ATM"
+         write(unit, "(a)") "D4-ATM"
       else
-         write(unit, '(a)') "D4"
+         write(unit, "(a)") "D4"
       end if
       write(unit, '(21("-"))')
-      write(unit, '(a4, t10, f10.4)') &
+      write(unit, "(a4, t10, f10.4)") &
          & "s6", param%s6, &
          & "s8", param%s8, &
          & "s9", param%s9, &
@@ -311,7 +311,7 @@ subroutine ascii_damping_param(unit, param, method)
          & "a2", param%a2, &
          & "alp", param%alp
       write(unit, '(20("-"))')
-      write(unit, '(a)')
+      write(unit, "(a)")
    end select
 
 end subroutine ascii_damping_param
@@ -341,8 +341,8 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
          gradlatt(i,j) = sigma(i,1)*inv_lat(j,1) &
             & + sigma(i,2)*inv_lat(j,2) &
             & + sigma(i,3)*inv_lat(j,3)
-      enddo
-   enddo
+      end do
+   end do
 
    icycle = 1
    i = 0
@@ -353,19 +353,19 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
       open(newunit=igrad,file=fname)
       read_file: do
          call getline(igrad,line,iostat=err)
-         if (err.ne.0) exit read_file
+         if (err/=0) exit read_file
          i=i+1
-         if (index(line,'cycle') > 0) line_number = i
-      enddo read_file
+         if (index(line,"cycle") > 0) line_number = i
+      end do read_file
       if (line_number < 2) then
          stat = 1
          return
-      endif
+      end if
 
       rewind(igrad)
       skip_lines: do i = 1, line_number-1
-         read(igrad,'(a)')
-      enddo skip_lines
+         read(igrad,"(a)")
+      end do skip_lines
       call getline(igrad,line)
       read(line(10:17),*,iostat=err) icycle
       read(line(33:51),*,iostat=err) escf
@@ -373,34 +373,34 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
       do i = 1, 3
          call getline(igrad,line)
          read(line,*,iostat=err) dlat(1,i),dlat(2,i),dlat(3,i)
-      enddo
+      end do
       if (any(abs(dlat-mol%lattice) > 1.0e-8_wp)) then
          stat = 1
          return
-      endif
+      end if
       do i = 1, 3
          call getline(igrad,line)
          read(line,*,iostat=err) glat(1,i),glat(2,i),glat(3,i)
-      enddo
+      end do
       do i = 1, 3
          backspace(igrad)
          backspace(igrad)
-      enddo
+      end do
       backspace(igrad)
    else
       open(newunit=igrad,file=fname)
       write(igrad,'("$gradlatt")')
-   endif
+   end if
 
    write(igrad,'(2x,"cycle =",1x,i6,4x,"SCF energy =",f18.11,3x,'//&
                    '"|dE/dlatt| =",f10.6)') &
       icycle, energy+escf, norm2(gradlatt+glat)
    do i = 1, 3
-      write(igrad,'(3(F20.14,2x))') mol%lattice(1,i),mol%lattice(2,i),mol%lattice(3,i)
-   enddo
+      write(igrad,"(3(F20.14,2x))") mol%lattice(1,i),mol%lattice(2,i),mol%lattice(3,i)
+   end do
    do i = 1, 3
-      write(igrad,'(3D22.13)') gradlatt(1,i)+glat(1,i),gradlatt(2,i)+glat(2,i),gradlatt(3,i)+glat(3,i)
-   enddo
+      write(igrad,"(3D22.13)") gradlatt(1,i)+glat(1,i),gradlatt(2,i)+glat(2,i),gradlatt(3,i)+glat(3,i)
+   end do
    write(igrad,'("$end")')
    close(igrad)
 
@@ -433,19 +433,19 @@ subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
       open(newunit=igrad,file=fname)
       read_file: do
          call getline(igrad,line,iostat=err)
-         if (err.ne.0) exit read_file
+         if (err/=0) exit read_file
          i=i+1
-         if (index(line,'cycle') > 0) line_number = i
-      enddo read_file
+         if (index(line,"cycle") > 0) line_number = i
+      end do read_file
       if (line_number < 2) then
          stat = 1
          return
-      endif
+      end if
 
       rewind(igrad)
       skip_lines: do i = 1, line_number-1
-         read(igrad,'(a)')
-      enddo skip_lines
+         read(igrad,"(a)")
+      end do skip_lines
       call getline(igrad,line)
       read(line(10:17),*,iostat=err) icycle
       read(line(33:51),*,iostat=err) escf
@@ -454,34 +454,34 @@ subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
       do i = 1, mol%nat
          call getline(igrad,line)
          read(line,*,iostat=err) xyz(1,i),xyz(2,i),xyz(3,i)
-      enddo
+      end do
       if (any(abs(xyz-mol%xyz) > 1.0e-8_wp)) then
          stat = 1
          return
-      endif
+      end if
       do i = 1, mol%nat
          call getline(igrad,line)
          read(line,*,iostat=err) gscf(1,i),gscf(2,i),gscf(3,i)
-      enddo
+      end do
       do i = 1, mol%nat
          backspace(igrad)
          backspace(igrad)
-      enddo
+      end do
       backspace(igrad)
    else
       open(newunit=igrad,file=fname)
       write(igrad,'("$grad")')
-   endif
+   end if
 
    write(igrad,'(2x,"cycle =",1x,i6,4x,"SCF energy =",f18.11,3x,'//&
                    '"|dE/dxyz| =",f10.6)') &
       icycle, energy+escf, norm2(gradient+gscf)
    do i = 1, mol%nat
-      write(igrad,'(3(F20.14,2x),4x,a2)') mol%xyz(1,i),mol%xyz(2,i),mol%xyz(3,i),mol%sym(i)
-   enddo
+      write(igrad,"(3(F20.14,2x),4x,a2)") mol%xyz(1,i),mol%xyz(2,i),mol%xyz(3,i),mol%sym(i)
+   end do
    do i = 1, mol%nat
-      write(igrad,'(3D22.13)') gradient(1,i)+gscf(1,i),gradient(2,i)+gscf(2,i),gradient(3,i)+gscf(3,i)
-   enddo
+      write(igrad,"(3D22.13)") gradient(1,i)+gscf(1,i),gradient(2,i)+gscf(2,i),gradient(3,i)+gscf(3,i)
+   end do
    write(igrad,'("$end")')
    close(igrad)
 
@@ -499,21 +499,21 @@ subroutine getline(unit,line,iostat)
    integer :: size
    integer :: stat
 
-   line = ''
+   line = ""
    do
-      read(unit,'(a)',advance='no',iostat=stat,size=size)  &
+      read(unit,"(a)",advance="no",iostat=stat,size=size)  &
       &    buffer
-      if (stat.gt.0) then
+      if (stat>0) then
          if (present(iostat)) iostat=stat
          return ! an error occurred
-      endif
+      end if
       line = line // buffer(:size)
-      if (stat.lt.0) then
+      if (stat<0) then
          if (is_iostat_eor(stat)) stat = 0
          if (present(iostat)) iostat=stat
          return
-      endif
-   enddo
+      end if
+   end do
 
 end subroutine getline
 
@@ -543,77 +543,77 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, hessian, &
       indent = indentation
    end if
 
-   write(unit, '("{")', advance='no')
-   if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-   write(unit, jsonkey, advance='no') 'version'
-   write(unit, '(1x,a)', advance='no') '"'//version_string//'"'
+   write(unit, '("{")', advance="no")
+   if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+   write(unit, jsonkey, advance="no") "version"
+   write(unit, "(1x,a)", advance="no") '"'//version_string//'"'
    if (present(energy)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'energy'
-      write(unit, '(1x,es25.16)', advance='no') energy
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "energy"
+      write(unit, "(1x,es25.16)", advance="no") energy
    end if
    if (present(sigma)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'virial'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "virial"
       array = reshape(sigma, [size(sigma)])
       call write_json_array(unit, array, indent)
    end if
    if (present(gradient)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'gradient'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "gradient"
       array = reshape(gradient, [size(gradient)])
       call write_json_array(unit, array, indent)
    end if
    if (present(hessian)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'hessian'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "hessian"
       array = reshape(hessian, [size(hessian)])
       call write_json_array(unit, array, indent)
    end if
    if (present(cn)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'coordination numbers'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "coordination numbers"
       call write_json_array(unit, cn, indent)
    end if
    if (present(q)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'partial charges'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "partial charges"
       call write_json_array(unit, q, indent)
    end if
    if (present(c6)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'c6 coefficients'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "c6 coefficients"
       array = reshape(c6, [size(c6)])
       call write_json_array(unit, array, indent)
    end if
    if (present(alpha)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'polarizabilities'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "polarizabilities"
       call write_json_array(unit, alpha, indent)
    end if
    if (present(pairwise_energy2)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'additive pairwise energy'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "additive pairwise energy"
       array = reshape(pairwise_energy2, [size(pairwise_energy2)])
       call write_json_array(unit, array, indent)
    end if
    if (present(pairwise_energy3)) then
-      write(unit, '(",")', advance='no')
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-      write(unit, jsonkey, advance='no') 'non-additive pairwise energy'
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "non-additive pairwise energy"
       array = reshape(pairwise_energy3, [size(pairwise_energy3)])
       call write_json_array(unit, array, indent)
    end if
-   if (allocated(indent)) write(unit, '(/)', advance='no')
+   if (allocated(indent)) write(unit, "(/)", advance="no")
    write(unit, '("}")')
 
 end subroutine json_results
@@ -624,14 +624,14 @@ subroutine write_json_array(unit, array, indent)
    real(wp), intent(in) :: array(:)
    character(len=:), allocatable, intent(in) :: indent
    integer :: i
-   write(unit, '("[")', advance='no')
+   write(unit, '("[")', advance="no")
    do i = 1, size(array)
-      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 2)
-      write(unit, '(es23.16)', advance='no') array(i)
-      if (i /= size(array)) write(unit, '(",")', advance='no')
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 2)
+      write(unit, "(es23.16)", advance="no") array(i)
+      if (i /= size(array)) write(unit, '(",")', advance="no")
    end do
-   if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
-   write(unit, '("]")', advance='no')
+   if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+   write(unit, '("]")', advance="no")
 end subroutine write_json_array
 
 
@@ -647,19 +647,19 @@ subroutine tagged_result(unit, energy, gradient, sigma, hessian)
 
    if (present(energy)) then
       write(unit, tag_header) "energy", "real", 0
-      write(unit, '(3es24.16)') energy
+      write(unit, "(3es24.16)") energy
    end if
    if (present(gradient)) then
       write(unit, tag_header) "gradient", "real", 2, shape(gradient)
-      write(unit, '(3es24.16)') gradient
+      write(unit, "(3es24.16)") gradient
    end if
    if (present(sigma)) then
       write(unit, tag_header) "virial", "real", 2, shape(sigma)
-      write(unit, '(3es24.16)') sigma
+      write(unit, "(3es24.16)") sigma
    end if
    if (present(hessian)) then
       write(unit, tag_header) "hessian", "real", 4, shape(hessian)
-      write(unit, '(3es24.16)') hessian
+      write(unit, "(3es24.16)") hessian
    end if
 
 end subroutine tagged_result

@@ -15,12 +15,12 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_dftd4
+   use dftd4
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type, new
    use mstore, only : get_structure
-   use dftd4
    implicit none
    private
 
@@ -160,7 +160,7 @@ subroutine test_numgrad(error, mol, d4, param, cutoff)
 
    if (any(abs(gradient - numgrad) > thr2)) then
       call test_failed(error, "Gradient of dispersion energy does not match")
-      print'(3es21.14)', gradient-numgrad
+      print"(3es21.14)", gradient-numgrad
    end if
 
 end subroutine test_numgrad
@@ -216,7 +216,7 @@ subroutine test_numsigma(error, mol, d4, param, cutoff)
 
    if (any(abs(sigma - numsigma) > thr2)) then
       call test_failed(error, "Strain derivatives do not match")
-      print'(3es21.14)', sigma-numsigma
+      print"(3es21.14)", sigma-numsigma
    end if
 
 end subroutine test_numsigma
@@ -860,7 +860,7 @@ subroutine test_r2scan3c_mb01(error)
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.00_wp, s9 = 2.00_wp, alp = 16.0_wp, &
       & s8 = 0.00_wp, a1 = 0.42_wp, a2 = 5.65_wp)
-   
+
    real(wp), parameter :: ref = -5.7825025556386862E-003_wp
 
    call get_structure(mol, "MB16-43", "01")
@@ -879,7 +879,7 @@ subroutine test_r2scan3c_d4s_mb01(error)
    type(rational_damping_param) :: param = rational_damping_param(&
       & s6 = 1.00_wp, s9 = 2.00_wp, alp = 16.0_wp, &
       & s8 = 0.00_wp, a1 = 0.42_wp, a2 = 5.65_wp)
-   
+
    real(wp), parameter :: ref = -6.1176284425895639E-003_wp
 
    call get_structure(mol, "MB16-43", "01")
@@ -971,7 +971,7 @@ subroutine test_actinides_d4(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    real(wp), parameter :: ref = -0.17966420554540324_wp
-   
+
    integer, parameter :: nat = 17
    integer, parameter :: num(nat) = [&
       & 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103]
@@ -1013,7 +1013,7 @@ subroutine test_actinides_d4s(error)
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp)
 
    real(wp), parameter :: ref = -0.18578133252612403_wp
-   
+
    integer, parameter :: nat = 17
    integer, parameter :: num(nat) = [&
       & 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103]

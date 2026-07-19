@@ -15,9 +15,9 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd4_reference
+   use dftd4_data, only : get_hardness, get_effective_charge
    use mctc_env, only : wp
    use mctc_io_symbols, only : to_number
-   use dftd4_data, only : get_hardness, get_effective_charge
    implicit none
    private
 
@@ -74,8 +74,8 @@ module dftd4_reference
    integer, parameter :: max_elem = 118
 
    integer, dimension(max_elem)      :: refn ! for D4
-   real(wp),dimension(7,max_elem)    :: refq ! GFN2-xTB charges 
-   real(wp),dimension(7,max_elem)    :: refh ! GFN2-xTB charges 
+   real(wp),dimension(7,max_elem)    :: refq ! GFN2-xTB charges
+   real(wp),dimension(7,max_elem)    :: refh ! GFN2-xTB charges
    real(wp),dimension(7,max_elem)    :: dftq,pbcq,gffq,clsq,eeqbcq !solq
    real(wp),dimension(7,max_elem)    :: dfth,pbch,gffh,clsh,eeqbch !solh
    real(wp),dimension(7,max_elem)    :: hcount
@@ -495,7 +495,7 @@ elemental function zeta(a, c, qref, qmod)
       zeta = exp( a )
    else
       zeta = exp( a * ( 1.0_wp - exp( c * ( 1.0_wp - qref/qmod ) ) ) )
-   endif
+   end if
 
 end function zeta
 

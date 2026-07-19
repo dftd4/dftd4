@@ -563,7 +563,7 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, width, r4r2, c6, e
                   rik = sqrt(r2ik)
                   call smooth_cutoff(rik, cutoff, width, swik, dswdr)
 
-                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr) 
+                  ! vjk(:) = mol%xyz(:, kat) + trans(:, ktr)
                   !          - mol%xyz(:, jat) - trans(:, jtr)
                   vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)

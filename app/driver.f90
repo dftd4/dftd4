@@ -17,18 +17,18 @@
 !> Entry point for running single point calculations with dftd4
 module dftd4_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
-   use mctc_env, only : error_type, fatal_error, wp
-   use mctc_io, only : structure_type, read_structure, filetype
    use dftd4, only : get_dispersion, realspace_cutoff, &
       & damping_param, rational_damping_param, get_rational_damping, &
       & get_properties, get_pairwise_dispersion, get_dispersion_hessian, &
       & dispersion_model, new_dispersion_model, d4_qmod
-   use dftd4_output
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
+   use dftd4_output
    use dftd4_param, only : functional_group, get_functionals, &
       & get_functional_id, p_r2scan_3c
    use dftd4_utils, only : lowercase, wrap_to_central_cell
+   use mctc_env, only : error_type, fatal_error, wp
+   use mctc_io, only : structure_type, read_structure, filetype
    implicit none
    private
 
@@ -104,10 +104,10 @@ subroutine run_main(config, error)
          read(unit, *, iostat=stat) charge
          if (stat == 0) then
             mol%charge = charge
-            if (config%verbosity > 0) write(output_unit, '(a)') &
+            if (config%verbosity > 0) write(output_unit, "(a)") &
                "[Info] Molecular charge read from '"//filename//"'"
          else
-            if (config%verbosity > 0) write(output_unit, '(a)') &
+            if (config%verbosity > 0) write(output_unit, "(a)") &
                "[Warn] Could not read molecular charge read from '"//filename//"'"
          end if
          close(unit)
@@ -125,7 +125,7 @@ subroutine run_main(config, error)
       if (config%has_param) then
          param = config%inp
       else
-         is = index(config%method, '/')
+         is = index(config%method, "/")
          if (is == 0) is = len_trim(config%method) + 1
          functional = lowercase(config%method(:is-1))
          id = get_functional_id(functional)
@@ -169,7 +169,7 @@ subroutine run_main(config, error)
       else if(lowercase(config%charge_model) == "eeqbc") then
          charge_model = d4_qmod%eeqbc
       else
-         ! Unknown charge model or GFN2 are not supported 
+         ! Unknown charge model or GFN2 are not supported
          ! for non-self-consistent D4
          call fatal_error(error, "Unknown charge model selected")
          return
@@ -217,10 +217,10 @@ subroutine run_main(config, error)
       end if
       if (config%tmer) then
          if (config%verbosity > 0) then
-            write(output_unit, '(a)') "[Info] Dispersion energy written to .EDISP"
+            write(output_unit, "(a)") "[Info] Dispersion energy written to .EDISP"
          end if
          open(file=".EDISP", newunit=unit)
-         write(unit, '(f24.14)') energy
+         write(unit, "(f24.14)") energy
          close(unit)
       end if
       if (config%grad) then
@@ -228,7 +228,7 @@ subroutine run_main(config, error)
          call tagged_result(unit, energy, gradient, sigma, hessian)
          close(unit)
          if (config%verbosity > 0) then
-            write(output_unit, '(a)') &
+            write(output_unit, "(a)") &
                & "[Info] Dispersion results written to '"//config%grad_output//"'"
          end if
 
@@ -237,10 +237,10 @@ subroutine run_main(config, error)
             call turbomole_gradient(mol, "gradient", energy, gradient, stat)
             if (config%verbosity > 0) then
                if (stat == 0) then
-                  write(output_unit, '(a)') &
+                  write(output_unit, "(a)") &
                      & "[Info] Dispersion gradient added to Turbomole gradient file"
                else
-                  write(output_unit, '(a)') &
+                  write(output_unit, "(a)") &
                      & "[Warn] Could not add to Turbomole gradient file"
                end if
             end if
@@ -250,10 +250,10 @@ subroutine run_main(config, error)
             call turbomole_gradlatt(mol, "gradlatt", energy, sigma, stat)
             if (config%verbosity > 0) then
                if (stat == 0) then
-                  write(output_unit, '(a)') &
+                  write(output_unit, "(a)") &
                      & "[Info] Dispersion virial added to Turbomole gradlatt file"
                else
-                  write(output_unit, '(a)') &
+                  write(output_unit, "(a)") &
                      & "[Warn] Could not add to Turbomole gradlatt file"
                end if
             end if
@@ -270,7 +270,7 @@ subroutine run_main(config, error)
          & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
       close(unit)
       if (config%verbosity > 0) then
-         write(output_unit, '(a)') &
+         write(output_unit, "(a)") &
             & "[Info] JSON dump of results written to '"//config%json_output//"'"
       end if
    end if
@@ -291,10 +291,10 @@ subroutine run_param(config, error)
          type(functional_group), allocatable :: funcs(:)
          character(len=:), allocatable :: temp_names(:)
          integer, parameter :: MAX_LEN = 20
-    
+
          integer :: i, j, nfuncs
          integer :: size_j, size_jp1
- 
+
          call get_functionals(funcs)
          nfuncs = size(funcs)
 
@@ -321,15 +321,15 @@ subroutine run_param(config, error)
                end if
             end do
          end do
-         
-         write(output_unit, '(a)') "List of available functionals:"
-         
+
+         write(output_unit, "(a)") "List of available functionals:"
+
          do i = 1, nfuncs
             associate(names => funcs(i)%names)
                do j = 1, size(names)
                   if (len_trim(names(j)) > 0) then
-                     write(output_unit, '(a)', advance='no') trim(names(j)) // " "
-                     
+                     write(output_unit, "(a)", advance="no") trim(names(j)) // " "
+
                      ! new line if last in list
                      if (size(names) == j) then
                         write(output_unit, *)
@@ -353,9 +353,9 @@ function join(a1, a2) result(path)
    character :: filesep
 
    if (is_windows()) then
-      filesep = '\'
+      filesep = "\"
    else
-      filesep = '/'
+      filesep = "/"
    end if
 
    path = a1 // filesep // a2

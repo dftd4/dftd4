@@ -17,9 +17,9 @@
 !> Entry point for the command line interface of dftd4
 program driver
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use mctc_env, only : error_type
    use dftd4_cli, only : cli_config, get_arguments
    use dftd4_driver, only : main
+   use mctc_env, only : error_type
    implicit none
    !> Configuration data determining the driver behaviour
    class(cli_config), allocatable :: config

@@ -26,7 +26,7 @@ module dftd4_help
    !> The name of the program
    character(len=*), parameter :: prog_name = "dftd4"
 
-   character(len=*), parameter :: nl = new_line('a')
+   character(len=*), parameter :: nl = new_line("a")
 
    character(len=*), parameter :: run_options_text = &
       "-c,--charge <real>       Set charge to molecule, overwrites .CHRG file"//nl//&
@@ -61,7 +61,7 @@ module dftd4_help
       ""//nl//&
       "Takes an geometry input to calculate the D4(S) dispersion correction."//nl//&
       "Periodic calculations are performed automatically for periodic input formats."//nl//&
-      "Reads .CHRG file (if present) from the same directory as the input."//nl//&     
+      "Reads .CHRG file (if present) from the same directory as the input."//nl//&
       "Specify the functional to select the correct parameters."//nl//&
       ""//nl//&
       run_options_text//nl//&
@@ -85,7 +85,7 @@ module dftd4_help
       "Generally Applicable Atomic-Charge Dependent London Dispersion Correction."//nl//&
       "Takes an geometry input to calculate the D4(S) dispersion correction."//nl//&
       "Periodic calculations are performed automatically for periodic input formats."//nl//&
-      "Reads .CHRG file (if present) from the same directory as the input."//nl//&     
+      "Reads .CHRG file (if present) from the same directory as the input."//nl//&
       "Specify the functional to select the correct parameters."//nl//&
       ""//nl//&
       !
@@ -109,7 +109,7 @@ contains
 subroutine header(unit)
    integer, intent(in) :: unit
 
-   write(unit,'(a)') &
+   write(unit,"(a)") &
       "                    ____  _____ _____     ____  _  _",&
       "      -------------|  _ \|  ___|_   _|---|  _ \| || |------------",&
       "     |             | | | | |_    | | ___ | | | | || |_           |",&
@@ -129,7 +129,7 @@ subroutine version(unit)
    character(len=:), allocatable :: version_string
 
    call get_dftd4_version(string=version_string)
-   write(unit, '(a, *(1x, a))') &
+   write(unit, "(a, *(1x, a))") &
       & prog_name, "version", version_string
 
 end subroutine version
@@ -138,7 +138,7 @@ end subroutine version
 subroutine citation(unit)
    integer, intent(in) :: unit
 
-   write(unit, '(a)') &
+   write(unit, "(a)") &
       "Please include the appropriate citations when using DFTD4 in your work.", &
       "", &
       "Original DFTD4 idea:", &
@@ -168,7 +168,7 @@ subroutine citation(unit)
       "Lukas Wittmann, Igor Gordiy, Marvin Friede, Benjamin Helmich-Paris, ", &
       "Stefan Grimme, Andreas Hansen and Markus Bursch,", &
       "Phys. Chem. Chem. Phys., 2024, 26, 21379-21394.", &
-      "DOI: 10.1039/D4CP01514B", &   
+      "DOI: 10.1039/D4CP01514B", &
       "", &
       "Smooth D4S model:", &
       "Nikolay V. Tkachenko, Linus B. Dittmer, Rebecca Tomann and Martin Head-Gordon, ", &
@@ -182,7 +182,7 @@ end subroutine citation
 subroutine license(unit)
    integer, intent(in) :: unit
 
-   write(unit, '(a)') &
+   write(unit, "(a)") &
       "dftd4 is free software: you can redistribute it and/or modify it under", &
       "the terms of the Lesser GNU General Public License as published by", &
       "the Free Software Foundation, either version 3 of the License, or", &

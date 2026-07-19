@@ -17,12 +17,12 @@
 !> Definition of the D4S dispersion model for the evaluation of C6 coefficients.
 module dftd4_model_d4s
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
-   use ieee_arithmetic, only : ieee_is_nan
-   use dftd4_model_type, only : dispersion_model, d4_qmod
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_wfpair_val, &
       & get_effective_charge, get_electronegativity, get_hardness
-   use dftd4_reference
+   use dftd4_model_type, only : dispersion_model, d4_qmod
    use dftd4_model_utils
+   use dftd4_reference
+   use ieee_arithmetic, only : ieee_is_nan
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
@@ -117,7 +117,7 @@ subroutine new_d4s_model(error, d4, mol, ga, gc, qmod)
       do jsp = 1, mol%nid
          jzp = mol%num(jsp)
          d4%wf(isp, jsp) = get_wfpair_val(izp, jzp)
-      end do 
+      end do
    end do
 
    allocate(d4%rcov(mol%nid))
@@ -168,7 +168,7 @@ subroutine new_d4s_model(error, d4, mol, ga, gc, qmod)
    else
       tmp_qmod = d4_qmod%eeq
    end if
-   
+
    allocate(d4%q(mref, mol%nid))
    allocate(d4%aiw(23, mref, mol%nid))
    select case(tmp_qmod)
@@ -191,7 +191,7 @@ subroutine new_d4s_model(error, d4, mol, ga, gc, qmod)
          call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQBC model
-      call new_eeqbc2025_model(mol, d4%mchrg, error)  
+      call new_eeqbc2025_model(mol, d4%mchrg, error)
       if(allocated(error)) return
    case(d4_qmod%gfn2)
       do isp = 1, mol%nid
@@ -254,8 +254,8 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
    integer :: iat, izp, iref, igw, jat, jzp
    real(wp) :: norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, maxcn
-   real(wp), parameter :: eps_norm = tiny(1._wp)**0.5_wp
-   
+   real(wp), parameter :: eps_norm = tiny(1.0_wp)**0.5_wp
+
    if (present(gwdcn) .and. present(gwdq)) then
       gwvec(:, :, :) = 0.0_wp
       gwdcn(:, :, :) = 0.0_wp
@@ -264,7 +264,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
       !$omp parallel do default(none) schedule(runtime) &
       !$omp shared(gwvec, gwdcn, gwdq, mol, self, cn, q) &
       !$omp private(iat, izp, iref, igw, zi, gi, jat, jzp) &
-      !$omp private(norm, dnorm, gw, expw, expd, gwk, dgwk, wf, maxcn)      
+      !$omp private(norm, dnorm, gw, expw, expd, gwk, dgwk, wf, maxcn)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          zi = self%zeff(izp)
@@ -312,7 +312,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
                gwvec(iref, iat, jat) = gwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
                gwdq(iref, iat, jat) = gwk * dzeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
-               
+
                dgwk = norm * (expd - expw * dnorm * norm)
                if (is_exceptional(dgwk) .or. norm == 0.0_wp) then
                   dgwk = 0.0_wp
@@ -320,7 +320,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                gwdcn(iref, iat, jat) = dgwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
             end do
 
-         end do 
+         end do
       end do
    else
 
@@ -351,7 +351,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
             else
                norm = 0.0_wp
             end if
-            
+
             do iref = 1, self%ref(izp)
                expw = 0.0_wp
                do igw = 1, self%ngw(iref, izp)
@@ -372,7 +372,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                gwvec(iref, iat, jat) = gwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
             end do
 
-         end do 
+         end do
       end do
    end if
 

@@ -15,12 +15,12 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_pairwise
+   use dftd4
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type
    use mstore, only : get_structure
-   use dftd4
    implicit none
    private
 

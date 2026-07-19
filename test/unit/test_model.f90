@@ -192,7 +192,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
          cn(iat) = cn(iat) + step
          gwdcn(:, :, :) = 0.5_wp*(gwr - gwl)/step
          numdcn(:, iat, :) = gwdcn(:, iat, :)
-         gwdcn(:, iat, :) = 0.0_wp 
+         gwdcn(:, iat, :) = 0.0_wp
          if (any(abs(gwdcn) > thr)) then
             call test_failed(error, "Unexpected non-zero gradient element found")
             exit
@@ -223,20 +223,20 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
 
    if (with_cn .and. any(abs(gwdcn - numdcn) > thr2)) then
       call test_failed(error, "Gaussian weights derivatives do not match")
-      print'(3es21.14)', gwdcn
+      print"(3es21.14)", gwdcn
       print'("---")'
-      print'(3es21.14)', numdcn
+      print"(3es21.14)", numdcn
       print'("---")'
-      print'(3es21.14)', gwdcn - numdcn
+      print"(3es21.14)", gwdcn - numdcn
    end if
 
    if (with_q .and. any(abs(gwdq - numdq) > thr2)) then
       call test_failed(error, "Gaussian weights derivatives do not match")
-      print'(3es21.14)', gwdq
+      print"(3es21.14)", gwdq
       print'("---")'
-      print'(3es21.14)', numdq
+      print"(3es21.14)", numdq
       print'("---")'
-      print'(3es21.14)', gwdq - numdq
+      print"(3es21.14)", gwdq - numdq
    end if
 
 end subroutine test_dgw_gen
@@ -391,20 +391,20 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
 
    if (with_cn .and. any(abs(alphadcn - numdcn) > thr2)) then
      call test_failed(error, "Gaussian weights derivatives do not match")
-     print'(3es21.14)', alphadcn
+     print"(3es21.14)", alphadcn
      print'("---")'
-     print'(3es21.14)', numdcn
+     print"(3es21.14)", numdcn
      print'("---")'
-     print'(3es21.14)', alphadcn - numdcn
+     print"(3es21.14)", alphadcn - numdcn
    end if
 
    if (with_q .and. any(abs(alphadq - numdq) > thr2)) then
       call test_failed(error, "Gaussian weights derivatives do not match")
-      print'(3es21.14)', alphadq
+      print"(3es21.14)", alphadq
       print'("---")'
-      print'(3es21.14)', numdq
+      print"(3es21.14)", numdq
       print'("---")'
-      print'(3es21.14)', alphadq - numdq
+      print"(3es21.14)", alphadq - numdq
    end if
 
 end subroutine test_dpol_gen
@@ -449,7 +449,7 @@ subroutine test_gw_d4_mb01(error)
 
    call get_structure(mol, "MB16-43", "01")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -896,7 +896,7 @@ subroutine test_gw_d4s_mb01(error)
 
    call get_structure(mol, "MB16-43", "01")
    call new_d4s_model(error, d4s, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -944,7 +944,7 @@ subroutine test_gw_d4_mb02(error)
 
    call get_structure(mol, "MB16-43", "02")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -992,7 +992,7 @@ subroutine test_gw_d4_eeqbc_mb02(error)
 
    call get_structure(mol, "MB16-43", "02")
    call new_d4_model(error, d4, mol, qmod=d4_qmod%eeqbc)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1051,7 +1051,7 @@ subroutine test_gw_d4_mb03(error)
 
    call get_structure(mol, "MB16-43", "03")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1070,7 +1070,7 @@ subroutine test_dgw_d4_mb04(error)
 
    call get_structure(mol, "MB16-43", "04")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1089,7 +1089,7 @@ subroutine test_dgw_d4s_mb04(error)
 
    call get_structure(mol, "MB16-43", "04")
    call new_d4s_model(error, d4s, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -1108,7 +1108,7 @@ subroutine test_dgw_d4_mb05(error)
 
    call get_structure(mol, "MB16-43", "05")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1126,7 +1126,7 @@ subroutine test_dgw_d4s_mb05(error)
 
    call get_structure(mol, "MB16-43", "05")
    call new_d4s_model(error, d4s, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -1145,7 +1145,7 @@ subroutine test_dgw_d4s_eeqbc_mb05(error)
 
    call get_structure(mol, "MB16-43", "05")
    call new_d4s_model(error, d4s, mol, qmod=d4_qmod%eeqbc)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -1164,7 +1164,7 @@ subroutine test_dgw_d4_mb06(error)
 
    call get_structure(mol, "MB16-43", "06")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1182,7 +1182,7 @@ subroutine test_dgw_d4s_mb06(error)
 
    call get_structure(mol, "MB16-43", "06")
    call new_d4s_model(error, d4s, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -1249,7 +1249,7 @@ subroutine test_gw_d4_mb07(error)
 
    call get_structure(mol, "MB16-43", "06")
    call new_d4_model(error, d4, mol, qmod=d4_qmod%gfn2)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1276,7 +1276,7 @@ subroutine test_dgw_d4_mb08(error)
 
    call get_structure(mol, "MB16-43", "08")
    call new_d4_model(error, d4, mol, qmod=d4_qmod%gfn2)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1302,7 +1302,7 @@ subroutine test_dgw_d4s_mb08(error)
 
    call get_structure(mol, "MB16-43", "08")
    call new_d4s_model(error, d4s, mol, qmod=d4_qmod%gfn2)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -1328,7 +1328,7 @@ subroutine test_pol_d4_mb09(error)
 
    call get_structure(mol, "MB16-43", "09")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1353,7 +1353,7 @@ subroutine test_pol_d4s_mb09(error)
 
    call get_structure(mol, "MB16-43", "09")
    call new_d4s_model(error, d4s, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -1371,7 +1371,7 @@ subroutine test_dpol_d4_mb10(error)
 
    call get_structure(mol, "MB16-43", "10")
    call new_d4_model(error, d4, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4 model could not be created")
       return
    end if
@@ -1389,7 +1389,7 @@ subroutine test_dpol_d4s_mb10(error)
 
    call get_structure(mol, "MB16-43", "10")
    call new_d4s_model(error, d4s, mol)
-   if (allocated(error)) then 
+   if (allocated(error)) then
       call test_failed(error, "D4S model could not be created")
       return
    end if
@@ -1414,7 +1414,7 @@ subroutine test_d4_model_error(error)
 
    call new(mol, sym, xyz)
    call new_d4_model(error, d4, mol)
-  
+
 end subroutine test_d4_model_error
 
 subroutine test_d4s_model_error(error)
@@ -1433,7 +1433,7 @@ subroutine test_d4s_model_error(error)
 
    call new(mol, sym, xyz)
    call new_d4s_model(error, d4s, mol)
-  
+
 end subroutine test_d4s_model_error
 
 subroutine test_model_wrapper(error)

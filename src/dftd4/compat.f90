@@ -14,14 +14,14 @@
 ! You should have received a copy of the Lesser GNU General Public License
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-!> This is a compatibility module for dftd4 2.5.0 reproducing enough of the old 
+!> This is a compatibility module for dftd4 2.5.0 reproducing enough of the old
 !> API to compile the interface with Vasp.
 module dftd4_compat
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use mctc_env, only : error_type, wp
-   use mctc_io_math, only : matdet_3x3, matinv_3x3
    use dftd4, only: structure_type, new, d4_model, new_d4_model, rational_damping_param, &
       & damping_param, get_rational_damping, get_dispersion, realspace_cutoff
+   use mctc_env, only : error_type, wp
+   use mctc_io_math, only : matdet_3x3, matinv_3x3
    implicit none
    private
 
@@ -39,7 +39,7 @@ module dftd4_compat
       logical :: lgradient
       logical :: lhessian
       integer :: print_level
-   end type
+   end type dftd_options
 
    type :: dftd_parameter
       real(wp) :: s6
@@ -48,16 +48,16 @@ module dftd4_compat
       real(wp) :: a1
       real(wp) :: a2
       real(wp) :: alp = 16.0_wp
-   end type
+   end type dftd_parameter
 
    type :: dftd_results
       real(wp), allocatable :: energy
       real(wp), allocatable :: gradient(:, :)
       real(wp), allocatable :: lattice_gradient(:, :)
-   end type
+   end type dftd_results
 
    type :: ws_cell
-   end type
+   end type ws_cell
 
    type :: molecule
       integer, allocatable :: at(:)
@@ -74,11 +74,11 @@ module dftd4_compat
       procedure :: allocate
       procedure :: wrap_back
       procedure :: calculate_distances
-   end type
+   end type molecule
 
    type :: mctc_logger
       logical :: sane = .true.
-   end type
+   end type mctc_logger
 
 contains
 
@@ -181,42 +181,52 @@ end module dftd4_compat
 
 subroutine generate_wsc(mol, wsc)
    use dftd4_compat, only : molecule, ws_cell
+   implicit none
    type(molecule), intent(inout) :: mol
    type(ws_cell), intent(inout) :: wsc
 end subroutine generate_wsc
 
 module class_set
    use dftd4_compat, only : dftd_options
+   implicit none
 end module class_set
 
 module class_param
    use dftd4_compat, only : dftd_parameter
+   implicit none
 end module class_param
 
 module class_molecule
    use dftd4_compat, only : molecule
+   implicit none
 end module class_molecule
 
 module class_results
    use dftd4_compat, only : dftd_results
+   implicit none
 end module class_results
 
 module class_wsc
    use dftd4_compat, only : ws_cell
+   implicit none
 end module class_wsc
 
 module mctc_environment
    use dftd4_compat, only : mctc_logger
+   implicit none
 end module mctc_environment
 
 module dispersion_calculator
    use dftd4_compat, only : d4_calculation
+   implicit none
 end module dispersion_calculator
 
 module pbc_tools
    use dftd4_compat, only: dlat_to_cell, dlat_to_dvol, dlat_to_rlat
+   implicit none
 end module pbc_tools
 
 module dfuncpar
    use dftd4_compat, only : d4par
+   implicit none
 end module dfuncpar

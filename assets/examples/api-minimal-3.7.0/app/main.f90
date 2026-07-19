@@ -1,10 +1,10 @@
 program demo
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use mctc_env, only : wp, error_type, fatal_error
-   use mctc_io, only : new, structure_type
    use dftd4, only : damping_param, get_rational_damping, &
       & get_dispersion, realspace_cutoff, &
       & d4_model, new_d4_model
+   use mctc_env, only : wp, error_type, fatal_error
+   use mctc_io, only : new, structure_type
    implicit none
 
    type(error_type), allocatable :: error
@@ -37,7 +37,7 @@ program demo
       error stop
    end if
 
-   write (*,'(a,f18.12)') "D4 dispersion energy (Hartree): ", energy
+   write (*,"(a,f18.12)") "D4 dispersion energy (Hartree): ", energy
 
 contains
 

@@ -17,11 +17,11 @@
 !> Definition of the command line interface
 module dftd4_cli
    use, intrinsic :: iso_fortran_env, only : output_unit
-   use mctc_env, only : error_type, fatal_error, get_argument, wp
-   use mctc_io, only : get_filetype
    use dftd4, only : rational_damping_param, get_dftd4_version
    use dftd4_argument, only : argument_list, len
    use dftd4_help, only : citation, header, help_text, help_text_param, help_text_run, license, prog_name, version
+   use mctc_env, only : error_type, fatal_error, get_argument, wp
+   use mctc_io, only : get_filetype
 
    implicit none
    private
@@ -87,7 +87,7 @@ subroutine get_arguments(config, error)
       call list%get(iarg, arg)
       select case(arg)
       case("-h", "--help")
-         write(output_unit, '(a)') help_text
+         write(output_unit, "(a)") help_text
          stop
       case("--version")
          call version(output_unit)
@@ -113,7 +113,7 @@ subroutine get_arguments(config, error)
    if (allocated(error)) return
 
    if (.not.allocated(config)) then
-      write(output_unit, '(a)') help_text
+      write(output_unit, "(a)") help_text
       call fatal_error(error, "Insufficient arguments provided")
       return
    end if
@@ -165,7 +165,7 @@ subroutine get_run_arguments(config, list, start, error)
       case("--")
          getopts = .false.
       case("-h", "--help")
-         write(output_unit, '(a)') help_text_run
+         write(output_unit, "(a)") help_text_run
          stop
       case("-v", "--verbose")
          config%verbosity = config%verbosity + 1
@@ -182,7 +182,7 @@ subroutine get_run_arguments(config, list, start, error)
             call fatal_error(error, "Too many positional arguments present")
          end if
          exit
-      case("-m", "--model") 
+      case("-m", "--model")
          iarg = iarg + 1
          call get_argument(iarg, arg)
          if (.not.allocated(arg)) then
@@ -304,7 +304,7 @@ subroutine get_run_arguments(config, list, start, error)
 
    if (.not.allocated(config%input)) then
       if (.not.allocated(error)) then
-         write(output_unit, '(a)') help_text
+         write(output_unit, "(a)") help_text
          error stop
       end if
    end if
@@ -336,12 +336,12 @@ subroutine get_param_arguments(config, list, start, error)
       call list%get(iarg, arg)
       select case(arg)
       case("--help")
-         write(output_unit, '(a)') help_text_param
+         write(output_unit, "(a)") help_text_param
          stop
       case("-l", "--list", "--funcs")
          config%list = .true.
       case default
-         write(output_unit, '(a)') help_text_param
+         write(output_unit, "(a)") help_text_param
          stop
       end select
    end do
@@ -349,7 +349,7 @@ subroutine get_param_arguments(config, list, start, error)
 
    ! check if anything was set
    if (.not.config%list) then
-      write(output_unit, '(a)') help_text
+      write(output_unit, "(a)") help_text
       call fatal_error(error, "No arguments provided")
    end if
 

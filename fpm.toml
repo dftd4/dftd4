@@ -24,3 +24,20 @@ mstore.tag = "v0.3.0"
 [[test]]
 name = "tester"
 source-dir = "test/unit"
+
+[extra.fortitude.check]
+ignore = [
+  "C002",  # interface without implicit none
+  "C003",  # implicit none(external)
+  "C011",  # no default in select case
+  "C061",  # missing intent attribute
+  "C071",  # assumed size
+  "C072",  # assumed size character intent
+  "C081",  # implicit save
+  "C101",  # pointer not initialized
+  "C121",  # use without explicit only
+  "C122",  # intrinsic missing for internal modules
+  "C131",  # default module accessibility
+  "C181",  # iostat not checked
+]
+line-length = 132

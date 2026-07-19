@@ -15,12 +15,12 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_periodic
+   use dftd4
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type
    use mstore, only : get_structure
-   use dftd4
    implicit none
    private
 
@@ -123,7 +123,7 @@ subroutine test_numgrad(error, mol, d4, param)
 
    if (any(abs(gradient - numgrad) > thr2)) then
       call test_failed(error, "Gradient of dispersion energy does not match")
-      print'(3es21.14)', gradient-numgrad
+      print"(3es21.14)", gradient-numgrad
    end if
 
 end subroutine test_numgrad
@@ -176,7 +176,7 @@ subroutine test_numsigma(error, mol, d4, param)
 
    if (any(abs(sigma - numsigma) > thr3)) then
       call test_failed(error, "Strain derivatives do not match")
-      print'(3es21.14)', sigma-numsigma
+      print"(3es21.14)", sigma-numsigma
    end if
 
 end subroutine test_numsigma
