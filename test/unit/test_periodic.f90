@@ -189,7 +189,7 @@ subroutine test_pbed4_acetic(error)
 
    type(structure_type) :: mol
    type(d4_model) :: d4
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp )
 
@@ -206,7 +206,7 @@ subroutine test_pbed4s_acetic(error)
 
    type(structure_type) :: mol
    type(d4s_model) :: d4s
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 0.95948085_wp, a1 = 0.38574991_wp, a2 = 4.80688534_wp )
 
@@ -224,7 +224,7 @@ subroutine test_blypd4_adaman(error)
 
    type(structure_type) :: mol
    type(d4_model) :: d4
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 2.34076671_wp, a1 = 0.44488865_wp, a2 = 4.09330090_wp )
 
@@ -241,7 +241,7 @@ subroutine test_blypd4s_adaman(error)
 
    type(structure_type) :: mol
    type(d4s_model) :: d4s
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 2.34076671_wp, a1 = 0.44488865_wp, a2 = 4.09330090_wp )
 
@@ -259,7 +259,7 @@ subroutine test_tpssd4_ammonia(error)
 
    type(structure_type) :: mol
    type(d4_model) :: d4
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
@@ -276,7 +276,7 @@ subroutine test_tpssd4s_ammonia(error)
 
    type(structure_type) :: mol
    type(d4s_model) :: d4s
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
@@ -294,7 +294,7 @@ subroutine test_tpssd4atm_ammonia(error)
 
    type(structure_type) :: mol
    type(d4_model) :: d4
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
@@ -311,7 +311,7 @@ subroutine test_tpssd4satm_ammonia(error)
 
    type(structure_type) :: mol
    type(d4s_model) :: d4s
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
       & s8 = 1.76596355_wp, a1 = 0.42822303_wp, a2 = 4.54257102_wp )
 
@@ -329,7 +329,7 @@ subroutine test_scand4_anthracene(error)
 
    type(structure_type) :: mol
    type(d4_model) :: d4
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 1.46126056_wp, a1 = 0.62930855_wp, a2 = 6.31284039_wp )
 
@@ -346,7 +346,7 @@ subroutine test_scand4s_anthracene(error)
 
    type(structure_type) :: mol
    type(d4s_model) :: d4s
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 16.0_wp, &
       & s8 = 1.46126056_wp, a1 = 0.62930855_wp, a2 = 6.31284039_wp )
 
