@@ -124,7 +124,7 @@ jobs:
 
     steps:
       # Set up Python to host 'cibuildwheel'
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.x"
 
