@@ -192,7 +192,8 @@ recursive subroutine get_response_file(self, resp, stat)
       end if
       call push_back(self, arg)
    end do
-   close(unit, iostat=stat)
+   close(unit, iostat=istat)
+   stat = istat
    if (info /= 0) then
       stat = merge(0, info, is_iostat_end(info))
    end if
@@ -207,7 +208,7 @@ subroutine getline(unit, line, iostat, iomsg)
    !> Status of operation
    integer, intent(out) :: iostat
    !> Error message
-   character(len=:), allocatable, optional :: iomsg
+   character(len=:), allocatable, optional, intent(out) :: iomsg
 
    integer, parameter :: bufsize = 512
    character(len=bufsize) :: buffer, msg

@@ -15,7 +15,9 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_periodic
-   use dftd4
+   use dftd4, only : d4_model, d4s_model, damping_param, dispersion_model, &
+      & get_dispersion, new_d4_model, new_d4s_model, rational_damping_param, &
+      & realspace_cutoff
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed

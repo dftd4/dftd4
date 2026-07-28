@@ -137,7 +137,7 @@ subroutine d4par(fname, param_, lmbd, env)
    character(len=*), intent(in) :: fname
    type(dftd_parameter), intent(out) :: param_
    integer, intent(in) :: lmbd
-   type(mctc_logger) :: env
+   type(mctc_logger), intent(inout) :: env
 
    class(damping_param), allocatable :: param
 
@@ -189,44 +189,53 @@ end subroutine generate_wsc
 module class_set
    use dftd4_compat, only : dftd_options
    implicit none
+   public
 end module class_set
 
 module class_param
    use dftd4_compat, only : dftd_parameter
    implicit none
+   public
 end module class_param
 
 module class_molecule
    use dftd4_compat, only : molecule
    implicit none
+   public
 end module class_molecule
 
 module class_results
    use dftd4_compat, only : dftd_results
    implicit none
+   public
 end module class_results
 
 module class_wsc
    use dftd4_compat, only : ws_cell
    implicit none
+   public
 end module class_wsc
 
 module mctc_environment
    use dftd4_compat, only : mctc_logger
    implicit none
+   public
 end module mctc_environment
 
 module dispersion_calculator
    use dftd4_compat, only : d4_calculation
    implicit none
+   public
 end module dispersion_calculator
 
 module pbc_tools
    use dftd4_compat, only: dlat_to_cell, dlat_to_dvol, dlat_to_rlat
    implicit none
+   public
 end module pbc_tools
 
 module dfuncpar
    use dftd4_compat, only : d4par
    implicit none
+   public
 end module dfuncpar

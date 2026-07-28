@@ -20,6 +20,8 @@
 !>{!./include/dftd4.h!}
 !>```
 module dftd4_api
+   use, intrinsic :: iso_c_binding, only : c_associated, c_bool, c_char, c_double, &
+      & c_f_pointer, c_int, c_loc, c_null_char, c_null_ptr, c_ptr
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
@@ -31,7 +33,6 @@ module dftd4_api
    use dftd4_param, only : get_rational_damping
    use dftd4_utils, only : wrap_to_central_cell
    use dftd4_version, only : get_dftd4_version
-   use iso_c_binding
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io_structure, only : structure_type, new
    implicit none

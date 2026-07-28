@@ -80,7 +80,7 @@ subroutine test_gw_gen(error, mol, d4, ref, with_cn, with_q, qat)
    type(error_type), allocatable, intent(out) :: error
 
    !> Molecular structure data
-   type(structure_type) :: mol
+   type(structure_type), intent(in) :: mol
 
    !> Dispersion model
    class(dispersion_model), intent(in) :: d4
@@ -138,7 +138,7 @@ subroutine test_dgw_gen(error, mol, d4, with_cn, with_q, qat)
    type(error_type), allocatable, intent(out) :: error
 
    !> Molecular structure data
-   type(structure_type) :: mol
+   type(structure_type), intent(in) :: mol
 
    !> Dispersion model
    class(dispersion_model), intent(in) :: d4
@@ -248,7 +248,7 @@ subroutine test_pol_gen(error, mol, d4, ref, with_cn, with_q, qat)
    type(error_type), allocatable, intent(out) :: error
 
    !> Molecular structure data
-   type(structure_type) :: mol
+   type(structure_type), intent(in) :: mol
 
    !> Dispersion model
    class(dispersion_model), intent(in) :: d4
@@ -311,7 +311,7 @@ subroutine test_dpol_gen(error, mol, d4, with_cn, with_q, qat)
    type(error_type), allocatable, intent(out) :: error
 
    !> Molecular structure data
-   type(structure_type) :: mol
+   type(structure_type), intent(in) :: mol
 
    !> Dispersion model
    class(dispersion_model), intent(in) :: d4

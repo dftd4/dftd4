@@ -29,14 +29,10 @@ source-dir = "test/unit"
 ignore = [
   "C002",  # interface without implicit none
   "C003",  # implicit none(external)
-  "C011",  # no default in select case
-  "C061",  # missing intent attribute
-  "C121",  # use without explicit only
-  "C122",  # intrinsic missing for internal modules
-  "C131",  # default module accessibility
-  "C181",  # iostat not checked
 ]
 per-file-ignores."src/dftd4/compat.f90" = ["C092"]
 per-file-ignores."src/dftd4/api.f90" = ["C071", "C072"]
 per-file-ignores."src/dftd4/blas.F90" = ["C071"]
+per-file-ignores."src/dftd4/disp.f90" = ["C061"]  # https://github.com/PlasmaFAIR/fortitude/issues/695
+per-file-ignores."assets/examples/*/app/main.f90" = ["C061"]  # https://github.com/PlasmaFAIR/fortitude/issues/695
 line-length = 132

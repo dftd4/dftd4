@@ -365,7 +365,7 @@ subroutine get_argument_as_real(iarg, val, error)
    real(wp), intent(out) :: val
 
    !> Error handling
-   type(error_type), allocatable :: error
+   type(error_type), allocatable, intent(out) :: error
 
    integer :: stat
    character(len=:), allocatable :: arg

@@ -22,6 +22,7 @@ module dftd4_damping_atm
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
+   private
 
    public :: get_atm_dispersion
 

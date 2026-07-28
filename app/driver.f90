@@ -23,7 +23,9 @@ module dftd4_driver
       & dispersion_model, new_dispersion_model, d4_qmod
    use dftd4_cli, only : cli_config, param_config, run_config
    use dftd4_help, only : header
-   use dftd4_output
+   use dftd4_output, only : ascii_atomic_radii, ascii_atomic_references, &
+      & ascii_damping_param, ascii_pairwise, ascii_results, ascii_system_properties, &
+      & json_results, tagged_result, turbomole_gradient, turbomole_gradlatt
    use dftd4_param, only : functional_group, get_functionals, &
       & get_functional_id, p_r2scan_3c
    use dftd4_utils, only : lowercase, wrap_to_central_cell

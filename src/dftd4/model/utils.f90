@@ -16,9 +16,10 @@
 
 !> Utility functions for the dispersion models
 module dftd4_model_utils
-   use ieee_arithmetic, only : ieee_is_nan
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
    use mctc_env, only : wp
    implicit none
+   private
 
    public :: is_exceptional, weight_cn, zeta, dzeta, trapzd
 

@@ -16,13 +16,15 @@
 
 !> Definition of the D4 dispersion model for the evaluation of C6 coefficients.
 module dftd4_model_d4
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_effective_charge, &
       get_electronegativity, get_hardness
    use dftd4_model_type, only : dispersion_model, d4_qmod
-   use dftd4_model_utils
-   use dftd4_reference
-   use ieee_arithmetic, only : ieee_is_nan
+   use dftd4_model_utils, only : dzeta, is_exceptional, trapzd, weight_cn, zeta
+   use dftd4_reference, only : get_nref, set_refalpha_eeq, set_refalpha_eeqbc, &
+      & set_refalpha_gfn2, set_refcn, set_refgw, set_refq_eeq, set_refq_eeqbc, &
+      & set_refq_gfn2
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi

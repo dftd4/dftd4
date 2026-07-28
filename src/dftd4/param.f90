@@ -324,6 +324,8 @@ subroutine get_d4eeq_bj_parameter(dfnum, param, s9)
    case(p_dftb_pbc)
       param = dftd_param( & ! (SAW191202)
          &  s6=1.0_wp, s8=1.7303734_wp, a1=0.5546548_wp, a2=4.7973454_wp)
+   case default
+      continue
    end select
 
 contains
@@ -794,6 +796,8 @@ subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
    case(p_wpr2scan50) ! (10.1063/5.0174988)
       param = dftd_param ( &
          & s6=0.8143_wp, s8=0.3842_wp, a1=0.4135_wp, a2=5.8773_wp)
+   case default
+      continue
    end select
 
 contains

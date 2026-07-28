@@ -15,8 +15,9 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_param
-   use dftd4
-   use dftd4_param
+   use dftd4, only : d4_model, damping_param, get_dispersion, &
+      & get_rational_damping, new_d4_model, rational_damping_param, realspace_cutoff
+   use dftd4_param, only : get_functional_id
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
