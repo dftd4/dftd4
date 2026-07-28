@@ -16,6 +16,6 @@
 """Python API of the dftd4 program package"""
 
 # make sure we have a CFFI available
-import cffi
+import cffi  # noqa
 
 __version__ = "4.2.0"

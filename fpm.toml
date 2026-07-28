@@ -24,3 +24,15 @@ mstore.tag = "v0.3.0"
 [[test]]
 name = "tester"
 source-dir = "test/unit"
+
+[extra.fortitude.check]
+ignore = [
+  "C002",  # interface without implicit none
+  "C003",  # implicit none(external)
+]
+per-file-ignores."src/dftd4/compat.f90" = ["C092"]
+per-file-ignores."src/dftd4/api.f90" = ["C071", "C072"]
+per-file-ignores."src/dftd4/blas.F90" = ["C071"]
+per-file-ignores."src/dftd4/disp.f90" = ["C061"]  # https://github.com/PlasmaFAIR/fortitude/issues/695
+per-file-ignores."assets/examples/*/app/main.f90" = ["C061"]  # https://github.com/PlasmaFAIR/fortitude/issues/695
+line-length = 132

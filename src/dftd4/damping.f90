@@ -19,6 +19,7 @@ module dftd4_damping
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
+   private
 
    public :: damping_param, dispersion_interface
 

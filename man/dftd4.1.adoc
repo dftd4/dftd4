@@ -86,7 +86,7 @@ Specify the functional to select the correct parameters.
      Show more, can be used multiple times
 
 *-s, --silent*::
-     Show less, use twice to supress all output
+     Show less, use twice to suppress all output
 
 *-h, --help*::
      Show this message

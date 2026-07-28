@@ -70,9 +70,7 @@ class DFTD4Dispersion(lib.StreamObject):
     array(-0.0050011)
     """
 
-    def __init__(
-        self, mol, xc: str = "hf", atm: bool = True, model: str = "d4"
-    ):
+    def __init__(self, mol, xc: str = "hf", atm: bool = True, model: str = "d4"):
         self.mol = mol
         self.verbose = mol.verbose
         self.xc = xc
@@ -239,7 +237,7 @@ def energy(mf, model: str = "d4"):
             self.with_dftd4.reset(mol)
             return mf.__class__.reset(self, mol)
 
-        def nuc_grad_method(self) -> "DFTD4Grad":
+        def nuc_grad_method(self):
             scf_grad = mf.__class__.nuc_grad_method(self)
             return grad(scf_grad)
 
@@ -295,7 +293,7 @@ def grad(mfgrad: GradientsBase):
 
     # Ensure that the zeroth order results include DFTD4 corrections
     if not getattr(mfgrad.base, "with_dftd4", None):
-        mfgrad.base = dftd4(mfgrad.base)
+        mfgrad.base = energy(mfgrad.base)
 
     class DFTD4Grad(_DFTD4Grad, mfgrad.__class__):
         """

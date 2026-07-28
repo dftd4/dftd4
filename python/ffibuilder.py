@@ -56,9 +56,7 @@ else:
         import pkgconfig
 
         if not pkgconfig.exists(library):
-            raise ModuleNotFoundError(
-                "Unable to find pkg-config package 'dftd4'"
-            )
+            raise ModuleNotFoundError("Unable to find pkg-config package 'dftd4'")
         if pkgconfig.installed(library, "< 4.0"):
             raise RuntimeError(
                 "Installed 'dftd4' version is too old, 4.0 or newer is required"

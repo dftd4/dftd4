@@ -114,13 +114,13 @@ pure subroutine smooth_cutoff(r, cutoff, width, sw, dswdr)
 end subroutine smooth_cutoff
 
 
-!> Generate lattice points from repeatitions
+!> Generate lattice points from repetitions
 subroutine get_lattice_points_rep_3d(lat, rep, origin, trans)
 
    !> Lattice vectors
    real(wp), intent(in) :: lat(:, :)
 
-   !> Repeatitions of lattice points to generate
+   !> Repetitions of lattice points to generate
    integer, intent(in) :: rep(:)
 
    !> Include the origin in the generated lattice points

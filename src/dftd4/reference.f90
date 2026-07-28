@@ -15,9 +15,9 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd4_reference
+   use dftd4_data, only : get_hardness, get_effective_charge
    use mctc_env, only : wp
    use mctc_io_symbols, only : to_number
-   use dftd4_data, only : get_hardness, get_effective_charge
    implicit none
    private
 
@@ -74,8 +74,8 @@ module dftd4_reference
    integer, parameter :: max_elem = 118
 
    integer, dimension(max_elem)      :: refn ! for D4
-   real(wp),dimension(7,max_elem)    :: refq ! GFN2-xTB charges 
-   real(wp),dimension(7,max_elem)    :: refh ! GFN2-xTB charges 
+   real(wp),dimension(7,max_elem)    :: refq ! GFN2-xTB charges
+   real(wp),dimension(7,max_elem)    :: refh ! GFN2-xTB charges
    real(wp),dimension(7,max_elem)    :: dftq,pbcq,gffq,clsq,eeqbcq !solq
    real(wp),dimension(7,max_elem)    :: dfth,pbch,gffh,clsh,eeqbch !solh
    real(wp),dimension(7,max_elem)    :: hcount
@@ -307,10 +307,10 @@ pure subroutine set_refq_eeqbc_num(q, num)
 end subroutine set_refq_eeqbc_num
 
 
-!> Set the reference polarizibility for an element symbol
+!> Set the reference polarizability for an element symbol
 pure subroutine set_refalpha_eeq_sym(alpha, ga, gc, sym)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -327,10 +327,10 @@ pure subroutine set_refalpha_eeq_sym(alpha, ga, gc, sym)
 end subroutine set_refalpha_eeq_sym
 
 
-!> Set the reference polarizibility for an atomic number
+!> Set the reference polarizability for an atomic number
 pure subroutine set_refalpha_eeq_num(alpha, ga, gc, num)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -365,10 +365,10 @@ pure subroutine set_refalpha_eeq_num(alpha, ga, gc, num)
 end subroutine set_refalpha_eeq_num
 
 
-!> Set the reference polarizibility for an element symbol
+!> Set the reference polarizability for an element symbol
 pure subroutine set_refalpha_gfn2_sym(alpha, ga, gc, sym)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -385,10 +385,10 @@ pure subroutine set_refalpha_gfn2_sym(alpha, ga, gc, sym)
 end subroutine set_refalpha_gfn2_sym
 
 
-!> Set the reference polarizibility for an atomic number
+!> Set the reference polarizability for an atomic number
 pure subroutine set_refalpha_gfn2_num(alpha, ga, gc, num)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -423,10 +423,10 @@ pure subroutine set_refalpha_gfn2_num(alpha, ga, gc, num)
 end subroutine set_refalpha_gfn2_num
 
 
-!> Set the reference polarizibility for an element symbol
+!> Set the reference polarizability for an element symbol
 pure subroutine set_refalpha_eeqbc_sym(alpha, ga, gc, sym)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -443,10 +443,10 @@ pure subroutine set_refalpha_eeqbc_sym(alpha, ga, gc, sym)
 end subroutine set_refalpha_eeqbc_sym
 
 
-!> Set the reference polarizibility for an atomic number
+!> Set the reference polarizability for an atomic number
 pure subroutine set_refalpha_eeqbc_num(alpha, ga, gc, num)
 
-   !> Reference polarizibility
+   !> Reference polarizability
    real(wp), intent(out) :: alpha(:, :)
 
    !> Maximum charge scaling height
@@ -495,7 +495,7 @@ elemental function zeta(a, c, qref, qmod)
       zeta = exp( a )
    else
       zeta = exp( a * ( 1.0_wp - exp( c * ( 1.0_wp - qref/qmod ) ) ) )
-   endif
+   end if
 
 end function zeta
 

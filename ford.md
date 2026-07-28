@@ -1,6 +1,6 @@
 ---
 project: DFT-D4
-symmary: Generally Applicable Atomic-Charge Dependent London Dispersion Correction
+summary: Generally Applicable Atomic-Charge Dependent London Dispersion Correction
 author: Grimme group Bonn
 src_dir: ./src
 include: ./include

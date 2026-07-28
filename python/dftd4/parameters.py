@@ -70,10 +70,8 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
     return data_file
 
 
-def _get_params(
-    entry: dict, base: dict, defaults: list, keep_meta=False
-) -> dict:
-    """Retrive the parameters from the data base, make sure the default
+def _get_params(entry: dict, base: dict, defaults: list, keep_meta=False) -> dict:
+    """Retrieve the parameters from the data base, make sure the default
     values are applied correctly in the process. In case we have multiple
     defaults search for the first of the list defined for this method."""
 
@@ -89,7 +87,7 @@ def _get_params(
         except KeyError:
             continue
 
-    raise KeyError("No entry for " + method + " in parameter data base")
+    raise KeyError("No entry in parameter data base")
 
 
 def get_damping_param(
@@ -102,7 +100,6 @@ def get_damping_param(
     global _data_base
 
     if _data_base is None:
-
         if data_file is None:
             data_file = get_data_file_name()
 
@@ -129,7 +126,6 @@ def get_all_damping_params(
     global _data_base
 
     if _data_base is None:
-
         if data_file is None:
             data_file = get_data_file_name()
 

@@ -16,7 +16,7 @@
 """Thin wrapper around the CFFI extension module.
 
 This module mainly acts as a guard for importing the libdftd4 extension and
-also provides some FFI based wappers for memory handling.
+also provides some FFI based wrappers for memory handling.
 
 To check for API compatibility use the provided wrapper around the API version
 getter.
@@ -129,9 +129,7 @@ def custom_d4_model(mol, ga, gc, wf):
 
 def custom_d4s_model(mol, ga, gc):
     """Create new dftd4 D4S dispersion model object"""
-    return ffi.gc(
-        error_check(lib.dftd4_custom_d4s_model)(mol, ga, gc), _delete_model
-    )
+    return ffi.gc(error_check(lib.dftd4_custom_d4s_model)(mol, ga, gc), _delete_model)
 
 
 def _delete_param(error) -> None:
@@ -157,9 +155,7 @@ def load_rational_damping(method, mbd):
     )
 
 
-def set_model_realspace_cutoff(
-    disp, disp2, disp3, cn, width2=0.0, width3=0.0
-) -> None:
+def set_model_realspace_cutoff(disp, disp2, disp3, cn, width2=0.0, width3=0.0) -> None:
     """Set the realspace cutoff for the dispersion model"""
     return error_check(lib.dftd4_set_model_realspace_cutoff_smooth)(
         disp, disp2, disp3, cn, width2, width3

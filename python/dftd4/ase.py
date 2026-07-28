@@ -123,22 +123,20 @@ Example
 {'realspace_cutoff': {}}
 """
 
-try:
-    import ase
-except ModuleNotFoundError:
-    raise ModuleNotFoundError("This submodule requires ASE installed")
-
 from typing import List, Optional
 
-from ase.atoms import Atoms
-from ase.calculators.calculator import (
-    CalculationFailed,
-    Calculator,
-    InputError,
-    all_changes,
-)
-from ase.calculators.mixing import SumCalculator
-from ase.units import Bohr, Hartree
+try:
+    from ase.atoms import Atoms
+    from ase.calculators.calculator import (
+        CalculationFailed,
+        Calculator,
+        InputError,
+        all_changes,
+    )
+    from ase.calculators.mixing import SumCalculator
+    from ase.units import Bohr, Hartree
+except ModuleNotFoundError as e:
+    raise ModuleNotFoundError("This submodule requires ASE installed") from e
 
 from .interface import DampingParam, DispersionModel
 
@@ -333,7 +331,7 @@ class DFTD4(Calculator):
         except RuntimeError:
             raise CalculationFailed("dftd4 could not evaluate input")
 
-        # These properties are garanteed to exist for all implemented calculators
+        # These properties are guaranteed to exist for all implemented calculators
         self.results["energy"] = _res.get("energy") * Hartree
         self.results["free_energy"] = self.results["energy"]
         self.results["forces"] = -_res.get("gradient") * Hartree / Bohr

@@ -1,9 +1,7 @@
-
-import sys, os.path as op
+import sys
+import os.path as op
 
 sys.path.insert(0, op.join(op.dirname(__file__), "..", "python"))
-
-import dftd4
 
 
 project = "DFT-D4"

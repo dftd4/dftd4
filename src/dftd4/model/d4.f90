@@ -16,13 +16,15 @@
 
 !> Definition of the D4 dispersion model for the evaluation of C6 coefficients.
 module dftd4_model_d4
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
-   use ieee_arithmetic, only : ieee_is_nan
-   use dftd4_model_type, only : dispersion_model, d4_qmod
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_effective_charge, &
       get_electronegativity, get_hardness
-   use dftd4_reference
-   use dftd4_model_utils
+   use dftd4_model_type, only : dispersion_model, d4_qmod
+   use dftd4_model_utils, only : dzeta, is_exceptional, trapzd, weight_cn, zeta
+   use dftd4_reference, only : get_nref, set_refalpha_eeq, set_refalpha_eeqbc, &
+      & set_refalpha_gfn2, set_refcn, set_refgw, set_refq_eeq, set_refq_eeqbc, &
+      & set_refq_gfn2
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
@@ -194,7 +196,7 @@ subroutine new_d4_model(error, d4, mol, ga, gc, wf, qmod)
          call set_refalpha_eeqbc(d4%aiw(:, :, isp), d4%ga, d4%gc, izp)
       end do
       ! Setup EEQBC model
-      call new_eeqbc2025_model(mol, d4%mchrg, error)  
+      call new_eeqbc2025_model(mol, d4%mchrg, error)
       if(allocated(error)) return
    case(d4_qmod%gfn2)
       do isp = 1, mol%nid
@@ -257,7 +259,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
    integer :: iat, izp, iref, igw
    real(wp) :: norm, dnorm, gw, expw, expd, gwk, dgwk, wf, zi, gi, maxcn
-   real(wp), parameter :: eps_norm = tiny(1._wp)**0.5_wp
+   real(wp), parameter :: eps_norm = tiny(1.0_wp)**0.5_wp
 
    if (present(gwdcn) .and. present(gwdq)) then
       gwvec(:, :, :) = 0.0_wp
@@ -297,7 +299,7 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
                expw = expw + gw
                expd = expd + 2*wf * (self%cn(iref, izp) - cn(iat)) * gw
             end do
-            
+
             gwk = expw * norm
             if (is_exceptional(gwk) .or. norm == 0.0_wp) then
                maxcn = maxval(self%cn(:self%ref(izp), izp))
@@ -310,11 +312,11 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 
             gwvec(iref, iat, 1) = gwk * zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
             gwdq(iref, iat, 1) = gwk * dzeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
-            
+
             ! This expression behaves differently for -O0 and -O3 optimization
-            ! levels for tiny norm values. It yields incorrect values for -O0 
+            ! levels for tiny norm values. It yields incorrect values for -O0
             ! due to fp underflow. These tiny values can occur if the CN is very
-            ! far from all reference CNs. To ensure consistent behavior, we set 
+            ! far from all reference CNs. To ensure consistent behavior, we set
             ! the norm to zero above.
             dgwk = norm * (expd - expw * dnorm * norm)
             if (is_exceptional(dgwk) .or. norm == 0.0_wp) then
@@ -494,10 +496,10 @@ subroutine get_polarizabilities(self, mol, gwvec, gwdcn, gwdq, alpha, dadcn, dad
    !> Static polarizabilities for all atoms.
    real(wp), intent(out) :: alpha(:)
 
-   !> Derivative of the polarizibility w.r.t. the coordination number
+   !> Derivative of the polarizability w.r.t. the coordination number
    real(wp), intent(out), optional :: dadcn(:)
 
-   !> Derivative of the polarizibility w.r.t. the partial charge
+   !> Derivative of the polarizability w.r.t. the partial charge
    real(wp), intent(out), optional :: dadq(:)
 
    integer :: iat, izp, iref

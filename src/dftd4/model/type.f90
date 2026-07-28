@@ -71,7 +71,7 @@ module dftd4_model_type
       real(wp), allocatable :: c6(:, :, :, :)
 
       !> Multicharge model
-      class(mchrg_model_type), allocatable :: mchrg 
+      class(mchrg_model_type), allocatable :: mchrg
 
    contains
 
@@ -106,7 +106,7 @@ module dftd4_model_type
          real(wp), intent(out), optional :: gwdcn(:, :, :)
          !> derivative of the weighting function w.r.t. the charge scaling: [nref, nat, ncoup]
          real(wp), intent(out), optional :: gwdq(:, :, :)
-      end subroutine 
+      end subroutine weight_references
 
       !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
       !> the coordination numbers and atomic partial charges.
@@ -146,11 +146,11 @@ module dftd4_model_type
          real(wp), intent(in), optional :: gwdq(:, :, :)
          !> Static polarizabilities for all atoms.
          real(wp), intent(out) :: alpha(:)
-         !> Derivative of the polarizibility w.r.t. the coordination number
+         !> Derivative of the polarizability w.r.t. the coordination number
          real(wp), intent(out), optional :: dadcn(:)
-         !> Derivative of the polarizibility w.r.t. the partial charge
+         !> Derivative of the polarizability w.r.t. the partial charge
          real(wp), intent(out), optional :: dadq(:)
-      end subroutine
+      end subroutine get_polarizabilities
 
    end interface
 
@@ -164,7 +164,7 @@ module dftd4_model_type
       !> GFN2-xTB Mulliken partial charges
       integer :: gfn2 = 2
 
-      !> Bond-Capcity Electronegativity equilibration charges
+      !> Bond-Capacity Electronegativity equilibration charges
       integer :: eeqbc = 3
 
    end type enum_qmod

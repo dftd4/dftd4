@@ -18,6 +18,7 @@ module dftd4_utils
    use mctc_env, only : wp
    use mctc_io_math, only : matinv_3x3
    implicit none
+   private
 
    public :: lowercase, wrap_to_central_cell
 
@@ -52,12 +53,15 @@ elemental function shift_back_abc(in) result(out)
    real(wp) :: out
    real(wp),parameter :: p_pbc_eps = 1.0e-14_wp
    out = in
-   if(in < (0.0_wp - p_pbc_eps)) &
-      out = in + real(ceiling(-in),wp)
-   if(in > (1.0_wp + p_pbc_eps)) &
-      out = in - real(floor  ( in),wp)
-   if (abs(in - 1.0_wp) < p_pbc_eps) &
-      out = in - 1.0_wp
+   if(in < (0.0_wp - p_pbc_eps)) then
+     out = in + real(ceiling(-in),wp)
+   end if
+   if(in > (1.0_wp + p_pbc_eps)) then
+     out = in - real(floor  ( in),wp)
+   end if
+   if (abs(in - 1.0_wp) < p_pbc_eps) then
+     out = in - 1.0_wp
+   end if
 end function shift_back_abc
 
 
@@ -68,7 +72,7 @@ pure function lowercase(str) result(lcstr)
    integer :: ilen, ioffset, iquote, i, iav, iqc
 
    ilen=len_trim(str)
-   ioffset=iachar('A')-iachar('a')
+   ioffset=iachar("A")-iachar("a")
    iquote=0
    lcstr=str
    do i=1, ilen
@@ -77,18 +81,18 @@ pure function lowercase(str) result(lcstr)
          iquote=1
          iqc=iav
         cycle
-      endif
+      end if
       if(iquote==1 .and. iav==iqc) then
          iquote=0
          cycle
-      endif
+      end if
       if (iquote==1) cycle
-      if(iav >= iachar('A') .and. iav <= iachar('Z')) then
+      if(iav >= iachar("A") .and. iav <= iachar("Z")) then
          lcstr(i:i)=achar(iav-ioffset)
       else
          lcstr(i:i)=str(i:i)
-      endif
-   enddo
+      end if
+   end do
 
 end function lowercase
 

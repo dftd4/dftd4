@@ -53,9 +53,7 @@ def test_ase_scand4() -> None:
     atoms = molecule("methylenecyclopropane")
     atoms.calc = DFTD4(method="SCAN")
 
-    assert (
-        approx(atoms.get_potential_energy(), abs=thr) == -0.021665446836610567
-    )
+    assert approx(atoms.get_potential_energy(), abs=thr) == -0.021665446836610567
     assert approx(atoms.get_forces(), abs=thr) == forces
 
     atoms.calc = DFTD4(method="SCAN").add_calculator(EMT())

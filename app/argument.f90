@@ -79,7 +79,7 @@ module dftd4_argument
       end subroutine get_argument_interface
    end interface
 
-   !> Token identifyin response files
+   !> Token identifying response files
    character(len=*), parameter :: response_token = "@"
 
    !> Initial size for the resizer of the argument list
@@ -169,7 +169,7 @@ recursive subroutine get_response_file(self, resp, stat)
    class(argument_list), intent(inout) :: self
    !> Name of the response file to be appended
    character(len=*), intent(in) :: resp
-   !> Status of reading the reponse file
+   !> Status of reading the response file
    integer, intent(out) :: stat
 
    integer :: unit, info, istat
@@ -182,7 +182,7 @@ recursive subroutine get_response_file(self, resp, stat)
       return
    end if
 
-   open(file=resp, unit=unit, iostat=info, status='old', action='read')
+   open(file=resp, unit=unit, iostat=info, status="old", action="read")
    do while(info == 0)
       call getline(unit, arg, info)
       if (info /= 0) exit
@@ -192,7 +192,8 @@ recursive subroutine get_response_file(self, resp, stat)
       end if
       call push_back(self, arg)
    end do
-   close(unit, iostat=stat)
+   close(unit, iostat=istat)
+   stat = istat
    if (info /= 0) then
       stat = merge(0, info, is_iostat_end(info))
    end if
@@ -207,7 +208,7 @@ subroutine getline(unit, line, iostat, iomsg)
    !> Status of operation
    integer, intent(out) :: iostat
    !> Error message
-   character(len=:), allocatable, optional :: iomsg
+   character(len=:), allocatable, optional, intent(out) :: iomsg
 
    integer, parameter :: bufsize = 512
    character(len=bufsize) :: buffer, msg
@@ -216,7 +217,7 @@ subroutine getline(unit, line, iostat, iomsg)
 
    allocate(character(len=0) :: line)
    do
-      read(unit, '(a)', advance='no', iostat=stat, iomsg=msg, size=size) &
+      read(unit, "(a)", advance="no", iostat=stat, iomsg=msg, size=size) &
          & buffer
       if (stat > 0) exit
       line = line // buffer(:size)
@@ -330,12 +331,12 @@ subroutine get_default_argument(idx, arg)
    call get_command_argument(idx, length=length, status=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    allocate(character(len=length) :: arg, stat=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    if (length > 0) then
       call get_command_argument(idx, arg, status=stat)

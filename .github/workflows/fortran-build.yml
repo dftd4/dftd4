@@ -124,11 +124,11 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_V }}
 
@@ -214,7 +214,7 @@ jobs:
       - name: Cache Intel install
         if: ${{ matrix.compiler == 'intel' }}
         id: cache-install
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /opt/intel/oneapi
           key: install-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}
@@ -253,6 +253,7 @@ jobs:
           --prefix=$PWD/_dist
           --libdir=lib
           --warnlevel=0
+          -Dopenmp=false
           -Db_coverage=$COVERAGE
           $MESON_ARGS
         env:
@@ -326,9 +327,17 @@ jobs:
         env:
           OMP_NUM_THREADS: 1,2,1
 
+      # Use gcovr for more control instead of `ninja -C $BUILD_DIR coverage`.
+      # Option `--include-internal-functions` required to cover mangled Fortran
+      # symbols (e.g., `__dftd4_damping_rational_MOD_get_dispersion2`). 
       - name: Create coverage report
         if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
-        run: ninja -C $BUILD_DIR coverage
+        run: |
+          gcovr $BUILD_DIR \
+            --root . \
+            --include-internal-functions \
+            -e "subprojects/" -e "test/" \
+            -x -o coverage.xml
         env:
           BUILD_DIR: ${{ env.BUILD_DIR }}
 
@@ -370,8 +379,11 @@ jobs:
 
       - name: Upload coverage report
         if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
+          fail_ci_if_error: false
+          files: coverage.xml
+          flags: fortran
           token: ${{ secrets.CODECOV_TOKEN }}
 
   python:
@@ -400,11 +412,11 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python_v }}
 
@@ -480,6 +492,22 @@ jobs:
       - run: pip3 install coverage
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.x'
+
+    - name: Install pre-commit
+      run: pip install pre-commit
+
+    - name: Run pre-commit checks
+      run: pre-commit run -a
