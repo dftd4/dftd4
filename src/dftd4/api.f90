@@ -55,7 +55,7 @@ module dftd4_api
    public :: new_rational_damping_api , load_rational_damping_api
    public :: delete_param_api
 
-   public :: get_dispersion_api, get_pairwise_dispersion_api, get_properties_api
+   public :: get_dispersion_api, get_pairwise_dispersion_api, get_properties_api, get_numerical_hessian_api
 
    !> Namespace for C routines
    character(len=*), parameter :: namespace = "dftd4_"
