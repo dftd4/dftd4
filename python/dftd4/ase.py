@@ -110,7 +110,7 @@ To set values in Bohr, e.g. to match the default values, use the ASE units modul
 for converting them. By multiplying with Bohr the values are converted to Angstrom.
 An empty dict will reset the cutoff values to the library defaults.
 The smooth cutoff widths are optional but highly recommended to avoid discontinuities
-especially for small cutoff values or periodic systems.
+especially for small cutoff values or periodic systems (recommended are 0.05 Bohr).
 
 Example
 -------
