@@ -154,6 +154,17 @@ Alternatively, this project can be build with CMake (in this case ninja 1.10 or 
 cmake -B _build -G Ninja -DCMAKE_INSTALL_PREFIX=$HOME/.local
 ```
 
+The Python extension can be enabled with
+
+```sh
+cmake -B _build -G Ninja \
+  -DDFTD4_WITH_PYTHON=ON \
+  -DPython3_EXECUTABLE=$(which python3)
+```
+
+Building the Python extension requires CMake 3.18 or newer and the Python
+`cffi` and `setuptools` packages.
+
 To compile the project with CMake run
 
 ```
@@ -171,9 +182,6 @@ Finally, you can install the project to the selected prefix
 ```
 cmake --install _build
 ```
-
-Note that the CMake build does not support to build the Python extension module as part of the main build.
-
 
 #### Building with fpm
 
@@ -414,10 +422,18 @@ For convenience the type-generic macro ``dftd4_delete`` is available to free any
 
 The Python API is disabled by default and can be built in-tree or out-of-tree.
 The in-tree build is mainly meant for end users and packages.
-To build the Python API with the normal project set the `python` option in the configuration step with
+To build the Python API with Meson, set the `python` option in the configuration step with
 
 ```sh
 meson setup _build -Dpython=true -Dpython_version=$(which python3)
+```
+
+With CMake, use
+
+```sh
+cmake -B _build -G Ninja \
+  -DDFTD4_WITH_PYTHON=ON \
+  -DPython3_EXECUTABLE=$(which python3)
 ```
 
 The Python version can be used to select a different Python version, it defaults to `'python3'`.

@@ -115,6 +115,14 @@ add_subdirectory("app")
 add_library("${PROJECT_NAME}" INTERFACE)
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
+
+if(DFTD4_WITH_PYTHON)
+  if(NOT DFTD4_WITH_API)
+    message(FATAL_ERROR "DFTD4_WITH_PYTHON requires DFTD4_WITH_API")
+  endif()
+  add_subdirectory("python")
+endif()
+
 install(
   TARGETS
   "${PROJECT_NAME}"

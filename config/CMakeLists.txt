@@ -32,6 +32,7 @@ option(DFTD4_WITH_API "Enable support for C API via iso_c_binding module" ${WITH
 option(DFTD4_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
 option(DFTD4_WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" ${WITH_ILP64})
 option(DFTD4_WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" ${WITH_API_V2})
+option(DFTD4_WITH_PYTHON "Build the Python extension module" FALSE)
 set(DFTD4_USE_MULTICHARGE TRUE)
 set(DFTD4_USE_MCTCLIB TRUE)
 if(NOT DEFINED "${PROJECT_NAME}-dependency-method")

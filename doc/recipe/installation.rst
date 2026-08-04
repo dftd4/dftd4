@@ -153,6 +153,10 @@ Configure the CMake build with
 
    cmake -B_build -GNinja -DCMAKE_INSTALL_PREFIX=/path/to/installation
 
+The Python extension can be enabled with CMake 3.18 or newer by adding
+``-DDFTD4_WITH_PYTHON=ON`` and selecting the interpreter with
+``-DPython3_EXECUTABLE=/path/to/python3``.
+
 Similar to meson the compiler can be selected with the ``FC`` environment variable.
 You can build the project using
 
