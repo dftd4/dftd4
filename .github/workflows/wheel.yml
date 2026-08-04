@@ -58,6 +58,8 @@ jobs:
           retention-days: 5
 
   sdist:
+    needs:
+      - source
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -67,6 +69,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+
+      - name: Download source distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: dftd4-source
 
       - name: Install LAPACK
         run: |
@@ -90,13 +97,17 @@ jobs:
         run: |
           git config user.email ""
           git config user.name "dummy"
-          git subtree add --prefix python/subprojects/dftd4 . HEAD
+          mkdir -p python/subprojects/dftd4
+          tar -xJf dftd4-*.tar.xz \
+            --strip-components=1 \
+            -C python/subprojects/dftd4
+          git add --force python/subprojects/dftd4
           git mv {assets,python/dftd4}/parameters.toml
           git commit -m "Python dist"
 
       - name: Build source distribution
         run: |
-          python -m build python/ --sdist --outdir . -n -Cdist-args="--include-subprojects"
+          python -m build python/ --sdist --outdir . -n
 
       - name: Upload source distribution as artifact
         uses: actions/upload-artifact@v7
