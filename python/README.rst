@@ -245,8 +245,10 @@ Now you are ready to use ``dftd4``, check if you can import it with
 Building the extension module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To perform an out-of-tree build some version of ``dftd4`` has to be available on your system and preferably findable by ``pkg-config``.
-Try to find a ``dftd4`` installation you build against first with
+The released Python source distribution bundles the native ``dftd4`` sources.
+When building directly from the repository, an installed ``dftd4`` must be
+available through CMake or ``pkg-config``, depending on the selected build
+system. Try to find the installation first with
 
 .. code:: sh
 
@@ -291,6 +293,22 @@ If you already have a ``dftd4`` installation, *e.g.* from conda-forge, you can b
 .. code:: sh
 
    pip install "https://github.com/dftd4/dftd4/archive/refs/heads/main#egg=dftd4-python&subdirectory=python"
+
+
+Using CMake
+^^^^^^^^^^^
+
+This directory contains a standalone CMake build for the CFFI extension.
+It first looks for an installed ``dftd4`` CMake package and then for a bundled
+``subprojects/dftd4`` source tree, as provided by the Python source distribution.
+It requires CMake 3.18 or newer and Python 3.7 or newer with ``cffi`` and
+``setuptools`` installed.
+
+.. code:: sh
+
+   cmake -S . -B _build -G Ninja -DPython3_EXECUTABLE=$(which python3)
+   cmake --build _build
+   cmake --install _build --prefix=/path/to/install --component python
 
 
 
