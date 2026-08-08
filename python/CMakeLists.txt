@@ -16,6 +16,8 @@
 
 cmake_minimum_required(VERSION 3.18)
 
+include(GNUInstallDirs)
+
 set(_dftd4_python_standalone FALSE)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(_dftd4_python_standalone TRUE)
@@ -140,13 +142,15 @@ endif()
 
 execute_process(
   COMMAND
-  "${Python3_EXECUTABLE}"
-  -c
-  "import sysconfig; print(sysconfig.get_path('platlib', vars={'base': '', 'platbase': ''}).lstrip('/'))"
+    "${Python3_EXECUTABLE}"
+    -c
+    "import sysconfig, sys; print(sysconfig.get_path('platlib', vars={'base': '', 'platbase': '', 'platlibdir': sys.argv[1]}).lstrip('/'))"
+    "${CMAKE_INSTALL_LIBDIR}"
   OUTPUT_VARIABLE _dftd4_python_install_root
   OUTPUT_STRIP_TRAILING_WHITESPACE
   RESULT_VARIABLE _dftd4_sysconfig_status
 )
+
 if(NOT _dftd4_sysconfig_status EQUAL 0)
   message(FATAL_ERROR "Could not determine the Python platform-library directory")
 endif()
