@@ -23,29 +23,42 @@ import sys
 
 def quote(value: str) -> str:
     """Quote one TOML fragment as a Fortran character literal."""
-    return "'" + value.replace("'", "''") + "'"
+    return '"' + value.replace('"', '""') + '"'
 
 
 def write_module(source: Path, target: Path) -> None:
     lines = source.read_text(encoding="utf-8").splitlines()
-    escaped_lines = [line.replace("'", "''") for line in lines]
-    max_line_length = max((len(line) for line in escaped_lines), default=0)
+    max_line_length = max((len(line) for line in lines), default=0)
     with target.open("w", encoding="utf-8", newline="\n") as output:
         output.write("! This file is part of dftd4.\n")
         output.write("! SPDX-Identifier: LGPL-3.0-or-later\n")
         output.write("!\n")
-        output.write("! dftd4 is free software: you can redistribute it and/or modify it under\n")
-        output.write("! the terms of the Lesser GNU General Public License as published by\n")
-        output.write("! the Free Software Foundation, either version 3 of the License, or\n")
+        output.write(
+            "! dftd4 is free software: you can redistribute it and/or modify it under\n"
+        )
+        output.write(
+            "! the terms of the Lesser GNU General Public License as published by\n"
+        )
+        output.write(
+            "! the Free Software Foundation, either version 3 of the License, or\n"
+        )
         output.write("! (at your option) any later version.\n")
         output.write("!\n")
         output.write("! dftd4 is distributed in the hope that it will be useful,\n")
-        output.write("! but WITHOUT ANY WARRANTY; without even the implied warranty of\n")
-        output.write("! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n")
+        output.write(
+            "! but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+        )
+        output.write(
+            "! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+        )
         output.write("! Lesser GNU General Public License for more details.\n")
         output.write("!\n")
-        output.write("! You should have received a copy of the GNU Lesser General Public License\n")
-        output.write("! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.\n")
+        output.write(
+            "! You should have received a copy of the GNU Lesser General Public License\n"
+        )
+        output.write(
+            "! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.\n"
+        )
         output.write("!\n")
         output.write("! Generated from assets/parameters.toml; do not edit directly.\n")
         output.write("module dftd4_parameters\n")
@@ -56,11 +69,15 @@ def write_module(source: Path, target: Path) -> None:
         output.write("\n")
         output.write(f"   integer, parameter :: nlines = {len(lines)}\n")
         output.write(f"   integer, parameter :: max_line_length = {max_line_length}\n")
-        output.write("   character(len=max_line_length), parameter :: embedded_parameters(nlines) = [ &\n")
+        output.write(
+            "   character(len=max_line_length), parameter :: embedded_parameters(nlines) = [ &\n"
+        )
         output.write("      & character(len=max_line_length) :: &\n")
 
-        for index, escaped in enumerate(escaped_lines):
-            fragments = [escaped[pos:pos + 96] for pos in range(0, len(escaped), 96)] or [""]
+        for index, line in enumerate(lines):
+            fragments = [line[pos : pos + 96] for pos in range(0, len(line), 96)] or [
+                ""
+            ]
             for fragment_index, fragment in enumerate(fragments):
                 last_fragment = fragment_index == len(fragments) - 1
                 output.write(f"      & {quote(fragment)}")
@@ -82,11 +99,13 @@ def write_module(source: Path, target: Path) -> None:
         output.write("   do i = 1, nlines\n")
         output.write("      line_length = len_trim(embedded_parameters(i))\n")
         output.write("      if (line_length > 0) then\n")
-        output.write("         string(position:position + line_length - 1) = embedded_parameters(i)(:line_length)\n")
+        output.write(
+            "         string(position:position + line_length - 1) = embedded_parameters(i)(:line_length)\n"
+        )
         output.write("         position = position + line_length\n")
         output.write("      end if\n")
         output.write("      if (i < nlines) then\n")
-        output.write("         string(position:position) = new_line(\"a\")\n")
+        output.write('         string(position:position) = new_line("a")\n')
         output.write("         position = position + 1\n")
         output.write("      end if\n")
         output.write("   end do\n")

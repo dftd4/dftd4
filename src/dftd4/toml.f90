@@ -16,8 +16,8 @@
 
 !> TOML-backed database for DFT-D4 damping parameters.
 module dftd4_toml
-   use dftd4_damping_rational, only : rational_damping_param
    use dftd4_damping, only : damping_param
+   use dftd4_damping_rational, only : rational_damping_param
    use mctc_env, only : error_type, fatal_error
    use tomlf, only : toml_array, toml_error, toml_key, toml_parse, toml_table, &
       & get_value, len
@@ -334,6 +334,8 @@ subroutine get(self, param, method, scheme)
             tmp = record%param
             call move_alloc(tmp, param)
          end block
+      case default
+         return
       end select
    end associate
 end subroutine get

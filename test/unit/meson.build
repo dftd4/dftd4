@@ -51,7 +51,7 @@ tester = executable(
 
 foreach t : tests
   if t == 'param'
-    parameter_file = meson.project_source_dir() / 'assets' / 'parameters.toml'
+    parameter_file = meson.project_source_root() / 'assets' / 'parameters.toml'
     test(
       t,
       tester,
