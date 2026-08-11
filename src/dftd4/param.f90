@@ -69,8 +69,13 @@ module dftd4_param
       module procedure :: get_rational_damping_id
    end interface get_rational_damping
 
-   type(param_database), save :: database
-   logical, save :: database_ready = .false.
+   ! The database state is protected by the named OpenMP critical section below.
+   type(param_database) :: database
+   logical :: database_ready = .false.
+   ! Do not retry an implicit load after it has failed.
+   logical :: database_attempted = .false.
+   ! An explicit load suppresses the embedded fallback, including on failure.
+   logical :: database_overridden = .false.
 
 contains
 
@@ -310,26 +315,29 @@ subroutine load_rational_damping(method, param, s9)
    integer :: id, ii
 
    call ensure_database()
-   if (.not.database_ready) return
 
-   call query(method)
-   if (.not.allocated(param)) then
-      id = get_functional_id(method)
-      if (id > p_invalid .and. id < p_last) then
-         call get_functionals(funcs)
-         do ii = 1, size(funcs(id)%names)
-            call query(funcs(id)%names(ii))
-            if (allocated(param)) exit
-         end do
+   !$omp critical(dftd4_parameter_database)
+   if (database_ready) then
+      call query(method)
+      if (.not.allocated(param)) then
+         id = get_functional_id(method)
+         if (id > p_invalid .and. id < p_last) then
+            call get_functionals(funcs)
+            do ii = 1, size(funcs(id)%names)
+               call query(funcs(id)%names(ii))
+               if (allocated(param)) exit
+            end do
+         end if
+      end if
+
+      if (allocated(param) .and. present(s9)) then
+         select type(param)
+         type is(rational_damping_param)
+            param%s9 = s9
+         end select
       end if
    end if
-
-   if (allocated(param) .and. present(s9)) then
-      select type(param)
-      type is(rational_damping_param)
-         param%s9 = s9
-      end select
-   end if
+   !$omp end critical(dftd4_parameter_database)
 
 contains
 
@@ -359,9 +367,13 @@ subroutine load_parameters(file, error)
    !> Error handling.
    type(error_type), allocatable, intent(out) :: error
 
+   !$omp critical(dftd4_parameter_database)
    database_ready = .false.
+   database_attempted = .true.
+   database_overridden = .true.
    call database%load(file, error)
    database_ready = .not.allocated(error)
+   !$omp end critical(dftd4_parameter_database)
 end subroutine load_parameters
 
 
@@ -369,10 +381,13 @@ end subroutine load_parameters
 subroutine ensure_database()
    type(error_type), allocatable :: error
 
-   if (database_ready) return
-
-   call database%load_from_string(get_embedded_parameters(), error)
-   database_ready = .not.allocated(error)
+   !$omp critical(dftd4_parameter_database)
+   if (.not.database_attempted .and. .not.database_overridden) then
+      call database%load_from_string(get_embedded_parameters(), error)
+      database_attempted = .true.
+      database_ready = .not.allocated(error)
+   end if
+   !$omp end critical(dftd4_parameter_database)
 end subroutine ensure_database
 
 

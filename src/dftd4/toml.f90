@@ -73,8 +73,9 @@ subroutine load_from_file(self, file, error)
    !> Error handling.
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: unit
+   integer :: unit, stat
    logical :: exist
+   character(len=256) :: iomsg
 
    inquire(file=file, exist=exist)
    if (.not.exist) then
@@ -82,9 +83,20 @@ subroutine load_from_file(self, file, error)
       return
    end if
 
-   open(file=file, newunit=unit, status="old", action="read")
+   open(file=file, newunit=unit, status="old", action="read", iostat=stat, iomsg=iomsg)
+   if (stat /= 0) then
+      call fatal_error(error, "Could not open parameter file '"//trim(file)//"': "//trim(iomsg))
+      return
+   end if
    call self%load(unit, error)
-   close(unit)
+   close(unit, iostat=stat, iomsg=iomsg)
+   if (stat /= 0) then
+      if (allocated(error)) then
+         error%message = trim(error%message)//"; could not close parameter file '"//trim(file)//"': "//trim(iomsg)
+      else
+         call fatal_error(error, "Could not close parameter file '"//trim(file)//"': "//trim(iomsg))
+      end if
+   end if
 end subroutine load_from_file
 
 

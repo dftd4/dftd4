@@ -46,7 +46,8 @@ subroutine collect_param(testsuite)
    testsuite = [ &
       & new_unittest("rational-damping", test_rational_damping), &
       & new_unittest("toml-parameters", test_toml_parameters), &
-      & new_unittest("libxc-names", test_libxc_names) &
+      & new_unittest("libxc-names", test_libxc_names), &
+      & new_unittest("failed-parameter-load", test_failed_parameter_load) &
       & ]
 
 end subroutine collect_param
@@ -211,6 +212,41 @@ subroutine test_toml_parameters(error)
    end select
 
 end subroutine test_toml_parameters
+
+
+subroutine test_failed_parameter_load(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   class(damping_param), allocatable :: param
+   character(len=4096) :: file
+   logical :: failed
+   integer :: length, status
+
+   failed = .false.
+   call load_parameters("missing-parameters.toml", error)
+   if (.not.allocated(error)) then
+      failed = .true.
+   else
+      deallocate(error)
+      call get_rational_damping("pbe", param)
+      if (allocated(param)) failed = .true.
+   end if
+
+   call get_environment_variable("DFTD4_PARAMETER_FILE", file, length=length, status=status)
+   if (status /= 0 .or. length == 0) then
+      file = "assets/parameters.toml"
+      length = len_trim(file)
+   end if
+   call load_parameters(file(:length), error)
+   if (allocated(error)) return
+
+   if (failed) then
+      call test_failed(error, "Failed parameter loads must not fall back to defaults")
+   end if
+
+end subroutine test_failed_parameter_load
 
 
 subroutine test_libxc_names(error)
