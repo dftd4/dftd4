@@ -111,6 +111,7 @@ if install
     'DFTD4_WITH_ILP64': get_option('ilp64') ? 'ON' : 'OFF',
     'DFTD4_USE_MCTCLIB': mctc_dep.type_name() != 'internal' ? 'ON' : 'OFF',
     'DFTD4_USE_MULTICHARGE': multicharge_dep.type_name() != 'internal' ? 'ON' : 'OFF',
+    'DFTD4_USE_TOMLF': tomlf_dep.type_name() != 'internal' ? 'ON' : 'OFF',
     'module-dir': module_id,
   })
   cmake_files = [
@@ -129,6 +130,7 @@ if install
     files('config'/'cmake'/'Findmctc-lib.cmake'),
     files('config'/'cmake'/'Findmstore.cmake'),
     files('config'/'cmake'/'Findmulticharge.cmake'),
+    files('config'/'cmake'/'Findtoml-f.cmake'),
     files('config'/'cmake'/'dftd4-utils.cmake'),
   ]
   install_data(

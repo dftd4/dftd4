@@ -53,10 +53,14 @@ endif()
 if(NOT TARGET "multicharge::multicharge")
   find_package("multicharge")
 endif()
+if(NOT TARGET "toml-f::toml-f")
+  find_package("toml-f")
+endif()
 set(
   lib-deps
   "mctc-lib::mctc-lib"
   "multicharge::multicharge"
+  "toml-f::toml-f"
 )
 
 # Collect source of the project
