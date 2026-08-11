@@ -30,6 +30,7 @@ srcs += files(
   'output.f90',
   'param.f90',
   'reference.f90',
+  'toml.f90',
   'utils.f90',
   'version.f90',
 )
