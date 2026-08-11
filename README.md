@@ -302,7 +302,7 @@ reference.doi = ["<functional reference>"]
 d4.bj-eeq-atm = { s8=1.0, a1=0.4, a2=5.0, doi="<parameter reference>" }
 ```
 
-Those parameters are currently only used as reference and not yet usable in the library or executable.
+The library and executable read these entries from the installed `parameters.toml` database.
 
 
 ## API access

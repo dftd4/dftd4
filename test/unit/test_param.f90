@@ -44,13 +44,14 @@ subroutine collect_param(testsuite)
 
    testsuite = [ &
       & new_unittest("rational-damping", test_rational_damping), &
+      & new_unittest("toml-parameters", test_toml_parameters), &
       & new_unittest("libxc-names", test_libxc_names) &
       & ]
 
 end subroutine collect_param
 
 
-subroutine test_dftd4_gen(error, mol, param, ref)
+subroutine test_dftd4_gen(error, mol, param, ref, method)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -64,13 +65,16 @@ subroutine test_dftd4_gen(error, mol, param, ref)
    !> Expected dispersion energy
    real(wp), intent(in) :: ref
 
+   !> Functional name
+   character(len=*), intent(in) :: method
+
    type(d4_model) :: d4
    real(wp) :: energy
 
    call new_d4_model(error, d4, mol)
    call get_dispersion(mol, d4, param, cutoff, energy)
 
-   call check(error, energy, ref, thr=thr)
+   call check(error, energy, ref, message="Energy mismatch for "//trim(method), thr=thr)
    if (allocated(error)) then
       print"(es21.14)",energy
    end if
@@ -140,7 +144,7 @@ subroutine test_rational_damping(error)
       &-3.45136899744303E-2_wp,-3.21006297575776E-2_wp,-2.64304324016606E-2_wp, &
       &-9.62084434444786E-2_wp,-8.46614067739745E-2_wp,-1.02981045785624E-1_wp, &
       &-1.30367427484416E-1_wp,-9.72681691945497E-2_wp,-4.56420158979754E-2_wp, &
-      &-3.03460981931314E-2_wp,-2.95785080956723E-2_wp,-2.74474515700095E-2_wp, &
+      &-3.03460981931314E-2_wp,-3.05897242073636E-2_wp,-2.74474515700095E-2_wp, &
       &-2.67802208375706E-2_wp,-2.39612790751360E-2_wp,-2.54023462353336E-2_wp, &
       &-2.44710136053936E-2_wp,-2.74280989349169E-2_wp,-2.92749846421858E-1_wp, &
       &-4.75432573533092E-2_wp,-8.87276590259854E-2_wp,-8.87276590259854E-2_wp, &
@@ -152,13 +156,50 @@ subroutine test_rational_damping(error)
    call get_structure(mol, "UPU23", "0a")
    do ii = 1, size(func)
       call get_rational_damping(trim(func(ii)), param, s9=1.0_wp)
-      call check(error, allocated(param))
+      call check(error, allocated(param), message="No TOML parameters for "//trim(func(ii)))
       if (allocated(error)) exit
-      call test_dftd4_gen(error, mol, param, ref(ii))
+      call test_dftd4_gen(error, mol, param, ref(ii), trim(func(ii)))
       if (allocated(error)) exit
    end do
 
 end subroutine test_rational_damping
+
+
+subroutine test_toml_parameters(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   class(damping_param), allocatable :: param
+
+   call get_rational_damping("pbe", param)
+   call check(error, allocated(param))
+   if (allocated(error)) return
+   select type(param)
+   type is(rational_damping_param)
+      call check(error, param%s8, 0.95948085_wp, thr=thr)
+      if (allocated(error)) return
+      call check(error, param%a1, 0.38574991_wp, thr=thr)
+   class default
+      call test_failed(error, "Unexpected damping parameter type")
+   end select
+   if (allocated(error)) return
+
+   call get_rational_damping("dftb(3ob)", param, s9=0.0_wp)
+   call check(error, allocated(param))
+   if (allocated(error)) return
+   select type(param)
+   type is(rational_damping_param)
+      call check(error, param%s8, 0.4727337_wp, thr=thr)
+      if (allocated(error)) return
+      call check(error, param%a1, 0.5467502_wp, thr=thr)
+      if (allocated(error)) return
+      call check(error, param%s9, 0.0_wp, thr=thr)
+   class default
+      call test_failed(error, "Unexpected damping parameter type")
+   end select
+
+end subroutine test_toml_parameters
 
 
 subroutine test_libxc_names(error)

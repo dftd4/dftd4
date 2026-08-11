@@ -155,6 +155,11 @@ install(
   "COPYING.LESSER"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME}"
 )
+install(
+  FILES
+  "assets/parameters.toml"
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
+)
 
 # add the testsuite
 enable_testing()

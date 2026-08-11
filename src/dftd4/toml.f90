@@ -121,6 +121,10 @@ subroutine load_from_toml(self, table, error)
 
    type(toml_table), pointer :: child
 
+   if (allocated(self%defaults)) deallocate(self%defaults)
+   if (allocated(self%records)) deallocate(self%records)
+   if (allocated(self%mask)) deallocate(self%mask)
+
    call get_value(table, "default", child)
    if (.not.associated(child)) then
       call fatal_error(error, "Missing 'default' table in parameter file")
