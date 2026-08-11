@@ -17,6 +17,7 @@
 add_executable(
   "${PROJECT_NAME}-exe"
   "main.f90"
+  "parameter.f90"
   "argument.f90"
   "cli.f90"
   "driver.f90"

@@ -46,3 +46,8 @@ target_link_libraries(
 foreach(t IN LISTS tests)
   add_test("${t}" "${PROJECT_NAME}-tester" "${t}")
 endforeach()
+set_tests_properties(
+  "param"
+  PROPERTIES
+  ENVIRONMENT "DFTD4_PARAMETER_FILE=${PROJECT_SOURCE_DIR}/assets/parameters.toml"
+)

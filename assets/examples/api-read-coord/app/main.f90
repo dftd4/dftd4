@@ -5,7 +5,7 @@
 
 program d4_energy
    use dftd4, only : d4_model, new_d4_model, damping_param, &
-      & get_rational_damping, realspace_cutoff, get_dispersion
+      & get_rational_damping, load_parameters, realspace_cutoff, get_dispersion
    use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type, read_structure
    implicit none
@@ -16,6 +16,12 @@ program d4_energy
    type(realspace_cutoff) :: cutoff
    type(error_type), allocatable :: error
    real(wp) :: energy
+
+   call load_parameters("../../parameters.toml", error)
+   if (allocated(error)) then
+      write (*, "(a)") trim(error%message)
+      stop 1
+   end if
 
    call read_structure(mol, "coord", error)
    if (allocated(error)) then

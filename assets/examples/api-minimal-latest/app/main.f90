@@ -1,6 +1,6 @@
 program demo
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use dftd4, only : damping_param, get_rational_damping, &
+   use dftd4, only : damping_param, get_rational_damping, load_parameters, &
       & get_dispersion, realspace_cutoff, &
       & dispersion_model, new_dispersion_model
    use mctc_env, only : wp, error_type, fatal_error
@@ -28,6 +28,12 @@ program demo
      & [3, size(num)])
 
    call new(mol, num, xyz, charge=0.0_wp, uhf=0)
+
+   call load_parameters("../../parameters.toml", error)
+   if (allocated(error)) then
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
+   end if
 
    ! Run calculation, check for errors, and print results
    call calc_dftd4(error, mol, "pbe", energy, gradient=gradient, &

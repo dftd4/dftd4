@@ -16,7 +16,8 @@
 
 module test_param
    use dftd4, only : d4_model, damping_param, get_dispersion, &
-      & get_rational_damping, new_d4_model, rational_damping_param, realspace_cutoff
+      & get_rational_damping, load_parameters, new_d4_model, rational_damping_param, &
+      & realspace_cutoff
    use dftd4_param, only : get_functional_id
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
@@ -171,6 +172,16 @@ subroutine test_toml_parameters(error)
    type(error_type), allocatable, intent(out) :: error
 
    class(damping_param), allocatable :: param
+   character(len=4096) :: file
+   integer :: length, status
+
+   call get_environment_variable("DFTD4_PARAMETER_FILE", file, length=length, status=status)
+   if (status /= 0 .or. length == 0) then
+      file = "assets/parameters.toml"
+      length = len_trim(file)
+   end if
+   call load_parameters(file(:length), error)
+   if (allocated(error)) return
 
    call get_rational_damping("pbe", param)
    call check(error, allocated(param))

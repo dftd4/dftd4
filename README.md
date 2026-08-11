@@ -324,6 +324,8 @@ ABI compatibility is only guaranteed for the same minor version.
 
 The communication with the Fortran API uses the `error_type` and `structure_type` of the modular computation tool chain library (mctc-lib) to handle errors and represent geometries, respectively.
 
+Fortran API users should call `load_parameters` once before requesting damping parameters, passing the path to their `parameters.toml` file.
+
 
 #### Building Vasp with support for D4
 

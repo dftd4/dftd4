@@ -50,5 +50,15 @@ tester = executable(
 )
 
 foreach t : tests
-  test(t, tester, args: t)
+  if t == 'param'
+    parameter_file = meson.project_source_dir() / 'assets' / 'parameters.toml'
+    test(
+      t,
+      tester,
+      args: t,
+      env: ['DFTD4_PARAMETER_FILE=' + parameter_file],
+    )
+  else
+    test(t, tester, args: t)
+  endif
 endforeach
