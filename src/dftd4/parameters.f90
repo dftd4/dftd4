@@ -21,7 +21,7 @@ module dftd4_parameters
 
    public :: get_embedded_parameters
 
-   integer, parameter :: nlines = 513
+   integer, parameter :: nlines = 512
    integer, parameter :: max_line_length = 120
    character(len=max_line_length), parameter :: embedded_parameters(nlines) = [ &
       & character(len=max_line_length) :: &
@@ -552,7 +552,7 @@ module dftd4_parameters
       & '', &
       & '[parameter.r2scan-cidh]', &
       & 'reference.doi = ["10.1063/5.0174988"]', &
-      & 'd4.bj-eeq-atm = { s6=0.8666, s8=0.5336, a1=0.4171, a2=5.8565, doi="10.1063/5.0174988" }', &
+      & 'd4.bj-eeq-atm = { s6=0.8666, s8=0.5336, a1=0.4171, a2=5.9125, doi="10.1063/5.0174988" }', &
       & '', &
       & '[parameter.r2scan-qidh]', &
       & 'reference.doi = ["10.1063/5.0174988"]', &
@@ -576,8 +576,7 @@ module dftd4_parameters
       & '', &
       & '[parameter.wpr2scan50]', &
       & 'reference.doi = ["10.1063/5.0174988"]', &
-      & 'd4.bj-eeq-atm = { s6=0.8143, s8=0.3842, a1=0.4135, a2=5.8773, doi="10.1063/5.0174988" }', &
-      & '' &
+      & 'd4.bj-eeq-atm = { s6=0.8143, s8=0.3842, a1=0.4135, a2=5.8773, doi="10.1063/5.0174988" }' &
       & ]
 
 contains
