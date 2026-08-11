@@ -17,10 +17,10 @@
 module dftd4_param
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
+   use dftd4_parameters, only : get_embedded_parameters
    use dftd4_toml, only : param_database
    use dftd4_utils, only : lowercase
    use mctc_env, only : error_type, wp
-   use mctc_env_system, only : is_windows
    implicit none
    private
 
@@ -367,50 +367,13 @@ end subroutine load_parameters
 
 !> Locate and load the default parameter database.
 subroutine ensure_database()
-   character(len=4096) :: value
-   character :: separator
-   integer :: length, stat, pos
-
-   if (database_ready) return
-
-   call get_environment_variable("DFTD4_PARAMETER_FILE", value, length=length, status=stat)
-   if (stat == 0 .and. length > 0) then
-      call try_load(value(:length))
-      if (database_ready) return
-   end if
-
-   call try_load("assets/parameters.toml")
-   if (database_ready) return
-   call try_load("parameters.toml")
-   if (database_ready) return
-
-   ! Installed applications keep the data file beside the installation prefix,
-   ! while build-tree applications keep it in the source tree.
-   call get_command_argument(0, value, length=length, status=stat)
-   if (stat /= 0 .or. length == 0) return
-   pos = scan(value(:length), "/\", back=.true.)
-   if (pos == 0) return
-
-   separator = "/"
-   if (is_windows()) separator = "\"
-   call try_load(value(:pos)//".."//separator//"share"//separator//"dftd4"//separator//"parameters.toml")
-   if (database_ready) return
-   call try_load(value(:pos)//".."//separator//"assets"//separator//"parameters.toml")
-   if (database_ready) return
-   call try_load(value(:pos)//".."//separator//".."//separator//"assets"//separator//"parameters.toml")
-   if (database_ready) return
-   call try_load(value(:pos)//".."//separator//".."//separator//".."//separator//"assets"//separator//"parameters.toml")
-end subroutine ensure_database
-
-
-!> Try to load a parameter database without exposing a lookup error.
-subroutine try_load(file)
-   character(len=*), intent(in) :: file
    type(error_type), allocatable :: error
 
-   call database%load(trim(file), error)
-   if (.not.allocated(error)) database_ready = .true.
-end subroutine try_load
+   if (database_ready) return
+
+   call database%load_from_string(get_embedded_parameters(), error)
+   database_ready = .not.allocated(error)
+end subroutine ensure_database
 
 
 !> Get the unique identifier for most functionals, returns none if

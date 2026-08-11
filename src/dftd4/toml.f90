@@ -53,6 +53,7 @@ module dftd4_toml
       !> Read damping parameter data.
       generic :: load => load_from_file, load_from_unit, load_from_toml
       procedure, private :: load_from_file
+      procedure :: load_from_string
       procedure, private :: load_from_unit
       procedure, private :: load_from_toml
       !> Retrieve a damping parameter from the database.
@@ -85,6 +86,29 @@ subroutine load_from_file(self, file, error)
    call self%load(unit, error)
    close(unit)
 end subroutine load_from_file
+
+
+!> Read damping parameter data from a string.
+subroutine load_from_string(self, string, error)
+   !> Damping parameter data.
+   class(param_database), intent(inout) :: self
+   !> TOML document.
+   character(len=*), intent(in) :: string
+   !> Error handling.
+   type(error_type), allocatable, intent(out) :: error
+
+   type(toml_error), allocatable :: parse_error
+   type(toml_table), allocatable :: table
+
+   call toml_parse(table, string, parse_error)
+   if (allocated(parse_error)) then
+      allocate(error)
+      call move_alloc(parse_error%message, error%message)
+      return
+   end if
+
+   call self%load(table, error)
+end subroutine load_from_string
 
 
 !> Read damping parameter data from a formatted unit.

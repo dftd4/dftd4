@@ -29,8 +29,3 @@ target_link_libraries(
   "${PROJECT_NAME}-lib"
 )
 add_test(NAME "api" COMMAND "${PROJECT_NAME}-api-tester")
-set_tests_properties(
-  "api"
-  PROPERTIES
-  ENVIRONMENT "DFTD4_PARAMETER_FILE=${PROJECT_SOURCE_DIR}/assets/parameters.toml"
-)

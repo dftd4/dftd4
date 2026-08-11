@@ -22,6 +22,7 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
+  "${dftd4_embedded_parameters}"
   "${dir}/blas.F90"
   "${dir}/cutoff.f90"
   "${dir}/damping.f90"

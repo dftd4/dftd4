@@ -294,7 +294,8 @@ We recommend the revised D4 parameters for ωB97X-V (`wb97x-rev`).
 
 <br>
 
-You can add new functionals using to the TOML file by adding a new subtable
+You can add new functionals to the TOML file by adding a new subtable and rebuilding
+the library:
 
 ```toml
 [parameter.name]
@@ -302,7 +303,8 @@ reference.doi = ["<functional reference>"]
 d4.bj-eeq-atm = { s8=1.0, a1=0.4, a2=5.0, doi="<parameter reference>" }
 ```
 
-The library and executable read these entries from the installed `parameters.toml` database.
+The default parameter database is embedded into the library at build time from
+`parameters.toml`, so applications do not need to locate a parameter file at runtime.
 
 
 ## API access
@@ -323,8 +325,6 @@ The complete API is available from `dftd4` module, the individual modules are av
 ABI compatibility is only guaranteed for the same minor version.
 
 The communication with the Fortran API uses the `error_type` and `structure_type` of the modular computation tool chain library (mctc-lib) to handle errors and represent geometries, respectively.
-
-Fortran API users should call `load_parameters` once before requesting damping parameters, passing the path to their `parameters.toml` file.
 
 
 #### Building Vasp with support for D4

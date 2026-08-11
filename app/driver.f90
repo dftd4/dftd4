@@ -22,7 +22,6 @@ module dftd4_driver
       & get_properties, get_pairwise_dispersion, get_dispersion_hessian, &
       & dispersion_model, new_dispersion_model, d4_qmod
    use dftd4_cli, only : cli_config, param_config, run_config
-   use dftd4_app_parameter, only : load_parameter_database
    use dftd4_help, only : header
    use dftd4_output, only : ascii_atomic_radii, ascii_atomic_references, &
       & ascii_damping_param, ascii_pairwise, ascii_results, ascii_system_properties, &
@@ -48,9 +47,6 @@ subroutine main(config, error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
-
-   call load_parameter_database(error)
-   if (allocated(error)) return
 
    select type(config)
    class default

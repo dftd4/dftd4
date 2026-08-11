@@ -18,6 +18,15 @@ subdir('damping')
 subdir('data')
 subdir('model')
 
+embedded_parameters = custom_target(
+  'dftd4-embedded-parameters',
+  input: files('../../assets/parameters.toml'),
+  output: 'parameters.f90',
+  command: [python, files('../../config/embed-parameters.py'), '@INPUT@', '@OUTPUT@'],
+)
+
+srcs += embedded_parameters
+
 srcs += files(
   'blas.F90',
   'cutoff.f90',
