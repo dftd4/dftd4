@@ -15,6 +15,7 @@ set(
   DFTD4_DEPENDENCIES
   "$<$<BOOL:${DFTD4_USE_MCTCLIB}>:mctc-lib::mctc-lib>"
   "$<$<BOOL:${DFTD4_USE_MULTICHARGE}>:multicharge::multicharge>"
+  "$<$<BOOL:${DFTD4_USE_TOMLF}>:toml-f::toml-f>"
   "$<$<BOOL:${DFTD4_WITH_OpenMP}>:OpenMP::OpenMP_Fortran>"
   "LAPACK::LAPACK"
 )

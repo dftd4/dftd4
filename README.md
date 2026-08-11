@@ -294,7 +294,8 @@ We recommend the revised D4 parameters for ωB97X-V (`wb97x-rev`).
 
 <br>
 
-You can add new functionals using to the TOML file by adding a new subtable
+You can add new functionals to the TOML file by adding a new subtable and rebuilding
+the library:
 
 ```toml
 [parameter.name]
@@ -302,7 +303,8 @@ reference.doi = ["<functional reference>"]
 d4.bj-eeq-atm = { s8=1.0, a1=0.4, a2=5.0, doi="<parameter reference>" }
 ```
 
-Those parameters are currently only used as reference and not yet usable in the library or executable.
+The default parameter database is embedded into the library at build time from
+`parameters.toml`, so applications do not need to locate a parameter file at runtime.
 
 
 ## API access

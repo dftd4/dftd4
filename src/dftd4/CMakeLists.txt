@@ -22,6 +22,7 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
+  "${dftd4_embedded_parameters}"
   "${dir}/blas.F90"
   "${dir}/cutoff.f90"
   "${dir}/damping.f90"
@@ -33,6 +34,7 @@ list(
   "${dir}/output.f90"
   "${dir}/param.f90"
   "${dir}/reference.f90"
+  "${dir}/toml.f90"
   "${dir}/utils.f90"
   "${dir}/version.f90"
 )

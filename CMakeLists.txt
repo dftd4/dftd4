@@ -23,6 +23,22 @@ project(
   DESCRIPTION "Generally Applicable Atomic-Charge Dependent London Dispersion Correction"
 )
 
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+set(dftd4_embedded_parameters "${CMAKE_CURRENT_BINARY_DIR}/parameters.f90")
+add_custom_command(
+  OUTPUT "${dftd4_embedded_parameters}"
+  COMMAND
+  Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/embed-parameters.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/assets/parameters.toml"
+  "${dftd4_embedded_parameters}"
+  DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/embed-parameters.py"
+  "${CMAKE_CURRENT_SOURCE_DIR}/assets/parameters.toml"
+  VERBATIM
+)
+
 # Follow GNU conventions for installing directories
 include(GNUInstallDirs)
 
@@ -53,10 +69,14 @@ endif()
 if(NOT TARGET "multicharge::multicharge")
   find_package("multicharge")
 endif()
+if(NOT TARGET "toml-f::toml-f")
+  find_package("toml-f")
+endif()
 set(
   lib-deps
   "mctc-lib::mctc-lib"
   "multicharge::multicharge"
+  "toml-f::toml-f"
 )
 
 # Collect source of the project
@@ -150,6 +170,11 @@ install(
   "COPYING"
   "COPYING.LESSER"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME}"
+)
+install(
+  FILES
+  "assets/parameters.toml"
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}"
 )
 
 # add the testsuite

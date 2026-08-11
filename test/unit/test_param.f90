@@ -16,7 +16,8 @@
 
 module test_param
    use dftd4, only : d4_model, damping_param, get_dispersion, &
-      & get_rational_damping, new_d4_model, rational_damping_param, realspace_cutoff
+      & get_rational_damping, load_parameters, new_d4_model, rational_damping_param, &
+      & realspace_cutoff
    use dftd4_param, only : get_functional_id
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
@@ -44,13 +45,15 @@ subroutine collect_param(testsuite)
 
    testsuite = [ &
       & new_unittest("rational-damping", test_rational_damping), &
-      & new_unittest("libxc-names", test_libxc_names) &
+      & new_unittest("toml-parameters", test_toml_parameters), &
+      & new_unittest("libxc-names", test_libxc_names), &
+      & new_unittest("failed-parameter-load", test_failed_parameter_load) &
       & ]
 
 end subroutine collect_param
 
 
-subroutine test_dftd4_gen(error, mol, param, ref)
+subroutine test_dftd4_gen(error, mol, param, ref, method)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -64,13 +67,16 @@ subroutine test_dftd4_gen(error, mol, param, ref)
    !> Expected dispersion energy
    real(wp), intent(in) :: ref
 
+   !> Functional name
+   character(len=*), intent(in) :: method
+
    type(d4_model) :: d4
    real(wp) :: energy
 
    call new_d4_model(error, d4, mol)
    call get_dispersion(mol, d4, param, cutoff, energy)
 
-   call check(error, energy, ref, thr=thr)
+   call check(error, energy, ref, message="Energy mismatch for "//trim(method), thr=thr)
    if (allocated(error)) then
       print"(es21.14)",energy
    end if
@@ -152,13 +158,95 @@ subroutine test_rational_damping(error)
    call get_structure(mol, "UPU23", "0a")
    do ii = 1, size(func)
       call get_rational_damping(trim(func(ii)), param, s9=1.0_wp)
-      call check(error, allocated(param))
+      call check(error, allocated(param), message="No TOML parameters for "//trim(func(ii)))
       if (allocated(error)) exit
-      call test_dftd4_gen(error, mol, param, ref(ii))
+      call test_dftd4_gen(error, mol, param, ref(ii), trim(func(ii)))
       if (allocated(error)) exit
    end do
 
 end subroutine test_rational_damping
+
+
+subroutine test_toml_parameters(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   class(damping_param), allocatable :: param
+   character(len=4096) :: file
+   integer :: length, status
+
+   call get_environment_variable("DFTD4_PARAMETER_FILE", file, length=length, status=status)
+   if (status /= 0 .or. length == 0) then
+      file = "assets/parameters.toml"
+      length = len_trim(file)
+   end if
+   call load_parameters(file(:length), error)
+   if (allocated(error)) return
+
+   call get_rational_damping("pbe", param)
+   call check(error, allocated(param))
+   if (allocated(error)) return
+   select type(param)
+   type is(rational_damping_param)
+      call check(error, param%s8, 0.95948085_wp, thr=thr)
+      if (allocated(error)) return
+      call check(error, param%a1, 0.38574991_wp, thr=thr)
+   class default
+      call test_failed(error, "Unexpected damping parameter type")
+   end select
+   if (allocated(error)) return
+
+   call get_rational_damping("dftb(3ob)", param, s9=0.0_wp)
+   call check(error, allocated(param))
+   if (allocated(error)) return
+   select type(param)
+   type is(rational_damping_param)
+      call check(error, param%s8, 0.4727337_wp, thr=thr)
+      if (allocated(error)) return
+      call check(error, param%a1, 0.5467502_wp, thr=thr)
+      if (allocated(error)) return
+      call check(error, param%s9, 0.0_wp, thr=thr)
+   class default
+      call test_failed(error, "Unexpected damping parameter type")
+   end select
+
+end subroutine test_toml_parameters
+
+
+subroutine test_failed_parameter_load(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   class(damping_param), allocatable :: param
+   character(len=4096) :: file
+   logical :: failed
+   integer :: length, status
+
+   failed = .false.
+   call load_parameters("missing-parameters.toml", error)
+   if (.not.allocated(error)) then
+      failed = .true.
+   else
+      deallocate(error)
+      call get_rational_damping("pbe", param)
+      if (allocated(param)) failed = .true.
+   end if
+
+   call get_environment_variable("DFTD4_PARAMETER_FILE", file, length=length, status=status)
+   if (status /= 0 .or. length == 0) then
+      file = "assets/parameters.toml"
+      length = len_trim(file)
+   end if
+   call load_parameters(file(:length), error)
+   if (allocated(error)) return
+
+   if (failed) then
+      call test_failed(error, "Failed parameter loads must not fall back to defaults")
+   end if
+
+end subroutine test_failed_parameter_load
 
 
 subroutine test_libxc_names(error)

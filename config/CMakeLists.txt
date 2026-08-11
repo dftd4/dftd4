@@ -34,6 +34,7 @@ option(DFTD4_WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" ${WITH_ILP6
 option(DFTD4_WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" ${WITH_API_V2})
 set(DFTD4_USE_MULTICHARGE TRUE)
 set(DFTD4_USE_MCTCLIB TRUE)
+set(DFTD4_USE_TOMLF TRUE)
 if(NOT DEFINED "${PROJECT_NAME}-dependency-method")
   set(
     "${PROJECT_NAME}-dependency-method"

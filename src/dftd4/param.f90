@@ -17,13 +17,16 @@
 module dftd4_param
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
+   use dftd4_parameters, only : get_embedded_parameters
+   use dftd4_toml, only : param_database
    use dftd4_utils, only : lowercase
-   use mctc_env, only : wp
+   use mctc_env, only : error_type, wp
    implicit none
    private
 
    public :: functional_group
    public :: get_rational_damping, get_functionals, get_functional_id
+   public :: load_parameters
    public :: p_r2scan_3c
 
 
@@ -65,6 +68,14 @@ module dftd4_param
       module procedure :: get_rational_damping_name
       module procedure :: get_rational_damping_id
    end interface get_rational_damping
+
+   ! The database state is protected by the named OpenMP critical section below.
+   type(param_database) :: database
+   logical :: database_ready = .false.
+   ! Do not retry an implicit load after it has failed.
+   logical :: database_attempted = .false.
+   ! An explicit load suppresses the embedded fallback, including on failure.
+   logical :: database_overridden = .false.
 
 contains
 
@@ -141,8 +152,8 @@ subroutine get_functionals(funcs)
       & "r²scan-cidh", "r2scancidh", "r²scancidh"])
    funcs(p_r2scan_qidh) = new_funcgroup([character(len=20) :: "r2scan-qidh", &
       & "r²scan-qidh", "r2scanqidh", "r²scanqidh"])
-    funcs(p_r2scan0_2) = new_funcgroup([character(len=20) :: "r2scan0-2", &
-      & "r²scan0-2", "r2scan02", "r²scan02"])
+   funcs(p_r2scan0_2) = new_funcgroup([character(len=20) :: "r2scan0-2", &
+      & "r²scan0-2", "r2scan02", "r²scan02", "r2scan-0-2"])
    funcs(p_pr2scan50) = new_funcgroup([character(len=20) :: "pr2scan50", &
       & "pr²scan50", "pr2scan50", "pr²scan50"])
    funcs(p_pr2scan69) = new_funcgroup([character(len=20) :: "pr2scan69", &
@@ -194,13 +205,13 @@ subroutine get_functionals(funcs)
    funcs(p_dodpbeb95) = new_funcgroup([character(len=20) :: "dodpbeb95", "dod-pbeb95"])
    funcs(p_dodpbep86) = new_funcgroup([character(len=20) :: "dodpbep86", "dod-pbep86"])
    funcs(p_dodsvwn) = new_funcgroup([character(len=20) :: "dodsvwn", "dod-svwn"])
-   funcs(p_pbe0_2) = new_funcgroup([character(len=20) :: "pbe02", "pbe0-2"])
-   funcs(p_pbe0_dh) = new_funcgroup([character(len=20) :: "pbe0dh", "pbe0-dh"])
-   funcs(p_dftb_3ob) = new_funcgroup([character(len=20) :: "dftb3", "dftb(3ob)"])
-   funcs(p_dftb_mio) = new_funcgroup([character(len=20) :: "dftb(mio)"])
-   funcs(p_dftb_pbc) = new_funcgroup([character(len=20) :: "dftb(pbc)"])
-   funcs(p_dftb_matsci) = new_funcgroup([character(len=20) :: "dftb(matsci)"])
-   funcs(p_dftb_ob2) = new_funcgroup([character(len=20) :: "lc-dftb", "dftb(ob2)"])
+   funcs(p_pbe0_2) = new_funcgroup([character(len=20) :: "pbe02", "pbe0-2", "pbe0_2"])
+   funcs(p_pbe0_dh) = new_funcgroup([character(len=20) :: "pbe0dh", "pbe0-dh", "pbe0_dh"])
+   funcs(p_dftb_3ob) = new_funcgroup([character(len=20) :: "dftb3", "dftb(3ob)", "dftb_3ob"])
+   funcs(p_dftb_mio) = new_funcgroup([character(len=20) :: "dftb(mio)", "dftb_mio"])
+   funcs(p_dftb_pbc) = new_funcgroup([character(len=20) :: "dftb(pbc)", "dftb_pbc"])
+   funcs(p_dftb_matsci) = new_funcgroup([character(len=20) :: "dftb(matsci)", "dftb_matsci"])
+   funcs(p_dftb_ob2) = new_funcgroup([character(len=20) :: "lc-dftb", "dftb(ob2)", "dftb_ob2"])
    funcs(p_b1b95) = new_funcgroup([character(len=20) :: "b1b95"])
    funcs(p_pbesol) = new_funcgroup([character(len=20) :: "pbesol"])
    funcs(p_mpwb1k) = new_funcgroup([character(len=20) :: "mpwb1k"])
@@ -258,15 +269,13 @@ subroutine get_rational_damping_name(functional, param, s9)
    real(wp), intent(in), optional :: s9
 
    character(len=:), allocatable :: fname
-   integer :: is, id
+   integer :: is
 
    is = index(functional, "/")
    if (is == 0) is = len_trim(functional) + 1
    fname = lowercase(functional(:is-1))
 
-   id = get_functional_id(fname)
-
-   call get_rational_damping_id(id, param, s9=s9)
+   call load_rational_damping(fname, param, s9)
 
 end subroutine get_rational_damping_name
 
@@ -284,545 +293,103 @@ subroutine get_rational_damping_id(id, param, s9)
    !> Scaling factor for the three-body term
    real(wp), intent(in), optional :: s9
 
-   logical :: mbd
+   type(functional_group), allocatable :: funcs(:)
 
-   mbd = .true.
-   if (present(s9)) mbd = abs(s9) > epsilon(s9)
-
-   if (mbd) then
-      call get_d4eeq_bjatm_parameter(id, param, s9)
-      if (.not.allocated(param)) then
-         call get_d4eeq_bj_parameter(id, param, s9)
-      end if
-   else
-      call get_d4eeq_bj_parameter(id, param, s9)
-      if (.not.allocated(param)) then
-         call get_d4eeq_bjatm_parameter(id, param, s9)
-      end if
-   end if
+   if (id <= p_invalid .or. id >= p_last) return
+   call get_functionals(funcs)
+   call load_rational_damping(funcs(id)%names(1), param, s9)
 
 end subroutine get_rational_damping_id
 
 
-subroutine get_d4eeq_bj_parameter(dfnum, param, s9)
-   integer(df_enum), intent(in) :: dfnum
+!> Load rational damping parameters from the TOML database.
+subroutine load_rational_damping(method, param, s9)
+   !> Functional name.
+   character(len=*), intent(in) :: method
+   !> Damping parameters.
    class(damping_param), allocatable, intent(out) :: param
+   !> Scaling factor for the three-body term.
    real(wp), intent(in), optional :: s9
-   select case(dfnum)
-   case(p_dftb_3ob)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=0.4727337_wp, a1=0.5467502_wp, a2=4.4955068_wp)
-   case(p_dftb_matsci)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=2.7711819_wp, a1=0.4681712_wp, a2=5.2918629_wp)
-   case(p_dftb_mio)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=1.1948145_wp, a1=0.6074567_wp, a2=4.9336133_wp)
-   case(p_dftb_ob2)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=2.7611320_wp, a1=0.6037249_wp, a2=5.3900004_wp)
-   case(p_dftb_pbc)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=1.7303734_wp, a1=0.5546548_wp, a2=4.7973454_wp)
-   case default
-      continue
-   end select
+
+   type(functional_group), allocatable :: funcs(:)
+   integer :: id, ii
+
+   call ensure_database()
+
+   !$omp critical(dftd4_parameter_database)
+   if (database_ready) then
+      call query(method)
+      if (.not.allocated(param)) then
+         id = get_functional_id(method)
+         if (id > p_invalid .and. id < p_last) then
+            call get_functionals(funcs)
+            do ii = 1, size(funcs(id)%names)
+               call query(funcs(id)%names(ii))
+               if (allocated(param)) exit
+            end do
+         end if
+      end if
+
+      if (allocated(param) .and. present(s9)) then
+         select type(param)
+         type is(rational_damping_param)
+            param%s9 = s9
+         end select
+      end if
+   end if
+   !$omp end critical(dftd4_parameter_database)
 
 contains
 
-   pure function dftd_param(s6, s8, a1, a2, alp) result(par)
-      real(wp), intent(in) :: s8, a1, a2
-      real(wp), intent(in), optional :: s6, alp
-      type(rational_damping_param) :: par
-      real(wp) :: s6_, alp_, s9_
+subroutine query(name)
+   character(len=*), intent(in) :: name
 
-      s6_ = 1.0_wp
-      if (present(s6)) s6_ = s6
-      s9_ = 0.0_wp
-      if (present(s9)) s9_ = s9
-      alp_ = 16.0_wp
-      if (present(alp)) alp_ = alp
+   if (present(s9)) then
+      if (abs(s9) <= epsilon(s9)) then
+         call database%get(param, name, "bj-eeq-two")
+         if (.not.allocated(param)) call database%get(param, name)
+      else
+         call database%get(param, name, "bj-eeq-atm")
+         if (.not.allocated(param)) call database%get(param, name)
+      end if
+   else
+      call database%get(param, name)
+   end if
+end subroutine query
 
-      par = rational_damping_param(&
-         & s6=s6_, &
-         & s8=s8, a1=a1, a2=a2, &
-         & s9=s9_, &
-         & alp=alp_)
-   end function dftd_param
+end subroutine load_rational_damping
 
-end subroutine get_d4eeq_bj_parameter
 
-subroutine get_d4eeq_bjatm_parameter(dfnum, param, s9)
-   integer(df_enum), intent(in) :: dfnum
-   class(damping_param), allocatable, intent(out) :: param
-   real(wp), intent(in), optional :: s9
-   select case(dfnum)
-   case(p_b1b95)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=1.0000_wp, s8=1.27701162_wp, a1=0.40554715_wp, a2=4.63323074_wp )
-      !  Fitset: MD= 0.22852 MAD= 0.35189 RMSD= 0.46982
-   case(p_b1lyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.98553711_wp, a1=0.39309040_wp, a2=4.55465145_wp )
-      !  Fitset: MD= -0.04797 MAD= 0.25597 RMSD= 0.38778
-   case(p_b1p)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=3.36115015_wp, a1=0.48665293_wp, a2=5.05219572_wp )
-      !  Fitset: MD= -0.01406 MAD= 0.27441 RMSD= 0.47328
-   case(p_b1pw)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=1.0000_wp, s8=3.02227550_wp, a1=0.47396846_wp, a2=4.49845309_wp )
-      !  Fitset: MD= 0.10485 MAD= 0.32175 RMSD= 0.48508
-   case(p_b2gpplyp)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=0.5600_wp, s8=0.94633372_wp, a1=0.42907301_wp, a2=5.18802602_wp )
-      !  Fitset: MD= -0.05248 MAD= 0.18110 RMSD= 0.27365
-   case(p_b2plyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.6400_wp, s8=1.16888646_wp, a1=0.44154604_wp, a2=4.73114642_wp )
-      !  Fitset: MD= -0.03761 MAD= 0.18247 RMSD= 0.27109
-   case(p_b3lyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=2.02929367_wp, a1=0.40868035_wp, a2=4.53807137_wp )
-      !  Fitset: MD= -0.05892 MAD= 0.26117 RMSD= 0.40531
-   case(p_b3p)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=3.08822155_wp, a1=0.47324238_wp, a2=4.98682134_wp )
-      !  Fitset: MD= -0.02970 MAD= 0.26962 RMSD= 0.46761
-   case(p_b3pw)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=1.0000_wp, s8=2.88364295_wp, a1=0.46990860_wp, a2=4.51641422_wp )
-      !  Fitset: MD= 0.06643 MAD= 0.29151 RMSD= 0.45541
-   case(p_b97)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.87854260_wp, a1=0.29319126_wp, a2=4.51647719_wp )
-      !  Fitset: MD= -0.13017 MAD= 0.24778 RMSD= 0.36116
-   case(p_bhlyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.65281646_wp, a1=0.27263660_wp, a2=5.48634586_wp )
-      !  Fitset: MD= -0.15832 MAD= 0.34132 RMSD= 0.57342
-   case(p_blyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=2.34076671_wp, a1=0.44488865_wp, a2=4.09330090_wp )
-      !  Fitset: MD= 0.04801 MAD= 0.28161 RMSD= 0.38321
-   case(p_bpbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=3.64405246_wp, a1=0.52905620_wp, a2=4.11311891_wp )
-      !  Fitset: MD= 0.19316 MAD= 0.41912 RMSD= 0.60452
-   case(p_bp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=3.35497927_wp, a1=0.43645861_wp, a2=4.92406854_wp )
-      !  Fitset: MD= 0.08252 MAD= 0.32681 RMSD= 0.47063
-   case(p_bpw)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=3.24571506_wp, a1=0.50050454_wp, a2=4.12346483_wp )
-      !  Fitset: MD= 0.20607 MAD= 0.41941 RMSD= 0.59589
-   case(p_camb3lyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.66041301_wp, a1=0.40267156_wp, a2=5.17432195_wp )
-      !  Fitset: MD= -0.19675 MAD= 0.34901 RMSD= 0.59087
-   case(p_camqtp01)
-      param = dftd_param ( & ! (10.1021/acs.jctc.3c00717)
-         &  s6=1.0000_wp, s8=1.156_wp, a1=0.461_wp, a2=6.375_wp )
-   case(p_dodblyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.4700_wp, s8=1.31146043_wp, a1=0.43407294_wp, a2=4.27914360_wp )
-      !  Fitset: MD= 0.03323 MAD= 0.13858 RMSD= 0.20861
-   case(p_dodpbeb95)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.5600_wp, s8=0.01574635_wp, a1=0.43745720_wp, a2=3.69180763_wp )
-      !  Fitset: MD= 0.03704 MAD= 0.13343 RMSD= 0.18278
-   case(p_dodpbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.4800_wp, s8=0.92051454_wp, a1=0.43037052_wp, a2=4.38067238_wp )
-      !  Fitset: MD= 0.01065 MAD= 0.13414 RMSD= 0.21424
-   case(p_dodpbep86)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.4600_wp, s8=0.71405681_wp, a1=0.42408665_wp, a2=4.52884439_wp )
-      !  Fitset: MD= -0.03740 MAD= 0.12467 RMSD= 0.18127
-   case(p_dodsvwn)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.4200_wp, s8=0.94500207_wp, a1=0.47449026_wp, a2=5.05316093_wp )
-      !  Fitset: MD= -0.07427 MAD= 0.16970 RMSD= 0.25286
-   case(p_dsdblyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.5400_wp, s8=0.63018237_wp, a1=0.47591835_wp, a2=4.73713781_wp )
-      !  Fitset: MD= -0.01981 MAD= 0.14823 RMSD= 0.21530
-   case(p_dsdpbeb95)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.5400_wp, s8=-0.14668670_wp, a1=0.46394587_wp, a2=3.64913860_wp )
-      !  Fitset: MD= 0.02996 MAD= 0.12414 RMSD= 0.16860
-   case(p_dsdpbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.4500_wp, s8=0.70584116_wp, a1=0.45787085_wp, a2=4.44566742_wp )
-      !  Fitset: MD= 0.00866 MAD= 0.13406 RMSD= 0.21380
-   case(p_dsdpbep86)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.4700_wp, s8=0.37586675_wp, a1=0.53698768_wp, a2=5.13022435_wp )
-      !  Fitset: MD= -0.05273 MAD= 0.14259 RMSD= 0.21271
-   case(p_dsdsvwn)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.4100_wp, s8=0.72914436_wp, a1=0.51347412_wp, a2=5.11858541_wp )
-      !  Fitset: MD= -0.08974 MAD= 0.32285 RMSD= 0.43146
-   case(p_glyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=4.23798924_wp, a1=0.38426465_wp, a2=4.38412863_wp )
-      !  Fitset: MD= 0.63466 MAD= 0.89568 RMSD= 1.11309
-   case(p_hf)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.61679827_wp, a1=0.44959224_wp, a2=3.35743605_wp )
-      !  Fitset: MD= -0.02597 MAD= 0.34732 RMSD= 0.49719
-   case(p_lb94)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=2.59538499_wp, a1=0.42088944_wp, a2=3.28193223_wp )
-      !  Fitset: MD= 0.31701 MAD= 0.53196 RMSD= 0.74553
-   case(p_lcblyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.60344180_wp, a1=0.45769839_wp, a2=7.86924893_wp )
-      !  Fitset: MD= -0.39724 MAD= 0.72327 RMSD= 1.18218
-   case(p_lcwpbe)
-      param = dftd_param ( & ! (10.1021/acs.jctc.3c00717)
-         &  s6=1.0000_wp, s8=1.170_wp, a1=0.378_wp, a2=4.816_wp )
-   case(p_lcwpbeh)
-      param = dftd_param ( & ! (10.1021/acs.jctc.3c00717)
-         &  s6=1.0000_wp, s8=1.318_wp, a1=0.386_wp, a2=5.010_wp )
-   case(p_lh07ssvwn)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=3.16675531_wp, a1=0.35965552_wp, a2=4.31947614_wp )
-      !  Fitset: MD= 0.32224 MAD= 0.59006 RMSD= 0.86272
-   case(p_lh07tsvwn)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=2.09333001_wp, a1=0.35025189_wp, a2=4.34166515_wp )
-      !  Fitset: MD= 0.24243 MAD= 0.43497 RMSD= 0.61671
-   case(p_lh12ctssifpw92)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=2.68467610_wp, a1=0.34190416_wp, a2=3.91039666_wp )
-      !  Fitset: MD= 0.55106 MAD= 0.80783 RMSD= 1.11048
-   case(p_lh12ctssirpw92)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=2.48973402_wp, a1=0.34026075_wp, a2=3.96948081_wp )
-      !  Fitset: MD= 0.47785 MAD= 0.71188 RMSD= 0.98422
-   case(p_lh14tcalpbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.28130770_wp, a1=0.38822021_wp, a2=4.92501211_wp )
-      !  Fitset: MD= -0.02105 MAD= 0.22968 RMSD= 0.36045
-   case(p_lh20t)
-      param = dftd_param ( & ! (10.1021/acs.jctc.0c00498)
-         & s6=1.000_wp, s8=0.113_wp, a1=0.479_wp, a2=4.635_wp )
-   case(p_m06)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.16366729_wp, a1=0.53456413_wp, a2=6.06192174_wp )
-      !  Fitset: MD= 0.01788 MAD= 0.24914 RMSD= 0.38604
-   case(p_m06l)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.59493760_wp, a1=0.71422359_wp, a2=6.35314182_wp )
-      !  Fitset: MD= 0.08395 MAD= 0.24888 RMSD= 0.34879
-   case(p_mn12sx)
-      param = dftd_param ( & ! (SAW211021)
-         &  s6=1.0000_wp, s8=0.85964873_wp, a1=0.62662681_wp, a2=5.62088906_wp )
-      !  Fitset: MD= 0.16131 MAD= 0.34142 RMSD= 0.47113
-   case(p_mpw1b95)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=1.0000_wp, s8=0.50093024_wp, a1=0.41585097_wp, a2=4.99154869_wp )
-      !  Fitset: MD= 0.00585 MAD= 0.15695 RMSD= 0.21297
-   case(p_mpw1lyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.15591153_wp, a1=0.25603493_wp, a2=5.32083895_wp )
-      !  Fitset: MD= -0.26979 MAD= 0.41542 RMSD= 0.60678
-   case(p_mpw1pw)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.80841716_wp, a1=0.42961819_wp, a2=4.68892341_wp )
-      !  Fitset: MD= -0.08840 MAD= 0.26815 RMSD= 0.45231
-   case(p_mpw2plyp)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=0.7500_wp, s8=0.45788846_wp, a1=0.42997704_wp, a2=5.07650682_wp )
-      !  Fitset: MD= -0.18921 MAD= 0.30115 RMSD= 0.44049
-   case(p_mpwb1k)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=1.0000_wp, s8=0.57338313_wp, a1=0.44687975_wp, a2=5.21266777_wp )
-      !  Fitset: MD= -0.00870 MAD= 0.17226 RMSD= 0.23614
-   case(p_mpwlyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.25842942_wp, a1=0.25773894_wp, a2=5.02319542_wp )
-      !  Fitset: MD= -0.24426 MAD= 0.39145 RMSD= 0.54503
-   case(p_mpwpw)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.82596836_wp, a1=0.34526745_wp, a2=4.84620734_wp )
-      !  Fitset: MD= -0.06278 MAD= 0.27913 RMSD= 0.43988
-   case(p_o3lyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.75762508_wp, a1=0.10348980_wp, a2=6.16233282_wp )
-      !  Fitset: MD= -0.19268 MAD= 0.38577 RMSD= 0.62168
-   case(p_olyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=2.74836820_wp, a1=0.60184498_wp, a2=2.53292167_wp )
-      !  Fitset: MD= 0.12352 MAD= 0.37113 RMSD= 0.58291
-   case(p_opbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=3.06917417_wp, a1=0.68267534_wp, a2=2.22849018_wp )
-      !  Fitset: MD= 0.26699 MAD= 0.55308 RMSD= 0.85023
-   case(p_pbe0_2)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.5000_wp, s8=0.64299082_wp, a1=0.76542115_wp, a2=5.78578675_wp )
-      !  Fitset: MD= -0.04260 MAD= 0.21186 RMSD= 0.34045
-   case(p_pbe0)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.20065498_wp, a1=0.40085597_wp, a2=5.02928789_wp )
-      !  Fitset: MD= -0.17892 MAD= 0.30557 RMSD= 0.51050
-   case(p_pbe0_dh)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.8750_wp, s8=0.96811578_wp, a1=0.47592488_wp, a2=5.08622873_wp )
-      !  Fitset: MD= -0.13857 MAD= 0.27919 RMSD= 0.47256
-   case(p_pbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp )
-      !  Fitset: MD= -0.20544 MAD= 0.33635 RMSD= 0.51168
-   case(p_pbesol)
-      param = dftd_param ( & ! (SAW211021)
-         &  s6=1.0000_wp, s8=1.71885698_wp, a1=0.47901421_wp, a2=5.96771589_wp )
-      !  Fitset: MD= -0.28899 MAD= 0.52215 RMSD= 0.93584
-   case(p_am05)
-      param = dftd_param ( & ! (SAW211021)
-         &  s6=1.0000_wp, s8=1.71885838_wp, a1=0.47901431_wp, a2=5.96771581_wp )
-      !  Fitset: MD= -0.28899 MAD= 0.52215 RMSD= 0.93584
-   case(p_pw1pw)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.96850170_wp, a1=0.42427511_wp, a2=5.02060636_wp )
-      !  Fitset: MD= -0.27325 MAD= 0.42206 RMSD= 0.64119
-   case(p_pw6b95)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=-0.31926054_wp, a1=0.04142919_wp, a2=5.84655608_wp )
-      !  Fitset: MD= -0.04767 MAD= 0.14330 RMSD= 0.18958
-   case(p_pw86pbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.21362856_wp, a1=0.40510366_wp, a2=4.66737724_wp )
-      !  Fitset: MD= -0.11505 MAD= 0.24691 RMSD= 0.38101
-   case(p_pw91)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.77283111_wp, a1=0.39581542_wp, a2=4.93405761_wp )
-      !  Fitset: MD= -0.33019 MAD= 0.48611 RMSD= 0.68110
-   case(p_pwp1)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.60492565_wp, a1=0.46855837_wp, a2=5.76921413_wp )
-      !  Fitset: MD= -0.35321 MAD= 0.54026 RMSD= 0.86629
-   case(p_pwpb95)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.8200_wp, s8=-0.34639127_wp, a1=0.41080636_wp, a2=3.83878274_wp )
-      !  Fitset: MD= 0.02143 MAD= 0.13040 RMSD= 0.17599
-   case(p_pwp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=0.32801227_wp, a1=0.35874687_wp, a2=6.05861168_wp )
-      !  Fitset: MD= -0.42482 MAD= 0.62607 RMSD= 0.91840
-   case(p_revpbe0)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.57185414_wp, a1=0.38705966_wp, a2=4.11028876_wp )
-      !  Fitset: MD= 0.02724 MAD= 0.21587 RMSD= 0.36040
-   case(p_revpbe0dh)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=0.8750_wp, s8=1.24456037_wp, a1=0.36730560_wp, a2=4.71126482_wp )
-      !  Fitset: MD= -0.01089 MAD= 0.20910 RMSD= 0.33564
-   case(p_revpbe38)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.66597472_wp, a1=0.39476833_wp, a2=4.39026628_wp )
-      !  Fitset: MD= -0.01326 MAD= 0.22598 RMSD= 0.36210
-   case(p_revpbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.74676530_wp, a1=0.53634900_wp, a2=3.07261485_wp )
-      !  Fitset: MD= 0.05649 MAD= 0.25212 RMSD= 0.40863
-   case(p_revtpss0)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=1.0000_wp, s8=1.54664499_wp, a1=0.45890964_wp, a2=4.78426405_wp )
-      !  Fitset: MD= -0.05298 MAD= 0.19965 RMSD= 0.32081
-   case(p_revtpss)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.53089454_wp, a1=0.44880597_wp, a2=4.64042317_wp )
-      !  Fitset: MD= -0.01904 MAD= 0.19568 RMSD= 0.29618
-   case(p_revtpssh)
-      param = dftd_param ( & ! (SAW190107)
-         &  s6=1.0000_wp, s8=1.52740307_wp, a1=0.45161957_wp, a2=4.70779483_wp )
-      !  Fitset: MD= -0.03731 MAD= 0.19133 RMSD= 0.29091
-   case(p_rpbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.31183787_wp, a1=0.46169493_wp, a2=3.15711757_wp )
-      !  Fitset: MD= -0.07156 MAD= 0.26348 RMSD= 0.38671
-   case(p_rpw86pbe)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.12624034_wp, a1=0.38151218_wp, a2=4.75480472_wp )
-      !  Fitset: MD= -0.12740 MAD= 0.26294 RMSD= 0.40614
-   case(p_scan)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.46126056_wp, a1=0.62930855_wp, a2=6.31284039_wp )
-      !  Fitset: MD= -0.13170 MAD= 0.28640 RMSD= 0.51183
-   case(p_rscan)
-      param = dftd_param ( & ! (10.1063/5.0041008)
-         &  s6=1.0000_wp, s8=0.87728975_wp, a1=0.49116966_wp, a2=5.75859346_wp )
-   case(p_r2scan)
-      param = dftd_param ( & ! (10.1063/5.0041008)
-         &  s6=1.0000_wp, s8=0.60187490_wp, a1=0.51559235_wp, a2=5.77342911_wp )
-   case(p_r2scanh)
-      param = dftd_param ( & ! (10.1063/5.0086040)
-         & s6=1.0_wp, s8=0.8324_wp, a1=0.4944_wp, a2=5.9019_wp)
-   case(p_r2scan0)
-      param = dftd_param ( & ! (10.1063/5.0086040)
-         & s6=1.0_wp, s8=0.8992_wp, a1=0.4778_wp, a2=5.8779_wp)
-   case(p_r2scan50)
-      param = dftd_param ( & ! (10.1063/5.0086040)
-         & s6=1.0_wp, s8=1.0471_wp, a1=0.4574_wp, a2=5.8969_wp)
-   case(p_r2scan_3c)
-      param = dftd_param ( & ! (10.1063/5.0040021)
-         & s6=1.0_wp, s8=0.00_wp, a1=0.42_wp, a2=5.65_wp)
-   case(p_tpss0)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.62438102_wp, a1=0.40329022_wp, a2=4.80537871_wp )
-      !  Fitset: MD= -0.09569 MAD= 0.26733 RMSD= 0.44767
-   case(p_tpss)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.76596355_wp, a1=0.42822303_wp, a2=4.54257102_wp )
-      !  Fitset: MD= -0.09296 MAD= 0.27505 RMSD= 0.42537
-   case(p_tpssh)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.85897750_wp, a1=0.44286966_wp, a2=4.60230534_wp )
-      !  Fitset: MD=  0.02238 MAD= 0.16042 RMSD= 0.33519
-   case(p_b97d)
-      param = dftd_param ( & ! (SAW201029)
-         &  s6=1.0000_wp, s8=1.69460052_wp, a1=0.28904684_wp, a2=4.13407323_wp )
-      !  Fitset: MD= -0.09858 MAD= 0.26757 RMSD= 0.42380
-   case(p_wb97)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=6.55792598_wp, a1=0.76666802_wp, a2=8.36027334_wp )
-      !  Fitset: MD= -0.12779 MAD= 0.36152 RMSD= 0.49991
-   case(p_wb97x_2008)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=-0.07519516_wp, a1=0.45094893_wp, a2=6.78425255_wp )
-      !  S22x5: MD= 0.05 MAD= 0.16 RMSD= 0.22
-      !  S66x8: MD= 0.06 MAD= 0.16 RMSD= 0.21
-      !  NCI10: MD= 0.08 MAD= 0.15 RMSD= 0.25
-   case(p_wb97x)
-      param = dftd_param ( & ! (10.1002/jcc.26411)
-         &  s6=1.0000_wp, s8=0.5093_wp, a1=0.0662_wp, a2=5.4487_wp )
-   case(p_wb97x_rev)
-      param = dftd_param ( & ! (10.1063/5.0133026)
-         &  s6=1.0000_wp, s8=0.4485_wp, a1=0.3306_wp, a2=4.279_wp )
-   case(p_wb97x_3c)
-      param = dftd_param ( & ! (10.1063/5.0133026)
-         &  s6=1.0000_wp, s8=0.0_wp, a1=0.2464_wp, a2=4.737_wp )
-   case(p_b97m)
-      param = dftd_param ( & ! (10.1002/jcc.26411)
-         &  s6=1.0000_wp, s8=0.6633_wp, a1=0.4288_wp, a2=3.9935_wp )
-      !  S22x5: MD= 0.03 MAD= 0.12 RMSD= 0.18
-      !  S66x8: MD= 0.09 MAD= 0.17 RMSD= 0.22
-      !  NCI10: MD= 0.09 MAD= 0.15 RMSD= 0.32
-   case(p_wb97m)
-      param = dftd_param ( & ! (10.1002/jcc.26411)
-         &  s6=1.0000_wp, s8=0.7761_wp, a1=0.7514_wp, a2=2.7099_wp )
-      !  Fitset: MD= -0.20216 MAD= 0.34696 RMSD= 0.53641
-   case(p_wb97m_rev)
-      param = dftd_param ( & ! (10.1021/acs.jctc.3c00717)
-         &  s6=1.0000_wp, s8=0.842_wp, a1=0.359_wp, a2=4.668_wp )
-   case(p_x3lyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.54701429_wp, a1=0.20318443_wp, a2=5.61852648_wp )
-      !  Fitset: MD= -0.15607 MAD= 0.31342 RMSD= 0.49546
-   case(p_xlyp)
-      param = dftd_param ( & ! (SAW190103)
-         &  s6=1.0000_wp, s8=1.62972054_wp, a1=0.11268673_wp, a2=5.40786417_wp )
-      !  Fitset: MD= -0.03900 MAD= 0.27562 RMSD= 0.38491
-   case(p_revdsdpbep86)
-      param = dftd_param ( & ! (WTMAD2)
-         &  s6=0.5132_wp, s8=0.00000000_wp, a1=0.44000000_wp, a2=3.60000000_wp )
-   case(p_revdsdpbe)
-      param = dftd_param ( & ! (WTMAD2)
-         &  s6=0.6706_wp, s8=0.00000000_wp, a1=0.40000000_wp, a2=3.60000000_wp )
-   case(p_revdsdblyp)
-      param = dftd_param ( & !(WTMAD2)
-         &  s6=0.6141_wp, s8=0.00000000_wp, a1=0.38000000_wp, a2=3.52000000_wp )
-   case(p_revdodpbep86)
-      param = dftd_param ( & !(WTMAD2)
-         &  s6=0.5552_wp, s8=0.00000000_wp, a1=0.44000000_wp, a2=3.60000000_wp )
-   case(p_dftb_3ob)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=0.6635015_wp, a1=0.5523240_wp, a2=4.3537076_wp)
-   case(p_dftb_matsci)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=3.3157614_wp, a1=0.4826330_wp, a2=5.3811976_wp)
-   case(p_dftb_mio)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=1.2916225_wp, a1=0.5965326_wp, a2=4.8778602_wp)
-   case(p_dftb_ob2)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=2.9692689_wp, a1=0.6068916_wp, a2=5.4476789_wp)
-   case(p_dftb_pbc)
-      param = dftd_param( & ! (SAW191202)
-         &  s6=1.0_wp, s8=2.1667394_wp, a1=0.5646391_wp, a2=4.9576353_wp)
-   case(p_hse03)
-      param = dftd_param( & ! (SAW211107)
-         &  s6=1.0_wp, s8=1.19812280_wp, a1=0.38662939_wp, a2=5.22925796_wp)
-   case(p_hse06)
-      param = dftd_param( & ! (SAW211107)
-         &  s6=1.0_wp, s8=1.19528249_wp, a1=0.38663183_wp, a2=5.19133469_wp)
-   case(p_hse12)
-      param = dftd_param( & ! (SAW211107)
-         &  s6=1.0_wp, s8=1.23500792_wp, a1=0.39226921_wp, a2=5.22036266_wp)
-   case(p_hse12s)
-      param = dftd_param( & ! (SAW211107)
-         &  s6=1.0_wp, s8=1.23767762_wp, a1=0.39989137_wp, a2=5.34809245_wp)
-   case(p_hsesol)
-      param = dftd_param( & ! (SAW211107)
-         &  s6=1.0_wp, s8=1.82207807_wp, a1=0.45646268_wp, a2=5.59662251_wp)
-   case(p_wr2scan) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=1.0_wp, s8=1.0_wp, a1=0.3834_wp, a2=5.7889_wp)
-   case(p_r2scan0_dh) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.9424_wp, s8=0.3856_wp, a1=0.4271_wp, a2=5.8565_wp)
-   case(p_r2scan_cidh) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.8666_wp, s8=0.5336_wp, a1=0.4171_wp, a2=5.9125_wp)
-   case(p_r2scan_qidh) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.7867_wp, s8=0.2955_wp, a1=0.4001_wp, a2=5.8300_wp)
-   case(p_r2scan0_2) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.7386_wp, s8=0.0000_wp, a1=0.4030_wp, a2=5.5142_wp)
-   case(p_pr2scan50) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.7964_wp, s8=0.3421_wp, a1=0.4663_wp, a2=5.7916_wp)
-   case(p_pr2scan69) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.7167_wp, s8=0.0000_wp, a1=0.4644_wp, a2=5.2563_wp)
-   case(p_kpr2scan50) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.8402_wp, s8=0.1212_wp, a1=0.4382_wp, a2=5.8232_wp)
-   case(p_wpr2scan50) ! (10.1063/5.0174988)
-      param = dftd_param ( &
-         & s6=0.8143_wp, s8=0.3842_wp, a1=0.4135_wp, a2=5.8773_wp)
-   case default
-      continue
-   end select
+!> Load a parameter database explicitly.
+subroutine load_parameters(file, error)
+   !> Parameter file name.
+   character(len=*), intent(in) :: file
+   !> Error handling.
+   type(error_type), allocatable, intent(out) :: error
 
-contains
+   !$omp critical(dftd4_parameter_database)
+   database_ready = .false.
+   database_attempted = .true.
+   database_overridden = .true.
+   call database%load(file, error)
+   database_ready = .not.allocated(error)
+   !$omp end critical(dftd4_parameter_database)
+end subroutine load_parameters
 
-   pure function dftd_param(s6, s8, a1, a2, alp) result(par)
-      real(wp), intent(in) :: s8, a1, a2
-      real(wp), intent(in), optional :: s6, alp
-      type(rational_damping_param) :: par
-      real(wp) :: s6_, alp_, s9_
 
-      s6_ = 1.0_wp
-      if (present(s6)) s6_ = s6
-      s9_ = 1.0_wp
-      if (present(s9)) s9_ = s9
-      alp_ = 16.0_wp
-      if (present(alp)) alp_ = alp
+!> Locate and load the default parameter database.
+subroutine ensure_database()
+   type(error_type), allocatable :: error
 
-      par = rational_damping_param(&
-         & s6=s6_, &
-         & s8=s8, a1=a1, a2=a2, &
-         & s9=s9_, &
-         & alp=alp_)
-   end function dftd_param
+   !$omp critical(dftd4_parameter_database)
+   if (.not.database_attempted .and. .not.database_overridden) then
+      call database%load_from_string(get_embedded_parameters(), error)
+      database_attempted = .true.
+      database_ready = .not.allocated(error)
+   end if
+   !$omp end critical(dftd4_parameter_database)
+end subroutine ensure_database
 
-end subroutine get_d4eeq_bjatm_parameter
 
 !> Get the unique identifier for most functionals, returns none if
 !> the functional was not known at the time I implemented this mapping

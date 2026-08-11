@@ -183,3 +183,12 @@ multicharge_dep = dependency(
   default_options: ['default_library=static'],
 )
 lib_deps += multicharge_dep
+
+# Create the TOML Fortran library as subproject
+tomlf_dep = dependency(
+  'toml-f',
+  version: '>=0.4.3',
+  fallback: ['toml-f', 'tomlf_dep'],
+  default_options: ['default_library=static'],
+)
+lib_deps += tomlf_dep

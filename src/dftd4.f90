@@ -24,7 +24,7 @@ module dftd4
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_ncoord, only : get_coordination_number
    use dftd4_numdiff, only : get_dispersion_hessian
-   use dftd4_param, only : get_rational_damping
+   use dftd4_param, only : get_rational_damping, load_parameters
    use dftd4_version, only : get_dftd4_version
    use mctc_io, only : structure_type, new
    implicit none

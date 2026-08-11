@@ -6,6 +6,7 @@ set(DFTD4_WITH_API_V2 @DFTD4_WITH_API_V2@)
 set(DFTD4_WITH_ILP64 @DFTD4_WITH_ILP64@)
 set(DFTD4_USE_MCTCLIB @DFTD4_USE_MCTCLIB@)
 set(DFTD4_USE_MULTICHARGE @DFTD4_USE_MULTICHARGE@)
+set(DFTD4_USE_TOMLF @DFTD4_USE_TOMLF@)
 
 enable_language("Fortran")
 if(DFTD4_WITH_API)
@@ -30,6 +31,10 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
 
   if(NOT TARGET "multicharge::multicharge" AND DFTD4_USE_MULTICHARGE)
     find_dependency("multicharge")
+  endif()
+
+  if(NOT TARGET "toml-f::toml-f" AND DFTD4_USE_TOMLF)
+    find_dependency("toml-f")
   endif()
 
   list(REMOVE_AT CMAKE_MODULE_PATH -1)
