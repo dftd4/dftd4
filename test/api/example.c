@@ -60,6 +60,25 @@ unexpected:
     return 1;
 }
 
+int test_invalid_partition(void)
+{
+    printf("Start test: invalid partition\n");
+    double energy = 0.0;
+    dftd4_error error = dftd4_new_error();
+
+    dftd4_get_dispersion_partitioned(NULL, NULL, NULL, NULL, 0, 1,
+                                     &energy, NULL, NULL);
+    dftd4_get_dispersion_partitioned(error, NULL, NULL, NULL, 0, 0,
+                                     &energy, NULL, NULL);
+    if (!dftd4_check_error(error)) {
+        dftd4_delete(error);
+        return 1;
+    }
+
+    dftd4_delete(error);
+    return 0;
+}
+
 int test_example(void)
 {
     printf("Start test: example\n");
@@ -400,6 +419,7 @@ int main(void)
     int stat = 0;
     stat += test_uninitialized_error();
     stat += test_uninitialized_structure();
+    stat += test_invalid_partition();
     stat += test_example();
     stat += test_mbd_toggle();
 

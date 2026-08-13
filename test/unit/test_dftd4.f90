@@ -305,6 +305,10 @@ subroutine test_partitioned_dispersion(error)
    do part = 0, nparts - 1
       call new_work_partition(error, partition, part, nparts)
       if (allocated(error)) return
+      if (partition%is_first() .neqv. (part == 0)) then
+         call test_failed(error, "Unexpected first work partition")
+         return
+      end if
       call get_dispersion(mol, d4, param, realspace_cutoff(), part_energy, &
          & part_gradient, part_sigma, partition)
       partitioned_energy = partitioned_energy + part_energy
