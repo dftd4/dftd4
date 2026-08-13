@@ -145,13 +145,12 @@ subroutine get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, &
    real(wp), intent(inout), optional :: sigma(:, :)
    type(work_partition), intent(in) :: partition
 
-   if (.not. partition%is_valid()) then
-      error stop "Invalid dispersion work partition"
-   else if (partition%nparts /= 1) then
-      error stop "External work partitioning is not implemented for this damping model"
+   ! Models without finer-grained partitioning assign their complete
+   ! contribution to the first part, keeping the reduced result correct.
+   if (partition%is_first()) then
+      call self%get_dispersion2(mol, trans, cutoff, width, r4r2, c6, dc6dcn, &
+         & dc6dq, energy, dEdcn, dEdq, gradient, sigma)
    end if
-   call self%get_dispersion2(mol, trans, cutoff, width, r4r2, c6, dc6dcn, &
-      & dc6dq, energy, dEdcn, dEdq, gradient, sigma)
 
 end subroutine get_dispersion2_partitioned
 
@@ -176,13 +175,12 @@ subroutine get_dispersion3_partitioned(self, mol, trans, cutoff, width, r4r2, &
    real(wp), intent(inout), optional :: sigma(:, :)
    type(work_partition), intent(in) :: partition
 
-   if (.not. partition%is_valid()) then
-      error stop "Invalid dispersion work partition"
-   else if (partition%nparts /= 1) then
-      error stop "External work partitioning is not implemented for this damping model"
+   ! Models without finer-grained partitioning assign their complete
+   ! contribution to the first part, keeping the reduced result correct.
+   if (partition%is_first()) then
+      call self%get_dispersion3(mol, trans, cutoff, width, r4r2, c6, dc6dcn, &
+         & dc6dq, energy, dEdcn, dEdq, gradient, sigma)
    end if
-   call self%get_dispersion3(mol, trans, cutoff, width, r4r2, c6, dc6dcn, &
-      & dc6dq, energy, dEdcn, dEdq, gradient, sigma)
 
 end subroutine get_dispersion3_partitioned
 

@@ -31,7 +31,7 @@ module dftd4_api
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_numdiff, only: get_dispersion_hessian
    use dftd4_param, only : get_rational_damping
-   use dftd4_partition, only : work_partition
+   use dftd4_partition, only : new_work_partition, work_partition
    use dftd4_utils, only : wrap_to_central_cell
    use dftd4_version, only : get_dftd4_version
    use mctc_env, only : wp, error_type, fatal_error
@@ -679,11 +679,16 @@ subroutine get_dispersion_partitioned_api(verror, vmol, vdisp, vparam, part, npa
    real(c_double), intent(out), optional :: c_gradient(3, *)
    real(c_double), intent(out), optional :: c_sigma(3, 3)
 
+   type(vp_error), pointer :: error
    type(work_partition) :: partition
 
    if (debug) print'("[Info]",1x, a)', "get_dispersion_partitioned"
 
-   partition = work_partition(part=part, nparts=nparts)
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+   call new_work_partition(error%ptr, partition, int(part), int(nparts))
+   if (allocated(error%ptr)) return
+
    call get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
       & energy, c_gradient, c_sigma, partition)
 
@@ -711,13 +716,6 @@ subroutine get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
 
    if (.not.c_associated(verror)) return
    call c_f_pointer(verror, error)
-
-   if (present(partition)) then
-      if (.not. partition%is_valid()) then
-         call fatal_error(error%ptr, "Invalid dispersion work partition")
-         return
-      end if
-   end if
 
    if (.not.c_associated(vmol)) then
       call fatal_error(error%ptr, "Molecular structure data is missing")

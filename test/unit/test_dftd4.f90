@@ -17,7 +17,7 @@
 module test_dftd4
    use dftd4, only : d4_model, d4_qmod, d4s_model, damping_param, dispersion_model, &
       & get_dispersion, get_pairwise_dispersion, new_d4_model, new_d4s_model, &
-      & rational_damping_param, realspace_cutoff, work_partition
+      & new_work_partition, rational_damping_param, realspace_cutoff, work_partition
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -280,6 +280,8 @@ subroutine test_partitioned_dispersion(error)
    type(structure_type) :: mol
    type(d4_model) :: d4
    type(rational_damping_param) :: param
+   type(work_partition) :: partition
+   type(error_type), allocatable :: partition_error
    integer :: part
    real(wp) :: energy, part_energy, partitioned_energy
    real(wp), allocatable :: gradient(:, :), part_gradient(:, :), partitioned_gradient(:, :)
@@ -301,8 +303,10 @@ subroutine test_partitioned_dispersion(error)
    partitioned_gradient(:, :) = 0.0_wp
    partitioned_sigma(:, :) = 0.0_wp
    do part = 0, nparts - 1
+      call new_work_partition(error, partition, part, nparts)
+      if (allocated(error)) return
       call get_dispersion(mol, d4, param, realspace_cutoff(), part_energy, &
-         & part_gradient, part_sigma, work_partition(part, nparts))
+         & part_gradient, part_sigma, partition)
       partitioned_energy = partitioned_energy + part_energy
       partitioned_gradient(:, :) = partitioned_gradient + part_gradient
       partitioned_sigma(:, :) = partitioned_sigma + part_sigma
@@ -321,6 +325,14 @@ subroutine test_partitioned_dispersion(error)
 
    if (any(abs(partitioned_sigma - sigma) > thr2)) then
       call test_failed(error, "Partitioned dispersion virial does not match")
+      return
+   end if
+
+   call new_work_partition(partition_error, partition, -1, nparts)
+   if (.not. allocated(partition_error)) then
+      call test_failed(error, "Invalid work partition did not return an error")
+   else if (partition_error%message /= "Invalid dispersion work partition") then
+      call test_failed(error, "Unexpected error message for invalid work partition")
    end if
 
 end subroutine test_partitioned_dispersion

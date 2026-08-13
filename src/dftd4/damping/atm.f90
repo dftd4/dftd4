@@ -19,7 +19,7 @@
 !> with the critical radii from the rational (Becke--Johnson) damping.
 module dftd4_damping_atm
    use dftd4_cutoff, only : smooth_cutoff
-   use dftd4_partition, only : work_partition
+   use dftd4_partition, only : serial_work_partition, work_partition
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -93,9 +93,8 @@ subroutine get_atm_dispersion(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, 
    logical :: grad
    type(work_partition) :: partition_
 
-   partition_ = work_partition()
+   partition_ = serial_work_partition
    if (present(partition)) partition_ = partition
-   if (.not. partition_%is_valid()) error stop "Invalid dispersion work partition"
    if (abs(s9) < epsilon(1.0_wp)) return
    grad = present(dc6dcn) .and. present(dEdcn) .and. present(dc6dq) &
       & .and. present(dEdq) .and. present(gradient) .and. present(sigma)

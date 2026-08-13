@@ -17,10 +17,11 @@
 !> Work partitioning for externally distributed dispersion calculations
 module dftd4_partition
    use, intrinsic :: iso_fortran_env, only : int64
+   use mctc_env, only : error_type, fatal_error
    implicit none
    private
 
-   public :: work_partition
+   public :: work_partition, new_work_partition, serial_work_partition
 
 
    !> Cyclic partition of the symmetry-reduced atom-pair work.
@@ -29,31 +30,61 @@ module dftd4_partition
    !> assigned to exactly one part.  The caller is responsible for summing the
    !> energy and derivative contributions returned by all parts.
    type :: work_partition
+      private
+
       !> Zero-based index of this part
       integer :: part = 0
 
       !> Total number of parts
       integer :: nparts = 1
    contains
-      !> Whether this partition is well formed
-      procedure :: is_valid
+      !> Whether this is the first work partition
+      procedure, public :: is_first
 
       !> Whether this part owns a symmetry-reduced atom pair
-      procedure :: owns_pair
+      procedure, public :: owns_pair
    end type work_partition
+
+   !> Work partition representing an ordinary serial calculation
+   type(work_partition), parameter :: serial_work_partition = work_partition()
 
 
 contains
 
 
-!> Whether this partition is well formed
-elemental function is_valid(self) result(valid)
+!> Create a work partition
+subroutine new_work_partition(error, partition, part, nparts)
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> New work partition
+   type(work_partition), intent(out) :: partition
+
+   !> Zero-based index of this part
+   integer, intent(in) :: part
+
+   !> Total number of parts
+   integer, intent(in) :: nparts
+
+   if (nparts <= 0 .or. part < 0 .or. part >= nparts) then
+      call fatal_error(error, "Invalid dispersion work partition")
+      return
+   end if
+
+   partition%part = part
+   partition%nparts = nparts
+
+end subroutine new_work_partition
+
+
+!> Whether this is the first work partition
+elemental function is_first(self) result(first)
    class(work_partition), intent(in) :: self
-   logical :: valid
+   logical :: first
 
-   valid = self%nparts > 0 .and. self%part >= 0 .and. self%part < self%nparts
+   first = self%part == 0
 
-end function is_valid
+end function is_first
 
 
 !> Whether this part owns a symmetry-reduced atom pair

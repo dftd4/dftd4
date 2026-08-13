@@ -20,7 +20,7 @@ module dftd4_damping_rational
    use dftd4_damping, only : damping_param
    use dftd4_damping_atm, only : get_atm_dispersion
    use dftd4_data, only : get_r4r2_val
-   use dftd4_partition, only : work_partition
+   use dftd4_partition, only : serial_work_partition, work_partition
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -86,7 +86,7 @@ subroutine get_dispersion2(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, dc
    real(wp), intent(inout), optional :: sigma(:, :)
 
    call get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, c6, &
-      & dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, work_partition())
+      & dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, serial_work_partition)
 
 end subroutine get_dispersion2
 
@@ -142,7 +142,6 @@ subroutine get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, &
 
    logical :: grad
 
-   if (.not. partition%is_valid()) error stop "Invalid dispersion work partition"
    if (abs(self%s6) < epsilon(1.0_wp) .and. abs(self%s8) < epsilon(1.0_wp)) return
    grad = present(dc6dcn) .and. present(dEdcn) .and. present(dc6dq) &
       & .and. present(dEdq) .and. present(gradient) .and. present(sigma)

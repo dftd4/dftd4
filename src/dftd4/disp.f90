@@ -74,17 +74,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    real(wp), allocatable :: dEdcn(:), dEdq(:), energies(:)
    real(wp), allocatable :: lattr(:, :)
    type(error_type), allocatable :: error
-   type(work_partition) :: partition_
 
    mref = maxval(disp%ref)
    grad = present(gradient).or.present(sigma)
-   partition_ = work_partition()
-   if (present(partition)) partition_ = partition
-
-   if (.not. partition_%is_valid()) then
-      write(error_unit, '("[Error]:", 1x, a)') "Invalid dispersion work partition"
-      error stop
-   end if
 
    if (.not. allocated(disp%mchrg)) then
       write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
@@ -125,7 +117,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    if (present(partition)) then
       call param%get_dispersion2_partitioned(mol, lattr, cutoff%disp2, &
          & cutoff%width2, disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, &
-         & dEdq, gradient, sigma, partition_)
+         & dEdq, gradient, sigma, partition)
    else
       call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, &
          & disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
@@ -143,7 +135,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    if (present(partition)) then
       call param%get_dispersion3_partitioned(mol, lattr, cutoff%disp3, &
          & cutoff%width3, disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, &
-         & dEdq, gradient, sigma, partition_)
+         & dEdq, gradient, sigma, partition)
    else
       call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
          & disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
