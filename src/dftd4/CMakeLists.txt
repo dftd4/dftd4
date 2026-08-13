@@ -24,6 +24,7 @@ list(
   APPEND srcs
   "${dir}/blas.F90"
   "${dir}/cutoff.f90"
+  "${dir}/partition.f90"
   "${dir}/damping.f90"
   "${dir}/data.f90"
   "${dir}/disp.f90"

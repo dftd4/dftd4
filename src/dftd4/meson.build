@@ -21,6 +21,7 @@ subdir('model')
 srcs += files(
   'blas.F90',
   'cutoff.f90',
+  'partition.f90',
   'damping.f90',
   'data.f90',
   'disp.f90',

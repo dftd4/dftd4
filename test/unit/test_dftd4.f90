@@ -17,7 +17,7 @@
 module test_dftd4
    use dftd4, only : d4_model, d4_qmod, d4s_model, damping_param, dispersion_model, &
       & get_dispersion, get_pairwise_dispersion, new_d4_model, new_d4s_model, &
-      & rational_damping_param, realspace_cutoff
+      & rational_damping_param, realspace_cutoff, work_partition
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -82,6 +82,7 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
       & new_unittest("TPSSh-D4S-ATM-AmF3", test_tpsshd4satm_amf3), &
       & new_unittest("smooth cutoff", test_smooth_cutoff), &
+      & new_unittest("partitioned dispersion", test_partitioned_dispersion), &
       & new_unittest("Actinides-D4", test_actinides_d4), &
       & new_unittest("Actinides-D4S", test_actinides_d4s) &
       & ]
@@ -268,6 +269,61 @@ subroutine test_smooth_cutoff(error)
    call test_numsigma(error, mol, d4, param, smooth)
 
 end subroutine test_smooth_cutoff
+
+
+subroutine test_partitioned_dispersion(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer, parameter :: nparts = 3
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(rational_damping_param) :: param
+   integer :: part
+   real(wp) :: energy, part_energy, partitioned_energy
+   real(wp), allocatable :: gradient(:, :), part_gradient(:, :), partitioned_gradient(:, :)
+   real(wp) :: sigma(3, 3), part_sigma(3, 3), partitioned_sigma(3, 3)
+
+   param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 16.0_wp, &
+      & s8 = 1.31183787_wp, a1 = 0.46169493_wp, a2 = 3.15711757_wp)
+
+   call get_structure(mol, "MB16-43", "09")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+
+   allocate(gradient(3, mol%nat), part_gradient(3, mol%nat), &
+      & partitioned_gradient(3, mol%nat))
+   call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, sigma)
+
+   partitioned_energy = 0.0_wp
+   partitioned_gradient(:, :) = 0.0_wp
+   partitioned_sigma(:, :) = 0.0_wp
+   do part = 0, nparts - 1
+      call get_dispersion(mol, d4, param, realspace_cutoff(), part_energy, &
+         & part_gradient, part_sigma, work_partition(part, nparts))
+      partitioned_energy = partitioned_energy + part_energy
+      partitioned_gradient(:, :) = partitioned_gradient + part_gradient
+      partitioned_sigma(:, :) = partitioned_sigma + part_sigma
+   end do
+
+   call check(error, partitioned_energy, energy, thr=thr2)
+   if (allocated(error)) then
+      call test_failed(error, "Partitioned dispersion energy does not match")
+      return
+   end if
+
+   if (any(abs(partitioned_gradient - gradient) > thr2)) then
+      call test_failed(error, "Partitioned dispersion gradient does not match")
+      return
+   end if
+
+   if (any(abs(partitioned_sigma - sigma) > thr2)) then
+      call test_failed(error, "Partitioned dispersion virial does not match")
+   end if
+
+end subroutine test_partitioned_dispersion
 
 
 subroutine test_pbed4_mb01(error)

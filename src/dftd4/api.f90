@@ -31,6 +31,7 @@ module dftd4_api
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_numdiff, only: get_dispersion_hessian
    use dftd4_param, only : get_rational_damping
+   use dftd4_partition, only : work_partition
    use dftd4_utils, only : wrap_to_central_cell
    use dftd4_version, only : get_dftd4_version
    use mctc_env, only : wp, error_type, fatal_error
@@ -55,7 +56,8 @@ module dftd4_api
    public :: new_rational_damping_api , load_rational_damping_api
    public :: delete_param_api
 
-   public :: get_dispersion_api, get_pairwise_dispersion_api, get_properties_api, get_numerical_hessian_api
+   public :: get_dispersion_api, get_dispersion_partitioned_api
+   public :: get_pairwise_dispersion_api, get_properties_api, get_numerical_hessian_api
 
    !> Namespace for C routines
    character(len=*), parameter :: namespace = "dftd4_"
@@ -646,6 +648,52 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       & bind(C, name=namespace//"get_dispersion")
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_api
    type(c_ptr), value :: verror
+   type(c_ptr), value :: vmol
+   type(c_ptr), value :: vdisp
+   type(c_ptr), value :: vparam
+   real(c_double), intent(out) :: energy
+   real(c_double), intent(out), optional :: c_gradient(3, *)
+   real(c_double), intent(out), optional :: c_sigma(3, 3)
+
+
+   if (debug) print'("[Info]",1x, a)', "get_dispersion"
+
+   call get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
+      & energy, c_gradient, c_sigma)
+
+end subroutine get_dispersion_api
+
+
+!> Calculate one externally assigned partition of the dispersion correction
+subroutine get_dispersion_partitioned_api(verror, vmol, vdisp, vparam, part, nparts, &
+      & energy, c_gradient, c_sigma) &
+      & bind(C, name=namespace//"get_dispersion_partitioned")
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_partitioned_api
+   type(c_ptr), value :: verror
+   type(c_ptr), value :: vmol
+   type(c_ptr), value :: vdisp
+   type(c_ptr), value :: vparam
+   integer(c_int), value :: part
+   integer(c_int), value :: nparts
+   real(c_double), intent(out) :: energy
+   real(c_double), intent(out), optional :: c_gradient(3, *)
+   real(c_double), intent(out), optional :: c_sigma(3, 3)
+
+   type(work_partition) :: partition
+
+   if (debug) print'("[Info]",1x, a)', "get_dispersion_partitioned"
+
+   partition = work_partition(part=part, nparts=nparts)
+   call get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
+      & energy, c_gradient, c_sigma, partition)
+
+end subroutine get_dispersion_partitioned_api
+
+
+!> Common implementation of serial and externally partitioned C API calls
+subroutine get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
+      & energy, c_gradient, c_sigma, partition)
+   type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
    type(vp_structure), pointer :: mol
@@ -658,13 +706,18 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    real(wp), allocatable :: gradient(:, :)
    real(c_double), intent(out), optional :: c_sigma(3, 3)
    real(wp), allocatable :: sigma(:, :)
+   type(work_partition), intent(in), optional :: partition
    logical :: has_grad, has_sigma
-
-
-   if (debug) print'("[Info]",1x, a)', "get_dispersion"
 
    if (.not.c_associated(verror)) return
    call c_f_pointer(verror, error)
+
+   if (present(partition)) then
+      if (.not. partition%is_valid()) then
+         call fatal_error(error%ptr, "Invalid dispersion work partition")
+         return
+      end if
+   end if
 
    if (.not.c_associated(vmol)) then
       call fatal_error(error%ptr, "Molecular structure data is missing")
@@ -707,8 +760,13 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
 
    ! Evaluate energy, gradient (optional), and
    ! sigma (optional) analytically
-   call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
-      & energy, gradient, sigma)
+   if (present(partition)) then
+      call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
+         & energy, gradient, sigma, partition)
+   else
+      call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
+         & energy, gradient, sigma)
+   end if
 
    if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -718,7 +776,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       c_sigma(:3, :3) = sigma
    end if
 
-end subroutine get_dispersion_api
+end subroutine get_dispersion_api_impl
 
 !> Calculate hessian numerically
 subroutine get_numerical_hessian_api(verror, vmol, vdisp, &

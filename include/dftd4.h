@@ -33,6 +33,10 @@
 #define DFTD4_API_SUFFIX__V_3_5
 #define DFTD4_API_SUFFIX__V_4_0
 #define DFTD4_API_SUFFIX__V_4_2
+#define DFTD4_API_SUFFIX__V_4_3
+
+/// Whether the library provides externally partitioned dispersion evaluation
+#define DFTD4_HAS_PARTITIONED_DISPERSION 1
 
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;
@@ -211,6 +215,23 @@ dftd4_get_dispersion(dftd4_error /* error */,
                      double* /* energy */,
                      double* /* gradient[n][3] */,
                      double* /* sigma[3][3] */) DFTD4_API_SUFFIX__V_3_0;
+
+/// Evaluate one externally assigned partition of the dispersion correction
+///
+/// The part index is zero based and must be smaller than nparts.  Sum the
+/// energy, gradient, and sigma returned by all parts to recover the complete
+/// result.  Structure-dependent properties are evaluated for the full system
+/// on every part; only the pairwise and ATM interaction loops are partitioned.
+DFTD4_API_ENTRY void DFTD4_API_CALL
+dftd4_get_dispersion_partitioned(dftd4_error /* error */,
+                                 dftd4_structure /* mol */,
+                                 dftd4_model /* disp */,
+                                 dftd4_param /* param */,
+                                 int /* part */,
+                                 int /* nparts */,
+                                 double* /* energy */,
+                                 double* /* gradient[n][3] */,
+                                 double* /* sigma[3][3] */) DFTD4_API_SUFFIX__V_4_3;
 
 /// Evaluate the dispersion hessian numerically
 DFTD4_API_ENTRY void DFTD4_API_CALL

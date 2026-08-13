@@ -16,6 +16,7 @@
 
 !> Generic interface to define damping functions for the DFT-D4 model
 module dftd4_damping
+   use dftd4_partition, only : work_partition
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -29,9 +30,11 @@ module dftd4_damping
       generic :: get_dispersion2 => get_dispersion2_impl, get_dispersion2_compat
       procedure(dispersion_interface), deferred :: get_dispersion2_impl
       procedure :: get_dispersion2_compat
+      procedure :: get_dispersion2_partitioned
       generic :: get_dispersion3 => get_dispersion3_impl, get_dispersion3_compat
       procedure(dispersion_interface), deferred :: get_dispersion3_impl
       procedure :: get_dispersion3_compat
+      procedure :: get_dispersion3_partitioned
       generic :: get_pairwise_dispersion2 => get_pairwise_dispersion2_impl, get_pairwise_dispersion2_compat
       procedure(pairwise_dispersion_interface), deferred :: get_pairwise_dispersion2_impl
       procedure :: get_pairwise_dispersion2_compat
@@ -121,6 +124,67 @@ module dftd4_damping
    end interface
 
 contains
+
+!> Evaluation of an externally assigned pairwise-dispersion work partition
+subroutine get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, &
+      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
+
+   class(damping_param), intent(in) :: self
+   class(structure_type), intent(in) :: mol
+   real(wp), intent(in) :: trans(:, :)
+   real(wp), intent(in) :: cutoff
+   real(wp), intent(in) :: width
+   real(wp), intent(in) :: r4r2(:)
+   real(wp), intent(in) :: c6(:, :)
+   real(wp), intent(in), optional :: dc6dcn(:, :)
+   real(wp), intent(in), optional :: dc6dq(:, :)
+   real(wp), intent(inout) :: energy(:)
+   real(wp), intent(inout), optional :: dEdcn(:)
+   real(wp), intent(inout), optional :: dEdq(:)
+   real(wp), intent(inout), optional :: gradient(:, :)
+   real(wp), intent(inout), optional :: sigma(:, :)
+   type(work_partition), intent(in) :: partition
+
+   if (.not. partition%is_valid()) then
+      error stop "Invalid dispersion work partition"
+   else if (partition%nparts /= 1) then
+      error stop "External work partitioning is not implemented for this damping model"
+   end if
+   call self%get_dispersion2(mol, trans, cutoff, width, r4r2, c6, dc6dcn, &
+      & dc6dq, energy, dEdcn, dEdq, gradient, sigma)
+
+end subroutine get_dispersion2_partitioned
+
+
+!> Evaluation of an externally assigned three-body-dispersion work partition
+subroutine get_dispersion3_partitioned(self, mol, trans, cutoff, width, r4r2, &
+      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
+
+   class(damping_param), intent(in) :: self
+   class(structure_type), intent(in) :: mol
+   real(wp), intent(in) :: trans(:, :)
+   real(wp), intent(in) :: cutoff
+   real(wp), intent(in) :: width
+   real(wp), intent(in) :: r4r2(:)
+   real(wp), intent(in) :: c6(:, :)
+   real(wp), intent(in), optional :: dc6dcn(:, :)
+   real(wp), intent(in), optional :: dc6dq(:, :)
+   real(wp), intent(inout) :: energy(:)
+   real(wp), intent(inout), optional :: dEdcn(:)
+   real(wp), intent(inout), optional :: dEdq(:)
+   real(wp), intent(inout), optional :: gradient(:, :)
+   real(wp), intent(inout), optional :: sigma(:, :)
+   type(work_partition), intent(in) :: partition
+
+   if (.not. partition%is_valid()) then
+      error stop "Invalid dispersion work partition"
+   else if (partition%nparts /= 1) then
+      error stop "External work partitioning is not implemented for this damping model"
+   end if
+   call self%get_dispersion3(mol, trans, cutoff, width, r4r2, c6, dc6dcn, &
+      & dc6dq, energy, dEdcn, dEdq, gradient, sigma)
+
+end subroutine get_dispersion3_partitioned
 
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion2_compat(self, mol, trans, cutoff, r4r2, &
