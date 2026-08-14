@@ -35,9 +35,6 @@
 #define DFTD4_API_SUFFIX__V_4_2
 #define DFTD4_API_SUFFIX__V_4_3
 
-/// Whether the library provides externally partitioned dispersion evaluation
-#define DFTD4_HAS_PARTITIONED_DISPERSION 1
-
 /// Error handle class
 typedef struct _dftd4_error* dftd4_error;
 
