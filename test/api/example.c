@@ -63,20 +63,44 @@ unexpected:
 int test_invalid_partition(void)
 {
     printf("Start test: invalid partition\n");
-    double energy = 0.0;
+    int const attyp[1] = { 1 };
+    int const invalid[3][2] = {{-1, 3}, {3, 3}, {0, 0}};
+    double const coord[3] = { 0.0, 0.0, 0.0 };
     dftd4_error error = dftd4_new_error();
+    dftd4_structure mol = NULL;
+    dftd4_model disp = NULL;
 
-    dftd4_get_dispersion_partitioned(NULL, NULL, NULL, NULL, 0, 1,
-                                     &energy, NULL, NULL);
-    dftd4_get_dispersion_partitioned(error, NULL, NULL, NULL, 0, 0,
-                                     &energy, NULL, NULL);
-    if (!dftd4_check_error(error)) {
+    mol = dftd4_new_structure(error, 1, attyp, coord, NULL, NULL, NULL);
+    if (!mol || dftd4_check_error(error)) goto unexpected;
+
+    disp = dftd4_new_d4_model(error, mol);
+    if (!disp || dftd4_check_error(error)) goto unexpected;
+
+    // A missing error handle is allowed and leaves the model unchanged.
+    dftd4_set_model_work_partition(NULL, disp, 0, 1);
+
+    for (int i = 0; i < 3; ++i) {
+        dftd4_set_model_work_partition(error, disp, invalid[i][0], invalid[i][1]);
+        if (!dftd4_check_error(error)) goto unexpected;
         dftd4_delete(error);
-        return 1;
+        error = dftd4_new_error();
     }
 
+    dftd4_set_model_work_partition(error, NULL, 0, 1);
+    if (!dftd4_check_error(error)) {
+        goto unexpected;
+    }
+
+    dftd4_delete(disp);
+    dftd4_delete(mol);
     dftd4_delete(error);
     return 0;
+
+unexpected:
+    dftd4_delete(disp);
+    dftd4_delete(mol);
+    dftd4_delete(error);
+    return 1;
 }
 
 int test_example(void)
@@ -107,12 +131,16 @@ int test_example(void)
     double* pair_disp3;
     double* gradient;
     double* hessian;
+    double* part_hessian;
+    double* partitioned_hessian;
     double* c6;
 
     pair_disp2 = (double*)malloc(nat_sq * sizeof(double));
     pair_disp3 = (double*)malloc(nat_sq * sizeof(double));
     gradient = (double*)malloc(nat3 * sizeof(double));
     hessian = (double*)malloc(nat3_sq * sizeof(double));
+    part_hessian = (double*)malloc(nat3_sq * sizeof(double));
+    partitioned_hessian = (double*)malloc(nat3_sq * sizeof(double));
     c6 = (double*)malloc(nat_sq * sizeof(double));
 
     dftd4_error error = NULL;
@@ -173,22 +201,36 @@ int test_example(void)
     if (dftd4_check_error(error)) {
         goto err;
     }
+    dftd4_get_numerical_hessian(error, mol, disp, param, hessian);
+    if (dftd4_check_error(error)) {
+        goto err;
+    }
 
     // The sum over externally assigned work partitions must reproduce the
     // complete energy and derivatives.
     partitioned_energy = 0.0;
     for (int i = 0; i < nat3; ++i) partitioned_gradient[i] = 0.0;
     for (int i = 0; i < 9; ++i) partitioned_sigma[i] = 0.0;
+    for (int i = 0; i < nat3_sq; ++i) partitioned_hessian[i] = 0.0;
 
     for (int part = 0; part < 3; ++part) {
-        dftd4_get_dispersion_partitioned(error, mol, disp, param, part, 3,
-                                         &part_energy, part_gradient, part_sigma);
+        dftd4_set_model_work_partition(error, disp, part, 3);
+        if (dftd4_check_error(error)) {
+            goto err;
+        }
+        dftd4_get_dispersion(error, mol, disp, param,
+                             &part_energy, part_gradient, part_sigma);
+        if (dftd4_check_error(error)) {
+            goto err;
+        }
+        dftd4_get_numerical_hessian(error, mol, disp, param, part_hessian);
         if (dftd4_check_error(error)) {
             goto err;
         }
         partitioned_energy += part_energy;
         for (int i = 0; i < nat3; ++i) partitioned_gradient[i] += part_gradient[i];
         for (int i = 0; i < 9; ++i) partitioned_sigma[i] += part_sigma[i];
+        for (int i = 0; i < nat3_sq; ++i) partitioned_hessian[i] += part_hessian[i];
     }
 
     if (fabs(partitioned_energy - energy) > 1e-12) {
@@ -204,8 +246,14 @@ int test_example(void)
             goto err;
         }
     }
+    for (int i = 0; i < nat3_sq; ++i) {
+        if (fabs(partitioned_hessian[i] - hessian[i]) > 1e-12) {
+            goto err;
+        }
+    }
 
-    dftd4_get_numerical_hessian(error, mol, disp, param, hessian);
+    // Restore the ordinary serial calculation for subsequent calls.
+    dftd4_set_model_work_partition(error, disp, 0, 1);
     if (dftd4_check_error(error)) {
         goto err;
     }
@@ -314,6 +362,8 @@ int test_example(void)
     free(pair_disp3);
     free(gradient);
     free(hessian);
+    free(part_hessian);
+    free(partitioned_hessian);
     free(c6);
 
     return 0;
@@ -334,6 +384,8 @@ err:
     free(pair_disp3);
     free(gradient);
     free(hessian);
+    free(part_hessian);
+    free(partitioned_hessian);
     free(c6);
 
     return 1;

@@ -177,6 +177,18 @@ Recreating a structure object requires to recreate the dispersion model as well.
    Set realspace cutoffs and optional smoothing widths for usage in dispersion calculations.
    Smoothing is active for a contribution when the corresponding width is larger than zero.
 
+.. c:function:: void dftd4_set_model_work_partition(dftd4_error error, dftd4_model disp, int part, int nparts);
+
+   :param error: Error handle
+   :param disp: Dispersion model handle
+   :param part: Zero-based index of this part
+   :param nparts: Total number of parts
+
+   Assign an externally managed part of the interaction loops to this model.
+   Summing the results of all parts reproduces the complete calculation.
+   Structure-dependent quantities are evaluated for the full system on every
+   part; only the pairwise and ATM interaction loops are partitioned.
+
 
 Damping parameters
 ------------------

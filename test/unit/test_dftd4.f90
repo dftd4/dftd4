@@ -17,7 +17,8 @@
 module test_dftd4
    use dftd4, only : d4_model, d4_qmod, d4s_model, damping_param, dispersion_model, &
       & get_dispersion, get_pairwise_dispersion, new_d4_model, new_d4s_model, &
-      & new_work_partition, rational_damping_param, realspace_cutoff, work_partition
+      & new_work_partition, rational_damping_param, realspace_cutoff, &
+      & serial_work_partition, work_partition
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -282,8 +283,10 @@ subroutine test_partitioned_dispersion(error)
    type(rational_damping_param) :: param
    type(work_partition) :: partition
    type(error_type), allocatable :: partition_error
-   integer :: part
+   integer :: part, i
+   integer :: invalid_part(3), invalid_nparts(3)
    real(wp) :: energy, part_energy, partitioned_energy
+   real(wp) :: energy_only, part_energy_only, partitioned_energy_only
    real(wp), allocatable :: gradient(:, :), part_gradient(:, :), partitioned_gradient(:, :)
    real(wp) :: sigma(3, 3), part_sigma(3, 3), partitioned_sigma(3, 3)
 
@@ -297,21 +300,35 @@ subroutine test_partitioned_dispersion(error)
 
    allocate(gradient(3, mol%nat), part_gradient(3, mol%nat), &
       & partitioned_gradient(3, mol%nat))
+   call get_dispersion(mol, d4, param, realspace_cutoff(), energy_only)
    call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, sigma)
 
+   call get_dispersion(mol, d4, param, realspace_cutoff(), part_energy, &
+      & part_gradient, part_sigma, partition=serial_work_partition)
+   call check(error, part_energy, energy, thr=thr2)
+   if (allocated(error)) then
+      call test_failed(error, "Serial dispersion partition does not match")
+      return
+   end if
+   if (any(abs(part_gradient - gradient) > thr2) .or. &
+         & any(abs(part_sigma - sigma) > thr2)) then
+      call test_failed(error, "Serial dispersion derivatives do not match")
+      return
+   end if
+
    partitioned_energy = 0.0_wp
+   partitioned_energy_only = 0.0_wp
    partitioned_gradient(:, :) = 0.0_wp
    partitioned_sigma(:, :) = 0.0_wp
    do part = 0, nparts - 1
       call new_work_partition(error, partition, part, nparts)
       if (allocated(error)) return
-      if (partition%is_first() .neqv. (part == 0)) then
-         call test_failed(error, "Unexpected first work partition")
-         return
-      end if
       call get_dispersion(mol, d4, param, realspace_cutoff(), part_energy, &
          & part_gradient, part_sigma, partition)
+      call get_dispersion(mol, d4, param, realspace_cutoff(), part_energy_only, &
+         & partition=partition)
       partitioned_energy = partitioned_energy + part_energy
+      partitioned_energy_only = partitioned_energy_only + part_energy_only
       partitioned_gradient(:, :) = partitioned_gradient + part_gradient
       partitioned_sigma(:, :) = partitioned_sigma + part_sigma
    end do
@@ -319,6 +336,12 @@ subroutine test_partitioned_dispersion(error)
    call check(error, partitioned_energy, energy, thr=thr2)
    if (allocated(error)) then
       call test_failed(error, "Partitioned dispersion energy does not match")
+      return
+   end if
+
+   call check(error, partitioned_energy_only, energy_only, thr=thr2)
+   if (allocated(error)) then
+      call test_failed(error, "Partitioned energy-only dispersion does not match")
       return
    end if
 
@@ -332,12 +355,18 @@ subroutine test_partitioned_dispersion(error)
       return
    end if
 
-   call new_work_partition(partition_error, partition, -1, nparts)
-   if (.not. allocated(partition_error)) then
-      call test_failed(error, "Invalid work partition did not return an error")
-   else if (partition_error%message /= "Invalid dispersion work partition") then
-      call test_failed(error, "Unexpected error message for invalid work partition")
-   end if
+   invalid_part = [-1, nparts, 0]
+   invalid_nparts = [nparts, nparts, 0]
+   do i = 1, size(invalid_part)
+      call new_work_partition(partition_error, partition, invalid_part(i), invalid_nparts(i))
+      if (.not.allocated(partition_error)) then
+         call test_failed(error, "Invalid work partition did not return an error")
+         return
+      else if (partition_error%message /= "Invalid dispersion work partition") then
+         call test_failed(error, "Unexpected error message for invalid work partition")
+         return
+      end if
+   end do
 
 end subroutine test_partitioned_dispersion
 

@@ -51,12 +51,13 @@ module dftd4_api
    public :: new_d4_model_api, custom_d4_model_api, delete_model_api
    public :: new_d4s_model_api, custom_d4s_model_api
    public :: set_model_realspace_cutoff_api, set_model_realspace_cutoff_smooth_api
+   public :: set_model_work_partition_api
 
    public :: vp_param
    public :: new_rational_damping_api , load_rational_damping_api
    public :: delete_param_api
 
-   public :: get_dispersion_api, get_dispersion_partitioned_api
+   public :: get_dispersion_api
    public :: get_pairwise_dispersion_api, get_properties_api, get_numerical_hessian_api
 
    !> Namespace for C routines
@@ -81,6 +82,9 @@ module dftd4_api
 
       !> Realspace cutoff used by C API calculation entry points
       type(realspace_cutoff) :: cutoff
+
+      !> Work partition of the interaction loops
+      type(work_partition) :: partition
    end type vp_model
 
    !> Void pointer to damping parameters
@@ -546,6 +550,34 @@ subroutine set_model_realspace_cutoff_smooth_api(verror, vdisp, disp2, disp3, cn
 end subroutine set_model_realspace_cutoff_smooth_api
 
 
+!> Assign an externally managed part of the interaction loops to this model.
+!>
+!> Parts are zero based, summing the results of all parts reproduces the
+!> complete calculation.
+subroutine set_model_work_partition_api(verror, vdisp, part, nparts) &
+      & bind(C, name=namespace//"set_model_work_partition")
+   !DEC$ ATTRIBUTES DLLEXPORT :: set_model_work_partition_api
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   integer(c_int), value, intent(in) :: part
+   integer(c_int), value, intent(in) :: nparts
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   call new_work_partition(error%ptr, disp%partition, int(part), int(nparts))
+
+end subroutine set_model_work_partition_api
+
+
 !> Create new rational damping parameters
 function new_rational_damping_api(verror, s6, s8, s9, a1, a2, alp) &
       & result(vparam) &
@@ -648,57 +680,6 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       & bind(C, name=namespace//"get_dispersion")
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_api
    type(c_ptr), value :: verror
-   type(c_ptr), value :: vmol
-   type(c_ptr), value :: vdisp
-   type(c_ptr), value :: vparam
-   real(c_double), intent(out) :: energy
-   real(c_double), intent(out), optional :: c_gradient(3, *)
-   real(c_double), intent(out), optional :: c_sigma(3, 3)
-
-
-   if (debug) print'("[Info]",1x, a)', "get_dispersion"
-
-   call get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
-      & energy, c_gradient, c_sigma)
-
-end subroutine get_dispersion_api
-
-
-!> Calculate one externally assigned partition of the dispersion correction
-subroutine get_dispersion_partitioned_api(verror, vmol, vdisp, vparam, part, nparts, &
-      & energy, c_gradient, c_sigma) &
-      & bind(C, name=namespace//"get_dispersion_partitioned")
-   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_partitioned_api
-   type(c_ptr), value :: verror
-   type(c_ptr), value :: vmol
-   type(c_ptr), value :: vdisp
-   type(c_ptr), value :: vparam
-   integer(c_int), value :: part
-   integer(c_int), value :: nparts
-   real(c_double), intent(out) :: energy
-   real(c_double), intent(out), optional :: c_gradient(3, *)
-   real(c_double), intent(out), optional :: c_sigma(3, 3)
-
-   type(vp_error), pointer :: error
-   type(work_partition) :: partition
-
-   if (debug) print'("[Info]",1x, a)', "get_dispersion_partitioned"
-
-   if (.not.c_associated(verror)) return
-   call c_f_pointer(verror, error)
-   call new_work_partition(error%ptr, partition, int(part), int(nparts))
-   if (allocated(error%ptr)) return
-
-   call get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
-      & energy, c_gradient, c_sigma, partition)
-
-end subroutine get_dispersion_partitioned_api
-
-
-!> Common implementation of serial and externally partitioned C API calls
-subroutine get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
-      & energy, c_gradient, c_sigma, partition)
-   type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
    type(vp_structure), pointer :: mol
@@ -711,8 +692,10 @@ subroutine get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
    real(wp), allocatable :: gradient(:, :)
    real(c_double), intent(out), optional :: c_sigma(3, 3)
    real(wp), allocatable :: sigma(:, :)
-   type(work_partition), intent(in), optional :: partition
    logical :: has_grad, has_sigma
+
+
+   if (debug) print'("[Info]",1x, a)', "get_dispersion"
 
    if (.not.c_associated(verror)) return
    call c_f_pointer(verror, error)
@@ -756,15 +739,9 @@ subroutine get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
       allocate(sigma(3,3))
    end if
 
-   ! Evaluate energy, gradient (optional), and
-   ! sigma (optional) analytically
-   if (present(partition)) then
-      call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
-         & energy, gradient, sigma, partition)
-   else
-      call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
-         & energy, gradient, sigma)
-   end if
+   ! Evaluate energy, gradient (optional), and sigma (optional) analytically
+   call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
+      & energy, gradient, sigma, partition=disp%partition)
 
    if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -774,7 +751,7 @@ subroutine get_dispersion_api_impl(verror, vmol, vdisp, vparam, &
       c_sigma(:3, :3) = sigma
    end if
 
-end subroutine get_dispersion_api_impl
+end subroutine get_dispersion_api
 
 !> Calculate hessian numerically
 subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
@@ -827,7 +804,7 @@ subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
    hessian = reshape(c_hessian(:9*nat_sq), &
                     &[3, mol%ptr%nat, 3, mol%ptr%nat])
    call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
-      & disp%cutoff, hessian)
+      & disp%cutoff, hessian, disp%partition)
    c_hessian(:9*nat_sq) = reshape(hessian, [9*nat_sq])
 
 end subroutine get_numerical_hessian_api

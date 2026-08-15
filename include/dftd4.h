@@ -148,6 +148,8 @@ DFTD4_API_ENTRY void DFTD4_API_CALL
 dftd4_delete_model(dftd4_model* /* disp */) DFTD4_API_SUFFIX__V_3_0;
 
 /// Set realspace cutoffs (quantities in Bohr)
+///
+/// deprecated: removed with the v5 API, use dftd4_set_model_realspace_cutoff_smooth
 DFTD4_API_ENTRY void DFTD4_API_CALL
 dftd4_set_model_realspace_cutoff(dftd4_error /* error */,
                                  dftd4_model /* disp */,
@@ -164,6 +166,18 @@ dftd4_set_model_realspace_cutoff_smooth(dftd4_error /* error */,
                                         double /* cn */,
                                         double /* width2 */,
                                         double /* width3 */) DFTD4_API_SUFFIX__V_4_2;
+
+/// Assign an externally managed part of the interaction loops to this model.
+///
+/// The part index is zero based and must be smaller than nparts. Summing the
+/// results of all parts reproduces the complete calculation. Structure-
+/// dependent quantities are evaluated for the full system on every part; only
+/// the pairwise and ATM interaction loops are partitioned.
+DFTD4_API_ENTRY void DFTD4_API_CALL
+dftd4_set_model_work_partition(dftd4_error /* error */,
+                               dftd4_model /* model */,
+                               int /* part */,
+                               int /* nparts */) DFTD4_API_SUFFIX__V_4_3;
 
 /*
  * Damping parameter class
@@ -212,23 +226,6 @@ dftd4_get_dispersion(dftd4_error /* error */,
                      double* /* energy */,
                      double* /* gradient[n][3] */,
                      double* /* sigma[3][3] */) DFTD4_API_SUFFIX__V_3_0;
-
-/// Evaluate one externally assigned partition of the dispersion correction
-///
-/// The part index is zero based and must be smaller than nparts.  Sum the
-/// energy, gradient, and sigma returned by all parts to recover the complete
-/// result.  Structure-dependent properties are evaluated for the full system
-/// on every part; only the pairwise and ATM interaction loops are partitioned.
-DFTD4_API_ENTRY void DFTD4_API_CALL
-dftd4_get_dispersion_partitioned(dftd4_error /* error */,
-                                 dftd4_structure /* mol */,
-                                 dftd4_model /* disp */,
-                                 dftd4_param /* param */,
-                                 int /* part */,
-                                 int /* nparts */,
-                                 double* /* energy */,
-                                 double* /* gradient[n][3] */,
-                                 double* /* sigma[3][3] */) DFTD4_API_SUFFIX__V_4_3;
 
 /// Evaluate the dispersion hessian numerically
 DFTD4_API_ENTRY void DFTD4_API_CALL

@@ -317,6 +317,18 @@ class DispersionModel(Structure):
 
         library.set_model_realspace_cutoff(self._disp, disp2, disp3, cn, width2, width3)
 
+    def set_work_partition(self, part: int, nparts: int) -> None:
+        """
+        Assign an externally managed part of the interaction loops to this model.
+
+        Parts are zero based, and summing the results of all parts reproduces
+        the complete calculation. Structure-dependent quantities are evaluated
+        for the full system on every part; only the pairwise and ATM interaction
+        loops are partitioned.
+        """
+
+        library.set_model_work_partition(self._disp, part, nparts)
+
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """
         Perform actual evaluation of the dispersion correction.

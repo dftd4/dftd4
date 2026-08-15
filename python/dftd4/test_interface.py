@@ -296,6 +296,49 @@ def test_smooth_realspace_cutoff() -> None:
     assert res != approx(ref)
 
 
+def test_work_partition() -> None:
+    """Summing all parts must reproduce the complete dispersion calculation."""
+    thr = 1.0e-12
+    nparts = 3
+    numbers = np.array([6, 1, 1, 1, 1])
+    positions = np.array(
+        [
+            [+0.0000000, -0.0000000, +0.0000000],
+            [-1.1922080, +1.1922080, +1.1922080],
+            [+1.1922080, -1.1922080, +1.1922080],
+            [-1.1922080, -1.1922080, -1.1922080],
+            [+1.1922080, +1.1922080, -1.1922080],
+        ]
+    )
+    param = DampingParam(method="pbe0", atm=True)
+
+    ref = DispersionModel(numbers, positions).get_dispersion(param, grad=True)
+    energy = 0.0
+    gradient = np.zeros_like(ref["gradient"])
+    virial = np.zeros_like(ref["virial"])
+
+    for part in range(nparts):
+        model = DispersionModel(numbers, positions)
+        model.set_work_partition(part, nparts)
+        res = model.get_dispersion(param, grad=True)
+        energy += res["energy"]
+        gradient += res["gradient"]
+        virial += res["virial"]
+
+    assert energy == approx(ref["energy"], abs=thr)
+    assert gradient == approx(ref["gradient"], abs=thr)
+    assert virial == approx(ref["virial"], abs=thr)
+
+
+def test_work_partition_invalid() -> None:
+    numbers = np.array([1, 1])
+    positions = np.array([[0.0, 0.0, -1.0], [0.0, 0.0, +1.0]])
+    model = DispersionModel(numbers, positions)
+
+    with raises(RuntimeError, match="Invalid dispersion work partition"):
+        model.set_work_partition(3, 3)
+
+
 def test_r2scan3c() -> None:
     """Use r2SCAN-3c for a mindless molecule"""
     thr = 1.0e-8

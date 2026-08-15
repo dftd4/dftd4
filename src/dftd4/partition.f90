@@ -16,19 +16,19 @@
 
 !> Work partitioning for externally distributed dispersion calculations
 module dftd4_partition
-   use, intrinsic :: iso_fortran_env, only : int64
-   use mctc_env, only : error_type, fatal_error
+   use mctc_env, only : error_type, fatal_error, i8
    implicit none
    private
 
    public :: work_partition, new_work_partition, serial_work_partition
+   public :: owns_pair
 
 
-   !> Cyclic partition of the symmetry-reduced atom-pair work.
+   !> Cyclic partition of the work of a dispersion calculation.
    !>
-   !> Parts are zero based.  Every pair `(iat, jat)`, with `jat <= iat`, is
-   !> assigned to exactly one part.  The caller is responsible for summing the
-   !> energy and derivative contributions returned by all parts.
+   !> Parts are zero based. Every unit of work is assigned to exactly one part,
+   !> summing the energy and derivative contributions of all parts reproduces the
+   !> complete result. An absent partition owns all of the work.
    type :: work_partition
       private
 
@@ -37,15 +37,10 @@ module dftd4_partition
 
       !> Total number of parts
       integer :: nparts = 1
-   contains
-      !> Whether this is the first work partition
-      procedure, public :: is_first
-
-      !> Whether this part owns a symmetry-reduced atom pair
-      procedure, public :: owns_pair
    end type work_partition
 
-   !> Work partition representing an ordinary serial calculation
+   !> Complete work of an ordinary serial calculation, equivalent to omitting
+   !> the partition entirely
    type(work_partition), parameter :: serial_work_partition = work_partition()
 
 
@@ -77,34 +72,27 @@ subroutine new_work_partition(error, partition, part, nparts)
 end subroutine new_work_partition
 
 
-!> Whether this is the first work partition
-elemental function is_first(self) result(first)
-   class(work_partition), intent(in) :: self
-   logical :: first
-
-   first = self%part == 0
-
-end function is_first
-
-
 !> Whether this part owns a symmetry-reduced atom pair
-elemental function owns_pair(self, iat, jat) result(owned)
-   class(work_partition), intent(in) :: self
-   integer, intent(in) :: iat
-   integer, intent(in) :: jat
+elemental function owns_pair(partition, iat, jat) result(owned)
+
+   !> Work partition, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
+   !> Atom indices of the pair, with jat <= iat
+   integer, intent(in) :: iat, jat
+
+   !> Whether this part owns the pair
    logical :: owned
 
-   integer(int64) :: pair_index
+   integer(i8) :: pair_index
 
-   if (self%nparts == 1) then
-      owned = .true.
-      return
-   end if
+   owned = .true.
+   if (.not.present(partition)) return
+   if (partition%nparts == 1) return
 
-   ! Zero-based index in the lower-triangular atom-pair sequence:
-   ! (1,1), (2,1), (2,2), (3,1), ...
-   pair_index = int(iat - 1, int64)*int(iat, int64)/2_int64 + int(jat - 1, int64)
-   owned = modulo(pair_index, int(self%nparts, int64)) == int(self%part, int64)
+   ! zero-based index in the lower-triangular sequence (1,1), (2,1), (2,2), ...
+   pair_index = int(iat - 1, i8)*int(iat, i8)/2_i8 + int(jat - 1, i8)
+   owned = modulo(pair_index, int(partition%nparts, i8)) == int(partition%part, i8)
 
 end function owns_pair
 

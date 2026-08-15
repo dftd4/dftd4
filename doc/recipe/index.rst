@@ -7,4 +7,5 @@ This section deals with solving specific task with DFT-D4 by providing step by s
 .. toctree::
 
    installation
+   partition
    vasp

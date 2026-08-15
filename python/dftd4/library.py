@@ -162,6 +162,11 @@ def set_model_realspace_cutoff(disp, disp2, disp3, cn, width2=0.0, width3=0.0) -
     )
 
 
+def set_model_work_partition(disp, part: int, nparts: int) -> None:
+    """Assign an externally managed part of the interaction loops to this model"""
+    error_check(lib.dftd4_set_model_work_partition)(disp, part, nparts)
+
+
 update_structure = error_check(lib.dftd4_update_structure)
 get_dispersion = error_check(lib.dftd4_get_dispersion)
 get_pairwise_dispersion = error_check(lib.dftd4_get_pairwise_dispersion)

@@ -20,7 +20,7 @@ module dftd4_damping_rational
    use dftd4_damping, only : damping_param
    use dftd4_damping_atm, only : get_atm_dispersion
    use dftd4_data, only : get_r4r2_val
-   use dftd4_partition, only : serial_work_partition, work_partition
+   use dftd4_partition, only : work_partition, owns_pair
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -42,14 +42,8 @@ module dftd4_damping_rational
       !> Evaluate pairwise dispersion energy expression
       procedure :: get_dispersion2_impl => get_dispersion2
 
-      !> Evaluate an externally assigned pairwise-dispersion work partition
-      procedure :: get_dispersion2_partitioned
-
       !> Evaluate ATM three-body dispersion energy expression
       procedure :: get_dispersion3_impl => get_dispersion3
-
-      !> Evaluate an externally assigned ATM-dispersion work partition
-      procedure :: get_dispersion3_partitioned
 
       !> Evaluate pairwise representation of additive dispersion energy
       procedure :: get_pairwise_dispersion2_impl => get_pairwise_dispersion2
@@ -67,33 +61,8 @@ contains
 
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion2(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, dc6dq, &
-      & energy, dEdcn, dEdq, gradient, sigma)
+      & energy, dEdcn, dEdq, gradient, sigma, partition)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion2
-
-   class(rational_damping_param), intent(in) :: self
-   class(structure_type), intent(in) :: mol
-   real(wp), intent(in) :: trans(:, :)
-   real(wp), intent(in) :: cutoff
-   real(wp), intent(in) :: width
-   real(wp), intent(in) :: r4r2(:)
-   real(wp), intent(in) :: c6(:, :)
-   real(wp), intent(in), optional :: dc6dcn(:, :)
-   real(wp), intent(in), optional :: dc6dq(:, :)
-   real(wp), intent(inout) :: energy(:)
-   real(wp), intent(inout), optional :: dEdcn(:)
-   real(wp), intent(inout), optional :: dEdq(:)
-   real(wp), intent(inout), optional :: gradient(:, :)
-   real(wp), intent(inout), optional :: sigma(:, :)
-
-   call get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, c6, &
-      & dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, serial_work_partition)
-
-end subroutine get_dispersion2
-
-
-!> Evaluation of an externally assigned pairwise-dispersion work partition
-subroutine get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, &
-      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
 
    !> Damping parameters
    class(rational_damping_param), intent(in) :: self
@@ -137,8 +106,8 @@ subroutine get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, &
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
-   !> Externally assigned work partition
-   type(work_partition), intent(in) :: partition
+   !> Work partition of the atom pairs, defaults to the complete work
+   type(work_partition), intent(in), optional :: partition
 
    logical :: grad
 
@@ -153,7 +122,7 @@ subroutine get_dispersion2_partitioned(self, mol, trans, cutoff, width, r4r2, &
       call get_dispersion_energy(self, mol, trans, cutoff, width, r4r2, c6, energy, partition)
    end if
 
-end subroutine get_dispersion2_partitioned
+end subroutine get_dispersion2
 
 
 !> Evaluation of the dispersion energy expression
@@ -183,8 +152,8 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, width, r4r2, c6, ener
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:)
 
-   !> Externally assigned work partition
-   type(work_partition), intent(in) :: partition
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, r, cutoff2, r0ij, rrij, c6ij, t6, t8, edisp, dE
@@ -207,7 +176,7 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, width, r4r2, c6, ener
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
-         if (.not. partition%owns_pair(iat, jat)) cycle
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = self%a1 * sqrt(rrij) + self%a2
@@ -290,8 +259,8 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, r4r2, c6, dc6d
    !> Dispersion virial
    real(wp), intent(inout) :: sigma(:, :)
 
-   !> Externally assigned work partition
-   type(work_partition), intent(in) :: partition
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, r, cutoff2, r0ij, rrij, c6ij, t6, t8, d6, d8
@@ -324,7 +293,7 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, r4r2, c6, dc6d
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
-         if (.not. partition%owns_pair(iat, jat)) cycle
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = self%a1 * sqrt(rrij) + self%a2
@@ -388,34 +357,8 @@ end subroutine get_dispersion_derivs
 
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion3(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, dc6dq, &
-      & energy, dEdcn, dEdq, gradient, sigma)
+      & energy, dEdcn, dEdq, gradient, sigma, partition)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion3
-
-   class(rational_damping_param), intent(in) :: self
-   class(structure_type), intent(in) :: mol
-   real(wp), intent(in) :: trans(:, :)
-   real(wp), intent(in) :: cutoff
-   real(wp), intent(in) :: width
-   real(wp), intent(in) :: r4r2(:)
-   real(wp), intent(in) :: c6(:, :)
-   real(wp), intent(in), optional :: dc6dcn(:, :)
-   real(wp), intent(in), optional :: dc6dq(:, :)
-   real(wp), intent(inout) :: energy(:)
-   real(wp), intent(inout), optional :: dEdcn(:)
-   real(wp), intent(inout), optional :: dEdq(:)
-   real(wp), intent(inout), optional :: gradient(:, :)
-   real(wp), intent(inout), optional :: sigma(:, :)
-
-   call get_atm_dispersion(mol, trans, cutoff, width, self%s9, self%a1, &
-      & self%a2, self%alp, r4r2, c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, &
-      & gradient, sigma)
-
-end subroutine get_dispersion3
-
-
-!> Evaluation of an externally assigned ATM-dispersion work partition
-subroutine get_dispersion3_partitioned(self, mol, trans, cutoff, width, r4r2, &
-      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
 
    !> Damping parameters
    class(rational_damping_param), intent(in) :: self
@@ -459,14 +402,14 @@ subroutine get_dispersion3_partitioned(self, mol, trans, cutoff, width, r4r2, &
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
-   !> Externally assigned work partition
-   type(work_partition), intent(in) :: partition
+   !> Work partition of the atom pairs, defaults to the complete work
+   type(work_partition), intent(in), optional :: partition
 
    call get_atm_dispersion(mol, trans, cutoff, width, self%s9, self%a1, &
       & self%a2, self%alp, r4r2, c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, &
       & gradient, sigma, partition)
 
-end subroutine get_dispersion3_partitioned
+end subroutine get_dispersion3
 
 
 !> Evaluation of the dispersion energy expression projected on atomic pairs
