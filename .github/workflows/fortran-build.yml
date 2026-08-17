@@ -362,16 +362,16 @@ jobs:
           meson compile -C ${{ env.BUILD_DIR }}/discover-meson
 
       - name: Create package
-        if: ${{ matrix.build == 'meson' && matrix.version == 14 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
+        if: ${{ matrix.build != 'fpm' && matrix.version == 14 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
         run: |
           tar cvf ${OUTPUT} _dist
           xz -T0 $OUTPUT
           echo "DFTD4_OUTPUT=${OUTPUT}.xz" >> $GITHUB_ENV
         env:
-          OUTPUT: dftd4-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}.tar
+          OUTPUT: dftd4-${{ matrix.build }}-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}.tar
 
       - name: Upload package
-        if: ${{ matrix.build == 'meson' && matrix.version == 14 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
+        if: ${{ matrix.build != 'fpm' && matrix.version == 14 && matrix.build-type == 'debug' && matrix.compiler == 'gnu' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.DFTD4_OUTPUT }}
@@ -394,11 +394,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        build: [meson, cmake]
         gcc_v: [14]
         python_v: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
         include:
           - os: macos-latest
+            build: meson
+            gcc_v: 14
+            python_v: "3.9"
+
+          - os: macos-latest
+            build: cmake
             gcc_v: 14
             python_v: "3.9"
 
@@ -408,7 +415,7 @@ jobs:
       GCC_V: ${{ matrix.gcc_v }}
       PYTHON_V: ${{ matrix.python_v }}
       OMP_NUM_THREADS: 2,1
-      DFTD4_OUTPUT: dftd4-gnu-${{ matrix.gcc_v }}-${{ matrix.os }}.tar.xz
+      DFTD4_OUTPUT: dftd4-${{ matrix.build }}-gnu-${{ matrix.gcc_v }}-${{ matrix.os }}.tar.xz
 
     steps:
       - name: Checkout code
@@ -452,9 +459,10 @@ jobs:
         env:
           GCC_V: ${{ env.GCC_V }}
 
-      - name: Install meson and test dependencies
-        run: pip3 install $PIP_EXTRAS
+      - name: Install build and test dependencies
+        run: pip3 install $PIP_PACKAGES $PIP_EXTRAS
         env:
+          PIP_PACKAGES: ${{ env.PIP_PACKAGES }}
           PIP_EXTRAS: ${{ env.PIP_EXTRAS }}
 
       - name: Install QCSchema v2 for Py 313+
@@ -477,15 +485,47 @@ jobs:
         run: |
           cp assets/parameters.toml python/dftd4
 
-      - name: Install Python extension module (pip)
+      - name: Install Python extension module (Meson)
+        if: ${{ matrix.build == 'meson' }}
         run: pip3 install . -vv
         working-directory: python
         env:
           PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD4_PREFIX }}/lib/pkgconfig
 
-      - name: Test Python API
+      - name: Configure Python extension module (CMake)
+        if: ${{ matrix.build == 'cmake' }}
+        run: >-
+          cmake -S python -B $BUILD_DIR-python
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_PREFIX_PATH=$DFTD4_PREFIX
+          -DCMAKE_INSTALL_PREFIX=$PWD/_python-dist
+          -DCMAKE_INSTALL_LIBDIR=lib
+          -DPython3_EXECUTABLE=$(which python3)
+
+      - name: Build Python extension module (CMake)
+        if: ${{ matrix.build == 'cmake' }}
+        run: cmake --build $BUILD_DIR-python
+
+      - name: Install Python extension module (CMake)
+        if: ${{ matrix.build == 'cmake' }}
+        run: |
+          cmake --install $BUILD_DIR-python
+          python_site=$(python3 -c "import sysconfig; print(sysconfig.get_path('platlib', vars={'base': '', 'platbase': '', 'platlibdir': 'lib'}).lstrip('/'))")
+          echo "DFTD4_PYTHONPATH=$PWD/_python-dist/$python_site" >> $GITHUB_ENV
+
+      - name: Test Python API (Meson)
+        if: ${{ matrix.build == 'meson' }}
         run: pytest --pyargs dftd4 --cov=dftd4 -vv
         env:
+          LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
+          DYLD_LIBRARY_PATH: ${{ env.DYLD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
+
+      - name: Test Python API (CMake)
+        if: ${{ matrix.build == 'cmake' }}
+        run: pytest --pyargs dftd4 --cov=dftd4 -vv
+        env:
+          PYTHONPATH: ${{ env.DFTD4_PYTHONPATH }}
           LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
           DYLD_LIBRARY_PATH: ${{ env.DYLD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
 
