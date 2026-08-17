@@ -16,8 +16,6 @@
 
 cmake_minimum_required(VERSION 3.18)
 
-include(GNUInstallDirs)
-
 set(_dftd4_python_standalone FALSE)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(_dftd4_python_standalone TRUE)
@@ -28,6 +26,8 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     DESCRIPTION "Python API of the DFT-D4 project"
   )
 endif()
+
+include(GNUInstallDirs)
 
 find_package(Python3 3.7 REQUIRED COMPONENTS "Interpreter" "Development.Module")
 execute_process(
