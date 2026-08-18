@@ -89,6 +89,20 @@ test(
     files('02-nitralin.mol'),
   ],
 )
+
+test(
+  'app-hessian',
+  app_tester,
+  args: [
+    dftd4_exe,
+    files('07-hessian.json'),
+    files('07-hessian.xyz'),
+    '--noedisp',
+    '--func', 'pbe',
+    '--hessian',
+  ],
+)
+
 test(
   'app-properties',
   app_tester,

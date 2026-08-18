@@ -18,7 +18,7 @@
 module dftd4_damping_rational
    use dftd4_cutoff, only : smooth_cutoff
    use dftd4_damping, only : damping_param
-   use dftd4_damping_atm, only : get_atm_dispersion
+   use dftd4_damping_atm, only : get_atm_dispersion, get_atm_dispersion_hessian
    use dftd4_data, only : get_r4r2_val
    use dftd4_partition, only : work_partition, owns_pair
    use mctc_env, only : wp
@@ -44,6 +44,9 @@ module dftd4_damping_rational
 
       !> Evaluate ATM three-body dispersion energy expression
       procedure :: get_dispersion3_impl => get_dispersion3
+
+      !> Evaluate ATM three-body contribution to the Hessian
+      procedure :: get_dispersion3_hessian
 
       !> Evaluate pairwise representation of additive dispersion energy
       procedure :: get_pairwise_dispersion2_impl => get_pairwise_dispersion2
@@ -410,6 +413,56 @@ subroutine get_dispersion3(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, dc
       & gradient, sigma, partition)
 
 end subroutine get_dispersion3
+
+
+!> Evaluation of the ATM three-body contribution to the Hessian
+subroutine get_dispersion3_hessian(self, mol, trans, cutoff, width, r4r2, c6, dc6dcn, &
+      & d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn, partition)
+
+   !> Damping parameters
+   class(rational_damping_param), intent(in) :: self
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Derivatives of the C6 w.r.t. the coordination number
+   real(wp), intent(in) :: dc6dcn(:, :), d2c6dcn2(:, :), d2c6dcnij(:, :)
+
+   !> Second derivative of the energy w.r.t. the Cartesian coordinates
+   real(wp), intent(inout) :: hessian(:, :)
+
+   !> Derivative of the energy w.r.t. the coordination number
+   real(wp), intent(inout) :: dEdcn(:)
+
+   !> Mixed derivative w.r.t. coordination number and Cartesian coordinates
+   real(wp), intent(inout) :: dEdcndr(:, :)
+
+   !> Second derivative w.r.t. the coordination numbers
+   real(wp), intent(inout) :: dEdcndcn(:, :)
+
+   !> Work partition of the atom pairs, defaults to the complete work
+   type(work_partition), intent(in), optional :: partition
+
+   call get_atm_dispersion_hessian(mol, trans, cutoff, width, self%s9, self%a1, &
+      & self%a2, self%alp, r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, &
+      & dEdcn, dEdcndr, dEdcndcn, partition)
+
+end subroutine get_dispersion3_hessian
 
 
 !> Evaluation of the dispersion energy expression projected on atomic pairs

@@ -19,6 +19,7 @@ module test_dftd4
       & get_dispersion, get_pairwise_dispersion, new_d4_model, new_d4s_model, &
       & new_work_partition, rational_damping_param, realspace_cutoff, &
       & serial_work_partition, work_partition
+   use dftd4_disp, only : get_dispersion3_hessian
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -83,6 +84,7 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
       & new_unittest("TPSSh-D4S-ATM-AmF3", test_tpsshd4satm_amf3), &
       & new_unittest("smooth cutoff", test_smooth_cutoff), &
+      & new_unittest("analytical ATM Hessian", test_atm_hessian), &
       & new_unittest("partitioned dispersion", test_partitioned_dispersion), &
       & new_unittest("Actinides-D4", test_actinides_d4), &
       & new_unittest("Actinides-D4S", test_actinides_d4s) &
@@ -224,6 +226,166 @@ subroutine test_numsigma(error, mol, d4, param, cutoff)
    end if
 
 end subroutine test_numsigma
+
+
+subroutine test_numhess3(error, mol, d4, param, cutoff)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(inout) :: mol
+
+   !> Dispersion model
+   class(dispersion_model), intent(in) :: d4
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   integer :: iat, jat, ic, jc, ii, jj, ndim
+   real(wp) :: energy, sigma(3, 3), maxdiff
+   real(wp), allocatable :: hessian(:, :), numhess(:, :), gr(:, :), gl(:, :)
+   real(wp), parameter :: step = 1.0e-5_wp
+   real(wp), parameter :: hess_thr = 2.0e-7_wp
+
+   ndim = 3*mol%nat
+   allocate(hessian(ndim, ndim), numhess(ndim, ndim))
+   allocate(gr(3, mol%nat), gl(3, mol%nat))
+
+   call get_dispersion3_hessian(error, mol, d4, param, cutoff, hessian)
+   if (allocated(error)) return
+
+   do jat = 1, mol%nat
+      do jc = 1, 3
+         jj = 3*(jat - 1) + jc
+         mol%xyz(jc, jat) = mol%xyz(jc, jat) + step
+         call get_dispersion(mol, d4, param, cutoff, energy, gr, sigma)
+         mol%xyz(jc, jat) = mol%xyz(jc, jat) - 2*step
+         call get_dispersion(mol, d4, param, cutoff, energy, gl, sigma)
+         mol%xyz(jc, jat) = mol%xyz(jc, jat) + step
+
+         do iat = 1, mol%nat
+            do ic = 1, 3
+               ii = 3*(iat - 1) + ic
+               numhess(ii, jj) = 0.5_wp*(gr(ic, iat) - gl(ic, iat))/step
+            end do
+         end do
+      end do
+   end do
+
+   maxdiff = maxval(abs(hessian - numhess))
+   if (maxdiff > hess_thr) then
+      call test_failed(error, "Analytical ATM Hessian does not match numerical gradient derivative")
+      print '("max |H-Hnum| = ", es21.14)', maxdiff
+      return
+   end if
+
+   if (maxval(abs(hessian - transpose(hessian))) > hess_thr) then
+      call test_failed(error, "Analytical ATM Hessian is not symmetric")
+   end if
+
+end subroutine test_numhess3
+
+
+subroutine test_hess3_partition(error, mol, d4, param, cutoff)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(dispersion_model), intent(in) :: d4
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   integer, parameter :: nparts = 3
+   integer :: ndim, part
+   type(work_partition) :: partition
+   real(wp), allocatable :: hessian(:, :), part_hessian(:, :), partitioned_hessian(:, :)
+
+   ndim = 3*mol%nat
+   allocate(hessian(ndim, ndim), part_hessian(ndim, ndim), &
+      & partitioned_hessian(ndim, ndim))
+
+   call get_dispersion3_hessian(error, mol, d4, param, cutoff, hessian)
+   if (allocated(error)) return
+   call get_dispersion3_hessian(error, mol, d4, param, cutoff, part_hessian, serial_work_partition)
+   if (allocated(error)) return
+   if (maxval(abs(part_hessian - hessian)) > thr2) then
+      call test_failed(error, "Serial ATM Hessian partition does not match")
+      return
+   end if
+
+   partitioned_hessian(:, :) = 0.0_wp
+   do part = 0, nparts - 1
+      call new_work_partition(error, partition, part, nparts)
+      if (allocated(error)) return
+      call get_dispersion3_hessian(error, mol, d4, param, cutoff, part_hessian, partition)
+      if (allocated(error)) return
+      partitioned_hessian = partitioned_hessian + part_hessian
+   end do
+
+   if (maxval(abs(partitioned_hessian - hessian)) > thr2) then
+      call test_failed(error, "Partitioned ATM Hessian does not match")
+   end if
+
+end subroutine test_hess3_partition
+
+
+subroutine test_atm_hessian(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(d4s_model) :: d4s
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
+      & s6=0.0_wp, s8=0.0_wp, s9=1.0_wp, alp=16.0_wp, &
+      & a1=0.38574991_wp, a2=4.80688534_wp)
+   type(realspace_cutoff) :: cutoff
+
+   call get_structure(mol, "MB16-43", "01")
+   cutoff = realspace_cutoff()
+
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+   call test_numhess3(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+   call test_hess3_partition(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+
+   cutoff = realspace_cutoff(disp3=8.0_wp, width3=4.0_wp)
+   call test_numhess3(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+
+   call new_d4s_model(error, d4s, mol)
+   if (allocated(error)) return
+   cutoff = realspace_cutoff()
+   call test_numhess3(error, mol, d4s, param, cutoff)
+   if (allocated(error)) return
+
+   call get_structure(mol, "X23", "ammonia")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+   cutoff = realspace_cutoff(cn=30.0_wp, disp3=15.0_wp)
+   call test_numhess3(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+
+   call new_d4s_model(error, d4s, mol)
+   if (allocated(error)) return
+   call test_numhess3(error, mol, d4s, param, cutoff)
+
+end subroutine test_atm_hessian
 
 
 subroutine test_smooth_cutoff(error)

@@ -20,7 +20,7 @@ module dftd4_cutoff
    implicit none
    private
 
-   public :: realspace_cutoff, get_lattice_points, smooth_cutoff
+   public :: realspace_cutoff, get_lattice_points, smooth_cutoff, smooth_cutoff_r2
 
 
    !> Coordination number cutoff
@@ -112,6 +112,64 @@ pure subroutine smooth_cutoff(r, cutoff, width, sw, dswdr)
    end if
 
 end subroutine smooth_cutoff
+
+
+!> Smooth polynomial switch and derivatives with respect to squared distance
+pure subroutine smooth_cutoff_r2(r2, cutoff, width, sw, dswdr2, d2swdr22)
+
+   !> Squared interatomic distance
+   real(wp), intent(in) :: r2
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Switching function value
+   real(wp), intent(out) :: sw
+
+   !> First derivative with respect to squared distance
+   real(wp), intent(out) :: dswdr2
+
+   !> Second derivative with respect to squared distance
+   real(wp), intent(out) :: d2swdr22
+
+   real(wp) :: inner, effective_width, x, r, dswdr, d2swdr2
+
+   if (r2 <= 0.0_wp) then
+      sw = 1.0_wp
+      dswdr2 = 0.0_wp
+      d2swdr22 = 0.0_wp
+      return
+   end if
+
+   r = sqrt(r2)
+   dswdr = 0.0_wp
+   d2swdr2 = 0.0_wp
+
+   if (width <= 0.0_wp .or. cutoff <= 0.0_wp) then
+      sw = 1.0_wp
+   else
+      effective_width = min(width, cutoff)
+      inner = cutoff - effective_width
+      if (r <= inner) then
+         sw = 1.0_wp
+      else if (r >= cutoff) then
+         sw = 0.0_wp
+      else
+         x = (cutoff - r) / effective_width
+         sw = x**3 * (smoothstep3 + x*(smoothstep4 + smoothstep5*x))
+         dswdr = -smoothstep_deriv * x**2 * (1.0_wp - x)**2 / effective_width
+         d2swdr2 = 2.0_wp*smoothstep_deriv*x*(1.0_wp - x)*(1.0_wp - 2.0_wp*x) &
+            & / (effective_width*effective_width)
+      end if
+   end if
+
+   dswdr2 = 0.5_wp * dswdr / r
+   d2swdr22 = 0.25_wp * (d2swdr2 - dswdr/r) / r2
+
+end subroutine smooth_cutoff_r2
 
 
 !> Generate lattice points from repetitions
