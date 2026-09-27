@@ -16,7 +16,7 @@
 
 !> Numerical differentiation of DFT-D4 model
 module dftd4_numdiff
-   use, intrinsic :: iso_fortran_env, only : error_unit
+   use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan
    use dftd4_cutoff, only : realspace_cutoff
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
@@ -35,7 +35,7 @@ contains
 
 
 !> Evaluate Hessian matrix using an analytical ATM contribution when available
-subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition)
+subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, error)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_hessian
 
    !> Molecular structure data
@@ -56,11 +56,14 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition)
    !> Work partition of the interaction loops, defaults to the complete work
    type(work_partition), intent(in), optional :: partition
 
+   !> Error on failure; the entire Hessian is set to NaN on failure.
+   type(error_type), allocatable, intent(out), optional :: error
+
    integer :: iat, ix, jat, jx, ii, jj, ndim
    logical :: analytical_atm
    real(wp), parameter :: step = 1.0e-4_wp
    type(structure_type) :: displ
-   type(error_type), allocatable :: error
+   type(error_type), allocatable :: local_error, first_error
    real(wp) :: el, er
    real(wp), allocatable :: gl(:, :), gr(:, :), sl(:, :), sr(:, :), hessian3(:, :)
 
@@ -77,40 +80,60 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition)
 
    hessian(:, :, :, :) = 0.0_wp
    !$omp parallel default(none) &
-   !$omp private(iat, ix, displ, er, el, gr, gl, sr, sl) &
-   !$omp shared(mol, disp, param, cutoff, hessian, partition, analytical_atm)
+   !$omp private(iat, ix, displ, er, el, gr, gl, sr, sl, local_error) &
+   !$omp shared(mol, disp, param, cutoff, hessian, partition, analytical_atm, first_error)
    displ = mol
    allocate(gl(3, mol%nat), gr(3, mol%nat), sl(3, 3), sr(3, 3))
    !$omp do schedule(dynamic) collapse(2)
    do iat = 1, mol%nat
       do ix = 1, 3
+         ! A failed worker skips its remaining displacements, retaining its error.
+         if (allocated(local_error)) cycle
          displ%xyz(ix, iat) = mol%xyz(ix, iat) + step
          if (analytical_atm) then
-            call get_dispersion2(displ, disp, param, cutoff, el, gl, sl, partition)
+            call get_dispersion2(displ, disp, param, cutoff, el, gl, sl, partition, local_error)
          else
-            call get_dispersion(displ, disp, param, cutoff, el, gl, sl, partition)
+            call get_dispersion(displ, disp, param, cutoff, el, gl, sl, partition, local_error)
+         end if
+         if (allocated(local_error)) then
+            displ%xyz(ix, iat) = mol%xyz(ix, iat)
+            cycle
          end if
 
          displ%xyz(ix, iat) = mol%xyz(ix, iat) - step
          if (analytical_atm) then
-            call get_dispersion2(displ, disp, param, cutoff, er, gr, sr, partition)
+            call get_dispersion2(displ, disp, param, cutoff, er, gr, sr, partition, local_error)
          else
-            call get_dispersion(displ, disp, param, cutoff, er, gr, sr, partition)
+            call get_dispersion(displ, disp, param, cutoff, er, gr, sr, partition, local_error)
          end if
 
          displ%xyz(ix, iat) = mol%xyz(ix, iat)
+         if (allocated(local_error)) cycle
          hessian(:, :, ix, iat) = (gl - gr) / (2 * step)
       end do
    end do
+   !$omp end do
+   if (allocated(local_error)) then
+      !$omp critical(dftd4_hessian_error)
+      if (.not. allocated(first_error)) first_error = local_error
+      !$omp end critical(dftd4_hessian_error)
+   end if
    !$omp end parallel
+
+   if (allocated(first_error)) then
+      hessian = ieee_value(0.0_wp, ieee_quiet_nan)
+      if (present(error)) call move_alloc(first_error, error)
+      return
+   end if
 
    if (analytical_atm) then
       ndim = 3*mol%nat
       allocate(hessian3(ndim, ndim))
-      call get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian3, partition)
-      if (allocated(error)) then
-         write(error_unit, '("[Error]:", 1x, a)') error%message
-         error stop
+      call get_dispersion3_hessian(local_error, mol, disp, param, cutoff, hessian3, partition)
+      if (allocated(local_error)) then
+         hessian = ieee_value(0.0_wp, ieee_quiet_nan)
+         if (present(error)) call move_alloc(local_error, error)
+         return
       end if
 
       !$omp parallel do collapse(4) schedule(static) default(none) &

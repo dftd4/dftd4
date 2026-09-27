@@ -16,6 +16,7 @@
 
 !> High-level wrapper to obtain the dispersion energy for a DFT-D4 calculation
 module dftd4_disp
+   use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan
    use, intrinsic :: iso_fortran_env, only : error_unit
    use dftd4_blas, only : d4_gemv
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
@@ -40,7 +41,7 @@ contains
 
 
 !> Wrapper to handle the evaluation of dispersion energy and derivatives
-subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, partition)
+subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, partition, error)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion
 
    !> Molecular structure data
@@ -67,6 +68,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    !> Optional externally assigned work partition
    type(work_partition), intent(in), optional :: partition
 
+   !> Error on failure; failed calculations return NaN results.
+   type(error_type), allocatable, intent(out), optional :: error
+
    logical :: grad
    integer :: mref
    real(wp), allocatable :: cn(:)
@@ -75,26 +79,34 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :), dc6dq(:, :)
    real(wp), allocatable :: dEdcn(:), dEdq(:), energies(:)
    real(wp), allocatable :: lattr(:, :)
-   type(error_type), allocatable :: error
+   type(error_type), allocatable :: local_error
+
+   energy = ieee_value(0.0_wp, ieee_quiet_nan)
+   if (present(gradient)) gradient = ieee_value(0.0_wp, ieee_quiet_nan)
+   if (present(sigma)) sigma = ieee_value(0.0_wp, ieee_quiet_nan)
 
    mref = maxval(disp%ref)
    grad = present(gradient).or.present(sigma)
 
    if (.not. allocated(disp%mchrg)) then
-      write(error_unit, '("[Error]:", 1x, a)') "Not supported for non-self-consistent D4 version"
-      error stop
+      if (present(error)) call fatal_error(error, "Not supported for non-self-consistent D4 version")
+      return
    end if
 
    allocate(cn(mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn, error=local_error)
+   if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
+      return
+   end if
 
    allocate(q(mol%nat))
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
-   call get_charges(disp%mchrg, mol, error, q, dqdr, dqdL)
-   if(allocated(error)) then
-      write(error_unit, '("[Error]:", 1x, a)') error%message
-      error stop
+   call get_charges(disp%mchrg, mol, local_error, q, dqdr, dqdL)
+   if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
+      return
    end if
 
    allocate(gwvec(mref, mol%nat, disp%ncoup))
@@ -134,7 +146,11 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
       & sigma, partition)
    if (grad) then
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
-         & disp%rcov, disp%en, dEdcn, gradient, sigma)
+         & disp%rcov, disp%en, dEdcn, gradient, sigma, error=local_error)
+      if (allocated(local_error)) then
+         if (present(error)) call move_alloc(local_error, error)
+         return
+      end if
    end if
 
    energy = sum(energies)
@@ -143,7 +159,7 @@ end subroutine get_dispersion
 
 
 !> Wrapper to handle the evaluation of the two-body dispersion contribution
-subroutine get_dispersion2(mol, disp, param, cutoff, energy, gradient, sigma, partition)
+subroutine get_dispersion2(mol, disp, param, cutoff, energy, gradient, sigma, partition, error)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -169,6 +185,9 @@ subroutine get_dispersion2(mol, disp, param, cutoff, energy, gradient, sigma, pa
    !> Optional externally assigned work partition
    type(work_partition), intent(in), optional :: partition
 
+   !> Error on failure; failed calculations return NaN results.
+   type(error_type), allocatable, intent(out), optional :: error
+
    logical :: grad
    integer :: mref
    real(wp), allocatable :: cn(:)
@@ -177,27 +196,34 @@ subroutine get_dispersion2(mol, disp, param, cutoff, energy, gradient, sigma, pa
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :), dc6dq(:, :)
    real(wp), allocatable :: dEdcn(:), dEdq(:), energies(:)
    real(wp), allocatable :: lattr(:, :)
-   type(error_type), allocatable :: error
+   type(error_type), allocatable :: local_error
+
+   energy = ieee_value(0.0_wp, ieee_quiet_nan)
+   if (present(gradient)) gradient = ieee_value(0.0_wp, ieee_quiet_nan)
+   if (present(sigma)) sigma = ieee_value(0.0_wp, ieee_quiet_nan)
 
    mref = maxval(disp%ref)
    grad = present(gradient).or.present(sigma)
 
    if (.not. allocated(disp%mchrg)) then
-      write(error_unit, '("[Error]:", 1x, a)') &
-         & "Not supported for non-self-consistent D4 version"
-      error stop
+      if (present(error)) call fatal_error(error, "Not supported for non-self-consistent D4 version")
+      return
    end if
 
    allocate(cn(mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn, error=local_error)
+   if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
+      return
+   end if
 
    allocate(q(mol%nat))
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
-   call get_charges(disp%mchrg, mol, error, q, dqdr, dqdL)
-   if (allocated(error)) then
-      write(error_unit, '("[Error]:", 1x, a)') error%message
-      error stop
+   call get_charges(disp%mchrg, mol, local_error, q, dqdr, dqdL)
+   if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
+      return
    end if
 
    allocate(gwvec(mref, mol%nat, disp%ncoup))
@@ -227,7 +253,11 @@ subroutine get_dispersion2(mol, disp, param, cutoff, energy, gradient, sigma, pa
       call d4_gemv(dqdL, dEdq, sigma, beta=1.0_wp)
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
-         & disp%rcov, disp%en, dEdcn, gradient, sigma)
+         & disp%rcov, disp%en, dEdcn, gradient, sigma, error=local_error)
+      if (allocated(local_error)) then
+         if (present(error)) call move_alloc(local_error, error)
+         return
+      end if
    end if
 
    energy = sum(energies)
@@ -282,7 +312,8 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
    ! itself only consumes dcndr.
    allocate(cn(nat), dcndr(3, nat, nat), dcndL(3, 3, nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn, dcndr, dcndL)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn, dcndr, dcndL, error)
+   if (allocated(error)) return
 
    ! The D4 ATM contribution is evaluated with charge-independent C6
    ! coefficients, matching the q=0 branch in get_dispersion.
@@ -323,7 +354,8 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call add_coordination_number_hessian(mol, lattr, cutoff%cn, disp%rcov, disp%en, &
-      & dEdcn, hessian)
+      & dEdcn, hessian, error)
+   if (allocated(error)) return
 
    dr(1:ndim, 1:nat) => dcndr
    allocate(cnwork(nat, ndim), drt(nat, ndim), dEdcndrt(nat, ndim))
