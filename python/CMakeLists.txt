@@ -22,7 +22,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   project(
     dftd4-python
     LANGUAGES C
-    VERSION 4.2.0
+    VERSION 4.3.0
     DESCRIPTION "Python API of the DFT-D4 project"
   )
 endif()

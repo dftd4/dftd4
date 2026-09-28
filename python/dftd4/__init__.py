@@ -18,4 +18,4 @@
 # make sure we have a CFFI available
 import cffi  # noqa
 
-__version__ = "4.2.0"
+__version__ = "4.3.0"
