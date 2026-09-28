@@ -43,6 +43,7 @@ module dftd4_damping
 
 
    abstract interface
+
       !> Evaluation of the dispersion energy expression
       subroutine dispersion_interface(self, mol, trans, cutoff, width, r4r2, &
             & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)

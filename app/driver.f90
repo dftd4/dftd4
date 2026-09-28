@@ -202,14 +202,16 @@ subroutine run_main(config, error)
 
    if (allocated(param)) then
       call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, &
-         & sigma)
+         & sigma, error=error)
+      if (allocated(error)) return
       if (config%pair_resolved) then
          allocate(pair_disp2(mol%nat, mol%nat), pair_disp3(mol%nat, mol%nat))
          call get_pairwise_dispersion(mol, d4, param, realspace_cutoff(), pair_disp2, &
             & pair_disp3)
       end if
       if (config%hessian) then
-         call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian)
+         call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=error)
+         if (allocated(error)) return
       end if
       if (config%verbosity > 0) then
          call ascii_results(output_unit, mol, energy, gradient, sigma)

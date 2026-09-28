@@ -15,15 +15,20 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_dftd4
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan, ieee_is_finite
    use dftd4, only : d4_model, d4_qmod, d4s_model, damping_param, dispersion_model, &
       & get_dispersion, get_pairwise_dispersion, new_d4_model, new_d4s_model, &
       & new_work_partition, rational_damping_param, realspace_cutoff, &
       & serial_work_partition, work_partition
+   use dftd4_disp, only : get_dispersion2, get_dispersion3_hessian
+   use dftd4_numdiff, only : get_dispersion_hessian
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type, new
    use mstore, only : get_structure
+   use multicharge_model_cache, only : cache_container
+   use multicharge_model_eeq, only : eeq_model
    implicit none
    private
 
@@ -32,6 +37,17 @@ module test_dftd4
    real(wp), parameter :: thr = 100*epsilon(1.0_wp)
    real(wp), parameter :: thr2 = sqrt(epsilon(1.0_wp))
    real(wp), parameter :: smooth_diff_thr = 1.0e-10_wp
+
+   ! An extension selects the fully numerical fallback in get_dispersion_hessian.
+   type, extends(d4_model) :: fallback_d4_model
+   end type fallback_d4_model
+
+   ! Make the EEQ matrix singular on just one side of a displacement.
+   type, extends(eeq_model) :: failing_eeq_model
+      real(wp) :: reference_x, direction
+   contains
+      procedure :: get_coulomb_matrix => failing_coulomb_matrix
+   end type failing_eeq_model
 
 
 contains
@@ -83,12 +99,140 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("TPSSh-D4-ATM-AmF3", test_tpsshd4atm_amf3), &
       & new_unittest("TPSSh-D4S-ATM-AmF3", test_tpsshd4satm_amf3), &
       & new_unittest("smooth cutoff", test_smooth_cutoff), &
+      & new_unittest("analytical ATM Hessian", test_atm_hessian), &
+      & new_unittest("Hessian missing charge model", test_hessian_missing_charge), &
+      & new_unittest("Hessian charge failure", test_hessian_charge_failure), &
       & new_unittest("partitioned dispersion", test_partitioned_dispersion), &
       & new_unittest("Actinides-D4", test_actinides_d4), &
       & new_unittest("Actinides-D4S", test_actinides_d4s) &
       & ]
 
 end subroutine collect_dftd4
+
+
+subroutine test_hessian_missing_charge(error)
+   type(error_type), allocatable, intent(out) :: error
+   type(error_type), allocatable :: stat
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(fallback_d4_model) :: fallback
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
+      & s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp)
+   real(wp), allocatable :: hessian(:, :, :, :)
+   real(wp) :: energy
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+   allocate(hessian(3, mol%nat, 3, mol%nat))
+   deallocate(d4%mchrg)
+   fallback%d4_model = d4
+
+   call get_dispersion2(mol, d4, param, realspace_cutoff(), energy, error=stat)
+   call check(error, allocated(stat), "Missing charge model must return an error")
+   if (allocated(error)) return
+   call check(error, ieee_is_nan(energy))
+   if (allocated(error)) return
+
+   call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=stat)
+   call check(error, allocated(stat), "Hybrid Hessian must propagate the error")
+   if (allocated(error)) return
+   call check(error, all(ieee_is_nan(hessian)))
+   if (allocated(error)) return
+
+   call get_dispersion_hessian(mol, fallback, param, realspace_cutoff(), hessian, error=stat)
+   call check(error, allocated(stat), "Numerical fallback must propagate the error")
+   if (allocated(error)) return
+   call check(error, all(ieee_is_nan(hessian)))
+   if (allocated(error)) return
+
+   ! Existing callers without an error argument must also survive a failure.
+   call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian)
+   call check(error, all(ieee_is_nan(hessian)))
+end subroutine test_hessian_missing_charge
+
+
+subroutine test_hessian_charge_failure(error)
+   type(error_type), allocatable, intent(out) :: error
+   type(error_type), allocatable :: stat
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(fallback_d4_model) :: fallback
+   type(failing_eeq_model) :: charge
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
+      & s8=0.95948085_wp, a1=0.38574991_wp, a2=4.80688534_wp)
+   real(wp) :: xyz(3, 3), hessian(3, 3, 3, 3), reference(3, 3, 3, 3)
+   integer :: direction
+
+   xyz = reshape([0.0_wp, 0.0_wp, 0.0_wp, &
+      & 1.8_wp, 0.0_wp, 0.0_wp, -0.5_wp, 1.7_wp, 0.0_wp], [3, 3])
+   call new(mol, [8, 1, 1], xyz)
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+   select type (model => d4%mchrg)
+   type is (eeq_model)
+      charge%eeq_model = model
+   class default
+      call test_failed(error, "Expected the default EEQ model")
+      return
+   end select
+   charge%reference_x = xyz(1, 1)
+
+   do direction = -1, 1, 2
+      charge%direction = real(direction, wp)
+      deallocate(d4%mchrg)
+      allocate(d4%mchrg, source=charge)
+      fallback%d4_model = d4
+      call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=stat)
+      call check(error, allocated(stat), "Hybrid Hessian must propagate EEQ failure")
+      if (allocated(error)) return
+      call check(error, stat%message == "Bunch-Kaufman factorization failed.")
+      if (allocated(error)) return
+      call check(error, all(ieee_is_nan(hessian)))
+      if (allocated(error)) return
+
+      call get_dispersion_hessian(mol, fallback, param, realspace_cutoff(), hessian, error=stat)
+      call check(error, allocated(stat), "Numerical fallback must propagate EEQ failure")
+      if (allocated(error)) return
+      call check(error, stat%message == "Bunch-Kaufman factorization failed.")
+      if (allocated(error)) return
+      call check(error, all(ieee_is_nan(hessian)))
+      if (allocated(error)) return
+      call check(error, all(mol%xyz == xyz), "Input geometry must remain unchanged")
+      if (allocated(error)) return
+   end do
+
+   ! A successful call clears a previous error and agrees with the legacy call.
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+   call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=stat)
+   call check(error, .not. allocated(stat), "A successful call must clear the old error")
+   if (allocated(error)) return
+   call check(error, all(ieee_is_finite(hessian)))
+   if (allocated(error)) return
+   call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), reference)
+   call check(error, maxval(abs(hessian - reference)), 0.0_wp, thr=thr2)
+   if (allocated(error)) return
+   fallback%d4_model = d4
+   call get_dispersion_hessian(mol, fallback, param, realspace_cutoff(), reference, error=stat)
+   call check(error, .not. allocated(stat))
+   if (allocated(error)) return
+   call check(error, maxval(abs(hessian - reference)), 0.0_wp, thr=thr2)
+end subroutine test_hessian_charge_failure
+
+
+subroutine failing_coulomb_matrix(self, mol, cache, amat)
+   class(failing_eeq_model), intent(in) :: self
+   type(structure_type), intent(in) :: mol
+   type(cache_container), intent(inout) :: cache
+   real(wp), intent(out) :: amat(:, :)
+
+   if (self%direction*(mol%xyz(1, 1) - self%reference_x) > 0.0_wp) then
+      amat = 0.0_wp
+   else
+      call self%eeq_model%get_coulomb_matrix(mol, cache, amat)
+   end if
+end subroutine failing_coulomb_matrix
 
 
 subroutine test_dftd4_gen(error, mol, d4, param, ref)
@@ -224,6 +368,166 @@ subroutine test_numsigma(error, mol, d4, param, cutoff)
    end if
 
 end subroutine test_numsigma
+
+
+subroutine test_numhess3(error, mol, d4, param, cutoff)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(inout) :: mol
+
+   !> Dispersion model
+   class(dispersion_model), intent(in) :: d4
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   integer :: iat, jat, ic, jc, ii, jj, ndim
+   real(wp) :: energy, sigma(3, 3), maxdiff
+   real(wp), allocatable :: hessian(:, :), numhess(:, :), gr(:, :), gl(:, :)
+   real(wp), parameter :: step = 1.0e-5_wp
+   real(wp), parameter :: hess_thr = 2.0e-7_wp
+
+   ndim = 3*mol%nat
+   allocate(hessian(ndim, ndim), numhess(ndim, ndim))
+   allocate(gr(3, mol%nat), gl(3, mol%nat))
+
+   call get_dispersion3_hessian(error, mol, d4, param, cutoff, hessian)
+   if (allocated(error)) return
+
+   do jat = 1, mol%nat
+      do jc = 1, 3
+         jj = 3*(jat - 1) + jc
+         mol%xyz(jc, jat) = mol%xyz(jc, jat) + step
+         call get_dispersion(mol, d4, param, cutoff, energy, gr, sigma)
+         mol%xyz(jc, jat) = mol%xyz(jc, jat) - 2*step
+         call get_dispersion(mol, d4, param, cutoff, energy, gl, sigma)
+         mol%xyz(jc, jat) = mol%xyz(jc, jat) + step
+
+         do iat = 1, mol%nat
+            do ic = 1, 3
+               ii = 3*(iat - 1) + ic
+               numhess(ii, jj) = 0.5_wp*(gr(ic, iat) - gl(ic, iat))/step
+            end do
+         end do
+      end do
+   end do
+
+   maxdiff = maxval(abs(hessian - numhess))
+   if (maxdiff > hess_thr) then
+      call test_failed(error, "Analytical ATM Hessian does not match numerical gradient derivative")
+      print '("max |H-Hnum| = ", es21.14)', maxdiff
+      return
+   end if
+
+   if (maxval(abs(hessian - transpose(hessian))) > hess_thr) then
+      call test_failed(error, "Analytical ATM Hessian is not symmetric")
+   end if
+
+end subroutine test_numhess3
+
+
+subroutine test_hess3_partition(error, mol, d4, param, cutoff)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(dispersion_model), intent(in) :: d4
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   integer, parameter :: nparts = 3
+   integer :: ndim, part
+   type(work_partition) :: partition
+   real(wp), allocatable :: hessian(:, :), part_hessian(:, :), partitioned_hessian(:, :)
+
+   ndim = 3*mol%nat
+   allocate(hessian(ndim, ndim), part_hessian(ndim, ndim), &
+      & partitioned_hessian(ndim, ndim))
+
+   call get_dispersion3_hessian(error, mol, d4, param, cutoff, hessian)
+   if (allocated(error)) return
+   call get_dispersion3_hessian(error, mol, d4, param, cutoff, part_hessian, serial_work_partition)
+   if (allocated(error)) return
+   if (maxval(abs(part_hessian - hessian)) > thr2) then
+      call test_failed(error, "Serial ATM Hessian partition does not match")
+      return
+   end if
+
+   partitioned_hessian(:, :) = 0.0_wp
+   do part = 0, nparts - 1
+      call new_work_partition(error, partition, part, nparts)
+      if (allocated(error)) return
+      call get_dispersion3_hessian(error, mol, d4, param, cutoff, part_hessian, partition)
+      if (allocated(error)) return
+      partitioned_hessian = partitioned_hessian + part_hessian
+   end do
+
+   if (maxval(abs(partitioned_hessian - hessian)) > thr2) then
+      call test_failed(error, "Partitioned ATM Hessian does not match")
+   end if
+
+end subroutine test_hess3_partition
+
+
+subroutine test_atm_hessian(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(d4s_model) :: d4s
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
+      & s6=0.0_wp, s8=0.0_wp, s9=1.0_wp, alp=16.0_wp, &
+      & a1=0.38574991_wp, a2=4.80688534_wp)
+   type(realspace_cutoff) :: cutoff
+
+   call get_structure(mol, "MB16-43", "01")
+   cutoff = realspace_cutoff()
+
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+   call test_numhess3(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+   call test_hess3_partition(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+
+   cutoff = realspace_cutoff(disp3=8.0_wp, width3=4.0_wp)
+   call test_numhess3(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+
+   call new_d4s_model(error, d4s, mol)
+   if (allocated(error)) return
+   cutoff = realspace_cutoff()
+   call test_numhess3(error, mol, d4s, param, cutoff)
+   if (allocated(error)) return
+
+   call get_structure(mol, "X23", "ammonia")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+   cutoff = realspace_cutoff(cn=30.0_wp, disp3=15.0_wp)
+   call test_numhess3(error, mol, d4, param, cutoff)
+   if (allocated(error)) return
+
+   call new_d4s_model(error, d4s, mol)
+   if (allocated(error)) return
+   call test_numhess3(error, mol, d4s, param, cutoff)
+
+end subroutine test_atm_hessian
 
 
 subroutine test_smooth_cutoff(error)

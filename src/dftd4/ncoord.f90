@@ -15,7 +15,7 @@
 ! along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd4_ncoord
-   use, intrinsic :: iso_fortran_env, only : error_unit
+   use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan
    use mctc_env, only : error_type, wp
    use mctc_io, only : structure_type
    use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
@@ -23,6 +23,7 @@ module dftd4_ncoord
    private
 
    public :: get_coordination_number, add_coordination_number_derivs
+   public :: add_coordination_number_hessian
 
 
    !> Steepness of counting function
@@ -33,7 +34,7 @@ contains
 
 
 !> Geometric fractional coordination number, supports error function counting.
-subroutine get_coordination_number(mol, trans, cutoff, rcov, en, cn, dcndr, dcndL)
+subroutine get_coordination_number(mol, trans, cutoff, rcov, en, cn, dcndr, dcndL, error)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_coordination_number
 
    !> Molecular structure data
@@ -60,14 +61,20 @@ subroutine get_coordination_number(mol, trans, cutoff, rcov, en, cn, dcndr, dcnd
    !> Derivative of the CN with respect to strain deformations.
    real(wp), intent(out), optional :: dcndL(:, :, :)
 
+   !> Error on failure; results are NaN if initialization fails.
+   type(error_type), allocatable, intent(out), optional :: error
+
    class(ncoord_type), allocatable :: ncoord
-   type(error_type), allocatable :: error
+   type(error_type), allocatable :: local_error
 
    call new_ncoord(ncoord, mol, cn_count%dftd4, &
-      & kcn=default_kcn, cutoff=cutoff, rcov=rcov, en=en, error=error)
-   if(allocated(error)) then
-      write(error_unit, '("[Error]:", 1x, a)') error%message
-      error stop
+      & kcn=default_kcn, cutoff=cutoff, rcov=rcov, en=en, error=local_error)
+   if (allocated(local_error)) then
+      cn = ieee_value(0.0_wp, ieee_quiet_nan)
+      if (present(dcndr)) dcndr = ieee_value(0.0_wp, ieee_quiet_nan)
+      if (present(dcndL)) dcndL = ieee_value(0.0_wp, ieee_quiet_nan)
+      if (present(error)) call move_alloc(local_error, error)
+      return
    end if
 
    call ncoord%get_coordination_number(mol, trans, cn, dcndr, dcndL)
@@ -75,7 +82,7 @@ subroutine get_coordination_number(mol, trans, cutoff, rcov, en, cn, dcndr, dcnd
 end subroutine get_coordination_number
 
 
-subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, en, dEdcn, gradient, sigma)
+subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, en, dEdcn, gradient, sigma, error)
 
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
@@ -102,19 +109,68 @@ subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, en, dEdcn, g
    real(wp), intent(inout) :: sigma(:, :)
 
 
+   !> Error on failure; results are NaN if initialization fails.
+   type(error_type), allocatable, intent(out), optional :: error
+
    class(ncoord_type), allocatable :: ncoord
-   type(error_type), allocatable :: error
+   type(error_type), allocatable :: local_error
 
    call new_ncoord(ncoord, mol, cn_count%dftd4, &
-      & kcn=default_kcn, cutoff=cutoff, rcov=rcov, en=en, error=error)
-   if(allocated(error)) then
-      write(error_unit, '("[Error]:", 1x, a)') error%message
-      error stop
+      & kcn=default_kcn, cutoff=cutoff, rcov=rcov, en=en, error=local_error)
+   if (allocated(local_error)) then
+      gradient = ieee_value(0.0_wp, ieee_quiet_nan)
+      sigma = ieee_value(0.0_wp, ieee_quiet_nan)
+      if (present(error)) call move_alloc(local_error, error)
+      return
    end if
 
    call ncoord%add_coordination_number_derivs(mol, trans, dEdcn, gradient, sigma)
 
 end subroutine add_coordination_number_derivs
+
+
+!> Add the second derivative of the D4 coordination number contracted with
+!> the derivative of the energy w.r.t. the coordination number.
+subroutine add_coordination_number_hessian(mol, trans, cutoff, rcov, en, dEdcn, hessian, error)
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Covalent radius
+   real(wp), intent(in) :: rcov(:)
+
+   !> Electronegativity
+   real(wp), intent(in) :: en(:)
+
+   !> Derivative of expression with respect to the coordination number
+   real(wp), intent(in) :: dEdcn(:)
+
+   !> Second derivative of the energy w.r.t. the Cartesian coordinates
+   real(wp), intent(inout) :: hessian(:, :)
+
+   !> Error on failure; results are NaN if initialization fails.
+   type(error_type), allocatable, intent(out), optional :: error
+
+   class(ncoord_type), allocatable :: ncoord
+   type(error_type), allocatable :: local_error
+
+   call new_ncoord(ncoord, mol, cn_count%dftd4, &
+      & kcn=default_kcn, cutoff=cutoff, rcov=rcov, en=en, error=local_error)
+   if (allocated(local_error)) then
+      hessian = ieee_value(0.0_wp, ieee_quiet_nan)
+      if (present(error)) call move_alloc(local_error, error)
+      return
+   end if
+
+   call ncoord%add_coordination_number_hessian(mol, trans, dEdcn, hessian)
+
+end subroutine add_coordination_number_hessian
 
 
 end module dftd4_ncoord

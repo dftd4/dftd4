@@ -741,7 +741,8 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
 
    ! Evaluate energy, gradient (optional), and sigma (optional) analytically
    call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
-      & energy, gradient, sigma, partition=disp%partition)
+      & energy, gradient, sigma, partition=disp%partition, error=error%ptr)
+   if (allocated(error%ptr)) return
 
    if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -801,10 +802,10 @@ subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
    end if
 
    ! Evaluate hessian numerically
-   hessian = reshape(c_hessian(:9*nat_sq), &
-                    &[3, mol%ptr%nat, 3, mol%ptr%nat])
+   allocate(hessian(3, mol%ptr%nat, 3, mol%ptr%nat))
    call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
-      & disp%cutoff, hessian, disp%partition)
+      & disp%cutoff, hessian, disp%partition, error%ptr)
+   if (allocated(error%ptr)) return
    c_hessian(:9*nat_sq) = reshape(hessian, [9*nat_sq])
 
 end subroutine get_numerical_hessian_api
