@@ -1,0 +1,478 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Generally Applicable Atomic-Charge Dependent London Dispersion Correction">
+    <meta name="author" content="Grimme group Bonn" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>get_dispersion3_hessian &ndash; DFT-D4</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">DFT-D4 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>get_dispersion3_hessian
+      <small>Subroutine</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 1.7% of total for procedures.">83 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/disp.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/disp.f90.html'>disp.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/dftd4_disp.html'>dftd4_disp</a></li>
+            <li class="breadcrumb-item active" aria-current="page">get_dispersion3_hessian</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/get_dispersion3_hessian.html#src">get_dispersion3_hessian</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public  subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, partition)  
+</h2>
+    
+
+    <p>Analytical Hessian of the ATM three-body contribution</p>
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error~4"></span>
+              type(error_type),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>error</strong></td>
+            <td>
+                <p>Error handling</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mol~16"></span>
+              class(structure_type),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mol</strong></td>
+            <td>
+                <p>Molecular structure data</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-disp~7"></span>
+              class(<a href='../type/dispersion_model.html'>dispersion_model</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>disp</strong></td>
+            <td>
+                <p>Dispersion model</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param~4"></span>
+              class(<a href='../type/damping_param.html'>damping_param</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+                <p>Damping parameters</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-cutoff~5"></span>
+              type(<a href='../type/realspace_cutoff.html'>realspace_cutoff</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>cutoff</strong></td>
+            <td>
+                <p>Realspace cutoffs</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-hessian~3"></span>
+              real(kind=wp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>hessian</strong>(:,:)</td>
+            <td>
+                <p>ATM dispersion Hessian</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-partition~3"></span>
+              type(<a href='../type/work_partition.html'>work_partition</a>),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>partition</strong></td>
+            <td>
+                <p>Optional externally assigned work partition</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="k">subroutine </span><span class="n">get_dispersion3_hessian</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">,</span><span class="w"> </span><span class="n">param</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">,</span><span class="w"> </span><span class="n">hessian</span><span class="p">,</span><span class="w"> </span><span class="n">partition</span><span class="p">)</span>
+<span class="w">   </span><span class="c">!DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion3_hessian</span>
+
+<span class="w">   </span><span class="c">!&gt; Error handling</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">error_type</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+
+<span class="w">   </span><span class="c">!&gt; Molecular structure data</span>
+<span class="w">   </span><span class="k">class</span><span class="p">(</span><span class="n">structure_type</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mol</span>
+
+<span class="w">   </span><span class="c">!&gt; Dispersion model</span>
+<span class="w">   </span><span class="k">class</span><span class="p">(</span><span class="n">dispersion_model</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">disp</span>
+
+<span class="w">   </span><span class="c">!&gt; Damping parameters</span>
+<span class="w">   </span><span class="k">class</span><span class="p">(</span><span class="n">damping_param</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">param</span>
+
+<span class="w">   </span><span class="c">!&gt; Realspace cutoffs</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">realspace_cutoff</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">cutoff</span>
+
+<span class="w">   </span><span class="c">!&gt; ATM dispersion Hessian</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">hessian</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+
+<span class="w">   </span><span class="c">!&gt; Optional externally assigned work partition</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">work_partition</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">partition</span>
+
+<span class="w">   </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mref</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span><span class="p">,</span><span class="w"> </span><span class="n">ii</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">,</span><span class="w"> </span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">jcn</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dcndr</span><span class="p">(:,</span><span class="w"> </span><span class="p">:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">cn</span><span class="p">(:),</span><span class="w"> </span><span class="n">dcndL</span><span class="p">(:,</span><span class="w"> </span><span class="p">:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">q</span><span class="p">(:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">gwvec</span><span class="p">(:,</span><span class="w"> </span><span class="p">:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">gwdcn</span><span class="p">(:,</span><span class="w"> </span><span class="p">:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">gwd2cn</span><span class="p">(:,</span><span class="w"> </span><span class="p">:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">c6</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">dc6dcn</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">d2c6dcn2</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">d2c6dcnij</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dEdcn</span><span class="p">(:),</span><span class="w"> </span><span class="n">dEdcndr</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">dEdcndcn</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">cnwork</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">drt</span><span class="p">(:,</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">dEdcndrt</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">pointer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dr</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">tmp</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">lattr</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+
+<span class="w">   </span><span class="n">nat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mol</span><span class="p">%</span><span class="n">nat</span>
+<span class="w">   </span><span class="n">ndim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="o">*</span><span class="n">nat</span>
+<span class="w">   </span><span class="n">mref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">maxval</span><span class="p">(</span><span class="n">disp</span><span class="p">%</span><span class="n">ref</span><span class="p">)</span>
+
+<span class="w">   </span><span class="c">! mctc-lib currently evaluates Cartesian CN derivatives only when both</span>
+<span class="w">   </span><span class="c">! dcndr and dcndL are requested.  Keep dcndL even though the ATM Hessian</span>
+<span class="w">   </span><span class="c">! itself only consumes dcndr.</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">cn</span><span class="p">(</span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">dcndr</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">dcndL</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">))</span>
+<span class="w">   </span><span class="k">call </span><span class="n">get_lattice_points</span><span class="p">(</span><span class="n">mol</span><span class="p">%</span><span class="n">periodic</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">%</span><span class="n">lattice</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">%</span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">lattr</span><span class="p">)</span>
+<span class="w">   </span><span class="k">call </span><span class="n">get_coordination_number</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">lattr</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">%</span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">rcov</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">en</span><span class="p">,</span><span class="w"> </span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">dcndr</span><span class="p">,</span><span class="w"> </span><span class="n">dcndL</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">allocated</span><span class="p">(</span><span class="n">error</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+
+<span class="w">   </span><span class="c">! The D4 ATM contribution is evaluated with charge-independent C6</span>
+<span class="w">   </span><span class="c">! coefficients, matching the q=0 branch in get_dispersion.</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">q</span><span class="p">(</span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">source</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">)</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">gwvec</span><span class="p">(</span><span class="n">mref</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">ncoup</span><span class="p">),</span><span class="w"> </span><span class="n">gwdcn</span><span class="p">(</span><span class="n">mref</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">ncoup</span><span class="p">),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="n">gwd2cn</span><span class="p">(</span><span class="n">mref</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">ncoup</span><span class="p">))</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">c6</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">dc6dcn</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">d2c6dcn2</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">d2c6dcnij</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">))</span>
+
+<span class="w">   </span><span class="k">select type</span><span class="p">(</span><span class="n">disp</span><span class="p">)</span>
+<span class="w">   </span><span class="k">type is</span><span class="w"> </span><span class="p">(</span><span class="n">d4_model</span><span class="p">)</span>
+<span class="w">      </span><span class="k">call </span><span class="n">disp</span><span class="p">%</span><span class="n">weight_references_hessian</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="n">gwvec</span><span class="p">,</span><span class="w"> </span><span class="n">gwdcn</span><span class="p">,</span><span class="w"> </span><span class="n">gwd2cn</span><span class="p">)</span>
+<span class="w">      </span><span class="k">call </span><span class="n">disp</span><span class="p">%</span><span class="n">get_atomic_c6_hessian</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">gwvec</span><span class="p">,</span><span class="w"> </span><span class="n">gwdcn</span><span class="p">,</span><span class="w"> </span><span class="n">gwd2cn</span><span class="p">,</span><span class="w"> </span><span class="n">c6</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">         </span><span class="p">&amp;</span><span class="w"> </span><span class="n">dc6dcn</span><span class="p">,</span><span class="w"> </span><span class="n">d2c6dcn2</span><span class="p">,</span><span class="w"> </span><span class="n">d2c6dcnij</span><span class="p">)</span>
+<span class="w">   </span><span class="k">type is</span><span class="w"> </span><span class="p">(</span><span class="n">d4s_model</span><span class="p">)</span>
+<span class="w">      </span><span class="k">call </span><span class="n">disp</span><span class="p">%</span><span class="n">weight_references_hessian</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="n">gwvec</span><span class="p">,</span><span class="w"> </span><span class="n">gwdcn</span><span class="p">,</span><span class="w"> </span><span class="n">gwd2cn</span><span class="p">)</span>
+<span class="w">      </span><span class="k">call </span><span class="n">disp</span><span class="p">%</span><span class="n">get_atomic_c6_hessian</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">gwvec</span><span class="p">,</span><span class="w"> </span><span class="n">gwdcn</span><span class="p">,</span><span class="w"> </span><span class="n">gwd2cn</span><span class="p">,</span><span class="w"> </span><span class="n">c6</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">         </span><span class="p">&amp;</span><span class="w"> </span><span class="n">dc6dcn</span><span class="p">,</span><span class="w"> </span><span class="n">d2c6dcn2</span><span class="p">,</span><span class="w"> </span><span class="n">d2c6dcnij</span><span class="p">)</span>
+<span class="w">   </span><span class="k">class </span><span class="n">default</span>
+<span class="w">      </span><span class="k">call </span><span class="n">fatal_error</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="s2">"Analytical ATM Hessian is only implemented for D4 and D4S models"</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span>
+<span class="k">   end select</span>
+
+<span class="k">   </span><span class="n">hessian</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_wp</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">dEdcn</span><span class="p">(</span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">source</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">)</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">dEdcndr</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">source</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">)</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">dEdcndcn</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span><span class="p">),</span><span class="w"> </span><span class="n">source</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">)</span>
+
+<span class="w">   </span><span class="k">call </span><span class="n">get_lattice_points</span><span class="p">(</span><span class="n">mol</span><span class="p">%</span><span class="n">periodic</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">%</span><span class="n">lattice</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">%</span><span class="n">disp3</span><span class="p">,</span><span class="w"> </span><span class="n">lattr</span><span class="p">)</span>
+<span class="w">   </span><span class="k">select type</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+<span class="w">   </span><span class="k">class is</span><span class="w"> </span><span class="p">(</span><span class="n">rational_damping_param</span><span class="p">)</span>
+<span class="w">      </span><span class="k">call </span><span class="n">param</span><span class="p">%</span><span class="n">get_dispersion3_hessian</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">lattr</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">%</span><span class="n">disp3</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">%</span><span class="n">width3</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">         </span><span class="p">&amp;</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">r4r2</span><span class="p">,</span><span class="w"> </span><span class="n">c6</span><span class="p">,</span><span class="w"> </span><span class="n">dc6dcn</span><span class="p">,</span><span class="w"> </span><span class="n">d2c6dcn2</span><span class="p">,</span><span class="w"> </span><span class="n">d2c6dcnij</span><span class="p">,</span><span class="w"> </span><span class="n">hessian</span><span class="p">,</span><span class="w"> </span><span class="n">dEdcn</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">         </span><span class="p">&amp;</span><span class="w"> </span><span class="n">dEdcndr</span><span class="p">,</span><span class="w"> </span><span class="n">dEdcndcn</span><span class="p">,</span><span class="w"> </span><span class="n">partition</span><span class="p">)</span>
+<span class="w">   </span><span class="k">class </span><span class="n">default</span>
+<span class="w">      </span><span class="k">call </span><span class="n">fatal_error</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="s2">"Analytical ATM Hessian is only implemented for rational damping"</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span>
+<span class="k">   end select</span>
+
+<span class="k">   call </span><span class="n">get_lattice_points</span><span class="p">(</span><span class="n">mol</span><span class="p">%</span><span class="n">periodic</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">%</span><span class="n">lattice</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">%</span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">lattr</span><span class="p">)</span>
+<span class="w">   </span><span class="k">call </span><span class="n">add_coordination_number_hessian</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">lattr</span><span class="p">,</span><span class="w"> </span><span class="n">cutoff</span><span class="p">%</span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">rcov</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">%</span><span class="n">en</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="n">dEdcn</span><span class="p">,</span><span class="w"> </span><span class="n">hessian</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">allocated</span><span class="p">(</span><span class="n">error</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+
+<span class="k">   </span><span class="n">dr</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ndim</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">:</span><span class="n">nat</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">dcndr</span>
+<span class="w">   </span><span class="k">allocate</span><span class="p">(</span><span class="n">cnwork</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span><span class="p">),</span><span class="w"> </span><span class="n">drt</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span><span class="p">),</span><span class="w"> </span><span class="n">dEdcndrt</span><span class="p">(</span><span class="n">nat</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span><span class="p">))</span>
+
+<span class="w">   </span><span class="c">! Assemble the CN chain rule explicitly under OpenMP.  Intrinsic MATMUL is</span>
+<span class="w">   </span><span class="c">! not guaranteed to use the program's OpenMP team (and is often serial with</span>
+<span class="w">   </span><span class="c">! a single-threaded BLAS), which otherwise leaves a sizeable serial tail in</span>
+<span class="w">   </span><span class="c">! analytical ATM Hessian calculations.</span>
+<span class="w">   </span><span class="c">!$omp parallel default(none) &amp;</span>
+<span class="w">   </span><span class="c">!$omp shared(nat, ndim, dEdcndr, dEdcndcn, dr, drt, dEdcndrt, cnwork, hessian) &amp;</span>
+<span class="w">   </span><span class="c">!$omp private(ii, jj, icn, jcn, tmp)</span>
+
+<span class="w">   </span><span class="c">! Store the Cartesian-by-CN matrices with CN as the contiguous dimension.</span>
+<span class="w">   </span><span class="c">! Both contractions below then stream through contiguous columns instead of</span>
+<span class="w">   </span><span class="c">! repeatedly traversing the second dimension of Fortran arrays.</span>
+<span class="w">   </span><span class="c">!$omp do collapse(2) schedule(static)</span>
+<span class="w">   </span><span class="k">do </span><span class="n">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span>
+<span class="w">      </span><span class="k">do </span><span class="n">icn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span>
+<span class="w">         </span><span class="n">drt</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">ii</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dr</span><span class="p">(</span><span class="n">ii</span><span class="p">,</span><span class="w"> </span><span class="n">icn</span><span class="p">)</span>
+<span class="w">         </span><span class="n">dEdcndrt</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">ii</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dEdcndr</span><span class="p">(</span><span class="n">ii</span><span class="p">,</span><span class="w"> </span><span class="n">icn</span><span class="p">)</span>
+<span class="w">      </span><span class="k">end do</span>
+<span class="k">   end do</span>
+<span class="w">   </span><span class="c">!$omp end do</span>
+
+<span class="w">   </span><span class="c">! cnwork = dEdcndcn * transpose(dr).  Keeping jcn as the accumulation</span>
+<span class="w">   </span><span class="c">! order preserves the scalar result while the icn loop is vectorizable.</span>
+<span class="w">   </span><span class="c">!$omp do schedule(static)</span>
+<span class="w">   </span><span class="k">do </span><span class="n">jj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span>
+<span class="w">      </span><span class="n">cnwork</span><span class="p">(:,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_wp</span>
+<span class="w">      </span><span class="k">do </span><span class="n">jcn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span>
+<span class="w">         </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">drt</span><span class="p">(</span><span class="n">jcn</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span>
+<span class="w">         </span><span class="c">!$omp simd</span>
+<span class="w">         </span><span class="k">do </span><span class="n">icn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span>
+<span class="w">            </span><span class="n">cnwork</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cnwork</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dEdcndcn</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">jcn</span><span class="p">)</span><span class="o">*</span><span class="n">tmp</span>
+<span class="w">         </span><span class="k">end do</span>
+<span class="k">      end do</span>
+<span class="k">   end do</span>
+<span class="w">   </span><span class="c">!$omp end do</span>
+
+<span class="w">   </span><span class="c">! H += dEdcndr*dr^T + dr*dEdcndr^T + dr*dEdcndcn*dr^T</span>
+<span class="w">   </span><span class="c">!$omp do collapse(2) schedule(static)</span>
+<span class="w">   </span><span class="k">do </span><span class="n">jj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span>
+<span class="w">      </span><span class="k">do </span><span class="n">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">ndim</span>
+<span class="w">         </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_wp</span>
+<span class="w">         </span><span class="c">!$omp simd reduction(+:tmp)</span>
+<span class="w">         </span><span class="k">do </span><span class="n">icn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nat</span>
+<span class="w">            </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dEdcndrt</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">ii</span><span class="p">)</span><span class="o">*</span><span class="n">drt</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">               </span><span class="p">&amp;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">drt</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">ii</span><span class="p">)</span><span class="o">*</span><span class="n">dEdcndrt</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">               </span><span class="p">&amp;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">drt</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">ii</span><span class="p">)</span><span class="o">*</span><span class="n">cnwork</span><span class="p">(</span><span class="n">icn</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span>
+<span class="w">         </span><span class="k">end do</span>
+<span class="k">         </span><span class="n">hessian</span><span class="p">(</span><span class="n">ii</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hessian</span><span class="p">(</span><span class="n">ii</span><span class="p">,</span><span class="w"> </span><span class="n">jj</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tmp</span>
+<span class="w">      </span><span class="k">end do</span>
+<span class="k">   end do</span>
+<span class="w">   </span><span class="c">!$omp end do</span>
+<span class="w">   </span><span class="c">!$omp end parallel</span>
+
+<span class="k">end subroutine </span><span class="n">get_dispersion3_hessian</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              DFT-D4
+ was developed by Grimme group Bonn<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-09-28 08:50 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>
