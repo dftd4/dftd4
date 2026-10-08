@@ -23,7 +23,7 @@ module dftd4_numdiff
    use dftd4_disp, only : get_dispersion, get_dispersion2, get_dispersion3_hessian
    use dftd4_model, only : dispersion_model, d4_model, d4s_model
    use dftd4_partition, only : work_partition
-   use mctc_env, only : error_type, wp
+   use mctc_env, only : error_type, wp, timer_type
    use mctc_io, only : structure_type
    implicit none
    private
@@ -35,7 +35,7 @@ contains
 
 
 !> Evaluate Hessian matrix using an analytical ATM contribution when available
-subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, error)
+subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, error, timer)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion_hessian
 
    !> Molecular structure data
@@ -59,6 +59,9 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, 
    !> Error on failure; the entire Hessian is set to NaN on failure.
    type(error_type), allocatable, intent(out), optional :: error
 
+   !> Optional wall-clock timings, recorded outside the OpenMP regions.
+   type(timer_type), intent(inout), optional :: timer
+
    integer :: iat, ix, jat, jx, ii, jj, ndim
    logical :: analytical_atm
    real(wp), parameter :: step = 1.0e-4_wp
@@ -78,6 +81,13 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, 
       end select
    end select
 
+   if (present(timer)) then
+      if (analytical_atm) then
+         call timer%push("  numerical two-body Hessian")
+      else
+         call timer%push("  numerical full Hessian")
+      end if
+   end if
    hessian(:, :, :, :) = 0.0_wp
    !$omp parallel default(none) &
    !$omp private(iat, ix, displ, er, el, gr, gl, sr, sl, local_error) &
@@ -119,6 +129,7 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, 
       !$omp end critical(dftd4_hessian_error)
    end if
    !$omp end parallel
+   if (present(timer)) call timer%pop()
 
    if (allocated(first_error)) then
       hessian = ieee_value(0.0_wp, ieee_quiet_nan)
@@ -127,15 +138,18 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, 
    end if
 
    if (analytical_atm) then
+      if (present(timer)) call timer%push("  analytical ATM Hessian")
       ndim = 3*mol%nat
       allocate(hessian3(ndim, ndim))
       call get_dispersion3_hessian(local_error, mol, disp, param, cutoff, hessian3, partition)
+      if (present(timer)) call timer%pop()
       if (allocated(local_error)) then
          hessian = ieee_value(0.0_wp, ieee_quiet_nan)
          if (present(error)) call move_alloc(local_error, error)
          return
       end if
 
+      if (present(timer)) call timer%push("  Hessian addition")
       !$omp parallel do collapse(4) schedule(static) default(none) &
       !$omp shared(mol, hessian, hessian3) private(jat, jx, iat, ix, ii, jj)
       do jat = 1, mol%nat
@@ -150,6 +164,7 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, 
          end do
       end do
       !$omp end parallel do
+      if (present(timer)) call timer%pop()
    end if
 
 end subroutine get_dispersion_hessian

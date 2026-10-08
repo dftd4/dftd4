@@ -29,7 +29,7 @@ module dftd4_driver
    use dftd4_param, only : functional_group, get_functionals, &
       & get_functional_id, p_r2scan_3c
    use dftd4_utils, only : lowercase, wrap_to_central_cell
-   use mctc_env, only : error_type, fatal_error, wp
+   use mctc_env, only : error_type, fatal_error, wp, timer_type
    use mctc_io, only : structure_type, read_structure, filetype
    implicit none
    private
@@ -69,8 +69,10 @@ subroutine run_main(config, error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
+   type(timer_type) :: timer
    character(len=:), allocatable :: filename
    character(len=:), allocatable :: functional
+   character(len=:), allocatable :: timing_label
    class(damping_param), allocatable :: param
    class(dispersion_model), allocatable :: d4
    real(wp) :: charge
@@ -78,10 +80,12 @@ subroutine run_main(config, error)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: cn(:), q(:), c6(:, :), alpha(:)
    real(wp), allocatable :: s9
-   real(wp) :: ga, gc
-   integer :: stat, unit, is, id, charge_model
+   real(wp) :: ga, gc, total_time, elapsed
+   integer :: stat, unit, is, id, charge_model, it
    logical :: exist
 
+   call timer%push("total")
+   call timer%push("setup")
    if (config%verbosity > 1) then
       call header(output_unit)
    end if
@@ -184,6 +188,7 @@ subroutine run_main(config, error)
    ! Initialize D4/D4S model
    call new_dispersion_model(error, d4, mol, config%model, ga=ga, &
       & gc=gc, wf=config%wf, qmod=charge_model)
+   call timer%pop()
 
    if (allocated(error)) return
 
@@ -192,8 +197,10 @@ subroutine run_main(config, error)
          call ascii_atomic_radii(output_unit, mol, d4)
          call ascii_atomic_references(output_unit, mol, d4)
       end if
+      call timer%push("properties")
       allocate(cn(mol%nat), q(mol%nat), c6(mol%nat, mol%nat), alpha(mol%nat))
       call get_properties(mol, d4, realspace_cutoff(), cn, q, c6, alpha)
+      call timer%pop()
 
       if (config%verbosity > 0) then
          call ascii_system_properties(output_unit, mol, d4, cn, q, c6, alpha)
@@ -201,18 +208,25 @@ subroutine run_main(config, error)
    end if
 
    if (allocated(param)) then
+      call timer%push("dispersion")
       call get_dispersion(mol, d4, param, realspace_cutoff(), energy, gradient, &
-         & sigma, error=error)
+         & sigma, error=error, timer=timer)
+      call timer%push("dispersion")
       if (allocated(error)) return
       if (config%pair_resolved) then
+         call timer%push("pairwise analysis")
          allocate(pair_disp2(mol%nat, mol%nat), pair_disp3(mol%nat, mol%nat))
          call get_pairwise_dispersion(mol, d4, param, realspace_cutoff(), pair_disp2, &
             & pair_disp3)
+         call timer%pop()
       end if
       if (config%hessian) then
-         call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=error)
+         call timer%push("Hessian")
+         call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=error, timer=timer)
+         call timer%push("Hessian")
          if (allocated(error)) return
       end if
+      call timer%push("output")
       if (config%verbosity > 0) then
          call ascii_results(output_unit, mol, energy, gradient, sigma)
          if (config%pair_resolved) then
@@ -264,9 +278,11 @@ subroutine run_main(config, error)
          end if
       end if
 
+      call timer%pop()
    end if
 
    if (config%json) then
+      call timer%push("output")
       open(file=config%json_output, newunit=unit)
       call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma, &
          & hessian=hessian, &
@@ -276,6 +292,27 @@ subroutine run_main(config, error)
       if (config%verbosity > 0) then
          write(output_unit, "(a)") &
             & "[Info] JSON dump of results written to '"//config%json_output//"'"
+      end if
+      call timer%pop()
+   end if
+
+   call timer%push("total")
+   if (config%verbosity > 0) then
+      total_time = timer%get("total")
+      write(output_unit, "(/, a)") "Timing (wall time):"
+      write(output_unit, '(1x, a, t36, f12.3, " sec")') "total:", total_time
+      if (config%verbosity > 1) then
+         do it = 2, timer%n
+            elapsed = timer%get(timer%record(it)%label)
+            timing_label = timer%record(it)%label
+            if (timing_label(1:1) == " ") then
+               timing_label = "  - "//trim(adjustl(timing_label))
+            else
+               timing_label = "- "//timing_label
+            end if
+            write(output_unit, '(1x, a, t36, f12.3, " sec (", f5.1, "%)")') &
+               & timing_label, elapsed, 100*elapsed/max(total_time, tiny(0.0_wp))
+         end do
       end if
    end if
 

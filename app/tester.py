@@ -24,14 +24,28 @@ prog = sys.argv[1]
 outp = sys.argv[2]
 args = sys.argv[3:]
 
-stat = subprocess.call(
+run = subprocess.run(
     [prog, "--json", os.path.basename(outp)] + args,
     shell=False,
     stdin=None,
     stderr=subprocess.STDOUT,
+    stdout=subprocess.PIPE,
+    universal_newlines=True,
 )
-if stat != 0:
+print(run.stdout, end="")
+if run.returncode != 0:
     raise RuntimeError("Calculation failed")
+
+verbosity = (
+    2
+    + sum(arg in ("-v", "--verbose") for arg in args)
+    - sum(arg in ("-s", "--silent") for arg in args)
+)
+assert ("Timing (wall time):" in run.stdout) == (verbosity > 0)
+if "--hessian" in args and verbosity > 1:
+    assert "numerical two-body Hessian" in run.stdout
+    assert "analytical ATM Hessian" in run.stdout
+    assert "numerical full Hessian" not in run.stdout
 
 with open(outp) as f:
     ref = json.load(f)

@@ -27,7 +27,7 @@ module dftd4_disp
    use dftd4_ncoord, only : get_coordination_number, add_coordination_number_derivs, &
       & add_coordination_number_hessian
    use dftd4_partition, only : work_partition
-   use mctc_env, only : wp, error_type, fatal_error
+   use mctc_env, only : wp, error_type, fatal_error, timer_type
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
    use multicharge, only : get_charges
@@ -41,7 +41,7 @@ contains
 
 
 !> Wrapper to handle the evaluation of dispersion energy and derivatives
-subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, partition, error)
+subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, partition, error, timer)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion
 
    !> Molecular structure data
@@ -71,6 +71,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    !> Error on failure; failed calculations return NaN results.
    type(error_type), allocatable, intent(out), optional :: error
 
+   !> Optional wall-clock timings; output is handled by the caller.
+   type(timer_type), intent(inout), optional :: timer
+
    logical :: grad
    integer :: mref
    real(wp), allocatable :: cn(:)
@@ -93,22 +96,27 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
       return
    end if
 
+   if (present(timer)) call timer%push("  coordination numbers")
    allocate(cn(mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, cn, error=local_error)
+   if (present(timer)) call timer%pop()
    if (allocated(local_error)) then
       if (present(error)) call move_alloc(local_error, error)
       return
    end if
 
+   if (present(timer)) call timer%push("  charges and response")
    allocate(q(mol%nat))
    if (grad) allocate(dqdr(3, mol%nat, mol%nat), dqdL(3, 3, mol%nat))
    call get_charges(disp%mchrg, mol, local_error, q, dqdr, dqdL)
+   if (present(timer)) call timer%pop()
    if (allocated(local_error)) then
       if (present(error)) call move_alloc(local_error, error)
       return
    end if
 
+   if (present(timer)) call timer%push("  C6 coefficients")
    allocate(gwvec(mref, mol%nat, disp%ncoup))
    if (grad) allocate(gwdcn(mref, mol%nat, disp%ncoup), gwdq(mref, mol%nat, disp%ncoup))
    call disp%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
@@ -116,7 +124,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    allocate(c6(mol%nat, mol%nat))
    if (grad) allocate(dc6dcn(mol%nat, mol%nat), dc6dq(mol%nat, mol%nat))
    call disp%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+   if (present(timer)) call timer%pop()
 
+   if (present(timer)) call timer%push("  two-body dispersion")
    allocate(energies(mol%nat))
    energies(:) = 0.0_wp
    if (grad) then
@@ -135,7 +145,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
       call d4_gemv(dqdr, dEdq, gradient, beta=1.0_wp)
       call d4_gemv(dqdL, dEdq, sigma, beta=1.0_wp)
    end if
+   if (present(timer)) call timer%pop()
 
+   if (present(timer)) call timer%push("  ATM dispersion")
    q(:) = 0.0_wp
    call disp%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
    call disp%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
@@ -144,9 +156,12 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
    call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
       & disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, &
       & sigma, partition)
+   if (present(timer)) call timer%pop()
    if (grad) then
+      if (present(timer)) call timer%push("  CN gradient")
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
          & disp%rcov, disp%en, dEdcn, gradient, sigma, error=local_error)
+      if (present(timer)) call timer%pop()
       if (allocated(local_error)) then
          if (present(error)) call move_alloc(local_error, error)
          return

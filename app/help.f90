@@ -50,7 +50,7 @@ module dftd4_help
       "   --noedisp             Disable writing of dispersion energy to .EDISP file"//nl//&
       "   --json [file]         Dump results to JSON output (default: dftd4.json)"//nl//&
       "-v,--verbose             Show more, can be used multiple times"//nl//&
-      "-s,--silent              Show less, use twice to suppress all output"//nl//&
+      "-s,--silent              Show less (total timing only), use twice to suppress all output"//nl//&
       "   --version             Print program version and exit"//nl//&
       "   --citation            Print citation information and exit"//nl//&
       "   --license             Print license header and exit"//nl//&
@@ -63,6 +63,7 @@ module dftd4_help
       "Periodic calculations are performed automatically for periodic input formats."//nl//&
       "Reads .CHRG file (if present) from the same directory as the input."//nl//&
       "Specify the functional to select the correct parameters."//nl//&
+      "Wall-clock timings are printed after successful calculations."//nl//&
       ""//nl//&
       run_options_text//nl//&
       ""
@@ -87,6 +88,7 @@ module dftd4_help
       "Periodic calculations are performed automatically for periodic input formats."//nl//&
       "Reads .CHRG file (if present) from the same directory as the input."//nl//&
       "Specify the functional to select the correct parameters."//nl//&
+      "Wall-clock timings are printed after successful calculations."//nl//&
       ""//nl//&
       !
       "Commands"//nl//&

@@ -15,6 +15,19 @@ Periodic calculations are performed automatically for periodic input formats.
 Reads .CHRG file (if present) from the same directory as the input.
 Specify the functional to select the correct parameters.
 
+Successful calculations print wall-clock timings in seconds. The total includes
+input, setup, computation and output, excluding argument parsing and the timing
+report itself. Individual stages are shown at the default verbosity; indented
+substeps are included in their parent stage, and all percentages refer to the
+total time. Use *-s* to show only the total timing or *-s -s* to suppress it.
+
+For Hessians, the numerical displacement loop and analytical ATM contribution
+are timed separately. The displacement time includes charge response and all
+other work repeated at displaced geometries, measured across the complete
+OpenMP region rather than summed over threads. The analytical ATM time includes
+CN derivatives and chain-rule assembly. A fully numerical fallback, when used,
+is labelled accordingly.
+
 
 == Commands
 
