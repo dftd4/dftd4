@@ -21,7 +21,8 @@ add_subdirectory("model")
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
-  APPEND srcs
+  APPEND
+  srcs
   "${dir}/blas.F90"
   "${dir}/cutoff.f90"
   "${dir}/partition.f90"
@@ -35,8 +36,7 @@ list(
   "${dir}/param.f90"
   "${dir}/reference.f90"
   "${dir}/utils.f90"
-  "${dir}/version.f90"
-)
+  "${dir}/version.f90")
 if(DFTD4_WITH_API)
   list(APPEND srcs "${dir}/api.f90")
 endif()
@@ -44,4 +44,6 @@ if(DFTD4_WITH_API_V2)
   list(APPEND srcs "${dir}/compat.f90")
 endif()
 
-set(srcs "${srcs}" PARENT_SCOPE)
+set(srcs
+    "${srcs}"
+    PARENT_SCOPE)

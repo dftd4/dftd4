@@ -401,10 +401,10 @@ _build/app/dftd4 param --list
 
 | Option | Description |
 |--------|-------------|
-| `WITH_OpenMP` | Enable OpenMP |
-| `WITH_API` | Build C API |
-| `WITH_API_V2` | Enable compatibility layer |
-| `WITH_PYTHON` | Build Python extension (may require out-of-tree steps) |
+| `DFTD4_WITH_OpenMP` | Enable OpenMP |
+| `DFTD4_WITH_API` | Build C API |
+| `DFTD4_WITH_API_V2` | Enable compatibility layer |
+| `DFTD4_WITH_PYTHON` | Build Python extension |
 
 ## Troubleshooting
 

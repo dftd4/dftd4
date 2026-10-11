@@ -15,33 +15,16 @@
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
 # Unit testing
-set(
-  tests
-  "model"
-  "dftd4"
-  "pairwise"
-  "param"
-  "periodic"
-)
-set(
-  test-srcs
-  "main.f90"
-)
+set(tests "model" "dftd4" "pairwise" "param" "periodic")
+set(test-srcs "main.f90")
 foreach(t IN LISTS tests)
-  string(MAKE_C_IDENTIFIER ${t} t) 
+  string(MAKE_C_IDENTIFIER ${t} t)
   list(APPEND test-srcs "test_${t}.f90")
 endforeach()
 
-add_executable(
-  "${PROJECT_NAME}-tester"
-  "${test-srcs}"
-)
-target_link_libraries(
-  "${PROJECT_NAME}-tester"
-  PRIVATE
-  "${PROJECT_NAME}-lib"
-  "mstore::mstore"
-)
+add_executable("${PROJECT_NAME}-tester" "${test-srcs}")
+target_link_libraries("${PROJECT_NAME}-tester" PRIVATE dftd4::dftd4
+                                                       "mstore::mstore")
 
 foreach(t IN LISTS tests)
   add_test("${t}" "${PROJECT_NAME}-tester" "${t}")

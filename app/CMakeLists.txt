@@ -14,28 +14,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-add_executable(
-  "${PROJECT_NAME}-exe"
-  "main.f90"
-  "argument.f90"
-  "cli.f90"
-  "driver.f90"
-  "help.f90"
-)
-set_target_properties(
-  "${PROJECT_NAME}-exe"
-  PROPERTIES
-  OUTPUT_NAME "${PROJECT_NAME}"
-)
-target_link_libraries(
-  "${PROJECT_NAME}-exe"
-  PRIVATE
-  "${PROJECT_NAME}-lib"
-)
+add_executable("${PROJECT_NAME}-exe" "main.f90" "argument.f90" "cli.f90"
+                                     "driver.f90" "help.f90")
+set_target_properties("${PROJECT_NAME}-exe" PROPERTIES OUTPUT_NAME
+                                                       "${PROJECT_NAME}")
+target_link_libraries("${PROJECT_NAME}-exe" PRIVATE dftd4::dftd4)
 
-install(
-  TARGETS
-  "${PROJECT_NAME}-exe"
-  DESTINATION
-  "${CMAKE_INSTALL_BINDIR}"
-)
+install(TARGETS "${PROJECT_NAME}-exe" DESTINATION "${CMAKE_INSTALL_BINDIR}")

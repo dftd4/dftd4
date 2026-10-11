@@ -109,6 +109,7 @@ if install
     'DFTD4_WITH_OpenMP': get_option('openmp') ? 'ON' : 'OFF',
     'DFTD4_WITH_API_V2': get_option('api_v2') ? 'ON' : 'OFF',
     'DFTD4_WITH_ILP64': get_option('ilp64') ? 'ON' : 'OFF',
+    'BUILD_SHARED_LIBS': 'OFF',
     'DFTD4_USE_MCTCLIB': mctc_dep.type_name() != 'internal' ? 'ON' : 'OFF',
     'DFTD4_USE_MULTICHARGE': multicharge_dep.type_name() != 'internal' ? 'ON' : 'OFF',
     'module-dir': module_id,
@@ -124,12 +125,6 @@ if install
       output: meson.project_name() + '-targets.cmake',
       configuration: cmake_data,
     ),
-    files('config'/'cmake'/'Findcustom-blas.cmake'),
-    files('config'/'cmake'/'Findcustom-lapack.cmake'),
-    files('config'/'cmake'/'Findmctc-lib.cmake'),
-    files('config'/'cmake'/'Findmstore.cmake'),
-    files('config'/'cmake'/'Findmulticharge.cmake'),
-    files('config'/'cmake'/'dftd4-utils.cmake'),
   ]
   install_data(
     cmake_files,

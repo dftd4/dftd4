@@ -17,13 +17,15 @@
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
-  APPEND srcs
+  APPEND
+  srcs
   "${dir}/covrad.f90"
   "${dir}/en.f90"
   "${dir}/hardness.f90"
   "${dir}/r4r2.f90"
   "${dir}/wfpair.f90"
-  "${dir}/zeff.f90"
-)
+  "${dir}/zeff.f90")
 
-set(srcs "${srcs}" PARENT_SCOPE)
+set(srcs
+    "${srcs}"
+    PARENT_SCOPE)

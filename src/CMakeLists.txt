@@ -18,9 +18,8 @@ add_subdirectory("dftd4")
 
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
-list(
-  APPEND srcs
-  "${dir}/dftd4.f90"
-)
+list(APPEND srcs "${dir}/dftd4.f90")
 
-set(srcs "${srcs}" PARENT_SCOPE)
+set(srcs
+    "${srcs}"
+    PARENT_SCOPE)

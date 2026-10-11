@@ -3,7 +3,7 @@ Using DFT-D4 in Vasp
 
 To use the D4 dispersion correction in Vasp you need to a compile the ``dftd4`` package using the same Fortran compiler as used for Vasp and enable the API compatibility needed for linking the Vasp-side interface for ``dftd4``.
 Checkout the instructions for installing ``dftd4`` at :ref:`installation`.
-To use ``dftd4`` in Vasp the compatibility layer for the 2.5.x API has to be enable with ``-Dapi_v2=true`` (meson) or ``-DWITH_API_V2=ON`` (CMake).
+To use ``dftd4`` in Vasp the compatibility layer for the 2.5.x API has to be enable with ``-Dapi_v2=true`` (meson) or ``-DDFTD4_WITH_API_V2=ON`` (CMake).
 
 .. important::
 

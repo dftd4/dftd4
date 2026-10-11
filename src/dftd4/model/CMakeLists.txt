@@ -16,12 +16,9 @@
 
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
-list(
-  APPEND srcs
-  "${dir}/d4.f90"
-  "${dir}/d4s.f90"
-  "${dir}/type.f90"
-  "${dir}/utils.f90"
-)
+list(APPEND srcs "${dir}/d4.f90" "${dir}/d4s.f90" "${dir}/type.f90"
+     "${dir}/utils.f90")
 
-set(srcs "${srcs}" PARENT_SCOPE)
+set(srcs
+    "${srcs}"
+    PARENT_SCOPE)
