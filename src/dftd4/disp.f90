@@ -145,6 +145,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, par
       & disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, &
       & sigma, partition)
    if (grad) then
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
          & disp%rcov, disp%en, dEdcn, gradient, sigma, error=local_error)
       if (allocated(local_error)) then
