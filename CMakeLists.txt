@@ -90,7 +90,7 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
+  $<INSTALL_INTERFACE:${DFTD4_INSTALL_FMODDIR}>
 )
 target_include_directories(
   "${PROJECT_NAME}-lib"
@@ -142,7 +142,7 @@ install(
 install(
   DIRECTORY
   "${CMAKE_CURRENT_BINARY_DIR}/include/"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
+  DESTINATION "${DFTD4_INSTALL_FMODDIR}"
 )
 if(DFTD4_WITH_API)
   enable_language("C")
