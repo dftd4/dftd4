@@ -14,7 +14,7 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with dftd4.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.22)
 
 project(
   "dftd4"
@@ -33,14 +33,16 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND DFTD4_WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
-if(DFTD4_WITH_ILP64 AND BLAS_LIBRARIES)
+if(DFTD4_WITH_ILP64)
   message(STATUS "Using LAPACK/BLAS ILP64 interface")
-elseif(DFTD4_WITH_ILP64)
-  message(FATAL_ERROR "ILP64 support needs BLAS_LIBRARIES")
+  set(BLA_SIZEOF_INTEGER 8)
 endif()
 
-if(NOT TARGET "BLAS::BLAS")
-  find_package("custom-blas" REQUIRED)
+if(NOT TARGET "LAPACK::LAPACK")
+  if(BLA_VENDOR MATCHES "^Intel" OR DEFINED ENV{MKLROOT})
+    enable_language(C)
+  endif()
+  find_package(LAPACK REQUIRED)
 endif()
 
 # Collect subprojects
