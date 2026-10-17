@@ -21,7 +21,7 @@ module test_dftd4
       & new_work_partition, rational_damping_param, realspace_cutoff, &
       & serial_work_partition, work_partition
    use dftd4_disp, only : get_dispersion2, get_dispersion3_hessian
-   use dftd4_numdiff, only : get_dispersion_hessian
+   use dftd4_numdiff, only : get_dispersion_hessian, get_dispersion_hessian_numdiff
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -183,8 +183,8 @@ subroutine test_hessian_charge_failure(error)
       deallocate(d4%mchrg)
       allocate(d4%mchrg, source=charge)
       fallback%d4_model = d4
-      call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=stat)
-      call check(error, allocated(stat), "Hybrid Hessian must propagate EEQ failure")
+      call get_dispersion_hessian_numdiff(mol, d4, param, realspace_cutoff(), hessian, error=stat)
+      call check(error, allocated(stat), "Numerical Hessian must propagate EEQ failure")
       if (allocated(error)) return
       call check(error, stat%message == "Bunch-Kaufman factorization failed.")
       if (allocated(error)) return
@@ -201,6 +201,19 @@ subroutine test_hessian_charge_failure(error)
       call check(error, all(mol%xyz == xyz), "Input geometry must remain unchanged")
       if (allocated(error)) return
    end do
+
+   ! The analytic path evaluates the reference geometry, without displacements.
+   charge%direction = 1.0_wp
+   charge%reference_x = xyz(1, 1) - 1.0e-3_wp
+   deallocate(d4%mchrg)
+   allocate(d4%mchrg, source=charge)
+   call get_dispersion_hessian(mol, d4, param, realspace_cutoff(), hessian, error=stat)
+   call check(error, allocated(stat), "Analytical Hessian must propagate EEQ failure")
+   if (allocated(error)) return
+   call check(error, stat%message == "Bunch-Kaufman factorization failed.")
+   if (allocated(error)) return
+   call check(error, all(ieee_is_nan(hessian)))
+   if (allocated(error)) return
 
    ! A successful call clears a previous error and agrees with the legacy call.
    call new_d4_model(error, d4, mol)

@@ -197,7 +197,7 @@ subroutine test_pbed4_acetic(error)
 
    call get_structure(mol, "X23", "acetic")
    call new_d4_model(error, d4, mol)
-   call test_dftd4_gen(error, mol, d4, param, -6.6969773229895183E-002_wp)
+   call test_dftd4_gen(error, mol, d4, param, -6.6969776849772483E-002_wp)
 
 end subroutine test_pbed4_acetic
 
@@ -214,7 +214,7 @@ subroutine test_pbed4s_acetic(error)
 
    call get_structure(mol, "X23", "acetic")
    call new_d4s_model(error, d4s, mol)
-   call test_dftd4_gen(error, mol, d4s, param, -6.8611894281210548E-002_wp)
+   call test_dftd4_gen(error, mol, d4s, param, -6.8611895261112762E-002_wp)
 
 end subroutine test_pbed4s_acetic
 
