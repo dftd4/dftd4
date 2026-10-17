@@ -18,7 +18,7 @@
 module dftd4_disp
    use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use dftd4_blas, only : d4_gemv
+   use dftd4_blas, only : d4_gemv, d4_gemm
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
@@ -475,65 +475,26 @@ end subroutine get_dispersion3_hessian
 subroutine add_hessian_chain(dr, mixed, curvature, hessian)
    real(wp), intent(in) :: dr(:, :), mixed(:, :), curvature(:, :)
    real(wp), intent(inout) :: hessian(:, :)
-   integer :: nz, ndim, ii, jj, iz, jz
-   real(wp) :: tmp
-   real(wp), allocatable :: work(:, :), drt(:, :), mixedt(:, :)
+   integer :: nz, ndim, ii, iz
+   real(wp), allocatable :: work(:, :)
 
    ndim = size(dr, 1)
    nz = size(dr, 2)
-   allocate(work(nz, ndim), drt(nz, ndim), mixedt(nz, ndim))
+   allocate(work(ndim, nz))
 
-   ! Assemble the internal-variable chain rule explicitly under OpenMP.  Intrinsic MATMUL is
-   ! not guaranteed to use the program's OpenMP team (and is often serial with
-   ! a single-threaded BLAS), which otherwise leaves a sizeable serial tail in
-   ! analytical Hessian calculations.
-   !$omp parallel default(none) &
-   !$omp shared(nz, ndim, mixed, curvature, dr, drt, mixedt, work, hessian) &
-   !$omp private(ii, jj, iz, jz, tmp)
-
-   ! Store the Cartesian-by-variable matrices with the variable as the contiguous dimension.
-   ! Both contractions below then stream through contiguous columns instead of
-   ! repeatedly traversing the second dimension of Fortran arrays.
-   !$omp do collapse(2) schedule(static)
-   do ii = 1, ndim
-      do iz = 1, nz
-         drt(iz, ii) = dr(ii, iz)
-         mixedt(iz, ii) = mixed(ii, iz)
-      end do
-   end do
-   !$omp end do
-
-   ! work = curvature * transpose(dr).  Keeping jz as the accumulation
-   ! order preserves the scalar result while the iz loop is vectorizable.
-   !$omp do schedule(static)
-   do jj = 1, ndim
-      work(:, jj) = 0.0_wp
-      do jz = 1, nz
-         tmp = drt(jz, jj)
-         !$omp simd
-         do iz = 1, nz
-            work(iz, jj) = work(iz, jj) + curvature(iz, jz)*tmp
-         end do
-      end do
-   end do
-   !$omp end do
-
-   ! H += mixed*dr^T + dr*mixed^T + dr*curvature*dr^T
-   !$omp do collapse(2) schedule(static)
-   do jj = 1, ndim
+   ! H += (mixed + dr*curvature)*dr^T + dr*mixed^T.
+   ! Keep one work array and let BLAS handle the three matrix products.
+   call d4_gemm(dr, curvature, work)
+   !$omp parallel do collapse(2) default(none) schedule(static) &
+   !$omp shared(ndim, nz, work, mixed)
+   do iz = 1, nz
       do ii = 1, ndim
-         tmp = 0.0_wp
-         !$omp simd reduction(+:tmp)
-         do iz = 1, nz
-            tmp = tmp + mixedt(iz, ii)*drt(iz, jj) &
-               & + drt(iz, ii)*mixedt(iz, jj) &
-               & + drt(iz, ii)*work(iz, jj)
-         end do
-         hessian(ii, jj) = hessian(ii, jj) + tmp
+         work(ii, iz) = work(ii, iz) + mixed(ii, iz)
       end do
    end do
-   !$omp end do
-   !$omp end parallel
+   !$omp end parallel do
+   call d4_gemm(work, dr, hessian, transb="t", beta=1.0_wp)
+   call d4_gemm(dr, mixed, hessian, transb="t", beta=1.0_wp)
 
 end subroutine add_hessian_chain
 
