@@ -49,5 +49,5 @@ Running with one part is identical to omitting the partition. In Fortran this
 is also available as ``serial_work_partition``; in C and Python the model can
 be reset with ``part=0`` and ``nparts=1``.
 
-The numerical Hessian uses the same partition. The pairwise decomposition and
+The analytical Hessian uses the same partition. The pairwise decomposition and
 the model properties do not.

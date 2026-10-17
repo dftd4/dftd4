@@ -754,7 +754,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
 
 end subroutine get_dispersion_api
 
-!> Calculate hessian numerically
+!> Calculate the Cartesian Hessian; retain the historical C symbol.
 subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
                                    & vparam, c_hessian) &
       & bind(C, name=namespace//"get_numerical_hessian")
