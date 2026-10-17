@@ -406,18 +406,17 @@ subroutine weight_references_hessian(self, mol, cn, q, gwvec, gwdcn, gwd2cn, gwd
    real(wp) :: gwk, dgwk, d2gwk, wf, dcn, zi, gi, zscale, dzscale, maxcn
    real(wp), parameter :: eps_norm = tiny(1.0_wp)**0.5_wp
 
-   gwvec(:, :, :) = 0.0_wp
-   gwdcn(:, :, :) = 0.0_wp
-   gwd2cn(:, :, :) = 0.0_wp
-   if (present(gwdq)) gwdq(:, :, :) = 0.0_wp
-   if (present(gwd2q)) gwd2q(:, :, :) = 0.0_wp
-   if (present(gwdcnq)) gwdcnq(:, :, :) = 0.0_wp
-
    !$omp parallel do default(none) schedule(runtime) &
    !$omp shared(gwvec, gwdcn, gwd2cn, gwdq, gwd2q, gwdcnq, mol, self, cn, q) &
    !$omp private(iat, izp, iref, igw, norm, dnorm, d2norm, gw, expw, expd, expdd, &
    !$omp& gwk, dgwk, d2gwk, wf, dcn, zi, gi, zscale, dzscale, maxcn)
    do iat = 1, mol%nat
+      gwvec(:, iat, :) = 0.0_wp
+      gwdcn(:, iat, :) = 0.0_wp
+      gwd2cn(:, iat, :) = 0.0_wp
+      if (present(gwdq)) gwdq(:, iat, :) = 0.0_wp
+      if (present(gwd2q)) gwd2q(:, iat, :) = 0.0_wp
+      if (present(gwdcnq)) gwdcnq(:, iat, :) = 0.0_wp
       izp = mol%id(iat)
       zi = self%zeff(izp)
       gi = self%eta(izp) * self%gc
