@@ -284,7 +284,7 @@ subroutine get_dispersion2_hessian(error, mol, disp, param, cutoff, hessian, par
    !> Optional externally assigned work partition
    type(work_partition), intent(in), optional :: partition
 
-   integer :: nat, ndim, mref
+   integer :: nat, ndim, mref, iat
    type(cache_container) :: cache
    real(wp), allocatable :: cn(:), q(:), dcndL(:, :, :), lattr(:, :)
    real(wp), allocatable, target :: dzdr(:, :, :)
@@ -296,7 +296,11 @@ subroutine get_dispersion2_hessian(error, mol, disp, param, cutoff, hessian, par
    real(wp), allocatable :: d2c6dcnq(:, :), d2c6dcnqij(:, :)
    real(wp), allocatable :: dEdz(:), dEdrdz(:, :), dEdzdz(:, :)
 
-   hessian = ieee_value(0.0_wp, ieee_quiet_nan)
+   !$omp parallel do default(none) schedule(static) shared(hessian) private(iat)
+   do iat = 1, size(hessian, 2)
+      hessian(:, iat) = ieee_value(0.0_wp, ieee_quiet_nan)
+   end do
+   !$omp end parallel do
    if (.not. allocated(disp%mchrg)) then
       call fatal_error(error, "Not supported for non-self-consistent D4 version")
       return
@@ -318,7 +322,6 @@ subroutine get_dispersion2_hessian(error, mol, disp, param, cutoff, hessian, par
    ! Its full response is encapsulated in the multicharge cache and contraction.
    call get_charges(disp%mchrg, mol, error, q, cache=cache)
    if (allocated(error)) return
-   dzdr(:, :, nat+1:) = cache%dqdr
    allocate(gw(mref, nat, disp%ncoup), gwc(mref, nat, disp%ncoup), gwcc(mref, nat, disp%ncoup), &
       & gwq(mref, nat, disp%ncoup), gwqq(mref, nat, disp%ncoup), gwcq(mref, nat, disp%ncoup))
    select type(disp)
@@ -337,13 +340,23 @@ subroutine get_dispersion2_hessian(error, mol, disp, param, cutoff, hessian, par
       & gwq, gwqq, gwcq, dc6dq, d2c6dq2, d2c6dqij, d2c6dcnq, d2c6dcnqij)
    deallocate(gw, gwc, gwcc, gwq, gwqq, gwcq)
 
-   allocate(dEdz(2*nat), source=0.0_wp)
-   allocate(dEdrdz(ndim, 2*nat), source=0.0_wp)
-   allocate(dEdzdz(2*nat, 2*nat), source=0.0_wp)
+   allocate(dEdz(2*nat), dEdrdz(ndim, 2*nat), dEdzdz(2*nat, 2*nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
    select type(param)
    class is (rational_damping_param)
-      hessian = 0.0_wp
+      !$omp parallel do default(none) schedule(static) &
+      !$omp shared(nat, hessian, dEdz, dEdrdz, dEdzdz, dzdr, cache) private(iat)
+      do iat = 1, nat
+         hessian(:, 3*iat-2:3*iat) = 0.0_wp
+         dEdz(iat) = 0.0_wp
+         dEdz(nat+iat) = 0.0_wp
+         dEdrdz(:, iat) = 0.0_wp
+         dEdrdz(:, nat+iat) = 0.0_wp
+         dEdzdz(:, iat) = 0.0_wp
+         dEdzdz(:, nat+iat) = 0.0_wp
+         dzdr(:, :, nat+iat) = cache%dqdr(:, :, iat)
+      end do
+      !$omp end parallel do
       call param%get_dispersion2_hessian(mol, lattr, cutoff%disp2, cutoff%width2, disp%r4r2, &
          & c6, dc6dcn, d2c6dcn2, d2c6dcnij, dc6dq, d2c6dq2, d2c6dqij, &
          & d2c6dcnq, d2c6dcnqij, hessian, dEdz, dEdrdz, dEdzdz, partition)
@@ -390,7 +403,7 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
    !> Optional externally assigned work partition
    type(work_partition), intent(in), optional :: partition
 
-   integer :: mref, nat, ndim
+   integer :: mref, nat, ndim, iat
    real(wp), allocatable, target :: dcndr(:, :, :)
    real(wp), allocatable :: cn(:), dcndL(:, :, :)
    real(wp), allocatable :: q(:)
@@ -404,7 +417,11 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
    select type(param)
    class is (rational_damping_param)
       if (abs(param%s9) < epsilon(1.0_wp)) then
-         hessian = 0.0_wp
+         !$omp parallel do default(none) schedule(static) shared(hessian) private(iat)
+         do iat = 1, size(hessian, 2)
+            hessian(:, iat) = 0.0_wp
+         end do
+         !$omp end parallel do
          return
       end if
    class default
@@ -444,10 +461,16 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
       return
    end select
 
-   hessian(:, :) = 0.0_wp
-   allocate(dEdcn(nat), source=0.0_wp)
-   allocate(dEdcndr(ndim, nat), source=0.0_wp)
-   allocate(dEdcndcn(nat, nat), source=0.0_wp)
+   allocate(dEdcn(nat), dEdcndr(ndim, nat), dEdcndcn(nat, nat))
+   !$omp parallel do default(none) schedule(static) &
+   !$omp shared(nat, hessian, dEdcn, dEdcndr, dEdcndcn) private(iat)
+   do iat = 1, nat
+      hessian(:, 3*iat-2:3*iat) = 0.0_wp
+      dEdcn(iat) = 0.0_wp
+      dEdcndr(:, iat) = 0.0_wp
+      dEdcndcn(:, iat) = 0.0_wp
+   end do
+   !$omp end parallel do
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
    select type(param)
