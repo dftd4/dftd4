@@ -16,7 +16,7 @@
 
 !> Implementation of the rational (Becke--Johnson) damping function.
 module dftd4_damping_rational
-   use dftd4_cutoff, only : smooth_cutoff
+   use dftd4_cutoff, only : smooth_cutoff, smooth_cutoff_r2
    use dftd4_damping, only : damping_param
    use dftd4_damping_atm, only : get_atm_dispersion, get_atm_dispersion_hessian
    use dftd4_data, only : get_r4r2_val
@@ -44,6 +44,9 @@ module dftd4_damping_rational
 
       !> Evaluate ATM three-body dispersion energy expression
       procedure :: get_dispersion3_impl => get_dispersion3
+
+      !> Evaluate two-body contribution to the Hessian
+      procedure :: get_dispersion2_hessian
 
       !> Evaluate ATM three-body contribution to the Hessian
       procedure :: get_dispersion3_hessian
@@ -356,6 +359,120 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, r4r2, c6, dc6d
    !$omp end parallel
 
 end subroutine get_dispersion_derivs
+
+
+!> Accumulate explicit Cartesian and CN/charge derivatives of the two-body energy.
+!> Internal variables are ordered as z = (CN_1,...,CN_N,q_1,...,q_N).
+subroutine get_dispersion2_hessian(self, mol, trans, cutoff, width, r4r2, c6, &
+      & dc6dcn, d2c6dcn2, d2c6dcnij, dc6dq, d2c6dq2, d2c6dqij, &
+      & d2c6dcnq, d2c6dcnqij, hessian, dEdz, dEdrdz, dEdzdz, partition)
+
+   !> Damping parameters
+   class(rational_damping_param), intent(in) :: self
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+   !> Lattice translations, real-space cutoff and smoothing width
+   real(wp), intent(in) :: trans(:, :), cutoff, width
+   !> Elemental C8/C6 ratios and pair C6 coefficients
+   real(wp), intent(in) :: r4r2(:), c6(:, :)
+   !> First and second derivatives with respect to CN and charge
+   real(wp), intent(in) :: dc6dcn(:, :), d2c6dcn2(:, :), d2c6dcnij(:, :)
+   real(wp), intent(in) :: dc6dq(:, :), d2c6dq2(:, :), d2c6dqij(:, :)
+   real(wp), intent(in) :: d2c6dcnq(:, :), d2c6dcnqij(:, :)
+   !> Cartesian Hessian at fixed CN and charge
+   real(wp), intent(inout) :: hessian(:, :)
+   !> Internal-variable gradient, Cartesian mixed and internal-variable Hessians
+   real(wp), intent(inout) :: dEdz(:), dEdrdz(:, :), dEdzdz(:, :)
+   !> Work partition of atom pairs
+   type(work_partition), intent(in), optional :: partition
+
+   integer :: iat, jat, jtr, ic, jc, ia, ib, ii, jj, iz(4)
+   real(wp) :: vec(3), r2, rrij, r0, fac, t6, t8, t6d, t8d, t6dd, t8dd
+   real(wp) :: p, pd, pdd, sw, swd, swdd, f, fd, fdd, fc, frc(3)
+   real(wp) :: block(3, 3), cd(4), cdd(4, 4)
+
+   ! Sum images before scattering into dense matrices. Serial pair assembly
+   ! avoids a full O(N^2) Hessian copy per thread; chain contractions are parallel.
+   do iat = 1, mol%nat
+      do jat = 1, iat
+         if (.not. owns_pair(partition, iat, jat)) cycle
+         rrij = 3.0_wp*r4r2(mol%id(iat))*r4r2(mol%id(jat))
+         r0 = self%a1*sqrt(rrij) + self%a2
+         fac = 1.0_wp
+         if (iat == jat) fac = 0.5_wp
+         iz = [iat, jat, mol%nat+iat, mol%nat+jat]
+         cd = [dc6dcn(iat, jat), dc6dcn(jat, iat), dc6dq(iat, jat), dc6dq(jat, iat)]
+         cdd(1, 1) = d2c6dcn2(iat, jat)
+         cdd(2, 2) = d2c6dcn2(jat, iat)
+         cdd(1, 2) = d2c6dcnij(iat, jat)
+         cdd(3, 3) = d2c6dq2(iat, jat)
+         cdd(4, 4) = d2c6dq2(jat, iat)
+         cdd(3, 4) = d2c6dqij(iat, jat)
+         cdd(1, 3) = d2c6dcnq(iat, jat)
+         cdd(2, 4) = d2c6dcnq(jat, iat)
+         cdd(1, 4) = d2c6dcnqij(iat, jat)
+         cdd(2, 3) = d2c6dcnqij(jat, iat)
+         do ia = 1, 4
+            do ib = 1, ia-1
+               cdd(ia, ib) = cdd(ib, ia)
+            end do
+         end do
+
+         block = 0.0_wp
+         fc = 0.0_wp
+         frc = 0.0_wp
+         do jtr = 1, size(trans, 2)
+            vec = mol%xyz(:, iat) - mol%xyz(:, jat) - trans(:, jtr)
+            r2 = sum(vec**2)
+            if (r2 > cutoff**2 .or. r2 < epsilon(1.0_wp)) cycle
+            call smooth_cutoff_r2(r2, cutoff, width, sw, swd, swdd)
+            if (sw <= 0.0_wp) cycle
+            t6 = 1.0_wp/(r2**3 + r0**6)
+            t8 = 1.0_wp/(r2**4 + r0**8)
+            t6d = -3.0_wp*r2**2*t6**2
+            t8d = -4.0_wp*r2**3*t8**2
+            t6dd = -6.0_wp*r2*t6**2 + 18.0_wp*r2**4*t6**3
+            t8dd = -12.0_wp*r2**2*t8**2 + 32.0_wp*r2**6*t8**3
+            p = self%s6*t6 + self%s8*rrij*t8
+            pd = self%s6*t6d + self%s8*rrij*t8d
+            pdd = self%s6*t6dd + self%s8*rrij*t8dd
+            ! E = C6*f(r^2); C8 is a fixed elemental multiple of C6.
+            f = -fac*sw*p
+            fd = -fac*(swd*p + sw*pd)
+            fdd = -fac*(swdd*p + 2.0_wp*swd*pd + sw*pdd)
+            fc = fc + f
+            if (iat == jat) cycle
+            frc = frc + 2.0_wp*fd*vec
+            do ic = 1, 3
+               do jc = 1, 3
+                  block(ic, jc) = block(ic, jc) + 4.0_wp*fdd*vec(ic)*vec(jc)*c6(iat, jat)
+               end do
+               block(ic, ic) = block(ic, ic) + 2.0_wp*fd*c6(iat, jat)
+            end do
+         end do
+
+         ! Repeated indices for self images combine both endpoints, including
+         ! their mixed derivatives. Only the explicit Cartesian displacement vanishes.
+         do ia = 1, 4
+            dEdz(iz(ia)) = dEdz(iz(ia)) + fc*cd(ia)
+            do ib = 1, 4
+               dEdzdz(iz(ia), iz(ib)) = dEdzdz(iz(ia), iz(ib)) + fc*cdd(ia, ib)
+            end do
+         end do
+         if (iat == jat) cycle
+         ii = 3*(iat-1)
+         jj = 3*(jat-1)
+         hessian(ii+1:ii+3, ii+1:ii+3) = hessian(ii+1:ii+3, ii+1:ii+3) + block
+         hessian(jj+1:jj+3, jj+1:jj+3) = hessian(jj+1:jj+3, jj+1:jj+3) + block
+         hessian(ii+1:ii+3, jj+1:jj+3) = hessian(ii+1:ii+3, jj+1:jj+3) - block
+         hessian(jj+1:jj+3, ii+1:ii+3) = hessian(jj+1:jj+3, ii+1:ii+3) - block
+         do ia = 1, 4
+            dEdrdz(ii+1:ii+3, iz(ia)) = dEdrdz(ii+1:ii+3, iz(ia)) + frc*cd(ia)
+            dEdrdz(jj+1:jj+3, iz(ia)) = dEdrdz(jj+1:jj+3, iz(ia)) - frc*cd(ia)
+         end do
+      end do
+   end do
+end subroutine get_dispersion2_hessian
 
 
 !> Evaluation of the dispersion energy expression

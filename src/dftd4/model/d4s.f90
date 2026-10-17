@@ -21,7 +21,7 @@ module dftd4_model_d4s
    use dftd4_data, only : get_covalent_rad, get_r4r2_val, get_wfpair_val, &
       & get_effective_charge, get_electronegativity, get_hardness
    use dftd4_model_type, only : dispersion_model, d4_qmod
-   use dftd4_model_utils, only : dzeta, is_exceptional, trapzd, weight_cn, zeta
+   use dftd4_model_utils, only : dzeta, d2zeta, is_exceptional, trapzd, weight_cn, zeta
    use dftd4_reference, only : get_nref, set_refalpha_eeq, set_refalpha_eeqbc, &
       & set_refalpha_gfn2, set_refcn, set_refgw, set_refq_eeq, set_refq_eeqbc, &
       & set_refq_gfn2
@@ -52,8 +52,6 @@ module dftd4_model_d4s
       !> Generate weights and second CN derivatives for analytical Hessians
       procedure :: weight_references_hessian
 
-      !> Evaluate C6 coefficients and second CN derivatives for analytical Hessians
-      procedure :: get_atomic_c6_hessian
 
       !> Evaluate atomic polarizabilities
       procedure :: get_polarizabilities
@@ -387,8 +385,8 @@ subroutine weight_references(self, mol, cn, q, gwvec, gwdcn, gwdq)
 end subroutine weight_references
 
 
-!> Calculate reference weights and their first and second CN derivatives.
-subroutine weight_references_hessian(self, mol, cn, q, gwvec, gwdcn, gwd2cn)
+!> Calculate reference weights and their first and second CN/charge derivatives.
+subroutine weight_references_hessian(self, mol, cn, q, gwvec, gwdcn, gwd2cn, gwdq, gwd2q, gwdcnq)
 
    !> Instance of the dispersion model
    class(d4s_model), intent(in) :: self
@@ -405,19 +403,25 @@ subroutine weight_references_hessian(self, mol, cn, q, gwvec, gwdcn, gwd2cn)
    !> Pairwise weighting for the atomic reference systems and its CN derivatives
    real(wp), intent(out) :: gwvec(:, :, :), gwdcn(:, :, :), gwd2cn(:, :, :)
 
+   !> Optional charge and mixed CN-charge derivatives
+   real(wp), intent(out), optional :: gwdq(:, :, :), gwd2q(:, :, :), gwdcnq(:, :, :)
+
    integer :: iat, izp, iref, igw, jat, jzp
    real(wp) :: norm, dnorm, d2norm, gw, expw, expd, expdd
-   real(wp) :: gwk, dgwk, d2gwk, wf, dcn, zi, gi, zscale, maxcn
+   real(wp) :: gwk, dgwk, d2gwk, wf, dcn, zi, gi, zscale, dzscale, maxcn
    real(wp), parameter :: eps_norm = tiny(1.0_wp)**0.5_wp
 
    gwvec(:, :, :) = 0.0_wp
    gwdcn(:, :, :) = 0.0_wp
    gwd2cn(:, :, :) = 0.0_wp
+   if (present(gwdq)) gwdq(:, :, :) = 0.0_wp
+   if (present(gwd2q)) gwd2q(:, :, :) = 0.0_wp
+   if (present(gwdcnq)) gwdcnq(:, :, :) = 0.0_wp
 
    !$omp parallel do default(none) schedule(runtime) &
-   !$omp shared(gwvec, gwdcn, gwd2cn, mol, self, cn, q) &
+   !$omp shared(gwvec, gwdcn, gwd2cn, gwdq, gwd2q, gwdcnq, mol, self, cn, q) &
    !$omp private(iat, izp, iref, igw, jat, jzp, norm, dnorm, d2norm, gw, expw, expd, expdd, &
-   !$omp& gwk, dgwk, d2gwk, wf, dcn, zi, gi, zscale, maxcn)
+   !$omp& gwk, dgwk, d2gwk, wf, dcn, zi, gi, zscale, dzscale, maxcn)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       zi = self%zeff(izp)
@@ -478,6 +482,13 @@ subroutine weight_references_hessian(self, mol, cn, q, gwvec, gwdcn, gwd2cn)
             gwvec(iref, iat, jat) = gwk*zscale
             gwdcn(iref, iat, jat) = dgwk*zscale
             gwd2cn(iref, iat, jat) = d2gwk*zscale
+            if (present(gwdq) .or. present(gwdcnq)) then
+               dzscale = dzeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
+               if (present(gwdq)) gwdq(iref, iat, jat) = gwk*dzscale
+               if (present(gwdcnq)) gwdcnq(iref, iat, jat) = dgwk*dzscale
+            end if
+            if (present(gwd2q)) gwd2q(iref, iat, jat) = &
+               & gwk*d2zeta(self%ga, gi, self%q(iref, izp)+zi, q(iat)+zi)
          end do
       end do
    end do
@@ -581,67 +592,6 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
 
 end subroutine get_atomic_c6
 
-
-!> Calculate C6 coefficients and their first and second CN derivatives.
-subroutine get_atomic_c6_hessian(self, mol, gwvec, gwdcn, gwd2cn, c6, &
-      & dc6dcn, d2c6dcn2, d2c6dcnij)
-
-   !> Instance of the dispersion model
-   class(d4s_model), intent(in) :: self
-
-   !> Molecular structure data
-   class(structure_type), intent(in) :: mol
-
-   !> Reference weights and their CN derivatives
-   real(wp), intent(in) :: gwvec(:, :, :), gwdcn(:, :, :), gwd2cn(:, :, :)
-
-   !> C6 coefficients and their CN derivatives
-   real(wp), intent(out) :: c6(:, :), dc6dcn(:, :)
-   real(wp), intent(out) :: d2c6dcn2(:, :), d2c6dcnij(:, :)
-
-   integer :: ipair, npair, iat, jat, izp, jzp, iref, jref
-   real(wp) :: refc6, c6ij, dc6dcni, dc6dcnj, d2c6dcni, d2c6dcnj, d2c6mix
-
-   ! Flatten the lower triangle so OpenMP can schedule O(N^2) pair tasks.
-   npair = mol%nat*(mol%nat + 1)/2
-   !$omp parallel do default(none) schedule(runtime) &
-   !$omp shared(c6, dc6dcn, d2c6dcn2, d2c6dcnij, mol, self, gwvec, gwdcn, gwd2cn, npair) &
-   !$omp private(ipair, iat, jat, izp, jzp, iref, jref, refc6, c6ij, dc6dcni, dc6dcnj, &
-   !$omp& d2c6dcni, d2c6dcnj, d2c6mix)
-   do ipair = 1, npair
-      iat = int(0.5_wp*(sqrt(8.0_wp*real(ipair, wp) + 1.0_wp) - 1.0_wp))
-      if (iat*(iat + 1)/2 < ipair) iat = iat + 1
-      jat = ipair - iat*(iat - 1)/2
-      izp = mol%id(iat)
-      jzp = mol%id(jat)
-      c6ij = 0.0_wp
-      dc6dcni = 0.0_wp
-      dc6dcnj = 0.0_wp
-      d2c6dcni = 0.0_wp
-      d2c6dcnj = 0.0_wp
-      d2c6mix = 0.0_wp
-      do iref = 1, self%ref(izp)
-         do jref = 1, self%ref(jzp)
-            refc6 = self%c6(iref, jref, izp, jzp)
-            c6ij = c6ij + gwvec(iref, iat, jat)*gwvec(jref, jat, iat)*refc6
-            dc6dcni = dc6dcni + gwdcn(iref, iat, jat)*gwvec(jref, jat, iat)*refc6
-            dc6dcnj = dc6dcnj + gwvec(iref, iat, jat)*gwdcn(jref, jat, iat)*refc6
-            d2c6dcni = d2c6dcni + gwd2cn(iref, iat, jat)*gwvec(jref, jat, iat)*refc6
-            d2c6dcnj = d2c6dcnj + gwvec(iref, iat, jat)*gwd2cn(jref, jat, iat)*refc6
-            d2c6mix = d2c6mix + gwdcn(iref, iat, jat)*gwdcn(jref, jat, iat)*refc6
-         end do
-      end do
-      c6(iat, jat) = c6ij
-      c6(jat, iat) = c6ij
-      dc6dcn(iat, jat) = dc6dcni
-      dc6dcn(jat, iat) = dc6dcnj
-      d2c6dcn2(iat, jat) = d2c6dcni
-      d2c6dcn2(jat, iat) = d2c6dcnj
-      d2c6dcnij(iat, jat) = d2c6mix
-      d2c6dcnij(jat, iat) = d2c6mix
-   end do
-
-end subroutine get_atomic_c6_hessian
 
 
 !> Calculate atomic polarizabilities and their derivatives w.r.t.

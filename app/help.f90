@@ -44,7 +44,7 @@ module dftd4_help
       "-g,--grad [file]         Evaluate molecular gradient and virial,"//nl//&
       "                         write results to file (default: dftd4.txt),"//nl//&
       "                         attempts to add to Turbomole gradient and gradlatt files"//nl//&
-      "   --hessian             Evaluate molecular hessian"//nl//&
+      "   --hessian             Evaluate Cartesian Hessian"//nl//&
       "   --property            Show dispersion related atomic and system properties"//nl//&
       "   --pair-resolved       Calculate pairwise representation of dispersion energy"//nl//&
       "   --noedisp             Disable writing of dispersion energy to .EDISP file"//nl//&
