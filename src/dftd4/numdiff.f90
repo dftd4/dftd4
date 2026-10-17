@@ -46,7 +46,7 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, 
    type(error_type), allocatable, intent(out), optional :: error
 
    logical :: analytic
-   integer :: ndim
+   integer :: ndim, iat, jat, ic, jc
    real(wp), allocatable :: hess2(:, :), hess3(:, :)
    type(error_type), allocatable :: local_error
 
@@ -81,8 +81,19 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition, 
       if (present(error)) call move_alloc(local_error, error)
       return
    end if
-   hess2(:, :) = hess2 + hess3
-   hessian(:, :, :, :) = reshape(hess2, shape(hessian))
+   !$omp parallel do collapse(2) default(none) schedule(static) &
+   !$omp shared(mol, hess2, hess3, hessian) private(iat, jat, ic, jc)
+   do jat = 1, mol%nat
+      do jc = 1, 3
+         do iat = 1, mol%nat
+            do ic = 1, 3
+               hessian(ic, iat, jc, jat) = hess2(3*(iat-1)+ic, 3*(jat-1)+jc) &
+                  & + hess3(3*(iat-1)+ic, 3*(jat-1)+jc)
+            end do
+         end do
+      end do
+   end do
+   !$omp end parallel do
 end subroutine get_dispersion_hessian
 
 
