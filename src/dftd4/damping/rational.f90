@@ -386,92 +386,140 @@ subroutine get_dispersion2_hessian(self, mol, trans, cutoff, width, r4r2, c6, &
    !> Work partition of atom pairs
    type(work_partition), intent(in), optional :: partition
 
-   integer :: iat, jat, jtr, ic, jc, ia, ib, ii, jj, iz(4)
+   integer :: nat, npair, ipair, iat, jat, jtr, ic, jc, ia, ib, iv, jv, ii, jj, iz(4), at(4)
    real(wp) :: vec(3), r2, rrij, r0, fac, t6, t8, t6d, t8d, t6dd, t8dd
    real(wp) :: p, pd, pdd, sw, swd, swdd, f, fd, fdd, fc, frc(3)
    real(wp) :: block(3, 3), cd(4), cdd(4, 4)
+   real(wp), allocatable :: hdiag(:, :, :), zgrad(:, :), rzdiag(:, :, :), zzdiag(:, :, :)
 
-   ! Sum images before scattering into dense matrices. Serial pair assembly
-   ! avoids a full O(N^2) Hessian copy per thread; chain contractions are parallel.
-   do iat = 1, mol%nat
-      do jat = 1, iat
-         if (.not. owns_pair(partition, iat, jat)) cycle
-         rrij = 3.0_wp*r4r2(mol%id(iat))*r4r2(mol%id(jat))
-         r0 = self%a1*sqrt(rrij) + self%a2
-         fac = 1.0_wp
-         if (iat == jat) fac = 0.5_wp
-         iz = [iat, jat, mol%nat+iat, mol%nat+jat]
-         cd = [dc6dcn(iat, jat), dc6dcn(jat, iat), dc6dq(iat, jat), dc6dq(jat, iat)]
-         cdd(1, 1) = d2c6dcn2(iat, jat)
-         cdd(2, 2) = d2c6dcn2(jat, iat)
-         cdd(1, 2) = d2c6dcnij(iat, jat)
-         cdd(3, 3) = d2c6dq2(iat, jat)
-         cdd(4, 4) = d2c6dq2(jat, iat)
-         cdd(3, 4) = d2c6dqij(iat, jat)
-         cdd(1, 3) = d2c6dcnq(iat, jat)
-         cdd(2, 4) = d2c6dcnq(jat, iat)
-         cdd(1, 4) = d2c6dcnqij(iat, jat)
-         cdd(2, 3) = d2c6dcnqij(jat, iat)
-         do ia = 1, 4
-            do ib = 1, ia-1
-               cdd(ia, ib) = cdd(ib, ia)
-            end do
-         end do
+   nat = mol%nat
+   npair = nat*(nat + 1)/2
+   allocate(hdiag(3, 3, nat), zgrad(2, nat), rzdiag(3, 2, nat), zzdiag(2, 2, nat), source=0.0_wp)
 
-         block = 0.0_wp
-         fc = 0.0_wp
-         frc = 0.0_wp
-         do jtr = 1, size(trans, 2)
-            vec = mol%xyz(:, iat) - mol%xyz(:, jat) - trans(:, jtr)
-            r2 = sum(vec**2)
-            if (r2 > cutoff**2 .or. r2 < epsilon(1.0_wp)) cycle
-            call smooth_cutoff_r2(r2, cutoff, width, sw, swd, swdd)
-            if (sw <= 0.0_wp) cycle
-            t6 = 1.0_wp/(r2**3 + r0**6)
-            t8 = 1.0_wp/(r2**4 + r0**8)
-            t6d = -3.0_wp*r2**2*t6**2
-            t8d = -4.0_wp*r2**3*t8**2
-            t6dd = -6.0_wp*r2*t6**2 + 18.0_wp*r2**4*t6**3
-            t8dd = -12.0_wp*r2**2*t8**2 + 32.0_wp*r2**6*t8**3
-            p = self%s6*t6 + self%s8*rrij*t8
-            pd = self%s6*t6d + self%s8*rrij*t8d
-            pdd = self%s6*t6dd + self%s8*rrij*t8dd
-            ! E = C6*f(r^2); C8 is a fixed elemental multiple of C6.
-            f = -fac*sw*p
-            fd = -fac*(swd*p + sw*pd)
-            fdd = -fac*(swdd*p + 2.0_wp*swd*pd + sw*pdd)
-            fc = fc + f
-            if (iat == jat) cycle
-            frc = frc + 2.0_wp*fd*vec
-            do ic = 1, 3
-               do jc = 1, 3
-                  block(ic, jc) = block(ic, jc) + 4.0_wp*fdd*vec(ic)*vec(jc)*c6(iat, jat)
-               end do
-               block(ic, ic) = block(ic, ic) + 2.0_wp*fd*c6(iat, jat)
-            end do
+   ! Each pair owns its off-diagonal atom blocks. Only atom-local blocks need
+   ! reduction: 21*N reals per thread, rather than full O(N^2) Hessian copies.
+   ! Sum images within a pair before updating these blocks.
+   !$omp parallel do default(none) schedule(runtime) &
+   !$omp shared(mol, self, trans, cutoff, width, r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij) &
+   !$omp shared(dc6dq, d2c6dq2, d2c6dqij, d2c6dcnq, d2c6dcnqij, partition, nat, npair) &
+   !$omp shared(hessian, dEdrdz, dEdzdz) &
+   !$omp private(ipair, iat, jat, jtr, ic, jc, ia, ib, iv, jv, ii, jj, iz, at) &
+   !$omp private(vec, r2, rrij, r0, fac, t6, t8, t6d, t8d, t6dd, t8dd) &
+   !$omp private(p, pd, pdd, sw, swd, swdd, f, fd, fdd, fc, frc, block, cd, cdd) &
+   !$omp reduction(+:hdiag, zgrad, rzdiag, zzdiag)
+   do ipair = 1, npair
+      iat = int(0.5_wp*(sqrt(8.0_wp*real(ipair, wp) + 1.0_wp) - 1.0_wp))
+      if (iat*(iat + 1)/2 < ipair) iat = iat + 1
+      jat = ipair - iat*(iat - 1)/2
+      if (.not. owns_pair(partition, iat, jat)) cycle
+      rrij = 3.0_wp*r4r2(mol%id(iat))*r4r2(mol%id(jat))
+      r0 = self%a1*sqrt(rrij) + self%a2
+      fac = 1.0_wp
+      if (iat == jat) fac = 0.5_wp
+      at = [iat, jat, iat, jat]
+      iz = [iat, jat, nat+iat, nat+jat]
+      cd = [dc6dcn(iat, jat), dc6dcn(jat, iat), dc6dq(iat, jat), dc6dq(jat, iat)]
+      cdd(1, 1) = d2c6dcn2(iat, jat)
+      cdd(2, 2) = d2c6dcn2(jat, iat)
+      cdd(1, 2) = d2c6dcnij(iat, jat)
+      cdd(3, 3) = d2c6dq2(iat, jat)
+      cdd(4, 4) = d2c6dq2(jat, iat)
+      cdd(3, 4) = d2c6dqij(iat, jat)
+      cdd(1, 3) = d2c6dcnq(iat, jat)
+      cdd(2, 4) = d2c6dcnq(jat, iat)
+      cdd(1, 4) = d2c6dcnqij(iat, jat)
+      cdd(2, 3) = d2c6dcnqij(jat, iat)
+      do ia = 1, 4
+         do ib = 1, ia-1
+            cdd(ia, ib) = cdd(ib, ia)
          end do
+      end do
 
-         ! Repeated indices for self images combine both endpoints, including
-         ! their mixed derivatives. Only the explicit Cartesian displacement vanishes.
-         do ia = 1, 4
-            dEdz(iz(ia)) = dEdz(iz(ia)) + fc*cd(ia)
-            do ib = 1, 4
-               dEdzdz(iz(ia), iz(ib)) = dEdzdz(iz(ia), iz(ib)) + fc*cdd(ia, ib)
-            end do
-         end do
+      block = 0.0_wp
+      fc = 0.0_wp
+      frc = 0.0_wp
+      do jtr = 1, size(trans, 2)
+         vec = mol%xyz(:, iat) - mol%xyz(:, jat) - trans(:, jtr)
+         r2 = sum(vec**2)
+         if (r2 > cutoff**2 .or. r2 < epsilon(1.0_wp)) cycle
+         call smooth_cutoff_r2(r2, cutoff, width, sw, swd, swdd)
+         if (sw <= 0.0_wp) cycle
+         t6 = 1.0_wp/(r2**3 + r0**6)
+         t8 = 1.0_wp/(r2**4 + r0**8)
+         t6d = -3.0_wp*r2**2*t6**2
+         t8d = -4.0_wp*r2**3*t8**2
+         t6dd = -6.0_wp*r2*t6**2 + 18.0_wp*r2**4*t6**3
+         t8dd = -12.0_wp*r2**2*t8**2 + 32.0_wp*r2**6*t8**3
+         p = self%s6*t6 + self%s8*rrij*t8
+         pd = self%s6*t6d + self%s8*rrij*t8d
+         pdd = self%s6*t6dd + self%s8*rrij*t8dd
+         ! E = C6*f(r^2); C8 is a fixed elemental multiple of C6.
+         f = -fac*sw*p
+         fd = -fac*(swd*p + sw*pd)
+         fdd = -fac*(swdd*p + 2.0_wp*swd*pd + sw*pdd)
+         fc = fc + f
          if (iat == jat) cycle
-         ii = 3*(iat-1)
-         jj = 3*(jat-1)
-         hessian(ii+1:ii+3, ii+1:ii+3) = hessian(ii+1:ii+3, ii+1:ii+3) + block
-         hessian(jj+1:jj+3, jj+1:jj+3) = hessian(jj+1:jj+3, jj+1:jj+3) + block
-         hessian(ii+1:ii+3, jj+1:jj+3) = hessian(ii+1:ii+3, jj+1:jj+3) - block
-         hessian(jj+1:jj+3, ii+1:ii+3) = hessian(jj+1:jj+3, ii+1:ii+3) - block
-         do ia = 1, 4
-            dEdrdz(ii+1:ii+3, iz(ia)) = dEdrdz(ii+1:ii+3, iz(ia)) + frc*cd(ia)
+         frc = frc + 2.0_wp*fd*vec
+         do ic = 1, 3
+            do jc = 1, 3
+               block(ic, jc) = block(ic, jc) + 4.0_wp*fdd*vec(ic)*vec(jc)*c6(iat, jat)
+            end do
+            block(ic, ic) = block(ic, ic) + 2.0_wp*fd*c6(iat, jat)
+         end do
+      end do
+
+      ! Repeated indices for self images combine both endpoints, including
+      ! their mixed derivatives. Only the explicit Cartesian displacement vanishes.
+      do ia = 1, 4
+         iv = (ia + 1)/2
+         zgrad(iv, at(ia)) = zgrad(iv, at(ia)) + fc*cd(ia)
+         do ib = 1, 4
+            jv = (ib + 1)/2
+            if (at(ia) == at(ib)) then
+               zzdiag(iv, jv, at(ia)) = zzdiag(iv, jv, at(ia)) + fc*cdd(ia, ib)
+            else
+               dEdzdz(iz(ia), iz(ib)) = dEdzdz(iz(ia), iz(ib)) + fc*cdd(ia, ib)
+            end if
+         end do
+      end do
+      if (iat == jat) cycle
+      ii = 3*(iat-1)
+      jj = 3*(jat-1)
+      hdiag(:, :, iat) = hdiag(:, :, iat) + block
+      hdiag(:, :, jat) = hdiag(:, :, jat) + block
+      hessian(ii+1:ii+3, jj+1:jj+3) = hessian(ii+1:ii+3, jj+1:jj+3) - block
+      hessian(jj+1:jj+3, ii+1:ii+3) = hessian(jj+1:jj+3, ii+1:ii+3) - block
+      do ia = 1, 4
+         iv = (ia + 1)/2
+         if (at(ia) == iat) then
+            rzdiag(:, iv, iat) = rzdiag(:, iv, iat) + frc*cd(ia)
             dEdrdz(jj+1:jj+3, iz(ia)) = dEdrdz(jj+1:jj+3, iz(ia)) - frc*cd(ia)
+         else
+            dEdrdz(ii+1:ii+3, iz(ia)) = dEdrdz(ii+1:ii+3, iz(ia)) + frc*cd(ia)
+            rzdiag(:, iv, jat) = rzdiag(:, iv, jat) - frc*cd(ia)
+         end if
+      end do
+   end do
+   !$omp end parallel do
+
+   ! Scatter the reduced atom-local blocks, preserving nonzero inout arrays.
+   !$omp parallel do default(none) schedule(static) &
+   !$omp shared(nat, hessian, dEdz, dEdrdz, dEdzdz, hdiag, zgrad, rzdiag, zzdiag) &
+   !$omp private(iat, ii, iv, jv, ia, ib)
+   do iat = 1, nat
+      ii = 3*(iat-1)
+      hessian(ii+1:ii+3, ii+1:ii+3) = hessian(ii+1:ii+3, ii+1:ii+3) + hdiag(:, :, iat)
+      do iv = 1, 2
+         ia = iat + (iv-1)*nat
+         dEdz(ia) = dEdz(ia) + zgrad(iv, iat)
+         dEdrdz(ii+1:ii+3, ia) = dEdrdz(ii+1:ii+3, ia) + rzdiag(:, iv, iat)
+         do jv = 1, 2
+            ib = iat + (jv-1)*nat
+            dEdzdz(ia, ib) = dEdzdz(ia, ib) + zzdiag(iv, jv, iat)
          end do
       end do
    end do
+   !$omp end parallel do
 end subroutine get_dispersion2_hessian
 
 
