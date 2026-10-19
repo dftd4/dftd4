@@ -20,6 +20,7 @@ module test_dftd4
       & get_dispersion, get_pairwise_dispersion, new_d4_model, new_d4s_model, &
       & new_work_partition, rational_damping_param, realspace_cutoff, &
       & serial_work_partition, work_partition
+   use dftd4_damping_atm, only : get_atm_dispersion
    use dftd4_disp, only : get_dispersion2, get_dispersion3_hessian
    use dftd4_numdiff, only : get_dispersion_hessian
    use mctc_env, only : wp
@@ -103,6 +104,7 @@ subroutine collect_dftd4(testsuite)
       & new_unittest("Hessian missing charge model", test_hessian_missing_charge), &
       & new_unittest("Hessian charge failure", test_hessian_charge_failure), &
       & new_unittest("partitioned dispersion", test_partitioned_dispersion), &
+      & new_unittest("ATM fast path", test_atm_fastpath), &
       & new_unittest("Actinides-D4", test_actinides_d4), &
       & new_unittest("Actinides-D4S", test_actinides_d4s) &
       & ]
@@ -673,6 +675,207 @@ subroutine test_partitioned_dispersion(error)
    end do
 
 end subroutine test_partitioned_dispersion
+
+
+subroutine test_atm_fastpath(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer, parameter :: nparts = 3
+   type(structure_type) :: mol
+   type(d4_model) :: d4
+   type(work_partition) :: partition
+   integer :: i, part
+   real(wp), parameter :: s9 = 1.0_wp, a1 = 0.4_wp, a2 = 4.0_wp, alp = 16.0_wp
+   real(wp) :: trans0(3, 1), trans2(3, 2), cutoffs(2), widths(2)
+   real(wp), allocatable :: cn(:), q(:), gwvec(:, :, :), gwdcn(:, :, :), gwdq(:, :, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :), dc6dq(:, :)
+   real(wp), allocatable :: e0(:), e2(:), ed0(:), ed2(:), dcn0(:), dcn2(:), dq0(:), dq2(:)
+   real(wp), allocatable :: g0(:, :), g2(:, :), gp(:, :), ep(:), dcnp(:), dqp(:)
+   real(wp) :: s0(3, 3), s2(3, 3), sp(3, 3)
+
+   call get_structure(mol, "MB16-43", "09")
+   call new_d4_model(error, d4, mol)
+   if (allocated(error)) return
+
+   allocate(cn(mol%nat), q(mol%nat), &
+      & gwvec(size(d4%c6, 1), mol%nat, 1), &
+      & gwdcn(size(d4%c6, 1), mol%nat, 1), &
+      & gwdq(size(d4%c6, 1), mol%nat, 1), &
+      & c6(mol%nat, mol%nat), dc6dcn(mol%nat, mol%nat), dc6dq(mol%nat, mol%nat), &
+      & e0(mol%nat), e2(mol%nat), ed0(mol%nat), ed2(mol%nat), &
+      & dcn0(mol%nat), dcn2(mol%nat), dq0(mol%nat), dq2(mol%nat), &
+      & g0(3, mol%nat), g2(3, mol%nat), gp(3, mol%nat), &
+      & ep(mol%nat), dcnp(mol%nat), dqp(mol%nat), source=0.0_wp)
+
+   do i = 1, mol%nat
+      cn(i) = 1.5_wp + 0.1_wp * real(modulo(i, 5), wp)
+      q(i) = 0.05_wp * real(modulo(i, 3) - 1, wp)
+   end do
+   call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+   call d4%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+
+   trans0(:, 1) = 0.0_wp
+   trans2(:, 1) = 0.0_wp
+   trans2(:, 2) = [1000.0_wp, 0.0_wp, 0.0_wp]
+   cutoffs = [15.0_wp, 10.0_wp]
+   widths = [0.0_wp, 5.0_wp]
+
+   do i = 1, 2
+      e0 = 0.0_wp
+      e2 = 0.0_wp
+      call get_atm_dispersion(mol, trans0, cutoffs(i), widths(i), s9, a1, a2, alp, &
+         & d4%r4r2, c6, energy=e0)
+      call get_atm_dispersion(mol, trans2, cutoffs(i), widths(i), s9, a1, a2, alp, &
+         & d4%r4r2, c6, energy=e2)
+      if (any(abs(e0 - e2) > thr)) then
+         call test_failed(error, "0D ATM fast-path energy differs from reference path")
+         return
+      end if
+
+      ed0 = 0.0_wp
+      ed2 = 0.0_wp
+      dcn0 = 0.0_wp
+      dcn2 = 0.0_wp
+      dq0 = 0.0_wp
+      dq2 = 0.0_wp
+      g0 = 0.0_wp
+      g2 = 0.0_wp
+      s0 = 0.0_wp
+      s2 = 0.0_wp
+      call get_atm_dispersion(mol, trans0, cutoffs(i), widths(i), s9, a1, a2, alp, &
+         & d4%r4r2, c6, dc6dcn, dc6dq, ed0, dcn0, dq0, g0, s0)
+      call get_atm_dispersion(mol, trans2, cutoffs(i), widths(i), s9, a1, a2, alp, &
+         & d4%r4r2, c6, dc6dcn, dc6dq, ed2, dcn2, dq2, g2, s2)
+      if (any(abs(ed0 - ed2) > thr) .or. any(abs(dcn0 - dcn2) > thr) &
+            & .or. any(abs(dq0 - dq2) > thr) .or. any(abs(g0 - g2) > thr) &
+            & .or. any(abs(s0 - s2) > thr)) then
+         call test_failed(error, "0D ATM fast-path derivatives differ from reference path")
+         return
+      end if
+   end do
+
+   ep = 0.0_wp
+   dcnp = 0.0_wp
+   dqp = 0.0_wp
+   gp = 0.0_wp
+   sp = 0.0_wp
+   do part = 0, nparts - 1
+      call new_work_partition(error, partition, part, nparts)
+      if (allocated(error)) return
+      call get_atm_dispersion(mol, trans0, cutoffs(2), widths(2), s9, a1, a2, alp, &
+         & d4%r4r2, c6, dc6dcn, dc6dq, ep, dcnp, dqp, gp, sp, partition)
+   end do
+   if (any(abs(ep - ed0) > thr) .or. any(abs(dcnp - dcn0) > thr) &
+         & .or. any(abs(dqp - dq0) > thr) .or. any(abs(gp - g0) > thr) &
+         & .or. any(abs(sp - s0) > thr)) then
+      call test_failed(error, "Partitioned 0D ATM derivatives do not match serial sum")
+      return
+   end if
+
+   ! Central finite-difference check of 0D analytical gradient, dEdcn, and dEdq
+   block
+      real(wp), parameter :: step = 1.0e-5_wp, fd_thr = 1.0e-8_wp
+      real(wp) :: er, el, fd_val
+      integer :: k
+      do i = 1, mol%nat
+         do k = 1, 3
+            mol%xyz(k, i) = mol%xyz(k, i) + step
+            e0 = 0.0_wp
+            call get_atm_dispersion(mol, trans0, cutoffs(2), widths(2), s9, a1, a2, alp, &
+               & d4%r4r2, c6, energy=e0)
+            er = sum(e0)
+            mol%xyz(k, i) = mol%xyz(k, i) - 2.0_wp * step
+            e0 = 0.0_wp
+            call get_atm_dispersion(mol, trans0, cutoffs(2), widths(2), s9, a1, a2, alp, &
+               & d4%r4r2, c6, energy=e0)
+            el = sum(e0)
+            mol%xyz(k, i) = mol%xyz(k, i) + step
+            fd_val = 0.5_wp * (er - el) / step
+            if (abs(g0(k, i) - fd_val) > fd_thr) then
+               call test_failed(error, "0D ATM gradient differs from finite difference")
+               return
+            end if
+         end do
+
+         cn(i) = cn(i) + step
+         call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+         call d4%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+         e0 = 0.0_wp
+         call get_atm_dispersion(mol, trans0, cutoffs(2), widths(2), s9, a1, a2, alp, &
+            & d4%r4r2, c6, energy=e0)
+         er = sum(e0)
+         cn(i) = cn(i) - 2.0_wp * step
+         call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+         call d4%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+         e0 = 0.0_wp
+         call get_atm_dispersion(mol, trans0, cutoffs(2), widths(2), s9, a1, a2, alp, &
+            & d4%r4r2, c6, energy=e0)
+         el = sum(e0)
+         cn(i) = cn(i) + step
+         call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+         call d4%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+         fd_val = 0.5_wp * (er - el) / step
+         if (abs(dcn0(i) - fd_val) > fd_thr) then
+            call test_failed(error, "0D ATM dEdcn differs from finite difference")
+            return
+         end if
+
+         q(i) = q(i) + step
+         call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+         call d4%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+         e0 = 0.0_wp
+         call get_atm_dispersion(mol, trans0, cutoffs(2), widths(2), s9, a1, a2, alp, &
+            & d4%r4r2, c6, energy=e0)
+         er = sum(e0)
+         q(i) = q(i) - 2.0_wp * step
+         call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+         call d4%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+         e0 = 0.0_wp
+         call get_atm_dispersion(mol, trans0, cutoffs(2), widths(2), s9, a1, a2, alp, &
+            & d4%r4r2, c6, energy=e0)
+         el = sum(e0)
+         q(i) = q(i) + step
+         call d4%weight_references(mol, cn, q, gwvec, gwdcn, gwdq)
+         call d4%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
+         fd_val = 0.5_wp * (er - el) / step
+         if (abs(dq0(i) - fd_val) > fd_thr) then
+            call test_failed(error, "0D ATM dEdq differs from finite difference")
+            return
+         end if
+      end do
+   end block
+
+   ! Diatomic molecule (nat < 3): 0D early return matches general path (zero contribution)
+   block
+      type(structure_type) :: mol2
+      type(d4_model) :: d4_2
+      real(wp) :: e0_2(2), g0_2(3, 2), dcn0_2(2), dq0_2(2), s0_2(3, 3), c6_2(2, 2), zero2(2, 2)
+      integer, parameter :: num2(2) = [6, 8]
+      real(wp), parameter :: xyz2(3, 2) = reshape([0.0_wp, 0.0_wp, 0.0_wp, &
+         & 2.1_wp, 0.0_wp, 0.0_wp], [3, 2])
+      call new(mol2, num2, xyz2)
+      call new_d4_model(error, d4_2, mol2)
+      if (allocated(error)) return
+      c6_2 = 25.0_wp
+      zero2 = 1.0_wp
+      e0_2 = 0.0_wp
+      call get_atm_dispersion(mol2, trans0, 15.0_wp, 0.0_wp, s9, a1, a2, alp, &
+         & d4_2%r4r2, c6_2, energy=e0_2)
+      dcn0_2 = 0.0_wp
+      dq0_2 = 0.0_wp
+      g0_2 = 0.0_wp
+      s0_2 = 0.0_wp
+      call get_atm_dispersion(mol2, trans0, 15.0_wp, 0.0_wp, s9, a1, a2, alp, &
+         & d4_2%r4r2, c6_2, zero2, zero2, e0_2, dcn0_2, dq0_2, g0_2, s0_2)
+      if (any(abs(e0_2) > thr) .or. any(abs(g0_2) > thr) .or. any(abs(s0_2) > thr)) then
+         call test_failed(error, "Diatomic 0D ATM contribution must vanish")
+         return
+      end if
+   end block
+
+end subroutine test_atm_fastpath
 
 
 subroutine test_pbed4_mb01(error)

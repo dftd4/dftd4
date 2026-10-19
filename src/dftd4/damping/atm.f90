@@ -556,6 +556,241 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, a1, a2, alp,
    !> Work partition of the atom pairs, absent selects the complete work
    type(work_partition), intent(in), optional :: partition
 
+   logical :: mol_fast
+
+   ! Molecular (0D) single-origin lattice without periodic image translations
+   mol_fast = (size(trans, 2) == 1)
+   if (mol_fast) then
+      mol_fast = (sum(trans(:, 1)**2) < epsilon(1.0_wp))
+   end if
+
+   if (mol_fast) then
+      call get_atm_dispersion_energy_0d(mol, cutoff, width, s9, a1, a2, alp, r4r2, &
+         & c6, energy, partition)
+   else
+      call get_atm_dispersion_energy_general(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, &
+         & c6, energy, partition)
+   end if
+
+end subroutine get_atm_dispersion_energy
+
+
+!> Precompute symmetric pairwise distance and damping matrices for 0D ATM dispersion
+subroutine build_atm_pair_matrices(mol, cutoff, width, a1, a2, alp, r4r2, c6, &
+      & r2_mat, inv_r1_mat, cralp_mat, sc6_sw_mat)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Scaling parameter for critical radius
+   real(wp), intent(in) :: a1
+
+   !> Offset parameter for critical radius
+   real(wp), intent(in) :: a2
+
+   !> Exponent of zero damping function
+   real(wp), intent(in) :: alp
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Squared interatomic distances within cutoff
+   real(wp), allocatable, intent(out) :: r2_mat(:, :)
+
+   !> Inverse interatomic distances within cutoff
+   real(wp), allocatable, intent(out) :: inv_r1_mat(:, :)
+
+   !> Precomputed (R0_ij / r_ij)**(alp/3) factors
+   real(wp), allocatable, intent(out) :: cralp_mat(:, :)
+
+   !> Precomputed sqrt(|C6_ij|) * sw_ij factors
+   real(wp), allocatable, intent(out) :: sc6_sw_mat(:, :)
+
+   integer :: iat, jat, izp, jzp
+   real(wp) :: vij(3), r2ij, rij, r0ij, cutoff2, alp3, swij, dswdr
+   real(wp) :: inv_r1, cralp_ij, sc6_ij
+
+   cutoff2 = cutoff * cutoff
+   alp3 = alp / 3.0_wp
+   allocate(r2_mat(mol%nat, mol%nat), inv_r1_mat(mol%nat, mol%nat), &
+      &     cralp_mat(mol%nat, mol%nat), sc6_sw_mat(mol%nat, mol%nat), source=0.0_wp)
+
+   !$omp parallel do default(none) &
+   !$omp shared(mol, c6, a1, a2, alp3, r4r2, cutoff2, cutoff, width, &
+   !$omp& r2_mat, inv_r1_mat, cralp_mat, sc6_sw_mat) &
+   !$omp private(iat, jat, izp, jzp, vij, r2ij, rij, r0ij, swij, dswdr, &
+   !$omp& inv_r1, cralp_ij, sc6_ij) &
+   !$omp collapse(2) schedule(dynamic, 32)
+   do iat = 1, mol%nat
+      do jat = 1, mol%nat
+         if (jat >= iat) cycle
+         vij(:) = mol%xyz(:, jat) - mol%xyz(:, iat)
+         r2ij = vij(1)*vij(1) + vij(2)*vij(2) + vij(3)*vij(3)
+         if (r2ij > cutoff2 .or. r2ij < epsilon(1.0_wp)) cycle
+         rij = sqrt(r2ij)
+         call smooth_cutoff(rij, cutoff, width, swij, dswdr)
+         if (swij <= 0.0_wp) cycle
+         izp = mol%id(iat)
+         jzp = mol%id(jat)
+         r0ij = a1 * sqrt(3.0_wp*r4r2(jzp)*r4r2(izp)) + a2
+         inv_r1 = 1.0_wp / rij
+         cralp_ij = (r0ij * inv_r1)**alp3
+         sc6_ij = sqrt(abs(c6(jat, iat))) * swij
+         r2_mat(jat, iat) = r2ij
+         r2_mat(iat, jat) = r2ij
+         inv_r1_mat(jat, iat) = inv_r1
+         inv_r1_mat(iat, jat) = inv_r1
+         cralp_mat(jat, iat) = cralp_ij
+         cralp_mat(iat, jat) = cralp_ij
+         sc6_sw_mat(jat, iat) = sc6_ij
+         sc6_sw_mat(iat, jat) = sc6_ij
+      end do
+   end do
+
+end subroutine build_atm_pair_matrices
+
+
+!> Three-body ATM dispersion energy for molecules (no periodic images)
+subroutine get_atm_dispersion_energy_0d(mol, cutoff, width, s9, a1, a2, alp, r4r2, &
+      & c6, energy, partition)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Scaling for dispersion coefficients
+   real(wp), intent(in) :: s9
+
+   !> Scaling parameter for critical radius
+   real(wp), intent(in) :: a1
+
+   !> Offset parameter for critical radius
+   real(wp), intent(in) :: a2
+
+   !> Exponent of zero damping function
+   real(wp), intent(in) :: alp
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Dispersion energy
+   real(wp), intent(inout) :: energy(:)
+
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
+   integer :: iat, jat, kat
+   real(wp) :: r2ij, r2jk, r2ik, fdmp, ang, c9
+   real(wp) :: inv_r1, inv_r2, inv_r3, inv_r5, inv_r1ij, cralp_ij, sc6_ij, de_ij
+   real(wp), allocatable :: r2_mat(:, :), inv_r1_mat(:, :), cralp_mat(:, :), sc6_sw_mat(:, :)
+   real(wp), allocatable :: energy_local(:)
+
+   if (mol%nat < 3) return
+   call build_atm_pair_matrices(mol, cutoff, width, a1, a2, alp, r4r2, c6, &
+      & r2_mat, inv_r1_mat, cralp_mat, sc6_sw_mat)
+
+   !$omp parallel default(none) &
+   !$omp shared(mol, s9, partition, r2_mat, inv_r1_mat, cralp_mat, sc6_sw_mat, energy) &
+   !$omp private(iat, jat, kat, r2ij, r2ik, r2jk, inv_r1ij, &
+   !$omp& cralp_ij, sc6_ij, c9, inv_r1, inv_r2, inv_r3, inv_r5, fdmp, ang, de_ij, energy_local)
+   allocate(energy_local(size(energy, 1)), source=0.0_wp)
+   !$omp do collapse(2) schedule(dynamic, 32)
+   do iat = 1, mol%nat
+      do jat = 1, mol%nat
+         if (jat >= iat) cycle
+         if (.not.owns_pair(partition, iat, jat)) cycle
+         if (sc6_sw_mat(jat, iat) <= 0.0_wp) cycle
+         r2ij = r2_mat(jat, iat)
+         inv_r1ij = inv_r1_mat(jat, iat)
+         cralp_ij = 6.0_wp * cralp_mat(jat, iat)
+         sc6_ij = -0.5_wp * third * s9 * sc6_sw_mat(jat, iat)
+         de_ij = 0.0_wp
+         !$omp simd reduction(+:de_ij) &
+         !$omp& private(r2ik, r2jk, c9, inv_r1, inv_r2, inv_r3, inv_r5, fdmp, ang)
+         do kat = 1, mol%nat
+            r2ik = r2_mat(kat, iat)
+            r2jk = r2_mat(kat, jat)
+            c9 = sc6_ij * sc6_sw_mat(kat, iat) * sc6_sw_mat(kat, jat)
+            inv_r1 = inv_r1ij * inv_r1_mat(kat, iat) * inv_r1_mat(kat, jat)
+            inv_r2 = inv_r1 * inv_r1
+            inv_r3 = inv_r2 * inv_r1
+            inv_r5 = inv_r3 * inv_r2
+            fdmp = 1.0_wp / (1.0_wp + cralp_ij * cralp_mat(kat, iat) * cralp_mat(kat, jat))
+            ang = 0.375_wp * (r2ij + r2jk - r2ik) * (r2ij - r2jk + r2ik) &
+               & * (-r2ij + r2jk + r2ik) * inv_r5 + inv_r3
+            de_ij = de_ij + ang * fdmp * c9
+         end do
+         energy_local(iat) = energy_local(iat) - de_ij
+         energy_local(jat) = energy_local(jat) - de_ij
+      end do
+   end do
+   !$omp end do nowait
+   !$omp critical (get_atm_dispersion_energy_0d_)
+   energy(:) = energy(:) + energy_local(:)
+   !$omp end critical (get_atm_dispersion_energy_0d_)
+   deallocate(energy_local)
+   !$omp end parallel
+
+end subroutine get_atm_dispersion_energy_0d
+
+
+!> General evaluation of the ATM dispersion energy expression (including periodic systems)
+subroutine get_atm_dispersion_energy_general(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, &
+      & c6, energy, partition)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Scaling for dispersion coefficients
+   real(wp), intent(in) :: s9
+
+   !> Scaling parameter for critical radius
+   real(wp), intent(in) :: a1
+
+   !> Offset parameter for critical radius
+   real(wp), intent(in) :: a2
+
+   !> Exponent of zero damping function
+   real(wp), intent(in) :: alp
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Dispersion energy
+   real(wp), intent(inout) :: energy(:)
+
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, rij, rjk, rik
    real(wp) :: c6ij, c6jk, c6ik, triple
@@ -645,11 +880,256 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, a1, a2, alp,
    deallocate(energy_local)
    !$omp end parallel
 
-end subroutine get_atm_dispersion_energy
+end subroutine get_atm_dispersion_energy_general
 
 
 !> Evaluation of the dispersion energy expression
 subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, &
+      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Scaling for dispersion coefficients
+   real(wp), intent(in) :: s9
+
+   !> Scaling parameter for critical radius
+   real(wp), intent(in) :: a1
+
+   !> Offset parameter for critical radius
+   real(wp), intent(in) :: a2
+
+   !> Exponent of zero damping function
+   real(wp), intent(in) :: alp
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Derivative of the C6 w.r.t. the coordination number
+   real(wp), intent(in) :: dc6dcn(:, :)
+
+   !> Derivative of the C6 w.r.t. the partial charges
+   real(wp), intent(in) :: dc6dq(:, :)
+
+   !> Dispersion energy
+   real(wp), intent(inout) :: energy(:)
+
+   !> Derivative of the energy w.r.t. the coordination number
+   real(wp), intent(inout) :: dEdcn(:)
+
+   !> Derivative of the energy w.r.t. the partial charges
+   real(wp), intent(inout) :: dEdq(:)
+
+   !> Dispersion gradient
+   real(wp), intent(inout) :: gradient(:, :)
+
+   !> Dispersion virial
+   real(wp), intent(inout) :: sigma(:, :)
+
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
+   logical :: mol_fast
+
+   ! Molecular (0D) single-origin lattice without periodic image translations
+   mol_fast = (size(trans, 2) == 1)
+   if (mol_fast) then
+      mol_fast = (sum(trans(:, 1)**2) < epsilon(1.0_wp))
+   end if
+
+   if (mol_fast) then
+      call get_atm_dispersion_derivs_0d(mol, cutoff, width, s9, a1, a2, alp, r4r2, &
+         & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
+   else
+      call get_atm_dispersion_derivs_general(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, &
+         & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
+   end if
+
+end subroutine get_atm_dispersion_derivs
+
+
+!> Three-body ATM dispersion energy and derivatives for molecules (no periodic images)
+subroutine get_atm_dispersion_derivs_0d(mol, cutoff, width, s9, a1, a2, alp, r4r2, &
+      & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Scaling for dispersion coefficients
+   real(wp), intent(in) :: s9
+
+   !> Scaling parameter for critical radius
+   real(wp), intent(in) :: a1
+
+   !> Offset parameter for critical radius
+   real(wp), intent(in) :: a2
+
+   !> Exponent of zero damping function
+   real(wp), intent(in) :: alp
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Derivative of the C6 w.r.t. the coordination number
+   real(wp), intent(in) :: dc6dcn(:, :)
+
+   !> Derivative of the C6 w.r.t. the partial charges
+   real(wp), intent(in) :: dc6dq(:, :)
+
+   !> Dispersion energy
+   real(wp), intent(inout) :: energy(:)
+
+   !> Derivative of the energy w.r.t. the coordination number
+   real(wp), intent(inout) :: dEdcn(:)
+
+   !> Derivative of the energy w.r.t. the partial charges
+   real(wp), intent(inout) :: dEdq(:)
+
+   !> Dispersion gradient
+   real(wp), intent(inout) :: gradient(:, :)
+
+   !> Dispersion virial
+   real(wp), intent(inout) :: sigma(:, :)
+
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
+   integer :: iat, jat, kat
+   real(wp) :: vij(3), r2ij, r2jk, r2ik, rij
+   real(wp) :: fdmp, dfdmp, ang, c9, dE
+   real(wp) :: dGij(3), swij, dswijdr
+   real(wp), allocatable :: r2_mat(:, :), inv_r1_mat(:, :), cralp_mat(:, :), sc6_sw_mat(:, :)
+   real(wp) :: inv_r1, inv_r2, inv_r3, inv_r5, inv_r1ij, inv_r2ij
+   real(wp) :: cralp_ij, sc6_ij, r2ij_2, r2ij_3, r2ik_2, r2jk_2
+   real(wp) :: s_jk_ik, d_jk_ik, dang_ij, term, gij_sum, eij_sum
+   real(wp) :: g_edge, de_dc6ij, sixth_e
+   real(wp), allocatable :: energy_local(:)
+   real(wp), allocatable :: dEdcn_local(:)
+   real(wp), allocatable :: dEdq_local(:)
+   real(wp), allocatable :: gradient_local(:, :)
+   real(wp), allocatable :: sigma_local(:, :)
+
+   if (mol%nat < 3) return
+   call build_atm_pair_matrices(mol, cutoff, width, a1, a2, alp, r4r2, c6, &
+      & r2_mat, inv_r1_mat, cralp_mat, sc6_sw_mat)
+
+   !$omp parallel default(none) &
+   !$omp shared(mol, s9, alp, cutoff, width, c6, dc6dcn, dc6dq, partition, &
+   !$omp& r2_mat, inv_r1_mat, cralp_mat, sc6_sw_mat, &
+   !$omp& energy, dEdcn, dEdq, gradient, sigma) &
+   !$omp private(iat, jat, kat, vij, rij, swij, dswijdr, &
+   !$omp& r2ij, r2ik, r2jk, r2ij_2, r2ij_3, r2ik_2, r2jk_2, &
+   !$omp& inv_r1ij, inv_r2ij, inv_r1, inv_r2, inv_r3, inv_r5, &
+   !$omp& cralp_ij, sc6_ij, c9, term, fdmp, dfdmp, ang, dE, &
+   !$omp& s_jk_ik, d_jk_ik, dang_ij, gij_sum, eij_sum, &
+   !$omp& g_edge, dGij, sixth_e, de_dc6ij, &
+   !$omp& energy_local, dEdcn_local, dEdq_local, gradient_local, sigma_local)
+   allocate(energy_local(size(energy, 1)), dEdcn_local(size(dEdcn, 1)), &
+      &     dEdq_local(size(dEdq, 1)), gradient_local(3, size(gradient, 2)), &
+      &     sigma_local(3, 3), source=0.0_wp)
+   !$omp do collapse(2) schedule(dynamic, 32)
+   do iat = 1, mol%nat
+      do jat = 1, mol%nat
+         if (jat >= iat) cycle
+         if (.not.owns_pair(partition, iat, jat)) cycle
+         if (sc6_sw_mat(jat, iat) <= 0.0_wp) cycle
+         r2ij = r2_mat(jat, iat)
+         r2ij_2 = r2ij * r2ij
+         r2ij_3 = r2ij_2 * r2ij
+         inv_r1ij = inv_r1_mat(jat, iat)
+         inv_r2ij = inv_r1ij * inv_r1ij
+         cralp_ij = cralp_mat(jat, iat)
+         sc6_ij = -s9 * sc6_sw_mat(jat, iat)
+         gij_sum = 0.0_wp
+         eij_sum = 0.0_wp
+         !$omp simd reduction(+:gij_sum, eij_sum) &
+         !$omp& private(r2ik, r2jk, c9, inv_r1, inv_r2, inv_r3, inv_r5, &
+         !$omp& term, fdmp, dfdmp, ang, dE, r2ik_2, r2jk_2, s_jk_ik, d_jk_ik, dang_ij)
+         do kat = 1, mol%nat
+            r2ik = r2_mat(kat, iat)
+            r2jk = r2_mat(kat, jat)
+            c9 = sc6_ij * sc6_sw_mat(kat, iat) * sc6_sw_mat(kat, jat)
+            inv_r1 = inv_r1ij * inv_r1_mat(kat, iat) * inv_r1_mat(kat, jat)
+            inv_r2 = inv_r1 * inv_r1
+            inv_r3 = inv_r2 * inv_r1
+            inv_r5 = inv_r3 * inv_r2
+            term = cralp_ij * cralp_mat(kat, iat) * cralp_mat(kat, jat)
+            fdmp = 1.0_wp / (1.0_wp + 6.0_wp * term)
+            ang = 0.375_wp * (r2ij + r2jk - r2ik) * (r2ij - r2jk + r2ik) &
+               & * (-r2ij + r2jk + r2ik) * inv_r5 + inv_r3
+            dfdmp = -2.0_wp * alp * term * fdmp * fdmp
+            dE = ang * fdmp * c9
+            r2ik_2 = r2ik * r2ik
+            r2jk_2 = r2jk * r2jk
+            s_jk_ik = r2jk + r2ik
+            d_jk_ik = r2jk - r2ik
+            dang_ij = -0.375_wp * (r2ij_3 + r2ij_2 * s_jk_ik &
+               & + r2ij * (3.0_wp * (r2jk_2 + r2ik_2) + 2.0_wp * r2jk * r2ik) &
+               & - 5.0_wp * d_jk_ik * d_jk_ik * s_jk_ik) * inv_r5
+            gij_sum = gij_sum + c9 * (-dang_ij * fdmp + ang * dfdmp) * inv_r2ij
+            eij_sum = eij_sum + dE
+         end do
+
+         vij(:) = mol%xyz(:, jat) - mol%xyz(:, iat)
+         rij = sqrt(r2ij)
+         call smooth_cutoff(rij, cutoff, width, swij, dswijdr)
+         if (swij <= 0.0_wp) cycle
+         g_edge = gij_sum - eij_sum * (dswijdr * inv_r1ij / swij)
+         dGij(:) = g_edge * vij
+         gradient_local(:, iat) = gradient_local(:, iat) - dGij
+         gradient_local(:, jat) = gradient_local(:, jat) + dGij
+         sigma_local(:, 1) = sigma_local(:, 1) + dGij * vij(1)
+         sigma_local(:, 2) = sigma_local(:, 2) + dGij * vij(2)
+         sigma_local(:, 3) = sigma_local(:, 3) + dGij * vij(3)
+
+         sixth_e = 0.5_wp * third * eij_sum
+         energy_local(iat) = energy_local(iat) - sixth_e
+         energy_local(jat) = energy_local(jat) - sixth_e
+
+         de_dc6ij = 0.5_wp * eij_sum / c6(jat, iat)
+         dEdcn_local(iat) = dEdcn_local(iat) - de_dc6ij * dc6dcn(iat, jat)
+         dEdcn_local(jat) = dEdcn_local(jat) - de_dc6ij * dc6dcn(jat, iat)
+         dEdq_local(iat) = dEdq_local(iat) - de_dc6ij * dc6dq(iat, jat)
+         dEdq_local(jat) = dEdq_local(jat) - de_dc6ij * dc6dq(jat, iat)
+      end do
+   end do
+   !$omp end do nowait
+   !$omp critical (get_atm_dispersion_derivs_0d_)
+   energy(:) = energy + energy_local
+   dEdcn(:) = dEdcn + dEdcn_local
+   dEdq(:) = dEdq + dEdq_local
+   gradient(:, :) = gradient + gradient_local
+   sigma(:, :) = sigma + sigma_local
+   !$omp end critical (get_atm_dispersion_derivs_0d_)
+   deallocate(energy_local, dEdcn_local, dEdq_local, gradient_local, sigma_local)
+   !$omp end parallel
+
+end subroutine get_atm_dispersion_derivs_0d
+
+
+!> General evaluation of the ATM dispersion energy and derivatives (including periodic systems)
+subroutine get_atm_dispersion_derivs_general(mol, trans, cutoff, width, s9, a1, a2, alp, r4r2, &
       & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
 
    !> Molecular structure data
@@ -871,7 +1351,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, a1, a2, alp,
    deallocate(sigma_local)
    !$omp end parallel
 
-end subroutine get_atm_dispersion_derivs
+end subroutine get_atm_dispersion_derivs_general
 
 
 !> Logic exercise to distribute a triple energy to atomwise energies.
