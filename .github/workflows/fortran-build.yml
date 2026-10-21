@@ -58,18 +58,6 @@ jobs:
         version: [14]
 
         include:
-          - os: ubuntu-22.04
-            build: cmake
-            build-type: debug
-            compiler: gnu
-            version: 9
-
-          - os: ubuntu-24.04
-            build: meson
-            build-type: coverage
-            compiler: gnu
-            version: 9
-
           - os: ubuntu-24.04
             build: meson
             build-type: debug
@@ -77,28 +65,40 @@ jobs:
             version: 10
 
           - os: ubuntu-24.04
+            build: meson
+            build-type: debug
+            compiler: gnu
+            version: 11
+
+          - os: ubuntu-latest
+            build: meson
+            build-type: debug
+            compiler: gnu
+            version: 12
+
+          - os: ubuntu-latest
             build: meson
             build-type: debug
             compiler: gnu
             version: 13
 
-          - os: ubuntu-24.04
-            build: meson
+          - os: ubuntu-latest
+            build: fpm
             build-type: debug
             compiler: gnu
             version: 14
 
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
+            build: meson
+            build-type: coverage
+            compiler: gnu
+            version: 15
+
+          - os: ubuntu-latest
             build: meson
             build-type: debug
             compiler: intel
             version: 2021.2.0
-
-          - os: ubuntu-24.04
-            build: fpm
-            build-type: debug
-            compiler: gnu
-            version: 10
 
           - os: macos-15-intel
             build: cmake
@@ -120,7 +120,7 @@ jobs:
       FC: ${{ matrix.compiler == 'intel' && 'ifort' || 'gfortran' }}
       CC: ${{ matrix.compiler == 'intel' && 'icc' || 'gcc' }}
       GCC_V: ${{ matrix.version }}
-      PYTHON_V: 3.9
+      PYTHON_V: 3.12
 
     steps:
       - name: Checkout code
@@ -396,18 +396,18 @@ jobs:
         os: [ubuntu-latest]
         build: [meson, cmake]
         gcc_v: [14]
-        python_v: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python_v: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
 
         include:
           - os: macos-latest
             build: meson
             gcc_v: 14
-            python_v: "3.9"
+            python_v: "3.12"
 
           - os: macos-latest
             build: cmake
             gcc_v: 14
-            python_v: "3.9"
+            python_v: "3.12"
 
     env:
       FC: gfortran
