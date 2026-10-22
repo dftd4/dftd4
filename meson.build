@@ -124,8 +124,6 @@ if install
       output: meson.project_name() + '-targets.cmake',
       configuration: cmake_data,
     ),
-    files('config'/'cmake'/'Findcustom-blas.cmake'),
-    files('config'/'cmake'/'Findcustom-lapack.cmake'),
     files('config'/'cmake'/'Findmctc-lib.cmake'),
     files('config'/'cmake'/'Findmstore.cmake'),
     files('config'/'cmake'/'Findmulticharge.cmake'),
