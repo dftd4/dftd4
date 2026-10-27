@@ -271,6 +271,67 @@ def test_gradient_hf_d4s() -> None:
     assert grad.kernel() == approx(ref, abs=1.0e-7)
 
 
+@pytest.mark.parametrize("gradient", [False, True])
+def test_reset(gradient: bool) -> None:
+    mol = gto.M(atom="H 0 0 0; H 0 0 1", verbose=0)
+    method = (
+        disp.grad(scf.RHF(mol).nuc_grad_method())
+        if gradient
+        else disp.energy(scf.RHF(mol))
+    )
+    mf = method.base if gradient else method
+    correction = mf.with_dftd4
+
+    assert method.reset() is method
+    assert method.mol is mol
+    assert mf.mol is mol
+    assert correction.mol is mol
+
+    new_mol = mol.set_geom_("H 0 0 0; H 0 0 2", inplace=False)
+    assert method.reset(new_mol) is method
+    assert method.mol is new_mol
+    assert mf.mol is new_mol
+    assert correction.mol is new_mol
+
+    mf.with_dftd4 = None
+    assert method.reset(mol) is method
+    assert method.mol is mol
+    assert mf.mol is mol
+
+
+def test_dispersion_reset() -> None:
+    mol = gto.M(atom="H 0 0 0; H 0 0 1", verbose=0)
+    correction = disp.DFTD4Dispersion(mol)
+    assert correction.reset() is correction
+    assert correction.mol is mol
+
+
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+@pytest.mark.parametrize("gradient", [False, True])
+def test_scanner(model: str, gradient: bool) -> None:
+    mol = gto.M(atom="H 0 0 0; H 0 0 1", verbose=0)
+    mf = disp.energy(scf.RHF(mol), model=model)
+    scanner = (mf.nuc_grad_method() if gradient else mf).as_scanner()
+
+    for geometry in ("H 0 0 0; H 0 0 2", "H 0 0 0; H 0 0 1.5"):
+        new_mol = mol.set_geom_(geometry, inplace=False)
+        result = scanner(new_mol)
+        reference = disp.energy(scf.RHF(new_mol), model=model).run()
+        scanner_mf = scanner.base if gradient else scanner
+
+        assert scanner.mol is new_mol
+        assert scanner_mf.mol is new_mol
+        assert scanner_mf.with_dftd4.mol is new_mol
+        assert scanner_mf.scf_summary["dispersion"] == approx(
+            reference.scf_summary["dispersion"], abs=1.0e-12
+        )
+        if gradient:
+            assert result[0] == approx(reference.e_tot, abs=1.0e-10)
+            assert result[1] == approx(reference.nuc_grad_method().kernel(), abs=1.0e-8)
+        else:
+            assert result == approx(reference.e_tot, abs=1.0e-10)
+
+
 def test_pbc():
     mol = gto.M(
         atom="""

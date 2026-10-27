@@ -127,11 +127,12 @@ class DFTD4Dispersion(lib.StreamObject):
         self.grads = res.get("gradient")
         return self.edisp, self.grads
 
-    def reset(self, mol) -> "DFTD4Dispersion":
+    def reset(self, mol=None) -> "DFTD4Dispersion":
         """
         Reset mol and clean up relevant attributes for scanner mode
         """
-        self.mol = mol
+        if mol is not None:
+            self.mol = mol
         return self
 
 
@@ -234,7 +235,8 @@ def energy(mf, model: str = "d4"):
             return enuc
 
         def reset(self, mol=None) -> "DFTD4":
-            self.with_dftd4.reset(mol)
+            if self.with_dftd4:
+                self.with_dftd4.reset(mol)
             return mf.__class__.reset(self, mol)
 
         def nuc_grad_method(self):
