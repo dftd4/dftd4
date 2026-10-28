@@ -18,7 +18,7 @@
 module dftd4_disp
    use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use dftd4_blas, only : d4_gemv
+   use dftd4_blas, only : d4_gemv, d4_gemm
    use dftd4_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd4_damping, only : damping_param
    use dftd4_damping_rational, only : rational_damping_param
@@ -30,11 +30,12 @@ module dftd4_disp
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
-   use multicharge, only : get_charges
+   use multicharge, only : get_charges, add_charge_hessian, cache_container
    implicit none
    private
 
    public :: get_dispersion, get_dispersion2, get_dispersion3_hessian, get_properties, get_pairwise_dispersion
+   public :: get_dispersion2_hessian
 
 
 contains
@@ -266,6 +267,118 @@ subroutine get_dispersion2(mol, disp, param, cutoff, energy, gradient, sigma, pa
 end subroutine get_dispersion2
 
 
+!> Analytical two-body Cartesian Hessian for molecules and fixed 3D cells.
+subroutine get_dispersion2_hessian(error, mol, disp, param, cutoff, hessian, partition)
+   !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion2_hessian
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+   !> Dispersion model and damping parameters
+   class(dispersion_model), intent(in) :: disp
+   class(damping_param), intent(in) :: param
+   !> Real-space cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+   !> Cartesian Hessian, shape (3*nat, 3*nat)
+   real(wp), intent(out) :: hessian(:, :)
+   !> Optional externally assigned work partition
+   type(work_partition), intent(in), optional :: partition
+
+   integer :: nat, ndim, mref, iat
+   type(cache_container) :: cache
+   real(wp), allocatable :: cn(:), q(:), dcndL(:, :, :), lattr(:, :)
+   real(wp), allocatable, target :: dzdr(:, :, :)
+   real(wp), pointer :: dr(:, :)
+   real(wp), allocatable :: gw(:, :, :), gwc(:, :, :), gwcc(:, :, :)
+   real(wp), allocatable :: gwq(:, :, :), gwqq(:, :, :), gwcq(:, :, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :), d2c6dcn2(:, :), d2c6dcnij(:, :)
+   real(wp), allocatable :: dc6dq(:, :), d2c6dq2(:, :), d2c6dqij(:, :)
+   real(wp), allocatable :: d2c6dcnq(:, :), d2c6dcnqij(:, :)
+   real(wp), allocatable :: dEdz(:), dEdrdz(:, :), dEdzdz(:, :)
+
+   !$omp parallel do default(none) schedule(static) shared(hessian) private(iat)
+   do iat = 1, size(hessian, 2)
+      hessian(:, iat) = ieee_value(0.0_wp, ieee_quiet_nan)
+   end do
+   !$omp end parallel do
+   if (.not. allocated(disp%mchrg)) then
+      call fatal_error(error, "Not supported for non-self-consistent D4 version")
+      return
+   end if
+   if (any(mol%periodic) .and. .not. all(mol%periodic)) then
+      call fatal_error(error, "Analytical two-body Hessian requires a molecule or a 3D periodic cell")
+      return
+   end if
+   nat = mol%nat
+   ndim = 3*nat
+   mref = maxval(disp%ref)
+   allocate(cn(nat), q(nat), dzdr(3, nat, 2*nat), dcndL(3, 3, nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, disp%en, &
+      & cn, dzdr(:, :, :nat), dcndL, error)
+   if (allocated(error)) return
+
+   ! The charge model's internal CN is distinct from the D4 CN above.
+   ! Its full response is encapsulated in the multicharge cache and contraction.
+   call get_charges(disp%mchrg, mol, error, q, cache=cache)
+   if (allocated(error)) return
+   allocate(gw(mref, nat, disp%ncoup), gwc(mref, nat, disp%ncoup), gwcc(mref, nat, disp%ncoup), &
+      & gwq(mref, nat, disp%ncoup), gwqq(mref, nat, disp%ncoup), gwcq(mref, nat, disp%ncoup))
+   select type(disp)
+   type is (d4_model)
+      call disp%weight_references_hessian(mol, cn, q, gw, gwc, gwcc, gwq, gwqq, gwcq)
+   type is (d4s_model)
+      call disp%weight_references_hessian(mol, cn, q, gw, gwc, gwcc, gwq, gwqq, gwcq)
+   class default
+      call fatal_error(error, "Analytical two-body Hessian is only implemented for D4 and D4S models")
+      return
+   end select
+   allocate(c6(nat, nat), dc6dcn(nat, nat), d2c6dcn2(nat, nat), d2c6dcnij(nat, nat), &
+      & dc6dq(nat, nat), d2c6dq2(nat, nat), d2c6dqij(nat, nat), &
+      & d2c6dcnq(nat, nat), d2c6dcnqij(nat, nat))
+   call disp%get_atomic_c6_hessian(mol, gw, gwc, gwcc, c6, dc6dcn, d2c6dcn2, d2c6dcnij, &
+      & gwq, gwqq, gwcq, dc6dq, d2c6dq2, d2c6dqij, d2c6dcnq, d2c6dcnqij)
+   deallocate(gw, gwc, gwcc, gwq, gwqq, gwcq)
+
+   allocate(dEdz(2*nat), dEdrdz(ndim, 2*nat), dEdzdz(2*nat, 2*nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
+   select type(param)
+   class is (rational_damping_param)
+      !$omp parallel do default(none) schedule(static) &
+      !$omp shared(nat, hessian, dEdz, dEdrdz, dEdzdz, dzdr, cache) private(iat)
+      do iat = 1, nat
+         hessian(:, 3*iat-2:3*iat) = 0.0_wp
+         dEdz(iat) = 0.0_wp
+         dEdz(nat+iat) = 0.0_wp
+         dEdrdz(:, iat) = 0.0_wp
+         dEdrdz(:, nat+iat) = 0.0_wp
+         dEdzdz(:, iat) = 0.0_wp
+         dEdzdz(:, nat+iat) = 0.0_wp
+         dzdr(:, :, nat+iat) = cache%dqdr(:, :, iat)
+      end do
+      !$omp end parallel do
+      call param%get_dispersion2_hessian(mol, lattr, cutoff%disp2, cutoff%width2, disp%r4r2, &
+         & c6, dc6dcn, d2c6dcn2, d2c6dcnij, dc6dq, d2c6dq2, d2c6dqij, &
+         & d2c6dcnq, d2c6dcnqij, hessian, dEdz, dEdrdz, dEdzdz, partition)
+   class default
+      call fatal_error(error, "Analytical two-body Hessian is only implemented for rational damping")
+      return
+   end select
+
+   dr(1:ndim, 1:2*nat) => dzdr
+   call add_hessian_chain(dr, dEdrdz, dEdzdz, hessian)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call add_coordination_number_hessian(mol, lattr, cutoff%cn, disp%rcov, disp%en, &
+      & dEdz(:nat), hessian, error)
+   if (.not. allocated(error)) then
+      ! dEdq is held fixed here; its derivatives are included by add_hessian_chain.
+      call add_charge_hessian(disp%mchrg, mol, error, dEdz(nat+1:), hessian, cache)
+   end if
+   if (allocated(error)) hessian = ieee_value(0.0_wp, ieee_quiet_nan)
+end subroutine get_dispersion2_hessian
+
+
 !> Analytical Hessian of the ATM three-body contribution
 subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, partition)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion3_hessian
@@ -291,18 +404,30 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
    !> Optional externally assigned work partition
    type(work_partition), intent(in), optional :: partition
 
-   integer :: mref, nat, ndim, ii, jj, icn, jcn
+   integer :: mref, nat, ndim, iat
    real(wp), allocatable, target :: dcndr(:, :, :)
    real(wp), allocatable :: cn(:), dcndL(:, :, :)
    real(wp), allocatable :: q(:)
    real(wp), allocatable :: gwvec(:, :, :), gwdcn(:, :, :), gwd2cn(:, :, :)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
    real(wp), allocatable :: d2c6dcn2(:, :), d2c6dcnij(:, :)
-   real(wp), allocatable :: dEdcn(:), dEdcndr(:, :), dEdcndcn(:, :), cnwork(:, :)
-   real(wp), allocatable :: drt(:, :), dEdcndrt(:, :)
+   real(wp), allocatable :: dEdcn(:), dEdcndr(:, :), dEdcndcn(:, :)
    real(wp), pointer :: dr(:, :)
-   real(wp) :: tmp
    real(wp), allocatable :: lattr(:, :)
+
+   select type(param)
+   class is (rational_damping_param)
+      if (abs(param%s9) < epsilon(1.0_wp)) then
+         !$omp parallel do default(none) schedule(static) shared(hessian) private(iat)
+         do iat = 1, size(hessian, 2)
+            hessian(:, iat) = 0.0_wp
+         end do
+         !$omp end parallel do
+         return
+      end if
+   class default
+      continue
+   end select
 
    nat = mol%nat
    ndim = 3*nat
@@ -337,10 +462,16 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
       return
    end select
 
-   hessian(:, :) = 0.0_wp
-   allocate(dEdcn(nat), source=0.0_wp)
-   allocate(dEdcndr(ndim, nat), source=0.0_wp)
-   allocate(dEdcndcn(nat, nat), source=0.0_wp)
+   allocate(dEdcn(nat), dEdcndr(ndim, nat), dEdcndcn(nat, nat))
+   !$omp parallel do default(none) schedule(static) &
+   !$omp shared(nat, hessian, dEdcn, dEdcndr, dEdcndcn) private(iat)
+   do iat = 1, nat
+      hessian(:, 3*iat-2:3*iat) = 0.0_wp
+      dEdcn(iat) = 0.0_wp
+      dEdcndr(:, iat) = 0.0_wp
+      dEdcndcn(:, iat) = 0.0_wp
+   end do
+   !$omp end parallel do
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
    select type(param)
@@ -359,61 +490,37 @@ subroutine get_dispersion3_hessian(error, mol, disp, param, cutoff, hessian, par
    if (allocated(error)) return
 
    dr(1:ndim, 1:nat) => dcndr
-   allocate(cnwork(nat, ndim), drt(nat, ndim), dEdcndrt(nat, ndim))
-
-   ! Assemble the CN chain rule explicitly under OpenMP.  Intrinsic MATMUL is
-   ! not guaranteed to use the program's OpenMP team (and is often serial with
-   ! a single-threaded BLAS), which otherwise leaves a sizeable serial tail in
-   ! analytical ATM Hessian calculations.
-   !$omp parallel default(none) &
-   !$omp shared(nat, ndim, dEdcndr, dEdcndcn, dr, drt, dEdcndrt, cnwork, hessian) &
-   !$omp private(ii, jj, icn, jcn, tmp)
-
-   ! Store the Cartesian-by-CN matrices with CN as the contiguous dimension.
-   ! Both contractions below then stream through contiguous columns instead of
-   ! repeatedly traversing the second dimension of Fortran arrays.
-   !$omp do collapse(2) schedule(static)
-   do ii = 1, ndim
-      do icn = 1, nat
-         drt(icn, ii) = dr(ii, icn)
-         dEdcndrt(icn, ii) = dEdcndr(ii, icn)
-      end do
-   end do
-   !$omp end do
-
-   ! cnwork = dEdcndcn * transpose(dr).  Keeping jcn as the accumulation
-   ! order preserves the scalar result while the icn loop is vectorizable.
-   !$omp do schedule(static)
-   do jj = 1, ndim
-      cnwork(:, jj) = 0.0_wp
-      do jcn = 1, nat
-         tmp = drt(jcn, jj)
-         !$omp simd
-         do icn = 1, nat
-            cnwork(icn, jj) = cnwork(icn, jj) + dEdcndcn(icn, jcn)*tmp
-         end do
-      end do
-   end do
-   !$omp end do
-
-   ! H += dEdcndr*dr^T + dr*dEdcndr^T + dr*dEdcndcn*dr^T
-   !$omp do collapse(2) schedule(static)
-   do jj = 1, ndim
-      do ii = 1, ndim
-         tmp = 0.0_wp
-         !$omp simd reduction(+:tmp)
-         do icn = 1, nat
-            tmp = tmp + dEdcndrt(icn, ii)*drt(icn, jj) &
-               & + drt(icn, ii)*dEdcndrt(icn, jj) &
-               & + drt(icn, ii)*cnwork(icn, jj)
-         end do
-         hessian(ii, jj) = hessian(ii, jj) + tmp
-      end do
-   end do
-   !$omp end do
-   !$omp end parallel
+   call add_hessian_chain(dr, dEdcndr, dEdcndcn, hessian)
 
 end subroutine get_dispersion3_hessian
+
+
+!> Add mixed and quadratic chain terms for z(R), shared by two-body and ATM.
+subroutine add_hessian_chain(dr, mixed, curvature, hessian)
+   real(wp), intent(in) :: dr(:, :), mixed(:, :), curvature(:, :)
+   real(wp), intent(inout) :: hessian(:, :)
+   integer :: nz, ndim, ii, iz
+   real(wp), allocatable :: work(:, :)
+
+   ndim = size(dr, 1)
+   nz = size(dr, 2)
+   allocate(work(ndim, nz))
+
+   ! H += (mixed + dr*curvature)*dr^T + dr*mixed^T.
+   ! Keep one work array and let BLAS handle the three matrix products.
+   call d4_gemm(dr, curvature, work)
+   !$omp parallel do collapse(2) default(none) schedule(static) &
+   !$omp shared(ndim, nz, work, mixed)
+   do iz = 1, nz
+      do ii = 1, ndim
+         work(ii, iz) = work(ii, iz) + mixed(ii, iz)
+      end do
+   end do
+   !$omp end parallel do
+   call d4_gemm(work, dr, hessian, transb="t", beta=1.0_wp)
+   call d4_gemm(dr, mixed, hessian, transb="t", beta=1.0_wp)
+
+end subroutine add_hessian_chain
 
 
 !> Wrapper to handle the evaluation of properties related to this dispersion model

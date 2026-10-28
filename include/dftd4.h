@@ -227,7 +227,8 @@ dftd4_get_dispersion(dftd4_error /* error */,
                      double* /* gradient[n][3] */,
                      double* /* sigma[3][3] */) DFTD4_API_SUFFIX__V_3_0;
 
-/// Evaluate the dispersion hessian numerically
+/// Evaluate the Cartesian dispersion Hessian (analytic where supported).
+/// The historical function name is retained for ABI compatibility.
 DFTD4_API_ENTRY void DFTD4_API_CALL
 dftd4_get_numerical_hessian(dftd4_error /* error */,
                             dftd4_structure /* mol */,

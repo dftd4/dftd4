@@ -61,6 +61,10 @@ Specify the functional to select the correct parameters.
      write results to file (default: dftd4.txt),
      attempts to add to Turbomole gradient and gradlatt files
 
+*--hessian*::
+     Evaluate the Cartesian Hessian analytically for D4/D4S with rational damping,
+     for molecules and three-dimensional periodic systems at fixed lattice.
+
 *--json* [_file_]::
      Serialize all results as JSON (dftd4.json)
 
