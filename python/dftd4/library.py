@@ -25,7 +25,7 @@ Example
 -------
 >>> from dftd4.library import get_api_version
 >>> get_api_version()
-'4.3.0'
+'4.3.1'
 """
 
 import functools

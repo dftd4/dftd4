@@ -1,11 +1,11 @@
 name = "dftd4"
-version = "4.3.0"
+version = "4.3.1"
 license = "LGPL-3.0-or-later"
 maintainer = ["@awvwgk"]
 author = ["Eike Caldeweyher", "Sebastian Ehlert", "Stefan Grimme"]
 description = "Generally Applicable Atomic-Charge Dependent London Dispersion Correction"
 keywords = ["quantum-chemistry", "dispersion-correction"]
-copyright = "Copyright 2017-2021 E. Caldeweyher, S. Ehlert, S. Grimme"
+copyright = "Copyright 2017-2026 E. Caldeweyher, S. Ehlert, S. Grimme"
 
 [build]
 link = ["lapack", "blas"]
