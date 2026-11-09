@@ -25,7 +25,7 @@ module dftd4_blas
    implicit none
    private
 
-   public :: d4_gemv, blas_gemv
+   public :: d4_gemv, blas_gemv, d4_gemm
 
 
    !> Performs one of the matrix-vector operations
@@ -81,8 +81,44 @@ module dftd4_blas
       end subroutine dgemv
    end interface blas_gemv
 
+   interface
+      pure subroutine dgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+         import :: dp, ik
+         character(len=1), intent(in) :: transa, transb
+         integer(ik), intent(in) :: m, n, k, lda, ldb, ldc
+         real(dp), intent(in) :: alpha, beta
+         real(dp), intent(in) :: a(lda, *), b(ldb, *)
+         real(dp), intent(inout) :: c(ldc, *)
+      end subroutine dgemm
+   end interface
+
 
 contains
+
+
+!> Double-precision matrix product with optional transpose of the right factor.
+!> C = A op(B) + beta C, with beta=0 and op(B)=B by default.
+subroutine d4_gemm(amat, bmat, cmat, beta, transb)
+   real(dp), intent(in) :: amat(:, :), bmat(:, :)
+   real(dp), intent(inout) :: cmat(:, :)
+   real(dp), intent(in), optional :: beta
+   character(len=1), intent(in), optional :: transb
+   real(dp) :: b
+   character(len=1) :: trb
+   integer(ik) :: m, n, k, lda, ldb, ldc
+
+   b = 0.0_dp
+   if (present(beta)) b = beta
+   trb = "n"
+   if (present(transb)) trb = transb
+   m = size(cmat, 1, kind=ik)
+   n = size(cmat, 2, kind=ik)
+   k = size(amat, 2, kind=ik)
+   lda = max(1_ik, size(amat, 1, kind=ik))
+   ldb = max(1_ik, size(bmat, 1, kind=ik))
+   ldc = max(1_ik, size(cmat, 1, kind=ik))
+   call dgemm("n", trb, m, n, k, 1.0_dp, amat, lda, bmat, ldb, b, cmat, ldc)
+end subroutine d4_gemm
 
 
 subroutine d4_sgemv312(amat, xvec, yvec, alpha, beta, trans)

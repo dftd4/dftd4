@@ -23,7 +23,7 @@ module dftd4
    use dftd4_model_d4, only : d4_model, new_d4_model
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_ncoord, only : get_coordination_number
-   use dftd4_numdiff, only : get_dispersion_hessian
+   use dftd4_numdiff, only : get_dispersion_hessian, get_dispersion_hessian_numdiff
    use dftd4_param, only : get_rational_damping
    use dftd4_partition, only : new_work_partition, serial_work_partition, work_partition
    use dftd4_version, only : get_dftd4_version
