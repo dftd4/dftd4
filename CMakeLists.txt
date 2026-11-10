@@ -133,27 +133,26 @@ add_subdirectory("src")
 
 # DFT-D4 library target
 add_library(
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
   "${srcs}"
 )
-add_library("${PROJECT_NAME}::${PROJECT_NAME}-lib" ALIAS "${PROJECT_NAME}-lib")
+add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 set_target_properties(
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
   PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE
-  OUTPUT_NAME "${PROJECT_NAME}"
   VERSION "${PROJECT_VERSION}"
   SOVERSION "${PROJECT_VERSION_MAJOR}"
   Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 target_link_libraries(
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
   PUBLIC
   "${lib-deps}"
   "$<$<BOOL:${DFTD4_WITH_OpenMP}>:OpenMP::OpenMP_Fortran>"
 )
 target_include_directories(
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -161,28 +160,27 @@ target_include_directories(
   $<INSTALL_INTERFACE:${DFTD4_INSTALL_FMODDIR}>
 )
 target_include_directories(
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/dftd4
 )
 
 if(DFTD4_WITH_ILP64)
   target_compile_definitions(
-    "${PROJECT_NAME}-lib"
+    "${PROJECT_NAME}"
     PRIVATE IK=i8)
 else()
   target_compile_definitions(
-    "${PROJECT_NAME}-lib"
+    "${PROJECT_NAME}"
     PRIVATE IK=i4)
+endif()
+
+if(DFTD4_WITH_API)
+  enable_language("C")
 endif()
 
 # Add example application
 add_subdirectory("app")
-
-# Export targets for other projects
-add_library("${PROJECT_NAME}" INTERFACE)
-add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
-target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
 
 if(DFTD4_WITH_PYTHON)
   if(NOT DFTD4_WITH_API)
@@ -194,7 +192,6 @@ endif()
 install(
   TARGETS
   "${PROJECT_NAME}"
-  "${PROJECT_NAME}-lib"
   EXPORT
   "${PROJECT_NAME}-targets"
 )
@@ -211,7 +208,6 @@ install(
   DESTINATION "${DFTD4_INSTALL_FMODDIR}"
 )
 if(DFTD4_WITH_API)
-  enable_language("C")
   install(
     DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/include/"
