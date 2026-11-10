@@ -31,11 +31,17 @@ option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" OFF)
 option(BUILD_TESTING "Build unittests" ON)
 
 # Unprefixed options are deprecated and will be removed in the future
-# For now they only provide the defaults; please use DFTD4_WITH_* instead.
-option(WITH_API "Enable support for C API via iso_c_binding module" ON)
-option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ON)
-option(WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" OFF)
-option(WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" OFF)
+# They now only provide the defaults; please use DFTD4_WITH_* instead.
+foreach(_option IN ITEMS WITH_API WITH_OpenMP WITH_ILP64 WITH_API_V2)
+  if(DEFINED ${_option})
+    message(DEPRECATION
+      "${_option} is deprecated; please use DFTD4_${_option} instead.")
+  elseif(_option MATCHES "^WITH_(API|OpenMP)$")
+    set(${_option} ON)
+  else()
+    set(${_option} OFF)
+  endif()
+endforeach()
 
 option(DFTD4_WITH_API "Enable support for C API via iso_c_binding module" ${WITH_API})
 option(DFTD4_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
@@ -43,7 +49,7 @@ option(DFTD4_WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" ${WITH_ILP6
 option(DFTD4_WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" ${WITH_API_V2})
 option(DFTD4_WITH_TESTS "Build unittests of dftd4" ${BUILD_TESTING})
 cmake_dependent_option(DFTD4_WITH_PYTHON "Build the Python extension module"
-                       FALSE "DFTD4_WITH_API" FALSE)
+                       OFF "DFTD4_WITH_API" OFF)
 
 set(
   DFTD4_INSTALL_FMODDIR
