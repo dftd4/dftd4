@@ -26,8 +26,74 @@ project(
 # Follow GNU conventions for installing directories
 include(GNUInstallDirs)
 
-# General configuration information
-add_subdirectory("config")
+# Build options
+option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
+
+# Unprefixed options are deprecated and will be removed in the future
+# For now they only provide the defaults; please use DFTD4_WITH_* instead.
+option(WITH_API "Enable support for C API via iso_c_binding module" ON)
+option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ON)
+option(WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" OFF)
+option(WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" OFF)
+
+option(DFTD4_WITH_API "Enable support for C API via iso_c_binding module" ${WITH_API})
+option(DFTD4_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
+option(DFTD4_WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" ${WITH_ILP64})
+option(DFTD4_WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" ${WITH_API_V2})
+option(DFTD4_WITH_PYTHON "Build the Python extension module" FALSE)
+
+set(
+  DFTD4_INSTALL_FMODDIR
+  "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
+  CACHE STRING "Installation directory for Fortran modules"
+)
+
+if(NOT DEFINED "${PROJECT_NAME}-dependency-method")
+  set(
+    "${PROJECT_NAME}-dependency-method"
+    "subproject" "cmake" "pkgconf" "fetch"
+  )
+endif()
+
+# Compiler-specific configurations
+
+# gfortran "Interface mismatch" bug (119928)
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL "15.0"
+     AND CMAKE_Fortran_COMPILER_VERSION VERSION_LESS "15.2")
+    message(FATAL_ERROR
+      "Unsupported GNU Fortran version ${CMAKE_Fortran_COMPILER_VERSION}. "
+      "This release has a known issue (fixed in 15.2). "
+      "Please use GCC >= 15.2 or < 15.0, or a different Fortran compiler.")
+  endif()
+endif()
+
+if(
+  "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "NVHPC"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Flang"
+)
+  set(
+    CMAKE_Fortran_FLAGS
+    "${CMAKE_Fortran_FLAGS} -Mbackslash -Mallocatable=03"
+  )
+endif()
+
+# Set build type as CMake does not provide defaults
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(
+    CMAKE_BUILD_TYPE "RelWithDebInfo"
+    CACHE STRING "Build type to be used."
+    FORCE
+  )
+  message(
+    STATUS
+    "Setting build type to '${CMAKE_BUILD_TYPE}' as none was specified."
+  )
+endif()
+
+# Dependency discovery
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/config/cmake")
 
 if(NOT TARGET "OpenMP::OpenMP_Fortran" AND DFTD4_WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
@@ -103,11 +169,11 @@ target_include_directories(
 if(DFTD4_WITH_ILP64)
   target_compile_definitions(
     "${PROJECT_NAME}-lib"
-    PUBLIC -DIK=i8)
+    PRIVATE IK=i8)
 else()
   target_compile_definitions(
     "${PROJECT_NAME}-lib"
-    PUBLIC -DIK=i4)
+    PRIVATE IK=i4)
 endif()
 
 # Add example application
@@ -131,8 +197,6 @@ install(
   "${PROJECT_NAME}-lib"
   EXPORT
   "${PROJECT_NAME}-targets"
-  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 )
 install(
   EXPORT
@@ -160,6 +224,51 @@ install(
   "COPYING"
   "COPYING.LESSER"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME}"
+)
+
+# Package configuration and pkg-config metadata
+install(
+  DIRECTORY
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/cmake/"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+
+set(DFTD4_USE_MULTICHARGE TRUE)
+set(DFTD4_USE_MCTCLIB TRUE)
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/template-config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY SameMinorVersion
+)
+install(
+  FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+
+if(IS_ABSOLUTE "${DFTD4_INSTALL_FMODDIR}")
+  set(pkgconfig_fmoddir "${DFTD4_INSTALL_FMODDIR}")
+else()
+  set(pkgconfig_fmoddir "\${prefix}/${DFTD4_INSTALL_FMODDIR}")
+endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/config/template.pc"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+  @ONLY
+)
+install(
+  FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 
 # add the testsuite
