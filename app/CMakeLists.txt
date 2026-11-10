@@ -30,7 +30,7 @@ set_target_properties(
 target_link_libraries(
   "${PROJECT_NAME}-exe"
   PRIVATE
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
 )
 
 install(
