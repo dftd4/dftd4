@@ -27,7 +27,8 @@ include(GNUInstallDirs)
 include(CMakeDependentOption)
 
 # Build options
-option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
+option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" OFF)
+option(BUILD_TESTING "Build unittests" ON)
 
 # Unprefixed options are deprecated and will be removed in the future
 # For now they only provide the defaults; please use DFTD4_WITH_* instead.
@@ -40,6 +41,7 @@ option(DFTD4_WITH_API "Enable support for C API via iso_c_binding module" ${WITH
 option(DFTD4_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
 option(DFTD4_WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" ${WITH_ILP64})
 option(DFTD4_WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" ${WITH_API_V2})
+option(DFTD4_WITH_TESTS "Build unittests of dftd4" ${BUILD_TESTING})
 cmake_dependent_option(DFTD4_WITH_PYTHON "Build the Python extension module"
                        FALSE "DFTD4_WITH_API" FALSE)
 
@@ -265,5 +267,7 @@ install(
 )
 
 # add the testsuite
-enable_testing()
-add_subdirectory("test")
+if(DFTD4_WITH_TESTS)
+  enable_testing()
+  add_subdirectory("test")
+endif()
