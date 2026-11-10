@@ -23,8 +23,8 @@ project(
   DESCRIPTION "Generally Applicable Atomic-Charge Dependent London Dispersion Correction"
 )
 
-# Follow GNU conventions for installing directories
 include(GNUInstallDirs)
+include(CMakeDependentOption)
 
 # Build options
 option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
@@ -40,7 +40,8 @@ option(DFTD4_WITH_API "Enable support for C API via iso_c_binding module" ${WITH
 option(DFTD4_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
 option(DFTD4_WITH_ILP64 "Enable support for ILP64 BLAS/LAPACK calls" ${WITH_ILP64})
 option(DFTD4_WITH_API_V2 "Enable the compatibility layer for the dftd4 2.5.x API" ${WITH_API_V2})
-option(DFTD4_WITH_PYTHON "Build the Python extension module" FALSE)
+cmake_dependent_option(DFTD4_WITH_PYTHON "Build the Python extension module"
+                       FALSE "DFTD4_WITH_API" FALSE)
 
 set(
   DFTD4_INSTALL_FMODDIR
@@ -177,17 +178,13 @@ endif()
 
 if(DFTD4_WITH_API)
   enable_language("C")
+  if(DFTD4_WITH_PYTHON)
+    add_subdirectory("python")
+  endif()
 endif()
 
 # Add example application
 add_subdirectory("app")
-
-if(DFTD4_WITH_PYTHON)
-  if(NOT DFTD4_WITH_API)
-    message(FATAL_ERROR "DFTD4_WITH_PYTHON requires DFTD4_WITH_API")
-  endif()
-  add_subdirectory("python")
-endif()
 
 install(
   TARGETS
