@@ -39,7 +39,7 @@ add_executable(
 target_link_libraries(
   "${PROJECT_NAME}-tester"
   PRIVATE
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
   "mstore::mstore"
 )
 

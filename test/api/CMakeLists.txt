@@ -26,6 +26,6 @@ target_include_directories(
 target_link_libraries(
   "${PROJECT_NAME}-api-tester"
   PRIVATE
-  "${PROJECT_NAME}-lib"
+  "${PROJECT_NAME}"
 )
 add_test(NAME "api" COMMAND "${PROJECT_NAME}-api-tester")
