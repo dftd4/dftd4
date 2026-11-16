@@ -37,8 +37,11 @@
 /_*/
 
 # Coverage
+.coverage*
 coverage*
 *.gcov
+*.gcda
+*.gcno
 
 # Meson build system files
 *.wraplock

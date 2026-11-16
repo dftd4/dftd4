@@ -27,7 +27,6 @@ env:
     meson!=1.8.0
     cmake
     ninja
-    gcovr
   PIP_EXTRAS: >-
     pkgconfig
     pytest
@@ -120,7 +119,7 @@ jobs:
       FC: ${{ matrix.compiler == 'intel' && 'ifort' || 'gfortran' }}
       CC: ${{ matrix.compiler == 'intel' && 'icc' || 'gcc' }}
       GCC_V: ${{ matrix.version }}
-      PYTHON_V: 3.9
+      PYTHON_V: "3.14"
 
     steps:
       - name: Checkout code
@@ -240,7 +239,7 @@ jobs:
 
       - name: Install build and test dependencies
         if: ${{ ! contains(matrix.os, 'windows') }}
-        run: pip3 install $PIP_PACKAGES $PIP_EXTRAS
+        run: pip3 install $PIP_PACKAGES $PIP_EXTRAS "gcovr>=8.7"
         env:
           PIP_PACKAGES: ${{ env.PIP_PACKAGES }}
           PIP_EXTRAS: ${{ env.PIP_EXTRAS }}
@@ -253,7 +252,6 @@ jobs:
           --prefix=$PWD/_dist
           --libdir=lib
           --warnlevel=0
-          -Dopenmp=false
           -Db_coverage=$COVERAGE
           $MESON_ARGS
         env:
@@ -263,6 +261,7 @@ jobs:
             ${{ matrix.compiler == 'intel' && '-Dfortran_link_args=-qopenmp -Dapi=false' || '' }}
             ${{ contains(matrix.os, 'macos') && '-Dlapack=openblas' || '' }}
             ${{ contains(matrix.os, 'windows') && '-Dfortran_link_args=-Wl,--allow-multiple-definition' || '' }}
+            ${{ (matrix.compiler == 'msys' || matrix.build-type == 'coverage') && '-Dopenmp=false' || '' }}
 
       - name: Configure build (CMake)
         if: ${{ matrix.build == 'cmake' }}
@@ -327,17 +326,22 @@ jobs:
         env:
           OMP_NUM_THREADS: 1,2,1
 
-      # Use gcovr for more control instead of `ninja -C $BUILD_DIR coverage`.
-      # Option `--include-internal-functions` required to cover mangled Fortran
-      # symbols (e.g., `__dftd4_damping_rational_MOD_get_dispersion2`). 
+      # Use gcovr directly instead of `ninja -C $BUILD_DIR coverage` for 
+      # explicit filtering. Requires gcovr >= 8.7 (Python >= 3.10) so Fortran 
+      # module procedures (`__<mod>_MOD_<proc>`) are preserved natively while
+      # compiler-synthesized OOP vtable thunks (`___copy_*`, `___final_*`)
+      # remain excluded.
       - name: Create coverage report
         if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
         run: |
           gcovr $BUILD_DIR \
             --root . \
-            --include-internal-functions \
-            -e "subprojects/" -e "test/" \
-            -x -o coverage.xml
+            --filter "app/" \
+            --filter "src/" \
+            --exclude "subprojects/" \
+            --exclude "test/" \
+            --cobertura coverage.xml \
+            --txt-summary
         env:
           BUILD_DIR: ${{ env.BUILD_DIR }}
 
@@ -383,6 +387,7 @@ jobs:
         with:
           fail_ci_if_error: false
           files: coverage.xml
+          disable_search: true
           flags: fortran
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -396,7 +401,7 @@ jobs:
         os: [ubuntu-latest]
         build: [meson, cmake]
         gcc_v: [14]
-        python_v: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python_v: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
         include:
           - os: macos-latest
@@ -408,6 +413,16 @@ jobs:
             build: cmake
             gcc_v: 14
             python_v: "3.9"
+          
+          - os: ubuntu-24.04
+            build: meson
+            gcc_v: 14
+            python_v: "3.8"
+
+          - os: ubuntu-24.04
+            build: meson
+            gcc_v: 14
+            python_v: "3.9"
 
     env:
       FC: gfortran
@@ -415,6 +430,7 @@ jobs:
       GCC_V: ${{ matrix.gcc_v }}
       PYTHON_V: ${{ matrix.python_v }}
       OMP_NUM_THREADS: 2,1
+      COVERAGE: ${{ matrix.os == 'ubuntu-latest' && matrix.build == 'meson' && matrix.python_v == '3.13' && 'true' || 'false' }}
       DFTD4_OUTPUT: dftd4-${{ matrix.build }}-gnu-${{ matrix.gcc_v }}-${{ matrix.os }}.tar.xz
 
     steps:
@@ -469,6 +485,10 @@ jobs:
         if: ((matrix.python_v == '3.14') || (matrix.python_v == '3.13'))
         run: pip3 install "qcelemental>=0.50.0rc3"
 
+      - name: Install Python coverage dependencies
+        if: ${{ env.COVERAGE == 'true' }}
+        run: pip3 install coverage pyscf
+
       - name: Download package
         uses: actions/download-artifact@v8
         with:
@@ -515,25 +535,38 @@ jobs:
           echo "DFTD4_PYTHONPATH=$PWD/_python-dist/$python_site" >> $GITHUB_ENV
 
       - name: Test Python API (Meson)
-        if: ${{ matrix.build == 'meson' }}
-        run: pytest --pyargs dftd4 --cov=dftd4 -vv
+        if: ${{ matrix.build == 'meson' && env.COVERAGE != 'true' }}
+        run: pytest --pyargs dftd4 -vv
         env:
           LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
           DYLD_LIBRARY_PATH: ${{ env.DYLD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
 
+      - name: Test Python API with coverage (Meson)
+        if: ${{ env.COVERAGE == 'true' }}
+        run: |
+          coverage run --rcfile=python/pyproject.toml -m pytest --pyargs dftd4 -vv
+          coverage combine --rcfile=python/pyproject.toml
+          coverage xml --rcfile=python/pyproject.toml -o coverage.xml
+          coverage report --rcfile=python/pyproject.toml
+        env:
+          LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
+
       - name: Test Python API (CMake)
         if: ${{ matrix.build == 'cmake' }}
-        run: pytest --pyargs dftd4 --cov=dftd4 -vv
+        run: pytest --pyargs dftd4 -vv
         env:
           PYTHONPATH: ${{ env.DFTD4_PYTHONPATH }}
           LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
           DYLD_LIBRARY_PATH: ${{ env.DYLD_LIBRARY_PATH }}:${{ env.DFTD4_PREFIX }}/lib
 
-      - run: pip3 install coverage
-
       - name: Upload coverage report
+        if: ${{ env.COVERAGE == 'true' }}
         uses: codecov/codecov-action@v7
         with:
+          fail_ci_if_error: false
+          files: coverage.xml
+          disable_search: true
+          flags: python
           token: ${{ secrets.CODECOV_TOKEN }}
 
   lint:

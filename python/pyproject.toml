@@ -44,3 +44,18 @@ optional-dependencies.test = [
   "pytest",
   "pytest-cov",
 ]
+
+[tool.coverage.run]
+source_pkgs = ["dftd4"]
+omit = ["*/test_*.py"]
+parallel = true
+
+[tool.coverage.paths]
+source = [
+  "python/dftd4",          # 1. Target path in the repo
+  "*/site-packages/dftd4", # 2. Installed path pattern(s) from which to 
+  "*/dist-packages/dftd4", #    map back to the repository tree
+]
+
+[tool.coverage.report]
+omit = ["*/test_*.py"]
