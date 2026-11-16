@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [gnu]
-        version: [10]
+        version: [14]
         example:
           - api-minimal-3.7.0
           - api-minimal-latest
