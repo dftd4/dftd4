@@ -1,7 +1,7 @@
 fixes:
   - "/home/runner/work/dftd4/dftd4::"
 
-# Only cover core library (`app` and `src` directories)
+# Cover core library, CLI, and Python API (`app`, `src`, and `python/dftd4`)
 ignore:
   - "assets/"
   - "build/"
@@ -9,6 +9,8 @@ ignore:
   - "doc/"
   - "include/"
   - "man/"
-  - "python/"
+  - "python/ffibuilder.py"
+  - "python/include/"
+  - "python/dftd4/test_*.py"
   - "subprojects/"
   - "test/"
