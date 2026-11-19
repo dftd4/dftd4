@@ -21,7 +21,7 @@ module dftd4_model_utils
    implicit none
    private
 
-   public :: is_exceptional, weight_cn, zeta, dzeta, trapzd
+   public :: is_exceptional, weight_cn, zeta, dzeta, d2zeta, trapzd
 
 contains
 
@@ -77,6 +77,22 @@ elemental function dzeta(a, c, qref, qmod)
    end if
 
 end function dzeta
+
+!> Second derivative of charge scaling w.r.t. charge.
+elemental function d2zeta(a, c, qref, qmod) result(second)
+   real(wp), intent(in) :: a, c, qref, qmod
+   real(wp) :: second, ex, slope
+
+   if (qmod < 0.0_wp) then
+      second = 0.0_wp
+   else
+      ex = exp(c*(1.0_wp - qref/qmod))
+      slope = c*qref/qmod**2
+      second = a*ex*zeta(a, c, qref, qmod) &
+         & * ((a*ex - 1.0_wp)*slope**2 + 2.0_wp*slope/qmod)
+   end if
+end function d2zeta
+
 
 !> numerical Casimir--Polder integration
 pure function trapzd(pol)
